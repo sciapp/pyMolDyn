@@ -1,6 +1,8 @@
 PDFFILE=master.pdf
 TEXFILES=master.tex
 TEXFILES+=packages.tex
+TEXFILES+=volumes.tex
+TEXFILES+=domains.tex
 
 ${PDFFILE}: ${TEXFILES}
 	pdflatex master

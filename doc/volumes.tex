@@ -1,0 +1,256 @@
+  \chapter{}
+  \clearpage
+  \section{Analyzed Volumes and Periodic Boundary Conditions}
+  As libmd is developed for the purpose of researching cavities in phase-change-materials, the different characteristics of crystal systems need to be considered. Most prominently, these are the shape of the analyzed volume and the resulting periodic boundary conditions. To support most crystal structures, the \textbf{7 Bravais lattice systems} have to be used for defining analyzed volume and the periodic boundary conditions. As cubic, tetragonal, orthorhombic, rhombohedral and monoclinic lattices can be seen as special cases of a triclinic lattice, the 7 lattice systems can be reduced to 2:
+  \begin{itemize}
+  \item{Hexagonal}
+  \item{Triclinic}
+  \end{itemize}
+  For both systems, the periodic boundary condition can be defined as the following:
+  \[\forall x \in \mathbb{R}^3\colon f(x) = f(x+\sum_{i=1}^3 v_i \cdot n_i)\]
+  where $v_1, v_2, v_3$ are \textbf{translation vectors} characteristic to the lattice system. As a result, every function $\hat{f}(x)$ defined in the \textbf{analyzed volume} $\mathcal{V}$, can be generalized so that a function $f(x)$ is defined in $\mathbb{R}^3$ by taking the value of $\hat{f}(x)$ at the corresponding point in the analyzed volume:
+  \[\forall x \in \mathbb{R}^3, \exists n \in \mathbb{Z}^3\colon f(x) = \hat{f}(x+\sum_{i=1}^3 v_i \cdot n_i)\]
+  As a result of this periodicity, if an object, e.\,g. an atom, exists at point $x$, it is also expected to exist at any point $x+\sum_{i=1}^3 v_i \cdot n_i$. This leads to the definition of a new distance function, based on euclidean distance:
+  \[|x-y| = \min_{n \in \mathbb{Z}^3}(\|x-y+\sum_{i=1}^3 v_i \cdot n_i\|_2)\]
+  This defines the distance between two points in $\mathbb{R}^3$ as the minimum of the euclidean distance between any of their corresponding points. The range of $n_i$ can be restricted if $x$ and $y$ are inside the analyzed volume:
+  \[\forall x,y  \in \mathcal{V}\colon n_i\in {-1,0,1}\]
+  
+  To allow operating both in continuous and in discrete spaces, the analyzed volume is defined as a subspace of a given space $\mathcal{X} \subseteq \mathbb{R}^3$. As an example, if the analyzed volume is supposed to be a cube with a side length $s$ centered in the origin, $\mathcal{V}(\mathcal{X})$ would be defined as:
+  \[\mathcal{V}(\mathcal{X}) = \{x | x \in \mathcal{X} \land |x_i| < \frac{s}{2} ~\forall i \in [1,3]\}\]
+  \subsection{Triclinic lattice systems}
+  For a triclinic lattice system fractional coordinates are used. The analyzed volume $\mathcal{V}(\mathcal{X})$ can be defined as:
+  \[\mathcal{V}(\mathcal{X}) = \{x | x \in \mathcal{X} \land\ |(Mx)_i| < \frac{1}{2} ~\forall i \in [1,3]\}\]
+  with the cartesian-to-fraction transformation matrix $M$:
+  \[M = \begin{pmatrix}
+  \frac{1}{a}&-\frac{\cos(\gamma)}{a \cdot \sin(\gamma)}&\frac{\cos(\alpha)\cos(\gamma)-\cos(\beta)}{a\cdot V \cdot \sin(\gamma)}\\
+  0&\frac{1}{b \cdot \sin(\gamma)}&\frac{\cos(\beta)\cos(\gamma)-\cos(\alpha)}{b\cdot V \cdot \sin(\gamma)}\\
+  0&0&\frac{\sin(\gamma)}{c \cdot V}\\
+  \end{pmatrix}\]
+  where $V$ is the volume of the unit parallelepiped:
+  \[V = \sqrt{1-\cos^2(\alpha)-\cos^2(\beta)-\cos^2(\gamma)+2\cdot\cos(\alpha)\cdot\cos(\beta)\cdot\cos(\gamma)}\]
+  and the translation vectors are:
+  \begingroup
+  \renewcommand*{\arraystretch}{1.2}
+  \[
+  v_1 = a\cdot\begin{pmatrix}1\\0\\0\end{pmatrix},
+  v_2 = b\cdot\begin{pmatrix}\cos(\gamma)\\\sin(\gamma)\\0\end{pmatrix},
+  v_3 = c\cdot\begin{pmatrix}\cos(\beta)\\\frac{\cos(\alpha)-\cos(\beta)\cos(\gamma)}{\sin(\gamma)}\\\frac{V}{\sin(\gamma)}\end{pmatrix}
+  \]
+  \endgroup
+  As a simple example with $a=b=c=1$ and $\alpha=\beta=\gamma=90^\circ$ (the unit cube) the translation vectors are the unit vectors, $M$ is the identity matrix and $\mathcal{V}(\mathcal{X})$ is the same as the one given as an example in the previous section (with $s=1$).
+
+  \begin{figure}[h]
+  \begin{center}
+\begin{tikzpicture}
+\fill[black!15!white] ({1*1.75+0.83},{1*1.5+0.8}) -- ({2*1.75+0.83},{1*1.5+0.8}) -- ({3*1.75-0.35},{2*1.5+0.8}) -- ({2*1.75-0.35},{2*1.5+0.8});
+\fill ({2*1.75+0.23},{1.5*1.5+0.8}) circle (0.1);
+\draw ({3*1.75+0.23},{1.5*1.5+0.8}) circle (0.1);
+\draw ({1*1.75+0.23},{1.5*1.5+0.8}) circle (0.1);
+\draw ({1*1.75+0.81},{2.5*1.5+0.8}) circle (0.1);
+\draw ({2*1.75+0.81},{2.5*1.5+0.8}) circle (0.1);
+\draw ({3*1.75+0.81},{2.5*1.5+0.8}) circle (0.1);
+\draw ({1*1.75-0.33},{0.5*1.5+0.8}) circle (0.1);
+\draw ({2*1.75-0.33},{0.5*1.5+0.8}) circle (0.1);
+\draw ({3*1.75-0.33},{0.5*1.5+0.8}) circle (0.1);
+\draw[dashed] ({3*1.75+0.23},{1.5*1.5+0.8}) -- ({3*1.75-0.33},{0.5*1.5+0.8});
+\draw[dashed] ({3*1.75+0.23},{1.5*1.5+0.8}) -- ({3*1.75+0.81},{2.5*1.5+0.8});
+\draw[dashed] ({1*1.75+0.23},{1.5*1.5+0.8}) -- ({1*1.75-0.33},{0.5*1.5+0.8});
+\draw[dashed] ({1*1.75+0.23},{1.5*1.5+0.8}) -- ({1*1.75+0.81},{2.5*1.5+0.8});
+\draw[dashed] ({2*1.75+0.23},{1.5*1.5+0.8}) -- ({2*1.75-0.33},{0.5*1.5+0.8});
+\draw[-triangle 45] ({2*1.75+0.23},{1.5*1.5+0.8}) -- ({2*1.75+0.81},{2.5*1.5+0.8});
+\draw[-triangle 45] ({2*1.75+0.23},{1.5*1.5+0.8}) -- ({3*1.75+0.23},{1.5*1.5+0.8});
+\draw[dashed] ({2*1.75+0.23},{1.5*1.5+0.8}) -- ({1*1.75+0.23},{1.5*1.5+0.8});
+\draw[dashed] ({1*1.75+0.81},{2.5*1.5+0.8}) -- ({2*1.75+0.81},{2.5*1.5+0.8});
+\draw[dashed] ({3*1.75+0.81},{2.5*1.5+0.8}) -- ({2*1.75+0.81},{2.5*1.5+0.8});
+\draw[dashed] ({1*1.75-0.33},{0.5*1.5+0.8}) -- ({2*1.75-0.33},{0.5*1.5+0.8});
+\draw[dashed] ({3*1.75-0.33},{0.5*1.5+0.8}) -- ({2*1.75-0.33},{0.5*1.5+0.8});
+\begin{scope}
+\clip (0,0) rectangle(7.7,6); 
+\foreach \i in {0,...,7}
+\draw ({\i*1.75+0.5},6) --({\i*1.75-2},-0.5); 
+\foreach \i in {0,...,7}
+\draw (-2,\i*1.5+0.8) --(10,\i*1.5+0.8); 
+\end{scope}
+\node at (4.83,2.9) {$v_1$};
+\node at (3.8,4) {$v_2$};
+\end{tikzpicture}
+\end{center}
+\caption{A triclinic lattice system (x-y-plane)}
+\end{figure}
+  \subsection{Hexagonal lattice systems}
+  For a hexagonal lattice system, the analyzed volume $\mathcal{V}(\mathcal{X},T)$ can be defined as: 
+  \begin{align*}\mathcal{V}(\mathcal{X}) = \{x &| x \in \mathcal{X} \\ &\land (|x_1| < \sin(60^\circ)\cdot a)\\ &\land (|x_2| < a) \\ &\land (|x_3| < \frac{c}{2}) \\ &\land ((|x_2| < \frac{a}{2}) \lor (|x_2| < a - \cot(60^\circ) \cdot x_1))\}\end{align*}
+  and the translation vectors are:
+  \begingroup
+  \renewcommand*{\arraystretch}{1.2}
+  \[
+  v_1 = \begin{pmatrix}\sqrt{3}a\\0\\0\end{pmatrix},
+  v_2 = \begin{pmatrix}\frac{\sqrt{3}}{2}a\\\frac{3}{2}a\\0\end{pmatrix},
+  v_3 = \begin{pmatrix}0\\0\\c\end{pmatrix}
+  \]
+  \endgroup  
+  \begin{figure}[h]
+  \begin{center}
+\begin{tikzpicture}
+\fill[black!15!white] ({2.1+sqrt(3)*0.5},-3.5) -- ({2.1+sqrt(3)*0.5},-2.5) -- ({2.1+sqrt(3)},-2) -- ({2.1+sqrt(3)*1.5},-2.5) -- ({2.1+sqrt(3)*1.5},-3.5) -- ({2.1+sqrt(3)},-4);
+\draw (2.1,-3) circle (0.1);
+\fill ({2.1+sqrt(3)},-3) circle (0.1);
+\draw ({2.1+2*sqrt(3)},-3) circle (0.1);
+\draw ({2.1+sqrt(3)*0.5},{-3+1.5}) circle (0.1);
+\draw ({2.1+sqrt(3)*1.5},{-3+1.5}) circle (0.1);
+\draw ({2.1+sqrt(3)*2.5},{-3+1.5}) circle (0.1);
+\draw ({2.1-sqrt(3)*0.5},{-3-1.5}) circle (0.1);
+\draw ({2.1+sqrt(3)*0.5},{-3-1.5}) circle (0.1);
+\draw ({2.1+sqrt(3)*1.5},{-3-1.5}) circle (0.1);
+\draw[-triangle 45] ({2.1+sqrt(3)},-3) -- ({2.1+sqrt(3)*1.5},{-3+1.5});
+\draw[-triangle 45] ({2.1+sqrt(3)},-3) -- ({2.1+sqrt(3)*2},{-3});
+\draw[dashed] ({2.1+sqrt(3)*1.5},{-3+1.5}) -- ({2.1+sqrt(3)*2.5},{-3+1.5});
+\draw[dashed] ({2.1+sqrt(3)*1.5},{-3+1.5}) -- ({2.1+sqrt(3)*0.5},{-3+1.5});
+\draw[dashed] ({2.1+sqrt(3)},-3) -- ({2.1},{-3});
+\draw[dashed] ({2.1+sqrt(3)*0.5},{-3+1.5}) -- ({2.1},{-3});
+\draw[dashed] ({2.1-sqrt(3)*0.5},{-3-1.5}) -- ({2.1},{-3});
+\draw[dashed] ({2.1-sqrt(3)*0.5},{-3-1.5}) -- ({2.1+sqrt(3)*0.5},{-3-1.5});
+\draw[dashed] ({2.1+sqrt(3)*1.5},{-3-1.5}) -- ({2.1+sqrt(3)*0.5},{-3-1.5});
+\draw[dashed] ({2.1+sqrt(3)},-3) -- ({2.1+sqrt(3)*0.5},{-3-1.5});
+\draw[dashed] ({2.1+sqrt(3)*2},-3) -- ({2.1+sqrt(3)*1.5},{-3-1.5});
+\draw[dashed] ({2.1+sqrt(3)*2},-3) -- ({2.1+sqrt(3)*2.5},{-3+1.5});
+\begin{scope}[rotate=-90]
+\clip (0,0) rectangle (6,7.7);
+\foreach \i in {0,...,3} 
+  \foreach \j in {0,...,5} {
+  \foreach \a in {0,120,-120} \draw ({3*\i-0.5},{sqrt(3)*\j-0.5}) -- +(\a:1);
+  \foreach \a in {0,120,-120} \draw ({3*\i+3*0.5-0.5},{\j*sqrt(3)+sqrt(3)*0.5-0.5}) -- +(\a:1);}
+\end{scope}
+\node at (4.95,-2.8) {$v_1$};
+\node at (4.15,-2) {$v_2$};
+\end{tikzpicture}
+\end{center}
+\caption{A hexagonal lattice system (x-y-plane)}
+\end{figure}
+\subsection{The bounding cuboid $\mathcal{B}$ and the discrete set $\mathcal{D}$}
+  
+  \begin{figure}[h]
+  \begin{center}
+\begin{tikzpicture}
+\begin{scope}[xshift=-11cm]
+\fill[black!15!white] ({-2*sqrt(3)*0.5},2*0.5) -- (0,2*1) -- ({2*sqrt(3)*0.5},2*0.5) -- ({2*sqrt(3)*0.5},-2*0.5) -- (0,-2*1) -- ({-sqrt(3)*2*0.5},-2*0.5) -- ({-sqrt(3)*2*0.5},2*0.5);
+\draw ({-2*sqrt(3)*0.5},2*0.5) -- (0,2*1) -- ({2*sqrt(3)*0.5},2*0.5) -- ({2*sqrt(3)*0.5},-2*0.5) -- (0,-2*1) -- ({-sqrt(3)*2*0.5},-2*0.5) -- ({-sqrt(3)*2*0.5},2*0.5);
+\draw[dashed] ({-2*sqrt(3)*0.5},-2.0) rectangle ({2*sqrt(3)*0.5},2.0);
+\draw ({-2*sqrt(3)*0.5},-2.3) -- ({-2*sqrt(3)*0.5},-2.1);
+\draw ({2*sqrt(3)*0.5},-2.3) -- ({2*sqrt(3)*0.5},-2.1);
+\draw[triangle 45-triangle 45] ({-2*sqrt(3)*0.5},-2.2) -- ({2*sqrt(3)*0.5},-2.2);
+\node at (0,-2.4) {$s_1$};
+\draw ({2*sqrt(3)*0.5+0.1},2) -- ({2*sqrt(3)*0.5+0.3},2);
+\draw ({2*sqrt(3)*0.5+0.1},-2) -- ({2*sqrt(3)*0.5+0.3},-2);
+\draw[triangle 45-triangle 45] ({2*sqrt(3)*0.5+0.2},2) -- ({2*sqrt(3)*0.5+0.2},-2);
+\node at ({2*sqrt(3)*0.5+1.1},0) {$s_2 = s_{max}$};
+\node at(-1.5,1.7) {$\mathcal{B}$};
+\node at(0,0) {$\mathcal{V}(\mathbb{R}^3)$};
+\end{scope}
+
+\begin{scope}[xshift=-5cm]
+\fill[black!15!white] ({-2*sqrt(3)*0.5},2*0.5) -- (0,2*1) -- ({2*sqrt(3)*0.5},2*0.5) -- ({2*sqrt(3)*0.5},-2*0.5) -- (0,-2*1) -- ({-sqrt(3)*2*0.5},-2*0.5) -- ({-sqrt(3)*2*0.5},2*0.5);
+\draw ({-2*sqrt(3)*0.5},2*0.5) -- (0,2*1) -- ({2*sqrt(3)*0.5},2*0.5) -- ({2*sqrt(3)*0.5},-2*0.5) -- (0,-2*1) -- ({-sqrt(3)*2*0.5},-2*0.5) -- ({-sqrt(3)*2*0.5},2*0.5);
+\draw[dashed] ({-2*sqrt(3)*0.5},-2.2) -- ({-2*sqrt(3)*0.5},2.2);
+\draw[dashed] ({2*sqrt(3)*0.5},-2.2) -- ({2*sqrt(3)*0.5},2.2);
+\foreach \i in {0,...,11}
+\draw[dotted] ({-2*sqrt(3)*0.5},{-2.2+0.4*\i}) -- ({2*sqrt(3)*0.5},{-2.2+0.4*\i});
+\begin{scope}[xshift=0.3cm]
+\draw ({2*sqrt(3)*0.5+0.1},2.2) -- ({2*sqrt(3)*0.5+0.3},2.2);
+\draw ({2*sqrt(3)*0.5+0.1},1.8) -- ({2*sqrt(3)*0.5+0.3},1.8);
+\draw[<->] ({2*sqrt(3)*0.5+0.2},2.2) -- ({2*sqrt(3)*0.5+0.2},1.8);
+\node at ({2*sqrt(3)*0.5+1.5},1.95) {$s_{step} = \frac{s_{max}}{d_{max}-2}$};
+\end{scope}
+\draw ({2*sqrt(3)*0.5+0.1},2.2) -- ({2*sqrt(3)*0.5+0.3},2.2);
+\draw ({2*sqrt(3)*0.5+0.1},-2.2) -- ({2*sqrt(3)*0.5+0.3},-2.2);
+\draw[triangle 45-triangle 45] ({2*sqrt(3)*0.5+0.2},2.2) -- ({2*sqrt(3)*0.5+0.2},-2.2);
+\node at ({2*sqrt(3)*0.5+2.4},0) {$\tilde{s}_{max} = (d_{max}-1)\cdot s_{step} $};
+\draw[triangle 45-triangle 45] ({2*sqrt(3)*0.5+0.2},2.2) -- ({2*sqrt(3)*0.5+0.2},-2.2);
+\node at ({2*sqrt(3)*0.5+2.825},-0.6) {$ = (\frac{s_{max}}{s_{step}}+1) \cdot s_{step}$};
+
+\end{scope}
+
+\begin{scope}[xshift=-11cm,yshift=-6cm]
+\fill[black!15!white] ({-2*sqrt(3)*0.5},2*0.5) -- (0,2*1) -- ({2*sqrt(3)*0.5},2*0.5) -- ({2*sqrt(3)*0.5},-2*0.5) -- (0,-2*1) -- ({-sqrt(3)*2*0.5},-2*0.5) -- ({-sqrt(3)*2*0.5},2*0.5);
+\draw ({-2*sqrt(3)*0.5},2*0.5) -- (0,2*1) -- ({2*sqrt(3)*0.5},2*0.5) -- ({2*sqrt(3)*0.5},-2*0.5) -- (0,-2*1) -- ({-sqrt(3)*2*0.5},-2*0.5) -- ({-sqrt(3)*2*0.5},2*0.5);
+
+\foreach \i in {0,...,11}
+\draw[dotted] ({-1.8},{-2.2+0.4*\i}) -- ({1.8},{-2.2+0.4*\i});
+\foreach \i in {0,...,9}
+\draw[dotted] ({-1.8+\i*0.4},{-2.2}) -- ({-1.8+\i*0.4},{2.2});
+
+\draw ({-1.8},-2.3) -- ({-1.8},-2.5);
+\draw ({1.8},-2.3) -- ({1.8},-2.5);
+\draw[triangle 45-triangle 45] (-1.8,-2.4) -- (1.8,-2.4);
+\node at (0,-2.7) {$\tilde{s}_1 = (d_i-1) \cdot s_{step}$};
+\node at (0.625,-3.3) {$ = (\lfloor\frac{s_1}{s_{step}}\rfloor+1)\cdot s_{step}$};
+\node at (-1.6,1.9) {$\mathcal{\tilde{B}}$};
+\draw (-1.8,-2.2) rectangle (1.8,2.2);
+\end{scope}
+
+
+
+\begin{scope}[xshift=-5cm,yshift=-6cm]
+
+
+\foreach \i in {0,...,11}
+\foreach \j in {0,...,9} {
+\fill[white] ({-1.8+\j*0.4},{-2.2+0.4*\i}) circle (0.05);
+\draw ({-1.8+\j*0.4},{-2.2+0.4*\i}) circle (0.05);}
+
+%\fill[black!15!white] ({-2*sqrt(3)*0.5},2*0.5) -- (0,2*1) -- ({2*sqrt(3)*0.5},2*0.5) -- ({2*sqrt(3)*0.5},-2*0.5) -- (0,-2*1) -- ({-sqrt(3)*2*0.5},-2*0.5) -- ({-sqrt(3)*2*0.5},2*0.5);
+\draw[dotted,thick] ({-2*sqrt(3)*0.5},2*0.5) -- (0,2*1) -- ({2*sqrt(3)*0.5},2*0.5) -- ({2*sqrt(3)*0.5},-2*0.5) -- (0,-2*1) -- ({-sqrt(3)*2*0.5},-2*0.5) -- ({-sqrt(3)*2*0.5},2*0.5);
+%\draw (-1.8,-2.2) rectangle (1.8,2.2);
+
+\begin{scope}
+\clip ({-2*sqrt(3)*0.5},2.1*0.5) -- (0,2*1) -- ({2*sqrt(3)*0.5},2.1*0.5) -- ({2*sqrt(3)*0.5},-2.1*0.5) -- (0,-2*1) -- ({-sqrt(3)*2*0.5},-2.1*0.5) -- ({-sqrt(3)*2*0.5},2.1*0.5);
+\foreach \i in {0,...,11}
+\foreach \j in {0,...,9} {
+\fill[black!45!white] ({-1.8+\j*0.4},{-2.2+0.4*\i}) circle (0.05);
+\draw ({-1.8+\j*0.4},{-2.2+0.4*\i}) circle (0.05);}
+\end{scope}
+\node at (-1.6,1.87) {$\mathcal{D}$};
+\node at (-0.05,0) {$\mathcal{V}(\mathcal{D})$};
+
+
+\end{scope}
+
+
+
+\end{tikzpicture}
+\end{center}
+\caption{Construction and discretization of the bounding cuboid of a hexagonal lattice system cell(x-y-plane)}
+\end{figure}
+
+  To simplify discretization an axis-aligned bounding cuboid $\mathcal{B} \subset \mathbb{R}^3$ is introduced:
+  \[
+  \mathcal{B} = \{x | \min_{y \in \mathcal{V}(\mathbb{R}^3)}(y_i) \le x_i \le  \max_{y \in \mathcal{V}(\mathbb{R}^3)}(y_i) ~\forall i \in [1,3]\}
+  \]
+  Therefore the side lengths of $\mathcal{B}$ are: \[s_i = \max_{y \in \mathcal{V}(\mathbb{R}^3)}(y_i)-\min_{y \in \mathcal{V}(\mathbb{R}^3)}(y_i)\]
+  A second axis-aligned cuboid $\mathcal{\tilde{B}}$ is introduced, which is dividable into a number of cubes, so that the corners of these cubes can be used as equally spaced  discretization points. Additionally, no part of surface of $\mathcal{\tilde{B}}$ should be part of $\mathcal{V}(\mathbb{R}^3)$. To calculate the side lengths of this cuboid, the side length of the cubes inside it has to be calculated first. With an additional input, $d_{max}$, the maximum discretization resolution of a single dimension, this cube side length can be calculated as:
+\[
+s_{step} = \frac{s_{max}}{d_{max}-2} = \frac{\max_{i \in [1,3]}(s_i)}{d_{max}-2}
+\]
+The side lengths of $\mathcal{\tilde{B}}$ can then be defined as:
+\[
+\tilde{s}_i = (\left\lfloor \frac{s_i}{s_{step}}\right\rfloor+1) \cdot s_{step}
+\]
+So the discretization resolutions of the three dimensions are:
+\[
+d_i = \left\lfloor \frac{s_i}{s_{step}}\right\rfloor+2 
+\]
+A new set $\mathcal{D} \subset \mathcal{\tilde{B}}$ can be defined as:
+\[
+\mathcal{D} = \{x | x_i = \min_{y \in \mathcal{\tilde{B}}}(y_i)+j*s_{step} \land 0 \le j \le d_i-1~\forall i \in [1,3]\}
+\]
+This is the set of discretization points that is used in the following sections.
+
+As the components of the translation vectors $v_1$, $v_2$ and $v_3$ are not necessarily multiples of $s_{step}$, the result of a translation might not be in $\mathcal{D}$. To allow using the translation vectors for implementing the periodic boundary condition, approximations for these need to be found, that have multiples of $s_{step}$ as components. In the following, all components of $v_i$ are expected to be non-negative.
+
+\begin{align*}
+\tilde{v}_{i,j} &= \begin{cases}0 & \text{if } v_{i,j} = 0\\
+2 s_{step}\left\lfloor \frac{1}{2} \frac{v_{i,j}}{s_{step}}\right\rfloor & \text{if } d_i \text{ is even}\\
+2 s_{step}\left\lfloor \frac{1}{2} \frac{v_{i,j}}{s_{step}}\right\rfloor + s_{step}& \text{if } d_i \text{ is odd}\end{cases}
+\\&= \begin{cases}0 & \text{if } v_{i,j} = 0\\
+2 s_{step}\left\lfloor \frac{1}{2} \frac{v_{i,j}}{s_{step}}\right\rfloor + (d_i \bmod 2) s_{step}& \text{otherwise}\end{cases}
+\end{align*}

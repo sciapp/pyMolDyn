@@ -8,14 +8,16 @@
 \date{\today}
 
 \begin{document}
-  \maketitle
+\maketitle
 \pagenumbering{roman}
 \setcounter{page}{1}
 \tableofcontents
-  \clearpage
+\thispagestyle{empty}~\cleardoublepage
 \pagenumbering{arabic}
 \setcounter{page}{1}
 
-%\input{introduction.tex}
+\input{volumes.tex}
+\input{domains.tex}
 
+\clearpage\thispagestyle{empty}~\cleardoublepage
 \end{document}
