@@ -1,4 +1,4 @@
-SUBDIRS=$(shell find . -type d -d 1)
+SUBDIRS=$(shell find . -mindepth 1 -maxdepth 1 -type d)
 
 all:
 	@for subdir in ${SUBDIRS}; do \
