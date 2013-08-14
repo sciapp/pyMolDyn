@@ -111,19 +111,44 @@ class TriclinicVolume:
         new_point = tuple(new_point.T.tolist()[0])
         return new_point
 
-#class CubicVolume:
-#    '''
-#    A cubic volume centered in the origin with a side length of a.
-#    '''
-#    def __init__(self, a):
-#        self.a = float(a)
-#        self.translation_vectors = [(self.a, 0, 0), (0, self.a, 0), (0, 0, self.a)]
-#        self.side_lengths = (self.a, self.a, self.a)
-#    def is_inside(self, point):
-#        '''
-#        Returns whether point is inside of the volume or not.
-#        ''' 
-#        return all([abs(c) < self.a/2 for c in point])
+class MonoclinicVolume(TriclinicVolume):
+    def __init__(self, a, b, c, beta):
+        alpha = pi/2
+        gamma = pi/2
+        TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
+        
+        
+class OrthorhombicVolume(TriclinicVolume):
+    def __init__(self, a, b, c):
+        alpha = pi/2
+        beta = pi/2
+        gamma = pi/2
+        TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
+        
+class TetragonalVolume(TriclinicVolume):
+    def __init__(self, a, c):
+        b = a
+        alpha = pi/2
+        beta = pi/2
+        gamma = pi/2
+        TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
+
+class RhombohedralVolume(TriclinicVolume):
+    def __init__(self, a, alpha):
+        b = a
+        c = a
+        beta = alpha
+        gamma = alpha
+        TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
+        
+class CubicVolume(TriclinicVolume):
+    def __init__(self, a):
+        b = a
+        c = a
+        alpha = pi/2
+        beta = pi/2
+        gamma = pi/2
+        TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
 
 class Discretization:
     '''
@@ -555,6 +580,9 @@ class CavityCalculation:
         domain_triangles = []
         step = (self.domain_calculation.discretization.s_step,)*3
         offset = self.domain_calculation.discretization.discrete_to_continuous((0, 0, 0))
+        np.save("example_grid_192.npy", self.grid3 < 0)
+        print "step", step
+        print "offset", offset
         domain_triangles.append(triangulate(self.grid3 < 0, step, offset))
         return domain_triangles
 
@@ -582,10 +610,10 @@ if __name__ == "__main__":
     atom_discretization = AtomDiscretization(atoms, discretization)
     print "Cavity domain calculation..."
     domain_calculation = DomainCalculation(discretization, atom_discretization)
-    triangles = domain_calculation.triangles()
-    np.save("domain_triangles_traject200_192_11.npy", triangles)
+    #triangles = domain_calculation.triangles()
+    #np.save("domain_triangles_traject200_192_13.npy", triangles)
     print "Cavity calculation..."
     cavity_calculation = CavityCalculation(domain_calculation)
     print "Triangle calculation..."
     triangles = cavity_calculation.triangles()
-    np.save("cavity_triangles_traject200_192_11.npy", triangles)
+    np.save("cavity_triangles_traject200_192_13.npy", triangles)
