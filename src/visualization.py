@@ -3,33 +3,46 @@ import math
 import itertools
 import numpy as np
 
-#from test8outdata256 import domain_triangles
-#from test8cavdata64 import cavity_triangles
-domain_triangles = np.load("domain_triangles_traject200_256_10.npy")
-cavity_triangles = np.load("cavity_triangles_traject200_256_10.npy")
-with open("xyz/traject_200.xyz") as xyzfile:
-    xyzlines = xyzfile.readlines()
-    num_atoms = int(xyzlines[0])
-    comment = xyzlines[1]
-    atom_lines = xyzlines[2:2+num_atoms]
-    atom_positions = [map(float, atom_line.split()[1:]) for atom_line in atom_lines]
+domain_triangles = np.load("domain_triangles_hexagonal_192_19.npy")
+cavity_triangles = np.load("cavity_triangles_hexagonal_192_19.npy")
+import pybel
+
+for molecule in pybel.readfile("xyz", "xyz/hexagonal.xyz"):
+    atoms = molecule.atoms
+    num_atoms = len(atoms)
+    atom_positions = [atom.coords for atom in atoms]
+    break
 
 
 import calculation
-volume = calculation.TriclinicVolume(30.639, 30.639, 22.612, math.pi/2, math.pi/2, math.pi/3)
+#volume = calculation.TriclinicVolume(30.639, 30.639, 22.612, math.pi/2, math.pi/2, math.pi/3)
+volume = calculation.HexagonalVolume(17.68943, 22.61158)
 for atom_index in range(num_atoms):
     atom_positions[atom_index] = volume.get_equivalent_point(atom_positions[atom_index])
 
-edges = [((-0.5, -0.5, -0.5), (-0.5, -0.5, 0.5)), ((-0.5, -0.5, -0.5), (-0.5, 0.5, -0.5)), ((-0.5, -0.5, -0.5), (0.5, -0.5, -0.5)), ((-0.5, -0.5, 0.5), (-0.5, 0.5, 0.5)), ((-0.5, -0.5, 0.5), (0.5, -0.5, 0.5)), ((-0.5, 0.5, -0.5), (-0.5, 0.5, 0.5)), ((-0.5, 0.5, -0.5), (0.5, 0.5, -0.5)), ((-0.5, 0.5, 0.5), (0.5, 0.5, 0.5)), ((0.5, -0.5, -0.5), (0.5, -0.5, 0.5)), ((0.5, -0.5, -0.5), (0.5, 0.5, -0.5)), ((0.5, -0.5, 0.5), (0.5, 0.5, 0.5)), ((0.5, 0.5, -0.5), (0.5, 0.5, 0.5))]
-new_edges = []
-for edge in edges:
-    point1, point2 = edge
-    point1 = volume.Minv*np.matrix(point1).T
-    point1 = point1.T.tolist()[0]
-    point2 = volume.Minv*np.matrix(point2).T
-    point2 = point2.T.tolist()[0]
-    new_edges.append((point1, point2))
-edges = new_edges
+if isinstance(volume, calculation.TriclinicVolume):
+    edges = [((-0.5, -0.5, -0.5), (-0.5, -0.5, 0.5)), ((-0.5, -0.5, -0.5), (-0.5, 0.5, -0.5)), ((-0.5, -0.5, -0.5), (0.5, -0.5, -0.5)), ((-0.5, -0.5, 0.5), (-0.5, 0.5, 0.5)), ((-0.5, -0.5, 0.5), (0.5, -0.5, 0.5)), ((-0.5, 0.5, -0.5), (-0.5, 0.5, 0.5)), ((-0.5, 0.5, -0.5), (0.5, 0.5, -0.5)), ((-0.5, 0.5, 0.5), (0.5, 0.5, 0.5)), ((0.5, -0.5, -0.5), (0.5, -0.5, 0.5)), ((0.5, -0.5, -0.5), (0.5, 0.5, -0.5)), ((0.5, -0.5, 0.5), (0.5, 0.5, 0.5)), ((0.5, 0.5, -0.5), (0.5, 0.5, 0.5))]
+    new_edges = []
+    for edge in edges:
+        point1, point2 = edge
+        point1 = volume.Minv*np.matrix(point1).T
+        point1 = point1.T.tolist()[0]
+        point2 = volume.Minv*np.matrix(point2).T
+        point2 = point2.T.tolist()[0]
+        new_edges.append((point1, point2))
+    edges = new_edges
+else:
+    edges = []
+    for i in range(6):
+        p1 = (math.sin(math.pi/3*i)*volume.a, math.cos(math.pi/3*i)*volume.a, -0.5*volume.c)
+        p2 = (math.sin(math.pi/3*(i+1))*volume.a, math.cos(math.pi/3*(i+1))*volume.a, -0.5*volume.c)
+        edges.append((p1,p2))
+        p3 = (math.sin(math.pi/3*i)*volume.a, math.cos(math.pi/3*i)*volume.a, 0.5*volume.c)
+        p4 = (math.sin(math.pi/3*(i+1))*volume.a, math.cos(math.pi/3*(i+1))*volume.a, 0.5*volume.c)
+        edges.append((p3,p4))
+        p5 = (math.sin(math.pi/3*i)*volume.a, math.cos(math.pi/3*i)*volume.a, -0.5*volume.c)
+        p6 = (math.sin(math.pi/3*i)*volume.a, math.cos(math.pi/3*i)*volume.a, 0.5*volume.c)
+        edges.append((p5,p6))
 
 #box_size = 27.079855
 
@@ -84,10 +97,10 @@ def init():
     for triangles in cavity_triangles:
         normals = get_normals(triangles)
         for triangle in triangles:
-            if all([volume.is_inside(vertex) for vertex in triangle]):
-                for vertex in triangle:
-                    glNormal(*normals[tuple(vertex)])
-                    glVertex(*vertex)
+            #if all([volume.is_inside(vertex) for vertex in triangle]):
+            for vertex in triangle:
+                glNormal(*normals[tuple(vertex)])
+                glVertex(*vertex)
                 
     glEnd()
     glEndList()
@@ -125,17 +138,6 @@ def display():
         glVertex3f(*point1)
         glVertex3f(*point2)
     glEnd()
-    #glBegin(GL_LINES)
-    #for x,y in itertools.product(range(2), range(2)):
-    #    x = x*box_size-box_size/2
-    #    y = y*box_size-box_size/2
-    #    glVertex(x,y,-box_size/2)
-    #    glVertex(x,y, box_size/2)
-    #    glVertex(x,-box_size/2,y)
-    #    glVertex(x, box_size/2,y)
-    #    glVertex(-box_size/2,x,y)
-    #    glVertex( box_size/2,x,y)
-    #glEnd()
     glEnable(GL_LIGHTING)
     glutSwapBuffers()
 

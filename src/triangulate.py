@@ -310,6 +310,8 @@ def polygonise(grid, position, isolevel=0):
     None will be returned if the grid cell is either totally above
     of totally below the isolevel.
     '''
+    global edge_table
+    global triangle_table
     
     x, y, z = position
     cell = [[], []]
@@ -317,8 +319,6 @@ def polygonise(grid, position, isolevel=0):
         cell[0].append((i+x, j+y, k+z))
         cell[1].append(grid[i+x][j+y][k+z])
     
-    global edge_table
-    global triangle_table
     vertlist = [False]*12
 
     # Determine the index into the edge table which

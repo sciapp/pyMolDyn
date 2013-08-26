@@ -5,6 +5,7 @@ import itertools
 import sys
 import numpy as np
 import numpy.linalg as la
+import h5py
 
 from triangulate import triangulate
 
@@ -28,7 +29,7 @@ class HexagonalVolume:
         self.side_lengths = [2*self.a*sin(pi/3), 2*self.a, self.c]
         print "side lengths:", self.side_lengths
         
-        print "<<<",self.get_equivalent_point((0.44,0,0))
+        self.volume = 3**0.5*self.a*self.a*self.c/2
 
     def is_inside(self, point):
         '''
@@ -63,12 +64,15 @@ class HexagonalVolume:
             projected_point = (projection_matrix * np.matrix(equivalent_point).T)
             scaled_projected_point = np.array(projected_point.flat) / translation_vector_lengths
             max_index = np.argmax(np.abs(scaled_projected_point))
-            if scaled_projected_point[max_index] > 0.5:
+            if abs(scaled_projected_point[max_index]) > 0.5:
                 may_be_outside = True
                 equivalent_point -= ceil(scaled_projected_point[max_index]-0.5)*translation_vector_lengths[max_index]*translation_vectors[max_index]
             else:
                 may_be_outside = False
         return tuple(equivalent_point)
+        
+    def __repr__(self):
+        return "HEXAGONAL a=%f c=%f" % (self.a, self.c)
 
 class TriclinicVolume:
     def __init__(self, a, b, c, alpha, beta, gamma):
@@ -95,9 +99,12 @@ class TriclinicVolume:
                 min_point[l] = min(min_point[l], point[l])
                 max_point[l] = max(max_point[l], point[l])
         self.side_lengths = [d-c for c,d in zip(min_point, max_point)]
+        self.volume = V*self.a*self.b*self.c
+        
         #self.translation_vectors = [(a, 0, 0),
         #                            (b*cos(gamma), b*sin(gamma), 0),
         #                            (c*cos(beta), c*(cos(alpha)-cos(beta)*cos(gamma))/sin(gamma), c*V/sin(gamma))]
+        
     def is_inside(self, point):
         fractional_point = self.M*np.matrix(point).T
         return all((-0.5 < float(c) < 0.5 for c in fractional_point))
@@ -110,6 +117,9 @@ class TriclinicVolume:
         new_point = self.Minv*np.matrix(fractional_point).T
         new_point = tuple(new_point.T.tolist()[0])
         return new_point
+        
+    def __repr__(self):
+        return "TRICLINIC a=%f b=%f c=%f alpha=%f beta=%f gamma=%f" % (self.a, self.b, self.c, self.alpha, self.beta, self.gamma)
 
 class MonoclinicVolume(TriclinicVolume):
     def __init__(self, a, b, c, beta):
@@ -117,6 +127,8 @@ class MonoclinicVolume(TriclinicVolume):
         gamma = pi/2
         TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
         
+    def __repr__(self):
+        return "MONOCLINIC a=%f b=%f c=%f beta=%f" % (self.a, self.b, self.c, self.beta)
         
 class OrthorhombicVolume(TriclinicVolume):
     def __init__(self, a, b, c):
@@ -125,6 +137,9 @@ class OrthorhombicVolume(TriclinicVolume):
         gamma = pi/2
         TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
         
+    def __repr__(self):
+        return "ORTHORHOMBIC a=%f b=%f c=%f" % (self.a, self.b, self.c)
+        
 class TetragonalVolume(TriclinicVolume):
     def __init__(self, a, c):
         b = a
@@ -132,6 +147,9 @@ class TetragonalVolume(TriclinicVolume):
         beta = pi/2
         gamma = pi/2
         TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
+        
+    def __repr__(self):
+        return "TETRAGONAL a=%f c=%f" % (self.a, self.c)
 
 class RhombohedralVolume(TriclinicVolume):
     def __init__(self, a, alpha):
@@ -141,6 +159,9 @@ class RhombohedralVolume(TriclinicVolume):
         gamma = alpha
         TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
         
+    def __repr__(self):
+        return "RHOMBOHEDRAL a=%f alpha=%f" % (self.a, self.alpha)
+        
 class CubicVolume(TriclinicVolume):
     def __init__(self, a):
         b = a
@@ -149,8 +170,31 @@ class CubicVolume(TriclinicVolume):
         beta = pi/2
         gamma = pi/2
         TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
+        
+    def __repr__(self):
+        return "CUBIC a=%f" % self.a
 
-class Discretization:
+class DiscretizationCache(object):
+    def __init__(self, filename):
+        self.file = h5py.File(filename, 'a')
+        if '/discretizations' not in self.file:
+            self.file.create_group('/discretizations')
+    def get_discretization(self, volume, d_max):
+        discretization_repr = repr(volume) + " d_max=%d" %d_max
+        print discretization_repr
+        if discretization_repr in self.file['/discretizations']:
+            stored_discretization = self.file['/discretizations/'+discretization_repr]
+            grid = np.array(stored_discretization)
+            discretization = Discretization(volume, d_max, grid)
+        else:
+            discretization = Discretization(volume, d_max)
+            grid = discretization.grid
+            self.file['/discretizations/'+discretization_repr] = grid
+            self.file.flush()
+        return discretization
+        
+
+class Discretization(object):
     '''
     Instances of this class represent a discrete version of a volume.
     
@@ -162,10 +206,10 @@ class Discretization:
         (s_tilde) are calculated. (After this point, the transformation 
         functions discrete_to_continuous(p) and continuous_to_discrete(p) can be
         used.)
-     3. An integer grid is created and for each discrete point, it stores either
-        0 if the point is inside the volume or 1 if it is outside the volume.
-     4. The volume's translation vectors are discretized (translation_vectors)
+     3. The volume's translation vectors are discretized (translation_vectors)
         and combinations of these are calculated (combined_translation_vectors).
+     4. An integer grid is created and for each discrete point, it stores either
+        0 if the point is inside the volume or 1 if it is outside the volume.
      5. In the grid, for each point which is inside the volume (value = 0) all 
         points created by addition of a combined translation vector are defined
         to be outside of the volume (value = 1), except for the point itself.
@@ -181,7 +225,7 @@ class Discretization:
         equivalent point inside the volume.
          
     '''
-    def __init__(self, volume, d_max):
+    def __init__(self, volume, d_max, grid=None):
         # step 1
         self.d_max = d_max
         self.volume = volume
@@ -200,49 +244,52 @@ class Discretization:
         print "d", self.d
         self.s_tilde = [(self.d[i]-1)*self.s_step for i in dimensions]
         
-        #step 3
-        self.grid = np.zeros(self.d, dtype=np.int8)
-        for p in itertools.product(*map(range, self.d)):
-            point = self.discrete_to_continuous(p)
-            if self.volume.is_inside(point):
-                self.grid[p] = 0
-            else:
-                self.grid[p] = 1
-
-        # step 4
+        # step 3
         self.translation_vectors = [[int(floor(c/self.s_step+0.5)) for c in v] for v in self.volume.translation_vectors]
         self.combined_translation_vectors = [[sum([v[0][j]*v[1] for v in zip(self.translation_vectors, i)]) for j in dimensions] for i in itertools.product((-1, 0, 1), repeat=dimension) if any(i)]
         
-        # step 5
-        for p in itertools.product(*map(range, self.d)):
-            equivalent_points = [[p[i]+v[i] for i in dimensions] for v in self.combined_translation_vectors]
-            valid_equivalent_points = [tuple(point) for point in equivalent_points if all([0 <= point[i] <= self.d[i]-1 for i in dimensions])]
-            if self.grid[p] == 0:
-                equivalent_points_inside = [point for point in valid_equivalent_points if self.grid[point] == 0]
-                for point in equivalent_points_inside:
-                    self.grid[point] = 1
-
-        # step 6 & 7
-        for p in itertools.product(*map(range, self.d)):
-            equivalent_points = [([p[i]+v[i] for i in dimensions], vi) for vi, v in enumerate(self.combined_translation_vectors)]
-            valid_equivalent_points = [(tuple(point), vi) for point, vi in equivalent_points if all([0 <= point[i] <= self.d[i]-1 for i in dimensions])]
-            if self.grid[p] == 1:
-                equivalent_points_inside = [(point, vi) for point, vi in valid_equivalent_points if self.grid[point] == 0]
-                if not equivalent_points_inside:
-                    nearest_to_center = p
-                    nearest_to_center_index = -1 # -1 -> -(-1+1) == 0
-                    min_d_center = sum([(p[i] - self.d[i]/2)*(p[i] - self.d[i]/2) for i in dimensions])
-                    for p2,vi in valid_equivalent_points:
-                        d_center = sum([(p2[i] - self.d[i]/2)*(p2[i] - self.d[i]/2) for i in dimensions])
-                        if d_center < min_d_center:
-                            min_d_center = d_center
-                            nearest_to_center = p2
-                            nearest_to_center_index = vi
-                    self.grid[nearest_to_center] = 0
-                    self.grid[p] = -(nearest_to_center_index+1)
+        if grid is not None:
+            self.grid = grid
+        else:
+        #step 4
+            self.grid = np.zeros(self.d, dtype=np.int8)
+            for p in itertools.product(*map(range, self.d)):
+                point = self.discrete_to_continuous(p)
+                if self.volume.is_inside(point):
+                    self.grid[p] = 0
                 else:
-                    combined_translation_vector_index = equivalent_points_inside[0][1]
-                    self.grid[p] = -(combined_translation_vector_index+1)
+                    self.grid[p] = 1
+            
+            # step 5
+            for p in itertools.product(*map(range, self.d)):
+                equivalent_points = [[p[i]+v[i] for i in dimensions] for v in self.combined_translation_vectors]
+                valid_equivalent_points = [tuple(point) for point in equivalent_points if all([0 <= point[i] <= self.d[i]-1 for i in dimensions])]
+                if self.grid[p] == 0:
+                    equivalent_points_inside = [point for point in valid_equivalent_points if self.grid[point] == 0]
+                    for point in equivalent_points_inside:
+                        self.grid[point] = 1
+
+            # step 6 & 7
+            for p in itertools.product(*map(range, self.d)):
+                equivalent_points = [([p[i]+v[i] for i in dimensions], vi) for vi, v in enumerate(self.combined_translation_vectors)]
+                valid_equivalent_points = [(tuple(point), vi) for point, vi in equivalent_points if all([0 <= point[i] <= self.d[i]-1 for i in dimensions])]
+                if self.grid[p] == 1:
+                    equivalent_points_inside = [(point, vi) for point, vi in valid_equivalent_points if self.grid[point] == 0]
+                    if not equivalent_points_inside:
+                        nearest_to_center = p
+                        nearest_to_center_index = -1 # -1 -> -(-1+1) == 0
+                        min_d_center = sum([(p[i] - self.d[i]/2)*(p[i] - self.d[i]/2) for i in dimensions])
+                        for p2,vi in valid_equivalent_points:
+                            d_center = sum([(p2[i] - self.d[i]/2)*(p2[i] - self.d[i]/2) for i in dimensions])
+                            if d_center < min_d_center:
+                                min_d_center = d_center
+                                nearest_to_center = p2
+                                nearest_to_center_index = vi
+                        self.grid[nearest_to_center] = 0
+                        self.grid[p] = -(nearest_to_center_index+1)
+                    else:
+                        combined_translation_vector_index = equivalent_points_inside[0][1]
+                        self.grid[p] = -(combined_translation_vector_index+1)
         print "translation vectors", self.translation_vectors
 
     def get_direct_neighbors(self, point):
@@ -285,6 +332,9 @@ class Discretization:
         Transforms a point from discrete to continuous coordinates.
         '''
         return tuple([point[k]*self.s_step-self.s_tilde[k]/2 for k in dimensions])
+        
+    def __repr__(self):
+        discretization_repr = repr(self.volume) + " d_max=%d" % self.d_max
 
 class Atoms:
     '''
@@ -580,40 +630,47 @@ class CavityCalculation:
         domain_triangles = []
         step = (self.domain_calculation.discretization.s_step,)*3
         offset = self.domain_calculation.discretization.discrete_to_continuous((0, 0, 0))
-        np.save("example_grid_192.npy", self.grid3 < 0)
-        print "step", step
-        print "offset", offset
+        #np.save("example_grid_192.npy", self.grid3 < 0)
+        #print "step", step
+        #print "offset", offset
         domain_triangles.append(triangulate(self.grid3 < 0, step, offset))
         return domain_triangles
 
 if __name__ == "__main__":
     # xyz/structure_c.xyz
     #box_size = 27.079855
-    with open("xyz/traject_200.xyz") as xyzfile:
-        xyzlines = xyzfile.readlines()
-        num_atoms = int(xyzlines[0])
-        comment = xyzlines[1]
-        atom_lines = xyzlines[2:2+num_atoms]
-        atom_positions = [map(float, atom_line.split()[1:]) for atom_line in atom_lines]
+    import pybel
 
-    #volume = CubicVolume(box_size)
-    #volume = HexagonalVolume(0.75,0.5)
-    #volume = CubicVolume(1.5)
-    volume = TriclinicVolume(30.639, 30.639, 22.612, pi/2, pi/2, pi/3)
+    for molecule in pybel.readfile("xyz", "xyz/hexagonal.xyz"):
+        atoms = molecule.atoms
+        num_atoms = len(atoms)
+        atom_positions = [atom.coords for atom in atoms]
+        break
+    #with open("xyz/traject_200.xyz") as xyzfile:
+    #    xyzlines = xyzfile.readlines()
+    #    num_atoms = int(xyzlines[0])
+    #    comment = xyzlines[1]
+    #    atom_lines = xyzlines[2:2+num_atoms]
+    #    atom_positions = [map(float, atom_line.split()[1:]) for atom_line in atom_lines]
+
+
+    volume = HexagonalVolume(17.68943, 22.61158)
+    
     print num_atoms,"atoms"
     for atom_index in range(num_atoms):
         atom_positions[atom_index] = volume.get_equivalent_point(atom_positions[atom_index])
     atoms = Atoms(atom_positions, [2.8]*num_atoms)
     print "Volume discretization..."
-    discretization = Discretization(volume, 192)
+    discratization_cache = DiscretizationCache('cache.hdf5')
+    discretization = discratization_cache.get_discretization(volume, 192)
     print "Atom discretization..."
     atom_discretization = AtomDiscretization(atoms, discretization)
     print "Cavity domain calculation..."
     domain_calculation = DomainCalculation(discretization, atom_discretization)
-    #triangles = domain_calculation.triangles()
-    #np.save("domain_triangles_traject200_192_13.npy", triangles)
+    triangles = domain_calculation.triangles()
+    np.save("domain_triangles_hexagonal_192_19.npy", triangles)
     print "Cavity calculation..."
     cavity_calculation = CavityCalculation(domain_calculation)
     print "Triangle calculation..."
     triangles = cavity_calculation.triangles()
-    np.save("cavity_triangles_traject200_192_13.npy", triangles)
+    np.save("cavity_triangles_hexagonal_192_19.npy", triangles)
