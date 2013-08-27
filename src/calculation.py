@@ -1,10 +1,53 @@
+'''
+This module allows the analysis of surface-based molecular cavities in various 
+volumes. To do so, a volume and a list of atom positions and their cutoff radii
+is required. The following example shows reading the first frame of a ``xyz`` 
+file (using the ``pybel`` module), defining a hexagonal volume and moving all 
+atoms into this volume.
+
+.. code-block:: python
+   :emphasize-lines: 7,10
+   
+   import pybel
+   
+   atoms = pybel.readfile("xyz", "hexagonal.xyz").next().atoms
+   num_atoms = len(atoms)
+   atom_positions = [atom.coords for atom in atoms]
+
+   volume = volumes.HexagonalVolume(17.68943, 22.61158)
+   for atom_index in range(num_atoms):
+       atom_positions[atom_index] = volume.get_equivalent_point(atom_positions[atom_index])
+   atoms = Atoms(atom_positions, [2.8]*num_atoms)
+   
+After this, a discretization of the volume is needed. This module supports
+caching of these with the ``DiscretizationCache`` class.
+
+.. code-block:: python
+   
+   discratization_cache = DiscretizationCache('cache.hdf5')
+   discretization = discratization_cache.get_discretization(volume, 192)
+   
+Using this ``discretization`` and the ``Atoms`` object created above, the atom
+positions and their cutoff radii are also discretized.
+
+.. code-block:: python
+   
+   atom_discretization = AtomDiscretization(atoms, discretization)
+   
+With these objections created, all preparations are complete and the domain and
+cavity calculation can be done:
+
+.. code-block:: python
+   
+   domain_calculation = DomainCalculation(discretization, atom_discretization)
+   cavity_calculation = CavityCalculation(domain_calculation)
+
+Author: Florian Rhiem <f.rhiem@fz-juelich.de>
+'''
 from math import ceil, floor, sin, cos, pi
-cot = lambda alpha: cos(alpha)/sin(alpha)
-import numpy as np
 import itertools
 import sys
 import numpy as np
-import numpy.linalg as la
 import h5py
 
 from triangulate import triangulate
@@ -12,174 +55,24 @@ from triangulate import triangulate
 dimension = 3
 dimensions = range(dimension)
 
-class HexagonalVolume:
-    '''
-    A hexagonal volume centered in the origin with a side length of a (for
-    the 6 individual outer sides) and a height of c.
-    '''
-    def __init__(self, a, c):
-        self.a = float(a)
-        self.c = float(c)
-        f = 2*self.a*sin(pi/3)
-        self.translation_vectors = [(cos(pi*i/3)*f, sin(pi*i/3)*f, 0) for i in range(2)] + [(0, 0, self.c)]
-        # x = [sin(pi/3+i*pi/3)*self.a for i in range(6)]*2
-        # y = [cos(pi/3+i*pi/3)*self.a for i in range(6)]*2
-        # z = [-self.c/2]*6 + [self.c/2]*6
-        # self.side_lengths = [max(c)-min(c) for c in (x,y,z)]
-        self.side_lengths = [2*self.a*sin(pi/3), 2*self.a, self.c]
-        print "side lengths:", self.side_lengths
-        
-        self.volume = 3**0.5*self.a*self.a*self.c/2
-
-    def is_inside(self, point):
-        '''
-        Returns True if point is inside of the volume, False otherwise.
-        ''' 
-        x,y,z = point
-        ax = abs(x)
-        ay = abs(y)
-        az = abs(z)
-        if az > self.c/2:
-            return False
-        if ax > sin(pi/3)*self.a:
-            return False
-        if ay > self.a:
-            return False
-        if ay > self.a/2 and ay > self.a - ax*cot(pi/3):
-            return False
-        return True
-        
-    def get_equivalent_point(self, point):
-        equivalent_point = np.array(point)
-        translation_vectors = np.array(self.translation_vectors)
-        translation_vectors = np.append(translation_vectors, [translation_vectors[1]-translation_vectors[0]])
-        translation_vectors.shape = (4, 3)
-        translation_vector_lengths = np.array([la.norm(v) for v in translation_vectors])
-        for i, translation_vector_length in enumerate(translation_vector_lengths):
-            translation_vectors[i] /= translation_vector_length
-        projection_matrix = np.matrix(translation_vectors)
-        
-        may_be_outside = True
-        while may_be_outside:
-            projected_point = (projection_matrix * np.matrix(equivalent_point).T)
-            scaled_projected_point = np.array(projected_point.flat) / translation_vector_lengths
-            max_index = np.argmax(np.abs(scaled_projected_point))
-            if abs(scaled_projected_point[max_index]) > 0.5:
-                may_be_outside = True
-                equivalent_point -= ceil(scaled_projected_point[max_index]-0.5)*translation_vector_lengths[max_index]*translation_vectors[max_index]
-            else:
-                may_be_outside = False
-        return tuple(equivalent_point)
-        
-    def __repr__(self):
-        return "HEXAGONAL a=%f c=%f" % (self.a, self.c)
-
-class TriclinicVolume:
-    def __init__(self, a, b, c, alpha, beta, gamma):
-        self.a = a
-        self.b = b
-        self.c = c
-        self.alpha = alpha
-        self.beta = beta
-        self.gamma = gamma
-        V = (1-cos(alpha)**2-cos(beta)**2-cos(gamma)**2+2*cos(alpha)*cos(beta)*cos(gamma))**0.5
-        # cartesian-to-fractional-Matrix
-        self.M = np.matrix([[1/a, 1/a * (-cos(gamma)/sin(gamma)), 1/a * (cos(alpha)*cos(gamma)-cos(beta))/(V*sin(gamma))],
-                            [  0, 1/b *             1/sin(gamma), 1/b * (cos(beta)*cos(gamma)-cos(alpha))/(V*sin(gamma))],
-                            [  0,                              0, 1/c * sin(gamma)/V]])
-        Minv = la.inv(self.M)
-        self.Minv = Minv
-        self.translation_vectors = [tuple(Minv.T[i].tolist()[0]) for i in range(3)]
-        min_point = [float('inf')]*3
-        max_point = [float('-inf')]*3
-        for i, j, k in itertools.product((-0.5,0,0.5),repeat=3):
-            point = Minv*np.matrix((i,j,k)).T
-            point = point.T.tolist()[0]
-            for l in range(3):
-                min_point[l] = min(min_point[l], point[l])
-                max_point[l] = max(max_point[l], point[l])
-        self.side_lengths = [d-c for c,d in zip(min_point, max_point)]
-        self.volume = V*self.a*self.b*self.c
-        
-        #self.translation_vectors = [(a, 0, 0),
-        #                            (b*cos(gamma), b*sin(gamma), 0),
-        #                            (c*cos(beta), c*(cos(alpha)-cos(beta)*cos(gamma))/sin(gamma), c*V/sin(gamma))]
-        
-    def is_inside(self, point):
-        fractional_point = self.M*np.matrix(point).T
-        return all((-0.5 < float(c) < 0.5 for c in fractional_point))
-        
-    def get_equivalent_point(self, point):
-        fractional_point = self.M*np.matrix(point).T
-        fractional_point = fractional_point.T.tolist()[0]
-        for i in range(3):
-            fractional_point[i] -= ceil(fractional_point[i]-0.5)
-        new_point = self.Minv*np.matrix(fractional_point).T
-        new_point = tuple(new_point.T.tolist()[0])
-        return new_point
-        
-    def __repr__(self):
-        return "TRICLINIC a=%f b=%f c=%f alpha=%f beta=%f gamma=%f" % (self.a, self.b, self.c, self.alpha, self.beta, self.gamma)
-
-class MonoclinicVolume(TriclinicVolume):
-    def __init__(self, a, b, c, beta):
-        alpha = pi/2
-        gamma = pi/2
-        TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
-        
-    def __repr__(self):
-        return "MONOCLINIC a=%f b=%f c=%f beta=%f" % (self.a, self.b, self.c, self.beta)
-        
-class OrthorhombicVolume(TriclinicVolume):
-    def __init__(self, a, b, c):
-        alpha = pi/2
-        beta = pi/2
-        gamma = pi/2
-        TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
-        
-    def __repr__(self):
-        return "ORTHORHOMBIC a=%f b=%f c=%f" % (self.a, self.b, self.c)
-        
-class TetragonalVolume(TriclinicVolume):
-    def __init__(self, a, c):
-        b = a
-        alpha = pi/2
-        beta = pi/2
-        gamma = pi/2
-        TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
-        
-    def __repr__(self):
-        return "TETRAGONAL a=%f c=%f" % (self.a, self.c)
-
-class RhombohedralVolume(TriclinicVolume):
-    def __init__(self, a, alpha):
-        b = a
-        c = a
-        beta = alpha
-        gamma = alpha
-        TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
-        
-    def __repr__(self):
-        return "RHOMBOHEDRAL a=%f alpha=%f" % (self.a, self.alpha)
-        
-class CubicVolume(TriclinicVolume):
-    def __init__(self, a):
-        b = a
-        c = a
-        alpha = pi/2
-        beta = pi/2
-        gamma = pi/2
-        TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
-        
-    def __repr__(self):
-        return "CUBIC a=%f" % self.a
+import volumes
 
 class DiscretizationCache(object):
+    '''
+    Instances of this class use a hdf5-formatted file as a cache for volume
+    discretizations.
+    '''
+    
     def __init__(self, filename):
         self.file = h5py.File(filename, 'a')
         if '/discretizations' not in self.file:
             self.file.create_group('/discretizations')
+            
     def get_discretization(self, volume, d_max):
+        '''
+        Return a cached discretization are generate a new one, store it in the
+        cache file and then return it.
+        '''
         discretization_repr = repr(volume) + " d_max=%d" %d_max
         print discretization_repr
         if discretization_repr in self.file['/discretizations']:
@@ -639,6 +532,15 @@ class CavityCalculation:
 if __name__ == "__main__":
     # xyz/structure_c.xyz
     #box_size = 27.079855
+    
+    
+    #with open("xyz/traject_200.xyz") as xyzfile:
+    #    xyzlines = xyzfile.readlines()
+    #    num_atoms = int(xyzlines[0])
+    #    comment = xyzlines[1]
+    #    atom_lines = xyzlines[2:2+num_atoms]
+    #    atom_positions = [map(float, atom_line.split()[1:]) for atom_line in atom_lines]
+    
     import pybel
 
     for molecule in pybel.readfile("xyz", "xyz/hexagonal.xyz"):
@@ -646,15 +548,8 @@ if __name__ == "__main__":
         num_atoms = len(atoms)
         atom_positions = [atom.coords for atom in atoms]
         break
-    #with open("xyz/traject_200.xyz") as xyzfile:
-    #    xyzlines = xyzfile.readlines()
-    #    num_atoms = int(xyzlines[0])
-    #    comment = xyzlines[1]
-    #    atom_lines = xyzlines[2:2+num_atoms]
-    #    atom_positions = [map(float, atom_line.split()[1:]) for atom_line in atom_lines]
 
-
-    volume = HexagonalVolume(17.68943, 22.61158)
+    volume = volumes.HexagonalVolume(17.68943, 22.61158)
     
     print num_atoms,"atoms"
     for atom_index in range(num_atoms):
@@ -668,9 +563,9 @@ if __name__ == "__main__":
     print "Cavity domain calculation..."
     domain_calculation = DomainCalculation(discretization, atom_discretization)
     triangles = domain_calculation.triangles()
-    np.save("domain_triangles_hexagonal_192_19.npy", triangles)
+    np.save("domain_triangles_hexagonal_192_20.npy", triangles)
     print "Cavity calculation..."
     cavity_calculation = CavityCalculation(domain_calculation)
     print "Triangle calculation..."
     triangles = cavity_calculation.triangles()
-    np.save("cavity_triangles_hexagonal_192_19.npy", triangles)
+    np.save("cavity_triangles_hexagonal_192_20.npy", triangles)

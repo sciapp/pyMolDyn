@@ -383,8 +383,6 @@ def polygonise(grid, position, isolevel=0):
         
     return triangles
 
-
-
 def vertex_interp(isolevel, p1, p2, valp1, valp2):
     '''
     Linearly interpolate the position where an isosurface cuts

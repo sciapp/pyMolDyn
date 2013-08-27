@@ -3,46 +3,24 @@ import math
 import itertools
 import numpy as np
 
-domain_triangles = np.load("domain_triangles_hexagonal_192_19.npy")
-cavity_triangles = np.load("cavity_triangles_hexagonal_192_19.npy")
+domain_triangles = []#np.load("domain_triangles_hexagonal_192_19.npy")
+cavity_triangles = []#np.load("cavity_triangles_hexagonal_192_19.npy")
 import pybel
 
-for molecule in pybel.readfile("xyz", "xyz/hexagonal.xyz"):
+for molecule in pybel.readfile("xyz", "xyz/test.xyz"):
     atoms = molecule.atoms
     num_atoms = len(atoms)
     atom_positions = [atom.coords for atom in atoms]
     break
 
 
-import calculation
+import volumes
 #volume = calculation.TriclinicVolume(30.639, 30.639, 22.612, math.pi/2, math.pi/2, math.pi/3)
-volume = calculation.HexagonalVolume(17.68943, 22.61158)
+volume = volumes.HexagonalVolume(17.68943, 22.61158)
 for atom_index in range(num_atoms):
     atom_positions[atom_index] = volume.get_equivalent_point(atom_positions[atom_index])
 
-if isinstance(volume, calculation.TriclinicVolume):
-    edges = [((-0.5, -0.5, -0.5), (-0.5, -0.5, 0.5)), ((-0.5, -0.5, -0.5), (-0.5, 0.5, -0.5)), ((-0.5, -0.5, -0.5), (0.5, -0.5, -0.5)), ((-0.5, -0.5, 0.5), (-0.5, 0.5, 0.5)), ((-0.5, -0.5, 0.5), (0.5, -0.5, 0.5)), ((-0.5, 0.5, -0.5), (-0.5, 0.5, 0.5)), ((-0.5, 0.5, -0.5), (0.5, 0.5, -0.5)), ((-0.5, 0.5, 0.5), (0.5, 0.5, 0.5)), ((0.5, -0.5, -0.5), (0.5, -0.5, 0.5)), ((0.5, -0.5, -0.5), (0.5, 0.5, -0.5)), ((0.5, -0.5, 0.5), (0.5, 0.5, 0.5)), ((0.5, 0.5, -0.5), (0.5, 0.5, 0.5))]
-    new_edges = []
-    for edge in edges:
-        point1, point2 = edge
-        point1 = volume.Minv*np.matrix(point1).T
-        point1 = point1.T.tolist()[0]
-        point2 = volume.Minv*np.matrix(point2).T
-        point2 = point2.T.tolist()[0]
-        new_edges.append((point1, point2))
-    edges = new_edges
-else:
-    edges = []
-    for i in range(6):
-        p1 = (math.sin(math.pi/3*i)*volume.a, math.cos(math.pi/3*i)*volume.a, -0.5*volume.c)
-        p2 = (math.sin(math.pi/3*(i+1))*volume.a, math.cos(math.pi/3*(i+1))*volume.a, -0.5*volume.c)
-        edges.append((p1,p2))
-        p3 = (math.sin(math.pi/3*i)*volume.a, math.cos(math.pi/3*i)*volume.a, 0.5*volume.c)
-        p4 = (math.sin(math.pi/3*(i+1))*volume.a, math.cos(math.pi/3*(i+1))*volume.a, 0.5*volume.c)
-        edges.append((p3,p4))
-        p5 = (math.sin(math.pi/3*i)*volume.a, math.cos(math.pi/3*i)*volume.a, -0.5*volume.c)
-        p6 = (math.sin(math.pi/3*i)*volume.a, math.cos(math.pi/3*i)*volume.a, 0.5*volume.c)
-        edges.append((p5,p6))
+edges = volume.edges
 
 #box_size = 27.079855
 
@@ -84,7 +62,7 @@ def init():
     gluPerspective(45,1,0.1,400)
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
-    glTranslate(0,0,-100)
+    glTranslate(0,0,-70)
     glEnable(GL_NORMALIZE)
     glEnable(GL_DEPTH_TEST)
     glDisable(GL_CULL_FACE)
@@ -156,7 +134,7 @@ def special(key, x, y):
         glRotate(-5,0,1,0)
 
 glutInit()
-glutInitWindowSize(1000,1000)
+glutInitWindowSize(1200,1200)
 glutCreateWindow("Test")
 init()
 glutDisplayFunc(display)
