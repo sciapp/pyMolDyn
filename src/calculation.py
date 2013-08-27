@@ -24,8 +24,8 @@ caching of these with the ``DiscretizationCache`` class.
 
 .. code-block:: python
    
-   discratization_cache = DiscretizationCache('cache.hdf5')
-   discretization = discratization_cache.get_discretization(volume, 192)
+   discretization_cache = DiscretizationCache('cache.hdf5')
+   discretization = discretization_cache.get_discretization(volume, 192)
    
 Using this ``discretization`` and the ``Atoms`` object created above, the atom
 positions and their cutoff radii are also discretized.
@@ -556,8 +556,8 @@ if __name__ == "__main__":
         atom_positions[atom_index] = volume.get_equivalent_point(atom_positions[atom_index])
     atoms = Atoms(atom_positions, [2.8]*num_atoms)
     print "Volume discretization..."
-    discratization_cache = DiscretizationCache('cache.hdf5')
-    discretization = discratization_cache.get_discretization(volume, 192)
+    discretization_cache = DiscretizationCache('cache.hdf5')
+    discretization = discretization_cache.get_discretization(volume, 192)
     print "Atom discretization..."
     atom_discretization = AtomDiscretization(atoms, discretization)
     print "Cavity domain calculation..."
