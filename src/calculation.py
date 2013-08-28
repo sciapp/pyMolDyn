@@ -144,7 +144,7 @@ class Discretization(object):
         if grid is not None:
             self.grid = grid
         else:
-        #step 4
+            #step 4
             self.grid = np.zeros(self.d, dtype=np.int8)
             for p in itertools.product(*map(range, self.d)):
                 point = self.discrete_to_continuous(p)
@@ -355,6 +355,12 @@ class DomainCalculation:
         return center, surface_points
 
     def triangles(self):
+        # as soon as the fast marching cubes implementation is ready, this 
+        # should be done for each seperate domain (in the specific subcube 
+        # (which has to be calculated in the walk_domain step)) and then the 
+        # domain surface should be calculated, e.g. using
+        # 0.5*sum(map(norm, cross(triangles[:,1]-triangles[:,0], 
+        # triangles[:,2]-triangles[:,0])))
         number_of_domains = len(self.centers)
         print number_of_domains
         domain_triangles = []
@@ -364,7 +370,7 @@ class DomainCalculation:
             #print domain_index
             #grid_value = -(domain_index+1)
             #domain_triangles.append(triangulate(self.grid == grid_value, step, offset))
-        domain_triangles.append(triangulate(self.grid < 0, step, offset))
+        domain_triangles.append(triangulate(self.grid < 0, step, offset,1))
         return domain_triangles
 
 class CavityCalculation:
@@ -520,13 +526,11 @@ class CavityCalculation:
         return sqd
 
     def triangles(self):
+        # See DomainCalculation.triangles() about surface calculation
         domain_triangles = []
         step = (self.domain_calculation.discretization.s_step,)*3
         offset = self.domain_calculation.discretization.discrete_to_continuous((0, 0, 0))
-        #np.save("example_grid_192.npy", self.grid3 < 0)
-        #print "step", step
-        #print "offset", offset
-        domain_triangles.append(triangulate(self.grid3 < 0, step, offset))
+        domain_triangles.append(triangulate(self.grid3 < 0, step, offset,1))
         return domain_triangles
 
 if __name__ == "__main__":
@@ -563,9 +567,9 @@ if __name__ == "__main__":
     print "Cavity domain calculation..."
     domain_calculation = DomainCalculation(discretization, atom_discretization)
     triangles = domain_calculation.triangles()
-    np.save("domain_triangles_hexagonal_192_20.npy", triangles)
+    np.save("domain_triangles_hexagonal_192_21.npy", triangles)
     print "Cavity calculation..."
     cavity_calculation = CavityCalculation(domain_calculation)
     print "Triangle calculation..."
     triangles = cavity_calculation.triangles()
-    np.save("cavity_triangles_hexagonal_192_20.npy", triangles)
+    np.save("cavity_triangles_hexagonal_192_21.npy", triangles)

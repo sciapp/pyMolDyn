@@ -2,140 +2,60 @@ import sys
 import math
 import itertools
 import numpy as np
-
-domain_triangles = []#np.load("domain_triangles_hexagonal_192_19.npy")
-cavity_triangles = []#np.load("cavity_triangles_hexagonal_192_19.npy")
+from OpenGL.GLUT import *
+import gr3
 import pybel
-
-for molecule in pybel.readfile("xyz", "xyz/test.xyz"):
-    atoms = molecule.atoms
-    num_atoms = len(atoms)
-    atom_positions = [atom.coords for atom in atoms]
-    break
-
-
 import volumes
-#volume = calculation.TriclinicVolume(30.639, 30.639, 22.612, math.pi/2, math.pi/2, math.pi/3)
+
 volume = volumes.HexagonalVolume(17.68943, 22.61158)
+
+molecule = pybel.readfile("xyz", "xyz/hexagonal.xyz").next()
+atoms = molecule.atoms
+num_atoms = len(atoms)
+atom_positions = [atom.coords for atom in atoms]
 for atom_index in range(num_atoms):
     atom_positions[atom_index] = volume.get_equivalent_point(atom_positions[atom_index])
 
-edges = volume.edges
-
-#box_size = 27.079855
-
-from OpenGL.GL import *
-from OpenGL.GLU import *
-from OpenGL.GLUT import *
-
-
-def get_normals(triangle_list):
-    normals = {}    # Die verschiedenen Punkte werden als Key verwendet, sodass mit den Punkten direkt die zugehoerige Normale abgefragt werden kann.
-    
-    for i in triangle_list:
-        v1 = (i[1][0] - i[0][0], i[1][1] - i[0][1], i[1][2] - i[0][2])
-        v2 = (i[2][0] - i[0][0], i[2][1] - i[0][1], i[2][2] - i[0][2]) 
-        n = (v1[1]*v2[2] - v1[2]*v2[1], v1[2]*v2[0] - v1[0]*v2[2], v1[0]*v2[1] - v1[1]*v2[0])
-        n_laenge = math.sqrt(n[0]**2 + n[1]**2 + n[2]**2)
-        if n_laenge != 0 :
-            n = (n[0]/n_laenge, n[1]/n_laenge, n[2]/n_laenge)
-        for j in i:
-            j = tuple(j)
-            if not normals.has_key(j):
-                normals[j] = n
-            else:
-                normals[j] = (normals[j][0] + n[0], normals[j][1] + n[1], normals[j][2] + n[2])
-                
-    for i in normals.iterkeys():
-        n = normals[i]
-        n_laenge = math.sqrt(n[0]**2 + n[1]**2 + n[2]**2)
-        if n_laenge != 0 :
-            n = (n[0]/n_laenge, n[1]/n_laenge, n[2]/n_laenge)
-        normals[i] = n
+domain_triangles, domain_normals = np.load("domain_triangles_hexagonal_192_21.npy")[0]
+cavity_triangles, cavity_normals = np.load("cavity_triangles_hexagonal_192_21.npy")[0]
         
-    return normals
-
 def init():
-    global display_list
-    global display_list2
-    glMatrixMode(GL_PROJECTION)
-    gluPerspective(45,1,0.1,400)
-    glMatrixMode(GL_MODELVIEW)
-    glLoadIdentity()
-    glTranslate(0,0,-70)
-    glEnable(GL_NORMALIZE)
-    glEnable(GL_DEPTH_TEST)
-    glDisable(GL_CULL_FACE)
-    glEnable(GL_LIGHTING)
-    glEnable(GL_LIGHT0)
-    glClearColor(0.2,0.2,0.2,1)
-    display_list = glGenLists(1)
-    glNewList(display_list, GL_COMPILE)
-    glBegin(GL_TRIANGLES)
-    for triangles in cavity_triangles:
-        normals = get_normals(triangles)
-        for triangle in triangles:
-            #if all([volume.is_inside(vertex) for vertex in triangle]):
-            for vertex in triangle:
-                glNormal(*normals[tuple(vertex)])
-                glVertex(*vertex)
-                
-    glEnd()
-    glEndList()
-    display_list2 = glGenLists(1)
-    glNewList(display_list2, GL_COMPILE)
-    glBegin(GL_TRIANGLES)
-    for triangles in domain_triangles:
-        normals = get_normals(triangles)
-        for triangle in triangles:
-            for vertex in triangle:
-                glNormal(*normals[tuple(vertex)])
-                glVertex(*vertex)
-                
-    glEnd()
-    glEndList()
+    edges = volume.edges
+    num_edges = len(edges)
+    edge_positions = [edge[0] for edge in edges]
+    edge_directions = [[edge[1][i]-edge[0][i] for i in range(3)] for edge in edges]
+    edge_lengths = [sum([c*c for c in edge])**0.5 for edge in edge_directions]
+    edge_radius = min(edge_lengths)/200
+    gr3.drawcylindermesh(num_edges, edge_positions, edge_directions, [(1,1,1)]*num_edges, [edge_radius]*num_edges, edge_lengths)
+    corners = list(set([tuple(edge[0]) for edge in edges] + [tuple(edge[1]) for edge in edges]))
+    num_corners = len(corners)
+    gr3.drawspheremesh(num_corners, corners, [(1,1,1)]*num_edges, [edge_radius]*num_edges)
+    gr3.drawspheremesh(len(atom_positions), atom_positions, [(1,1,1)]*len(atom_positions), [edge_radius*4]*len(atom_positions))
+    mesh = gr3.createmesh(np.prod(cavity_triangles.shape)/3, cavity_triangles, cavity_normals, [(1,1,1)]*(np.prod(cavity_triangles.shape)/3))
+    gr3.drawmesh(mesh, 1, (0,0,0), (0,0,1), (0,1,0), (0,1,0.5), (1,1,1))
     
 
+rot = 0
 def display():
-    global display_list
-    global display_list2
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-    glColor(1,1,1)
-    if show:
-        glCallList(display_list)
-    else:
-        glCallList(display_list2)
-    glDisable(GL_LIGHTING)
-    glBegin(GL_POINTS)
-    for atom_position in atom_positions:
-        glVertex3f(*atom_position)
-    glEnd()
-    glBegin(GL_LINES)
-    for edge in edges:
-        point1, point2 = edge
-        glVertex3f(*point1)
-        glVertex3f(*point2)
-    glEnd()
-    glEnable(GL_LIGHTING)
+    d = max(volume.side_lengths)*2
+    gr3.cameralookat(d*math.sin(rot),0,d*math.cos(rot), 0,0,0, 0,1,0)
+    gr3.drawimage(0, 1200, 0, 1200, 1200, 1200, gr3.GR3_Drawable.GR3_DRAWABLE_OPENGL)
     glutSwapBuffers()
 
-show = True
+def special(key, x, y):
+    global rot
+    if key == GLUT_KEY_LEFT:
+        rot += math.pi/180*2.5
+    if key == GLUT_KEY_RIGHT:
+        rot -= math.pi/180*2.5
+
 def keyboard(key, x, y):
     if ord(key) == 27:
         sys.exit()
-    if key == 'd':
-        global show
-        show = not show
-
-def special(key, x, y):
-    if key == GLUT_KEY_LEFT:
-        glRotate(5,0,1,0)
-    elif key == GLUT_KEY_RIGHT:
-        glRotate(-5,0,1,0)
 
 glutInit()
 glutInitWindowSize(1200,1200)
-glutCreateWindow("Test")
+glutCreateWindow(repr(volume))
 init()
 glutDisplayFunc(display)
 glutIdleFunc(glutPostRedisplay)

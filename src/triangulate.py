@@ -1,11 +1,17 @@
+'''
+Written in C++ by Paul Bourke
+May 1994
+Modified and ported to Python by Ingo Heimbach
+July 2010
+Modified to calculate normals (as gradients) and use PyPy by Florian Rhiem
+August 2013
+'''
 import itertools
-import numpy as np
-# Written in C++ by Paul Bourke
-# May 1994
-# Modified and ported to Python by Ingo Heimbach
-# July 2010
-# Modified for use with boolean grids by Florian Rhiem
-# July 2013
+import platform
+if platform.python_implementation() == 'PyPy':
+    import numpypy as np
+else:
+    import numpy as np
 
         
 edge_table = (
@@ -300,8 +306,10 @@ triangle_table = (
 (0, 3, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1),
 (-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1))    
 
+cube_edges = ((0,1), (1,2), (2,3), (3,0), (4,5), (5,6), (6,7), (7,4), (0,4), (1,5), (2,6), (3,7))
+cube_vertices = ((0, 0, 0), (0, 0, 1), (0, 1, 1), (0, 1, 0), (1, 0, 0), (1, 0, 1), (1, 1, 1), (1, 1, 0))
 
-def polygonise(grid, position, isolevel=0):
+def polygonise(grid, position, isolevel):
     '''
     Given a grid cell and an isolevel, calculate the triangular
     facets required to represent the isosurface through the cell.
@@ -312,77 +320,90 @@ def polygonise(grid, position, isolevel=0):
     '''
     global edge_table
     global triangle_table
+    global cube_edges
+    global cube_vertices
     
     x, y, z = position
-    cell = [[], []]
-    for i, j, k in [(0, 0, 0), (0, 0, 1), (0, 1, 1), (0, 1, 0), (1, 0, 0), (1, 0, 1), (1, 1, 1), (1, 1, 0)]:
-        cell[0].append((i+x, j+y, k+z))
-        cell[1].append(grid[i+x][j+y][k+z])
+    positions = []
+    values = []
+    for i, j, k in cube_vertices:
+        positions.append((i+x, j+y, k+z))
+        values.append(grid[i+x, j+y, k+z])
     
-    vertlist = [False]*12
 
     # Determine the index into the edge table which
     # tells us which vertices are inside of the surface
     cubeindex = 0
-    if cell[1][0] > isolevel:
-        cubeindex |= 1
-    if cell[1][1] > isolevel:
-        cubeindex |= 2
-    if cell[1][2] > isolevel:
-        cubeindex |= 4
-    if cell[1][3] > isolevel:
-        cubeindex |= 8
-    if cell[1][4] > isolevel:
-        cubeindex |= 16
-    if cell[1][5] > isolevel:
-        cubeindex |= 32
-    if cell[1][6] > isolevel:
-        cubeindex |= 64
-    if cell[1][7] > isolevel:
-        cubeindex |= 128
+    for i, value in enumerate(values):
+        if value < isolevel:
+            cubeindex += 2**i
 
     # Cube is entirely in/out of the surface
     if edge_table[cubeindex] == 0:
-        return None
-
-    # Find the vertices where the surface intersects the cube */
-    if edge_table[cubeindex] & 1:
-        vertlist[0] = vertex_interp(isolevel, cell[0][0], cell[0][1], cell[1][0], cell[1][1])
-    if edge_table[cubeindex] & 2:
-        vertlist[1] = vertex_interp(isolevel, cell[0][1], cell[0][2], cell[1][1], cell[1][2])
-    if edge_table[cubeindex] & 4:
-        vertlist[2] = vertex_interp(isolevel, cell[0][2], cell[0][3], cell[1][2], cell[1][3])
-    if edge_table[cubeindex] & 8:
-        vertlist[3] = vertex_interp(isolevel, cell[0][3], cell[0][0], cell[1][3], cell[1][0])
-    if edge_table[cubeindex] & 16:
-        vertlist[4] = vertex_interp(isolevel, cell[0][4], cell[0][5], cell[1][4], cell[1][5])
-    if edge_table[cubeindex] & 32:
-        vertlist[5] = vertex_interp(isolevel, cell[0][5], cell[0][6], cell[1][5], cell[1][6])
-    if edge_table[cubeindex] & 64:
-        vertlist[6] = vertex_interp(isolevel, cell[0][6], cell[0][7], cell[1][6], cell[1][7])
-    if edge_table[cubeindex] & 128:
-        vertlist[7] = vertex_interp(isolevel, cell[0][7], cell[0][4], cell[1][7], cell[1][4])
-    if edge_table[cubeindex] & 256:
-        vertlist[8] = vertex_interp(isolevel, cell[0][0], cell[0][4], cell[1][0], cell[1][4])
-    if edge_table[cubeindex] & 512:
-        vertlist[9] = vertex_interp(isolevel, cell[0][1], cell[0][5], cell[1][1], cell[1][5])
-    if edge_table[cubeindex] & 1024:
-        vertlist[10] = vertex_interp(isolevel, cell[0][2], cell[0][6], cell[1][2], cell[1][6])
-    if edge_table[cubeindex] & 2048:
-        vertlist[11] = vertex_interp(isolevel, cell[0][3], cell[0][7], cell[1][3], cell[1][7])
+        return [], []
+    
+    corner_normal_needed = [False]*8
+    for i, edge in enumerate(cube_edges):
+        if edge_table[cubeindex] & 2**i:
+            corner_normal_needed[edge[0]] = True
+            corner_normal_needed[edge[1]] = True
+            
+    corner_normals = [False]*8
+    for i, position in enumerate(positions):
+        if corner_normal_needed[i]:
+            if 0 < position[0] < grid.shape[0]-1:
+                nx = float(grid[position[0]-1, position[1], position[2]])-float(grid[position[0]+1, position[1], position[2]])
+            elif position[0] == 0:
+                nx = 2*(float(grid[position[0], position[1], position[2]])-float(grid[position[0]+1, position[1], position[2]]))
+            else:
+                nx = 2*(float(grid[position[0]-1, position[1], position[2]])-float(grid[position[0], position[1], position[2]]))
+                
+            if 0 < position[1] < grid.shape[1]-1:
+                ny = float(grid[position[0], position[1]-1, position[2]])-float(grid[position[0], position[1]+1, position[2]])
+            elif position[1] == 0:
+                ny = 2*(float(grid[position[0], position[1], position[2]])-float(grid[position[0], position[1]+1, position[2]]))
+            else:
+                ny = 2*(float(grid[position[0], position[1]-1, position[2]])-float(grid[position[0], position[1], position[2]]))
+                
+            if 0 < position[2] < grid.shape[2]-1:
+                nz = float(grid[position[0], position[1], position[2]-1])-float(grid[position[0], position[1], position[2]+1])
+            elif position[2] == 0:
+                nz = 2*(float(grid[position[0], position[1], position[2]])-float(grid[position[0], position[1], position[2]+1]))
+            else:
+                nz = 2*(float(grid[position[0], position[1], position[2]-1])-float(grid[position[0], position[1], position[2]]))
+            
+            l = nx*nx+ny*ny+nz*nz
+            if l > 0:
+                l = l**0.5
+                corner_normals[i] = (nx/l, ny/l, nz/l)
+            else:
+                corner_normals[i] = (0, 0, 0)
+                
+            
+    vertices = [False]*12
+    normals = [False]*12
+    for i, edge in enumerate(cube_edges):
+        if edge_table[cubeindex] & 2**i:
+            vertices[i] = vertex_interp(isolevel, positions[edge[0]], positions[edge[1]], values[edge[0]], values[edge[1]])
+            normals[i] = vertex_interp(isolevel, corner_normals[edge[0]], corner_normals[edge[1]], values[edge[0]], values[edge[1]])
+            l = sum([c*c for c in normals[i]])**0.5
+            normals[i] = (normals[i][0]/l, normals[i][1]/l, normals[i][2]/l)
     
 
     # Create the triangle
     triangles = []
+    triangles_normals = []
     i = 0
     while triangle_table[cubeindex][i] != -1:
-        triangle = (vertlist[triangle_table[cubeindex][i]], vertlist[triangle_table[cubeindex][i+1]], vertlist[triangle_table[cubeindex][i+2]])
+        triangle = (vertices[triangle_table[cubeindex][i]], vertices[triangle_table[cubeindex][i+1]], vertices[triangle_table[cubeindex][i+2]])
+        triangle_normals = (normals[triangle_table[cubeindex][i]], normals[triangle_table[cubeindex][i+1]], normals[triangle_table[cubeindex][i+2]])
         if triangle[0] != triangle[1] and triangle[0] != triangle[2] and triangle[1] != triangle[2]:
             triangles.append(triangle)
+            triangles_normals.append(triangle_normals)
         i += 3
         
-    return triangles
-
+    return triangles, triangles_normals
+    
 def vertex_interp(isolevel, p1, p2, valp1, valp2):
     '''
     Linearly interpolate the position where an isosurface cuts
@@ -396,13 +417,13 @@ def vertex_interp(isolevel, p1, p2, valp1, valp2):
         return p2
     if abs(valp1-valp2) < 0.00001:
         return p1
-    mu = 1. * (isolevel - valp1) / (valp2 - valp1)
+    mu = 1.0 * (isolevel - valp1) / (valp2 - valp1)
     p = (p1[0] + mu * (p2[0] - p1[0]), p1[1] + mu * (p2[1] - p1[1]), p1[2] + mu * (p2[2] - p1[2]))
-
     return p
     
-def triangulate(grid, step, offset):
+def triangulate(grid, step, offset, isolevel):
     triangles = []
+    normals = []
     views = []
     for x, y, z in itertools.product(*map(xrange, (3, 3, 3))):
         view = grid[x:grid.shape[0]-2+x, y:grid.shape[1]-2+y, z:grid.shape[2]-2+z]
@@ -411,21 +432,14 @@ def triangulate(grid, step, offset):
     grid[:,:,:] = -127
     grid[1:-1, 1:-1, 1:-1] = sum(views)
     for x, y, z in itertools.product(*[xrange(i-1) for i in grid.shape]):
-        subcube_triangles = polygonise(grid, (x,y,z), 0)
+        subcube_triangles, subcube_normals = polygonise(grid, (x,y,z), isolevel)
         if subcube_triangles:
             for triangle in subcube_triangles:
                 triangles.append(triangle)
+            for triangle_normals in subcube_normals:
+                normals.append(triangle_normals)
     if triangles:
-        return np.array(triangles)*step+offset
+        return np.array(triangles)*step+offset, np.array(normals)
     else:
-        return []
+        return [], []
 
-if __name__ == "__main__":
-    grid = np.zeros((20, 20, 20))
-    grid[8:12, 8:12, 8:12] = 1
-    import time
-    start_time = time.time()
-    #step = (self.domain_calculation.discretization.s_step,)*3
-    #offset = self.domain_calculation.discretization.discrete_to_continuous((0,0,0))
-    triangulate(grid < 0, (0.05, 0.05, 0.05), (-0.5, -0.5, -0.5))
-    print time.time()-start_time
