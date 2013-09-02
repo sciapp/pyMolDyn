@@ -48,9 +48,10 @@ from math import ceil, floor, sin, cos, pi
 import itertools
 import sys
 import numpy as np
+import numpy.linalg as la
 import h5py
 
-from triangulate import triangulate
+from cTriangulate import triangulate
 
 dimension = 3
 dimensions = range(dimension)
@@ -366,11 +367,33 @@ class DomainCalculation:
         domain_triangles = []
         step = (self.discretization.s_step,)*3
         offset = self.discretization.discrete_to_continuous((0, 0, 0))
-        #for domain_index in range(number_of_domains):
-            #print domain_index
-            #grid_value = -(domain_index+1)
-            #domain_triangles.append(triangulate(self.grid == grid_value, step, offset))
-        domain_triangles.append(triangulate(self.grid < 0, step, offset,1))
+        for domain_index in range(number_of_domains):
+            print "Calculating triangles for domain", domain_index
+            grid_value = -(domain_index+1)
+            grid = (self.grid == grid_value)
+            views = []
+            for x, y, z in itertools.product(*map(xrange, (3, 3, 3))):
+                view = grid[x:grid.shape[0]-2+x, y:grid.shape[1]-2+y, z:grid.shape[2]-2+z]
+                views.append(view)
+            grid = np.zeros(grid.shape, np.uint16)
+            grid[:,:,:] = 0
+            grid[1:-1, 1:-1, 1:-1] = sum(views)+100
+            domain_triangles.append(triangulate(grid, step, offset, 101))
+            domain_surface_area = 0
+            for domain_triangle in domain_triangles[-1][0]:
+                any_outside = False
+                for vertex in domain_triangle:
+                    discrete_vertex = discretization.continuous_to_discrete(vertex)
+                    if discretization.grid[discrete_vertex] != 0:
+                        any_outside = True
+                        break
+                if not any_outside:
+                    v1, v2, v3 = domain_triangle
+                    a = v2-v1
+                    b = v3-v1
+                    triangle_surface_area = la.norm(np.cross(a,b))*0.5
+                    domain_surface_area += triangle_surface_area
+            print domain_surface_area
         return domain_triangles
 
 class CavityCalculation:
@@ -498,7 +521,7 @@ class CavityCalculation:
                     neighbors = neighbors | multicavity
                     multicavities.remove(multicavity)
             multicavities.append(neighbors)
-        
+        self.multicavities = multicavities
         self.multicavity_volumes = []
         for multicavity in multicavities:
             self.multicavity_volumes.append(sum(self.cavity_volumes[cavity_index] for cavity_index in multicavity))
@@ -527,11 +550,38 @@ class CavityCalculation:
 
     def triangles(self):
         # See DomainCalculation.triangles() about surface calculation
-        domain_triangles = []
+        cavity_triangles = []
         step = (self.domain_calculation.discretization.s_step,)*3
         offset = self.domain_calculation.discretization.discrete_to_continuous((0, 0, 0))
-        domain_triangles.append(triangulate(self.grid3 < 0, step, offset,1))
-        return domain_triangles
+        for multicavity in self.multicavities:
+            print multicavity
+            grid = np.zeros(self.grid3.shape, dtype=np.bool)
+            for cavity_index in multicavity:
+                grid = np.logical_or(grid, self.grid3 == -(cavity_index+1))
+            views = []
+            for x, y, z in itertools.product(*map(xrange, (3, 3, 3))):
+                view = grid[x:grid.shape[0]-2+x, y:grid.shape[1]-2+y, z:grid.shape[2]-2+z]
+                views.append(view)
+            grid = np.zeros(grid.shape, np.uint16)
+            grid[:,:,:] = 0
+            grid[1:-1, 1:-1, 1:-1] = sum(views)+100
+            cavity_triangles.append(triangulate(grid, step, offset, 101))
+            cavity_surface_area = 0
+            for cavity_triangle in cavity_triangles[-1][0]:
+                any_outside = False
+                for vertex in cavity_triangle:
+                    discrete_vertex = discretization.continuous_to_discrete(vertex)
+                    if discretization.grid[discrete_vertex] != 0:
+                        any_outside = True
+                        break
+                if not any_outside:
+                    v1, v2, v3 = cavity_triangle
+                    a = v2-v1
+                    b = v3-v1
+                    triangle_surface_area = la.norm(np.cross(a,b))*0.5
+                    cavity_surface_area += triangle_surface_area
+            print cavity_surface_area
+        return cavity_triangles
 
 if __name__ == "__main__":
     # xyz/structure_c.xyz
@@ -547,11 +597,10 @@ if __name__ == "__main__":
     
     import pybel
 
-    for molecule in pybel.readfile("xyz", "xyz/hexagonal.xyz"):
-        atoms = molecule.atoms
-        num_atoms = len(atoms)
-        atom_positions = [atom.coords for atom in atoms]
-        break
+    molecule = pybel.readfile("xyz", "xyz/hexagonal.xyz").next()
+    atoms = molecule.atoms
+    num_atoms = len(atoms)
+    atom_positions = [atom.coords for atom in atoms]
 
     volume = volumes.HexagonalVolume(17.68943, 22.61158)
     
@@ -567,9 +616,11 @@ if __name__ == "__main__":
     print "Cavity domain calculation..."
     domain_calculation = DomainCalculation(discretization, atom_discretization)
     triangles = domain_calculation.triangles()
-    np.save("domain_triangles_hexagonal_192_21.npy", triangles)
+    for domain_index in range(len(triangles)):
+        np.save("domain_triangles_hexagonal_192_22_domain%d.npy"%domain_index, np.array(triangles[domain_index]))
     print "Cavity calculation..."
     cavity_calculation = CavityCalculation(domain_calculation)
     print "Triangle calculation..."
     triangles = cavity_calculation.triangles()
-    np.save("cavity_triangles_hexagonal_192_21.npy", triangles)
+    for cavity_index in range(len(triangles)):
+        np.save("cavity_triangles_hexagonal_192_22_cavity%d.npy"%cavity_index, np.array(triangles[cavity_index]))
