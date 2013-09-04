@@ -1,8 +1,8 @@
 import sys
 import math
 import numpy as np
-from OpenGL.GLUT import *
 import gr3
+from OpenGL.GLUT import *
 import pybel
 import volumes
 
@@ -26,7 +26,7 @@ domain_normals_list = []
 
 while True:
     try:
-        domain_vertices, domain_normals = np.load("domain_triangles_hexagonal_192_22_domain%d.npy" % max_domain_index)
+        domain_vertices, domain_normals = np.load("domain_triangles_hexagonal_192_23_domain%d.npy" % max_domain_index)
         domain_vertices_list.append(domain_vertices)
         domain_normals_list.append(domain_normals)
         max_domain_index += 1
@@ -37,7 +37,7 @@ cavity_vertices_list = []
 cavity_normals_list = []
 while True:
     try:
-        cavity_vertices, cavity_normals = np.load("cavity_triangles_hexagonal_192_22_cavity%d.npy" % max_cavity_index)
+        cavity_vertices, cavity_normals = np.load("cavity_triangles_hexagonal_192_23_cavity%d.npy" % max_cavity_index)
         cavity_vertices_list.append(cavity_vertices)
         cavity_normals_list.append(cavity_normals)
         print max_cavity_index, cavity_vertices.shape
@@ -45,8 +45,12 @@ while True:
     except IOError:
         break
 
-        
+domain_meshes = []
+cavity_meshes = []
 def init():
+    global domain_meshes
+    global cavity_meshes
+    
     domain_meshes = []
     for domain_index in range(max_domain_index):
         domain_vertices = domain_vertices_list[domain_index]
@@ -54,7 +58,6 @@ def init():
         num_domain_vertices = len(domain_vertices)*3
         mesh = gr3.createmesh(num_domain_vertices, domain_vertices, domain_normals, [(1,1,1)]*num_domain_vertices)
         domain_meshes.append(mesh)
-        gr3.drawmesh(mesh, 1, (0,0,0), (0,0,1), (0,1,0), (0,1,0.5), (1,1,1))
         
     cavity_meshes = []
     for cavity_index in range(max_cavity_index):
@@ -63,7 +66,20 @@ def init():
         num_cavity_vertices = len(cavity_vertices)*3
         mesh = gr3.createmesh(num_cavity_vertices, cavity_vertices, cavity_normals, [(1,1,1)]*num_cavity_vertices)
         cavity_meshes.append(mesh)
-        gr3.drawmesh(mesh, 1, (0,0,0), (0,0,1), (0,1,0), (0.2,0.4,1), (1,1,1))
+        
+    create_scene()
+
+def create_scene(show_cavities=True):
+    global domain_meshes
+    global cavity_meshes
+    
+    gr3.clear()
+    if not show_cavities:
+        for domain_index in range(max_domain_index):
+            gr3.drawmesh(domain_meshes[domain_index], 1, (0,0,0), (0,0,1), (0,1,0), (0,1,0.5), (1,1,1))
+    else:
+        for cavity_index in range(max_cavity_index):
+            gr3.drawmesh(cavity_meshes[cavity_index], 1, (0,0,0), (0,0,1), (0,1,0), (0.2,0.4,1), (1,1,1))
 
     edges = volume.edges
     num_edges = len(edges)
@@ -92,17 +108,22 @@ def special(key, x, y):
         rot += math.pi/180*10
     if key == GLUT_KEY_RIGHT:
         rot -= math.pi/180*10
+    glutPostRedisplay()
 
 def keyboard(key, x, y):
     if ord(key) == 27:
         sys.exit()
+    if key == 'd':
+        create_scene(False)
+    if key == 'c':
+        create_scene(True)
+    glutPostRedisplay()
 
 glutInit()
 glutInitWindowSize(1200,1200)
 glutCreateWindow(repr(volume))
 init()
 glutDisplayFunc(display)
-glutIdleFunc(glutPostRedisplay)
 glutKeyboardFunc(keyboard)
 glutSpecialFunc(special)
 glutMainLoop()

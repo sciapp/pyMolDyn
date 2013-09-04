@@ -50,8 +50,7 @@ import sys
 import numpy as np
 import numpy.linalg as la
 import h5py
-
-from cTriangulate import triangulate
+from gr3 import triangulate
 
 dimension = 3
 dimensions = range(dimension)
@@ -86,6 +85,24 @@ class DiscretizationCache(object):
             self.file['/discretizations/'+discretization_repr] = grid
             self.file.flush()
         return discretization
+        
+    def get_discretization_from_string(self, string):
+        string_parts = string.split()
+        volume_type = string_parts[0]
+        volume_type = volume_type.title()+"Volume"
+        volume_class = getattr(volumes, volume_type)
+        argument_info = string_parts[1:-1]
+        arguments = {}
+        for argument in argument_info:
+            name, value = argument.split('=')
+            value = float(value)
+            arguments[name] = value
+        volume = volume_class(**arguments)
+        d_max_info = string_parts[-1]
+        if not d_max_info.startswith('d_max='):
+            raise Exception('Any volume discretization information string must end with "d_max=<d_max>".')
+        d_max = float(d_max_info[len('d_max='):])
+        return self.get_discretization(volume, d_max)
         
 
 class Discretization(object):
@@ -324,6 +341,10 @@ class DomainCalculation:
                 self.surface_point_list.append(surface_points)
                 domain_index += 1
         print "number of domains:", domain_index
+        self.domain_volumes = []
+        for domain_index in range(len(self.centers)):
+            domain_volume = (self.grid == -(domain_index+1)).sum()*(self.discretization.s_step**3)
+            self.domain_volumes.append(domain_volume)
 
     def walk_domain(self, p, domain_index):
         '''
@@ -356,15 +377,10 @@ class DomainCalculation:
         return center, surface_points
 
     def triangles(self):
-        # as soon as the fast marching cubes implementation is ready, this 
-        # should be done for each seperate domain (in the specific subcube 
-        # (which has to be calculated in the walk_domain step)) and then the 
-        # domain surface should be calculated, e.g. using
-        # 0.5*sum(map(norm, cross(triangles[:,1]-triangles[:,0], 
-        # triangles[:,2]-triangles[:,0])))
         number_of_domains = len(self.centers)
         print number_of_domains
         domain_triangles = []
+        domain_surface_areas = []
         step = (self.discretization.s_step,)*3
         offset = self.discretization.discrete_to_continuous((0, 0, 0))
         for domain_index in range(number_of_domains):
@@ -378,7 +394,7 @@ class DomainCalculation:
             grid = np.zeros(grid.shape, np.uint16)
             grid[:,:,:] = 0
             grid[1:-1, 1:-1, 1:-1] = sum(views)+100
-            domain_triangles.append(triangulate(grid, step, offset, 101))
+            domain_triangles.append(triangulate(grid, step, offset, 100))
             domain_surface_area = 0
             for domain_triangle in domain_triangles[-1][0]:
                 any_outside = False
@@ -393,7 +409,9 @@ class DomainCalculation:
                     b = v3-v1
                     triangle_surface_area = la.norm(np.cross(a,b))*0.5
                     domain_surface_area += triangle_surface_area
-            print domain_surface_area
+            domain_surface_areas.append(domain_surface_area)
+        self.domain_triangles = domain_triangles
+        self.domain_surface_areas = domain_surface_areas
         return domain_triangles
 
 class CavityCalculation:
@@ -493,7 +511,7 @@ class CavityCalculation:
         grid_volume = (self.domain_calculation.discretization.grid == 0).sum()
         self.cavity_volumes = []
         for domain_index in range(num_domains):
-            self.cavity_volumes.append(1.0*(self.grid3 == -(domain_index+1)).sum()/grid_volume)
+            self.cavity_volumes.append(1.0*(self.grid3 == -(domain_index+1)).sum()*(self.domain_calculation.discretization.s_step**3))
 
         # step 6
         intersection_table = np.zeros((num_domains, num_domains), dtype=np.int8)
@@ -549,10 +567,10 @@ class CavityCalculation:
         return sqd
 
     def triangles(self):
-        # See DomainCalculation.triangles() about surface calculation
         cavity_triangles = []
         step = (self.domain_calculation.discretization.s_step,)*3
         offset = self.domain_calculation.discretization.discrete_to_continuous((0, 0, 0))
+        cavity_surface_areas = []
         for multicavity in self.multicavities:
             print multicavity
             grid = np.zeros(self.grid3.shape, dtype=np.bool)
@@ -565,7 +583,7 @@ class CavityCalculation:
             grid = np.zeros(grid.shape, np.uint16)
             grid[:,:,:] = 0
             grid[1:-1, 1:-1, 1:-1] = sum(views)+100
-            cavity_triangles.append(triangulate(grid, step, offset, 101))
+            cavity_triangles.append(triangulate(grid, step, offset, 100+4))
             cavity_surface_area = 0
             for cavity_triangle in cavity_triangles[-1][0]:
                 any_outside = False
@@ -580,21 +598,51 @@ class CavityCalculation:
                     b = v3-v1
                     triangle_surface_area = la.norm(np.cross(a,b))*0.5
                     cavity_surface_area += triangle_surface_area
-            print cavity_surface_area
+            cavity_surface_areas.append(cavity_surface_area)
+        self.cavity_triangles = cavity_triangles
+        self.cavity_surface_areas = cavity_surface_areas
         return cavity_triangles
 
+class CalculationResults(object):
+    def __init__(self, cavity_calculation):
+        domain_calculation = cavity_calculation.domain_calculation
+        discretization = domain_calculation.discretization
+        atom_discretization = domain_calculation.atom_discretization
+        atoms = atom_discretization.atoms
+        
+        # Atom Information
+        self.number_of_atoms = len(atoms.positions)
+        self.atom_positions = np.array(atoms.positions)
+        self.atom_radii = np.array(atoms.radii)
+        
+        # Domain Results
+        self.number_of_domains = len(domain_calculation.centers)
+        self.domain_centers = np.array(domain_calculation.centers)
+        self.domain_triangles = np.array(domain_calculation.domain_triangles)
+        self.domain_volumes = np.array(domain_calculation.domain_volumes)
+        self.domain_surface_areas = np.array(domain_calculation.domain_surface_areas)
+        
+        # Cavity Results
+        self.number_of_multicavities = len(cavity_calculation.multicavities)
+        self.multicavities = cavity_calculation.multicavities # Multicavities as sets of cavity domain indices
+        self.multicavity_triangles = np.array(cavity_calculation.cavity_triangles)
+        self.multicavity_volumes = np.array(cavity_calculation.multicavity_volumes)
+        self.multicavity_surface_areas = np.array(cavity_calculation.cavity_surface_areas)
+        
+    def _list_of_sets_to_array(self, list_of_sets):
+        arr = np.zeros((len(list_of_sets), max(map(len, list_of_sets)+1)), np.int32)
+        arr[:,:] = -1
+        for i, s in enumerate(list_of_sets):
+            arr[i,:len(s)] = list(s)
+        return arr
+        
+    def _list_of_sets_from_array(self, array):
+        list_of_sets = []
+        for row in array:
+            list_of_sets.append(set(row[:list(row).index(-1)]))
+        return list_of_sets
+
 if __name__ == "__main__":
-    # xyz/structure_c.xyz
-    #box_size = 27.079855
-    
-    
-    #with open("xyz/traject_200.xyz") as xyzfile:
-    #    xyzlines = xyzfile.readlines()
-    #    num_atoms = int(xyzlines[0])
-    #    comment = xyzlines[1]
-    #    atom_lines = xyzlines[2:2+num_atoms]
-    #    atom_positions = [map(float, atom_line.split()[1:]) for atom_line in atom_lines]
-    
     import pybel
 
     molecule = pybel.readfile("xyz", "xyz/hexagonal.xyz").next()
@@ -617,10 +665,12 @@ if __name__ == "__main__":
     domain_calculation = DomainCalculation(discretization, atom_discretization)
     triangles = domain_calculation.triangles()
     for domain_index in range(len(triangles)):
-        np.save("domain_triangles_hexagonal_192_22_domain%d.npy"%domain_index, np.array(triangles[domain_index]))
+        print "domain %3d: %fA^3 %fA^2" % (domain_index, domain_calculation.domain_volumes[domain_index], domain_calculation.domain_surface_areas[domain_index])
+        np.save("domain_triangles_hexagonal_192_23_domain%d.npy"%domain_index, np.array(triangles[domain_index]))
     print "Cavity calculation..."
     cavity_calculation = CavityCalculation(domain_calculation)
     print "Triangle calculation..."
     triangles = cavity_calculation.triangles()
     for cavity_index in range(len(triangles)):
-        np.save("cavity_triangles_hexagonal_192_22_cavity%d.npy"%cavity_index, np.array(triangles[cavity_index]))
+        print "cavity %3d: %fA^3 %fA^2" % (cavity_index, cavity_calculation.multicavity_volumes[cavity_index], cavity_calculation.cavity_surface_areas[cavity_index])
+        np.save("cavity_triangles_hexagonal_192_23_cavity%d.npy"%cavity_index, np.array(triangles[cavity_index]))

@@ -1,4 +1,7 @@
 ._*
 .DS_Store
-.pyc
-.npy
+*.pyc
+*.npy
+*.html
+*.data
+*.so
