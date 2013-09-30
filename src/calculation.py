@@ -444,10 +444,16 @@ class CavityCalculation:
     same cell or in one of the cell's neighbors. This is guaranteed, because the
     atom must be at most its on cavity cutoff radius away, and the subgrid cell
     size is the maximum cavity cutoff radius.
+    
+    
+    To calculate center-based cavities, use a grid filled with zeros instead of
+    resuing some values from the domain calculation grid and then iterate over
+    the domain centers instead of the domain surface points.
     '''
-    def __init__(self, domain_calculation):
+    def __init__(self, domain_calculation, use_surface_points=True):
         self.domain_calculation = domain_calculation
-        self.grid = self.domain_calculation.grid
+        if use_surface_points:
+            self.grid = self.domain_calculation.grid
         num_surface_points = sum(map(len, self.domain_calculation.surface_point_list))
         print "number of surface points:", num_surface_points
         
@@ -469,23 +475,34 @@ class CavityCalculation:
                 sgp = self.to_subgrid(real_atom_position)
                 self.sg[sgp[0]][sgp[1]][sgp[2]][0].append(real_atom_position)
         # step 3
-        for domain_index, surface_points in enumerate(self.domain_calculation.surface_point_list):
-            for surface_point in surface_points:
+        if use_surface_points:
+            domain_seed_point_lists = self.domain_calculation.surface_point_list
+        else:
+            domain_seed_point_lists = [[center] for center in self.domain_calculation.centers]
+        for domain_index, domain_seed_points in enumerate(domain_seed_point_lists):
+            for domain_seed_point in domain_seed_points:
                 for v in self.domain_calculation.discretization.combined_translation_vectors+[(0, 0, 0)]:
-                    real_surface_point = [surface_point[i]+v[i] for i in dimensions]
-                    sgp = self.to_subgrid(real_surface_point)
-                    self.sg[sgp[0]][sgp[1]][sgp[2]][1].append(real_surface_point)
+                    real_domain_seed_point = [domain_seed_point[i]+v[i] for i in dimensions]
+                    sgp = self.to_subgrid(real_domain_seed_point)
+                    self.sg[sgp[0]][sgp[1]][sgp[2]][1].append(real_domain_seed_point)
                     self.sg[sgp[0]][sgp[1]][sgp[2]][2].append(domain_index)
         # step 4
         self.grid3 = np.zeros(self.domain_calculation.discretization.d,dtype=np.int64)
         for p in itertools.product(*map(range, self.domain_calculation.discretization.d)):
-            grid_value = self.grid[p]
-            if grid_value == 0:
-                self.grid3[p] = 0
-            elif grid_value < 0:
-                self.grid3[p] = grid_value
-            elif grid_value > 0:
-                self.grid3[p] = 0
+            if use_surface_points:
+                grid_value = self.grid[p]
+                if grid_value == 0: # outside the volume
+                    self.grid3[p] = 0
+                    possibly_in_cavity = False
+                elif grid_value < 0: # cavity domain (stored as: -index-1), therefore guaranteed to be in a cavity
+                    self.grid3[p] = grid_value
+                    possibly_in_cavity = True
+                elif grid_value > 0: # in radius of atom (stored as: index+1), therefore possibly in a cavity
+                    self.grid3[p] = 0
+                    possibly_in_cavity = True
+            else:
+                possibly_in_cavity = (self.domain_calculation.discretization.grid[p] == 0)
+            if possibly_in_cavity:
                 # step 5
                 min_squared_atom_distance = sys.maxint
                 sgp = self.to_subgrid(p)
@@ -497,9 +514,9 @@ class CavityCalculation:
                 for i in itertools.product((0, 1, -1), repeat=dimension):
                     next = False
                     sgci = [sgp[j]+i[j] for j in dimensions]
-                    for domain_index, surface_point in zip(self.sg[sgci[0]][sgci[1]][sgci[2]][2], self.sg[sgci[0]][sgci[1]][sgci[2]][1]):
-                        squared_surface_point_distance = sum([(surface_point[j]-p[j])*(surface_point[j]-p[j]) for j in dimensions])
-                        if squared_surface_point_distance < min_squared_atom_distance:
+                    for domain_index, domain_seed_point in zip(self.sg[sgci[0]][sgci[1]][sgci[2]][2], self.sg[sgci[0]][sgci[1]][sgci[2]][1]):
+                        squared_domain_seed_point_distance = sum([(domain_seed_point[j]-p[j])*(domain_seed_point[j]-p[j]) for j in dimensions])
+                        if squared_domain_seed_point_distance < min_squared_atom_distance:
                             self.grid3[p] = -domain_index-1
                             next = True
                             break
@@ -507,7 +524,7 @@ class CavityCalculation:
                         break
 
 
-        num_domains = len(self.domain_calculation.surface_point_list)
+        num_domains = len(self.domain_calculation.centers)
         grid_volume = (self.domain_calculation.discretization.grid == 0).sum()
         self.cavity_volumes = []
         for domain_index in range(num_domains):
@@ -666,11 +683,11 @@ if __name__ == "__main__":
     triangles = domain_calculation.triangles()
     for domain_index in range(len(triangles)):
         print "domain %3d: %fA^3 %fA^2" % (domain_index, domain_calculation.domain_volumes[domain_index], domain_calculation.domain_surface_areas[domain_index])
-        np.save("domain_triangles_hexagonal_192_23_domain%d.npy"%domain_index, np.array(triangles[domain_index]))
+        np.save("domain_triangles_hexagonal_192_25_domain%d.npy"%domain_index, np.array(triangles[domain_index]))
     print "Cavity calculation..."
-    cavity_calculation = CavityCalculation(domain_calculation)
+    cavity_calculation = CavityCalculation(domain_calculation, True)
     print "Triangle calculation..."
     triangles = cavity_calculation.triangles()
     for cavity_index in range(len(triangles)):
         print "cavity %3d: %fA^3 %fA^2" % (cavity_index, cavity_calculation.multicavity_volumes[cavity_index], cavity_calculation.cavity_surface_areas[cavity_index])
-        np.save("cavity_triangles_hexagonal_192_23_cavity%d.npy"%cavity_index, np.array(triangles[cavity_index]))
+        np.save("cavity_triangles_hexagonal_192_25_cavity%d.npy"%cavity_index, np.array(triangles[cavity_index]))

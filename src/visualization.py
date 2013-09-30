@@ -26,7 +26,8 @@ domain_normals_list = []
 
 while True:
     try:
-        domain_vertices, domain_normals = np.load("domain_triangles_hexagonal_192_23_domain%d.npy" % max_domain_index)
+        #domain_vertices, domain_normals = np.load("domain_triangles_hexagonal_192_24_domain%d.npy" % max_domain_index)
+        domain_vertices, domain_normals = np.load("cavity_triangles_hexagonal_192_25_cavity%d.npy" % max_domain_index)
         domain_vertices_list.append(domain_vertices)
         domain_normals_list.append(domain_normals)
         max_domain_index += 1
@@ -37,7 +38,7 @@ cavity_vertices_list = []
 cavity_normals_list = []
 while True:
     try:
-        cavity_vertices, cavity_normals = np.load("cavity_triangles_hexagonal_192_23_cavity%d.npy" % max_cavity_index)
+        cavity_vertices, cavity_normals = np.load("cavity_triangles_hexagonal_192_24_cavity%d.npy" % max_cavity_index)
         cavity_vertices_list.append(cavity_vertices)
         cavity_normals_list.append(cavity_normals)
         print max_cavity_index, cavity_vertices.shape
@@ -45,11 +46,13 @@ while True:
     except IOError:
         break
 
+rot = 0
 domain_meshes = []
 cavity_meshes = []
 def init():
     global domain_meshes
     global cavity_meshes
+    global rot
     
     domain_meshes = []
     for domain_index in range(max_domain_index):
@@ -68,6 +71,10 @@ def init():
         cavity_meshes.append(mesh)
         
     create_scene()
+    
+    d = max(volume.side_lengths)*2
+    gr3.cameralookat(d*math.sin(rot),0,d*math.cos(rot), 0,0,0, 0,1,0)
+    gr3.export("test.html",800,800)
 
 def create_scene(show_cavities=True):
     global domain_meshes
@@ -94,7 +101,6 @@ def create_scene(show_cavities=True):
     gr3.drawspheremesh(len(atom_positions), atom_positions, [(1,1,1)]*len(atom_positions), [edge_radius*4]*len(atom_positions))
     
 
-rot = 0
 def display():
     global rot
     d = max(volume.side_lengths)*2
