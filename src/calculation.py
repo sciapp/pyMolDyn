@@ -34,13 +34,31 @@ positions and their cutoff radii are also discretized.
    
    atom_discretization = AtomDiscretization(atoms, discretization)
    
-With these objections created, all preparations are complete and the domain and
+With these objects created, all preparations are complete and the domain and
 cavity calculation can be done:
 
 .. code-block:: python
    
    domain_calculation = DomainCalculation(discretization, atom_discretization)
    cavity_calculation = CavityCalculation(domain_calculation)
+   
+Additionally, calculation of center-based cavities is possible by passing an 
+additional parameter to the CavityCalculation:
+
+.. code-block:: python
+
+   cavity_calculation = CavityCalculation(domain_calculation,
+                                          use_surface_points=False)
+                                          
+The FakeDomainCalculation class provides a drop-in replacement for the
+domain_calculation object in case the results of a previous calculation need to
+be used (this is possible as only those attributes which are stored are actually
+used during center-based cavity calculation, which is not the case for surface-
+based cavity calculations, which at least require the surface point lists).
+
+The CalculationResults class provides a container for the results and allows 
+storage to and retrieval from HDF5 files. These files have several groups which 
+contain the relevant information.
 
 Author: Florian Rhiem <f.rhiem@fz-juelich.de>
 '''
