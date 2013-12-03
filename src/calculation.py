@@ -420,8 +420,8 @@ class DomainCalculation:
             for domain_triangle in domain_triangles[-1][0]:
                 any_outside = False
                 for vertex in domain_triangle:
-                    discrete_vertex = discretization.continuous_to_discrete(vertex)
-                    if discretization.grid[discrete_vertex] != 0:
+                    discrete_vertex = self.discretization.continuous_to_discrete(vertex)
+                    if self.discretization.grid[discrete_vertex] != 0:
                         any_outside = True
                         break
                 if not any_outside:
@@ -630,8 +630,8 @@ class CavityCalculation:
             for cavity_triangle in cavity_triangles[-1][0]:
                 any_outside = False
                 for vertex in cavity_triangle:
-                    discrete_vertex = discretization.continuous_to_discrete(vertex)
-                    if discretization.grid[discrete_vertex] != 0:
+                    discrete_vertex = self.domain_calculation.discretization.continuous_to_discrete(vertex)
+                    if self.domain_calculation.discretization.grid[discrete_vertex] != 0:
                         any_outside = True
                         break
                 if not any_outside:
@@ -765,15 +765,37 @@ class FakeDomainCalculation(object):
         self.discretization = discretization
         self.atom_discretization = atom_discretization
     
-if __name__ == "__main__":
-    import pybel
+def calculate_cavities(filename, frame_nr, volume, use_surface_points=True):
+    exp_name = ''.join(filename.split(".")[:-1]+str(frame_nr))
+    if use_surface_points:
+        domain_calculation = calculate_domains(filename, frame_nr, volume)
+        print "Cavity calculation..."
+        cavity_calculation = CavityCalculation(domain_calculation)
+        results = CalculationResults(cavity_calculation)
+        results.export("results/"+exp_name + "_cs.hdf5")
+    else:
+        import pybel
+        try:
+            for i in range(frame_nr):
+                molecule = generator.next()
+        except StopIteration:
+            if frame_nr > n:
+                print 'Error: This frame does not exist.'
+                sys.exit(0)
+        (atom_discretization, discretization) = atom_volume_discretization(molecule.atoms, volume)
+        
+        imported_results = CalculationResults("results/"+exp_name + "_cs.hdf5")
+        domain_calculation = FakeDomainCalculation(discretization, atom_discretization, imported_results)
+        print "Cavity calculation..."
+        cavity_calculation = CavityCalculation(domain_calculation, False)
+        imported_results.add_center_cavity_information(cavity_calculation)
+        imported_results.export("results/"+exp_name + "_cc.hdf5")
 
-    molecule = pybel.readfile("xyz", "xyz/hexagonal.xyz").next()
-    atoms = molecule.atoms
+    return cavity_calculation
+
+def atom_volume_discretization(atoms, volume):
     num_atoms = len(atoms)
     atom_positions = [atom.coords for atom in atoms]
-
-    volume = volumes.HexagonalVolume(17.68943, 22.61158)
     
     print num_atoms,"atoms"
     for atom_index in range(num_atoms):
@@ -784,25 +806,51 @@ if __name__ == "__main__":
     discretization = discretization_cache.get_discretization(volume, 192)
     print "Atom discretization..."
     atom_discretization = AtomDiscretization(atoms, discretization)
-    '''
+
+    return (atom_discretization, discretization)
+
+def count_frames(filename):
+    import pybel
+
+    n = 0
+    generator = pybel.readfile("xyz", filename) 
+    try:
+        while 1:
+            generator.next()
+            n += 1
+    except StopIteration:
+        if frame_nr > n:
+            print 'Error: This frame does not exist.'
+            sys.exit(0)
+    return n
+
+def calculate_domains(filename, frame_nr, volume):
+    import pybel
+    
+    n = 0
+    generator = pybel.readfile("xyz", filename) 
+    try:
+        for i in range(frame_nr):
+            molecule = generator.next()
+    except StopIteration:
+        if frame_nr > n:
+            print 'Error: This frame does not exist.'
+            sys.exit(0)
+    (atom_discretization, discretization) = atom_volume_discretization(molecule.atoms, volume)
+    
     print "Cavity domain calculation..."
     domain_calculation = DomainCalculation(discretization, atom_discretization)
-    #triangles = domain_calculation.triangles()
-    #for domain_index in range(len(triangles)):
-    #    print "domain %3d: %fA^3 %fA^2" % (domain_index, domain_calculation.domain_volumes[domain_index], domain_calculation.domain_surface_areas[domain_index])
-    #    np.save("domain_triangles_hexagonal_128_26_domain%d.npy"%domain_index, np.array(triangles[domain_index]))
-    print "Cavity calculation..."
-    cavity_calculation = CavityCalculation(domain_calculation)
-    #print "Triangle calculation..."
-    #triangles = cavity_calculation.triangles()
-    #for cavity_index in range(len(triangles)):
-    #    print "cavity %3d: %fA^3 %fA^2" % (cavity_index, cavity_calculation.multicavity_volumes[cavity_index], cavity_calculation.cavity_surface_areas[cavity_index])
-    #    np.save("cavity_triangles_hexagonal_128_26_cavity%d.npy"%cavity_index, np.array(triangles[cavity_index]))
-    results = CalculationResults(cavity_calculation)
-    results.export("test2.hdf5")
-    '''
-    imported_results = CalculationResults("test2.hdf5")
-    domain_calculation = FakeDomainCalculation(discretization, atom_discretization, imported_results)
-    cavity_calculation = CavityCalculation(domain_calculation, False)
-    imported_results.add_center_cavity_information(cavity_calculation)
-    imported_results.export("test3.hdf5")
+
+    return domain_calculation
+
+if __name__ == "__main__":
+    import pybel
+
+    volume = volumes.HexagonalVolume(17.68943, 22.61158)
+#    xyz/structure_c.xyz
+#    box_size = 27.079855
+#    volume = volumes.CubicVolume(box_size)
+#    calculate_cavities("xyz/hexagonal.xyz", 1, volume)
+#    /Users/knodt/Home/datasets/data
+    calculate_cavities("xyz/hexagonal.xyz", 1, volume, False)
+    
