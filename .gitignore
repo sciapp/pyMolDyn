@@ -6,3 +6,8 @@
 *.html
 *.data
 *.so
+*.swp
+src/results
+src/xyz
+doc/_build
+src/.idea

@@ -116,9 +116,13 @@ class Visualization():
         
     def process_key(self, key):
         if key == 'right':
-            self.xrot += pi/180*10
+            self.rotate_mouse(20, 0)
         elif key == 'left':
-            self.xrot -= pi/180*10
+            self.rotate_mouse(-20, 0)
+        elif key == 'up':
+            self.rotate_mouse(0, -20)
+        elif key == 'down':
+            self.rotate_mouse(0, 20)
         elif key == 'd':
             self.create_scene(False)
         elif key == 'c':
@@ -128,19 +132,14 @@ class Visualization():
 
     def zoom(self, delta):
         zoom_v = 1./20
-        if self.pos[2] + zoom_v*delta > 0:
-            self.pos[2] += zoom_v*delta
+        if self.d + zoom_v*delta > 0:
+            self.d += zoom_v*delta
 
     def get_rotation_matrix(self, n, alpha):
         a = alpha
-        print 'norm',np.linalg.norm(n)
         rot_mat = np.array(([n[0]**2*(1-cos(a)) + cos(a),               n[0]*n[1]*(1-cos(a)) - n[2]*sin(a),     n[0]*n[2]*(1-cos(a)) + n[1]*sin(a)],
-                            [n[0]*n[1]*(1-cos(a)) - n[2]*sin(a),        n[1]**2*(1-cos(a)) + cos(a),            n[1]*n[2]*(1-cos(a)) - n[0]*sin(a)],
+                            [n[0]*n[1]*(1-cos(a)) + n[2]*sin(a),        n[1]**2*(1-cos(a)) + cos(a),            n[1]*n[2]*(1-cos(a)) - n[0]*sin(a)],
                             [n[2]*n[0]*(1-cos(a)) - n[1]*sin(a),        n[2]*n[1]*(1-cos(a)) + n[0]*sin(a),     n[2]**2*(1-cos(a)) + cos(a)]))
-#        print 'n1',np.linalg.norm(rot_mat[:,0])
-#        print 'n2',np.linalg.norm(rot_mat[:,1])
-#        print 'n3',np.linalg.norm(rot_mat[:,2])
-#        print 'HAHA',np.linalg.norm(rot_mat)
         return rot_mat
 
     def rotate_mouse(self, dx, dy):
@@ -150,15 +149,14 @@ class Visualization():
         diff_vec = (dx*self.rightt + (-1*dy)*self.upt)
         if all(diff_vec == np.zeros(3)):
             return
-#        print self.right, 'norm', np.linalg.norm(self.right)
         rot_axis = np.cross(diff_vec, self.pt)
         rot_axis = rot_axis/np.linalg.norm(rot_axis)
 
-        m = self.get_rotation_matrix(rot_axis, 0.05)
+        m = self.get_rotation_matrix(rot_axis, 0.15*(dx**2+dy**2)**0.5)
         self.mat = m.dot(self.mat)
-        self.mat[:,0] /= np.linalg.norm(self.mat[:,0])
-        self.mat[:,1] /= np.linalg.norm(self.mat[:,1])
-        self.mat[:,2] /= np.linalg.norm(self.mat[:,2])
+#        self.mat[:,0] /= np.linalg.norm(self.mat[:,0])
+#        self.mat[:,1] /= np.linalg.norm(self.mat[:,1])
+#        self.mat[:,2] /= np.linalg.norm(self.mat[:,2])
 
     def get_rotation_angle(self, v1, v2):
         if all(v1 == np.zeros(2)) or all(v2 == np.zeros(2)):
@@ -166,15 +164,8 @@ class Visualization():
         return acos((v1.dot(v2))/(np.linalg.norm(v1)*np.linalg.norm(v2)))
 
     def set_camera(self):
-        print 'n1',np.linalg.norm(self.mat[:,0])
-        print 'n2',np.linalg.norm(self.mat[:,1])
-        print 'n3',np.linalg.norm(self.mat[:,2])
-        self.pt = np.dot(self.mat, self.pos)
-        #self.upt = np.dot(self.mat, self.up)
-        #self.rightt = np.dot(self.mat, self.right)
         self.rightt = self.mat[:,0]
         self.upt = self.mat[:,1]
-        print np.dot(self.upt,self.rightt)
         self.pt = self.mat[:,2]*self.d
 
         gr3.cameralookat(self.pt[0], self.pt[1], self.pt[2], 0, 0, 0, self.upt[0], self.upt[1], self.upt[2])

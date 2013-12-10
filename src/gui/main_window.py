@@ -1,27 +1,43 @@
 import visualization
+from main_tab_widget import TabWidget
 import gr3
 from PySide import QtCore, QtGui, QtOpenGL
 import numpy
 import math
 
-display_size = 1000
+display_size = 800
 
 class Window(QtGui.QWidget):
 
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self, parent)
-#        self.setWindowTitle(self.tr(repr(visualization.get_volume())))
+        self.setWindowTitle('pyMolDyn 2')
         self.init_gui()
+#        self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+#        self.showFullScreen()
  
     def init_gui(self):
-        self.gl = GLWidget(self)
-        mainLayout = QtGui.QHBoxLayout()
-        mainLayout.addWidget(self.gl)
-        self.setLayout(mainLayout)
+        self.gl_widget  = GLWidget(self)
+        self.tab_widget = TabWidget(self)
 
-#TODO: Unschoen
+        mainLayout = QtGui.QHBoxLayout()
+        mainLayout.addWidget(self.gl_widget)
+        mainLayout.addWidget(self.tab_widget)
+        
+        self.setLayout(mainLayout)
+        self.show()
+
+#    def closeEvent(self, event):
+#        reply = QtGui.QMessageBox.question(self, 'Message',
+#            "Are you sure to quit?", QtGui.QMessageBox.Yes | 
+#            QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+#        if reply == QtGui.QMessageBox.Yes:
+#            event.accept()
+#        else:
+#            event.ignore() 
+
     def show_dataset(self, volume, filename, frame_nr):
-        self.gl.show_dataset(volume, filename, frame_nr)
+        self.gl_widget.show_dataset(volume, filename, frame_nr)
 
 class GLWidget(QtOpenGL.QGLWidget):
 
@@ -66,6 +82,10 @@ class GLWidget(QtOpenGL.QGLWidget):
             self.vis.process_key('right')
         elif e.key() == QtCore.Qt.Key_Left:
             self.vis.process_key('left')
+        elif e.key() == QtCore.Qt.Key_Up:
+            self.vis.process_key('up')
+        elif e.key() == QtCore.Qt.Key_Down:
+            self.vis.process_key('down')
         elif e.key() == QtCore.Qt.Key_D:
             self.vis.process_key('d')
         elif e.key() == QtCore.Qt.Key_C:
