@@ -80,8 +80,6 @@ class Visualization():
 
         self.create_scene()
         
-#        d = max(self.volume.side_lengths)*2
-#        gr3.cameralookat(d*math.sin(self.yrot),0,d*math.cos(self.yrot), 0,0,0, 0,1,0)
         self.set_camera()
         gr3.export("test.html",800,800)
 
@@ -115,15 +113,16 @@ class Visualization():
         gr3.drawspheremesh(len(self.atom_positions), self.atom_positions, [(1,1,1)]*len(self.atom_positions), [edge_radius*4]*len(self.atom_positions))
         
     def process_key(self, key):
+        rot_v_key = 15
         if key == 'right':
-            self.rotate_mouse(20, 0)
+            self.rotate_mouse(rot_v_key, 0)
         elif key == 'left':
-            self.rotate_mouse(-20, 0)
+            self.rotate_mouse(-rot_v_key, 0)
         elif key == 'up':
-            self.rotate_mouse(0, -20)
+            self.rotate_mouse(0, -rot_v_key)
         elif key == 'down':
-            self.rotate_mouse(0, 20)
-        elif key == 'd':
+            self.rotate_mouse(0, rot_v_key)
+        if key == 'd':
             self.create_scene(False)
         elif key == 'c':
             self.create_scene(True) 
@@ -132,7 +131,8 @@ class Visualization():
 
     def zoom(self, delta):
         zoom_v = 1./20
-        if self.d + zoom_v*delta > 0:
+        zoom_cap = self.d + zoom_v*delta < max(self.volume.side_lengths)*4
+        if self.d + zoom_v*delta > 0 and zoom_cap:
             self.d += zoom_v*delta
 
     def get_rotation_matrix(self, n, alpha):
@@ -143,25 +143,19 @@ class Visualization():
         return rot_mat
 
     def rotate_mouse(self, dx, dy):
-        rot_v = 1./100
-        dx *= rot_v
-        dy *= rot_v
+        rot_v = 1./13000
         diff_vec = (dx*self.rightt + (-1*dy)*self.upt)
         if all(diff_vec == np.zeros(3)):
             return
         rot_axis = np.cross(diff_vec, self.pt)
         rot_axis = rot_axis/np.linalg.norm(rot_axis)
 
-        m = self.get_rotation_matrix(rot_axis, 0.15*(dx**2+dy**2)**0.5)
+        # rotation matrix with min rotation angle
+        m = self.get_rotation_matrix(rot_axis, max(self.d,20)*rot_v*(dx**2+dy**2)**0.5)
         self.mat = m.dot(self.mat)
 #        self.mat[:,0] /= np.linalg.norm(self.mat[:,0])
 #        self.mat[:,1] /= np.linalg.norm(self.mat[:,1])
 #        self.mat[:,2] /= np.linalg.norm(self.mat[:,2])
-
-    def get_rotation_angle(self, v1, v2):
-        if all(v1 == np.zeros(2)) or all(v2 == np.zeros(2)):
-            return 0
-        return acos((v1.dot(v2))/(np.linalg.norm(v1)*np.linalg.norm(v2)))
 
     def set_camera(self):
         self.rightt = self.mat[:,0]
@@ -170,6 +164,6 @@ class Visualization():
 
         gr3.cameralookat(self.pt[0], self.pt[1], self.pt[2], 0, 0, 0, self.upt[0], self.upt[1], self.upt[2])
 
-    def paint(self, display_size):
+    def paint(self, width, height):
         self.set_camera()
-        gr3.drawimage(0, display_size, 0, display_size, display_size, display_size, gr3.GR3_Drawable.GR3_DRAWABLE_OPENGL)
+        gr3.drawimage(0, width, 0, height, width, height, gr3.GR3_Drawable.GR3_DRAWABLE_OPENGL)

@@ -15,16 +15,23 @@ class FileTab(QtGui.QWidget):
         self.file_button.clicked.connect(self.open_file_dialog)
         self.button_hbox.addWidget(self.file_button)
 
-        self.file_button = QtGui.QPushButton('Delete', self)
-        self.file_button.clicked.connect(self.remove_selected_files)
-        self.button_hbox.addWidget(self.file_button)
+        self.delete_button = QtGui.QPushButton('Delete', self)
+        self.delete_button.clicked.connect(self.remove_selected_files)
+        self.button_hbox.addWidget(self.delete_button)
 
+        self.calculate_button = QtGui.QPushButton('Calculate', self)
+        self.calculate_button.clicked.connect(self.calculate)
+        self.button_hbox.addWidget(self.calculate_button)
+        
         self.vbox.addLayout(self.button_hbox)
 
         self.file_list = DragList(self)
         self.vbox.addWidget(self.file_list)
 
         self.setLayout(self.vbox)
+
+    def calculate(self):
+        pass
 
     def remove_selected_files(self):
         self.file_list.remove_selected_files()
@@ -36,6 +43,7 @@ class FileTab(QtGui.QWidget):
             if fn:
                 self.file_list.add_file(fn)
 
+
 class DragList(QtGui.QListWidget):
     
     def __init__(self, parent):
@@ -43,6 +51,7 @@ class DragList(QtGui.QListWidget):
         self.setAcceptDrops(True)
         self.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
         self.setDragEnabled(True)
+        self.itemDoubleClicked.connect(self.double_click)
 
         self.datalist = {}
 
@@ -75,3 +84,7 @@ class DragList(QtGui.QListWidget):
             self.takeItem(row)
             del self.datalist[item.text()]
 
+    def double_click(self):
+        item = self.selectedItems()[0]
+        print 'filename: {} path: {}'.format(item.text(), self.datalist[item.text()])
+        

@@ -1,6 +1,6 @@
 from PySide import QtCore, QtGui
 from gui.file_tab import FileTab
-from gui.file_tab import DragList
+
 
 class TabWidget(QtGui.QTabWidget):
 
