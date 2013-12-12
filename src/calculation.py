@@ -850,7 +850,7 @@ if __name__ == "__main__":
 #    xyz/structure_c.xyz
 #    box_size = 27.079855
 #    volume = volumes.CubicVolume(box_size)
-#    calculate_cavities("xyz/hexagonal.xyz", 1, volume)
+    calculate_cavities("xyz/hexagonal.xyz", 1, volume)
 #    /Users/knodt/Home/datasets/data
     calculate_cavities("xyz/hexagonal.xyz", 1, volume, False)
     
