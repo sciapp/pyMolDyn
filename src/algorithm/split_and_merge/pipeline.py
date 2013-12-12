@@ -8,8 +8,8 @@ def start_split_and_merge_pipeline(data, mask, atoms, combined_translation_vecto
     algorithm.split(data, mask, graph)
     algorithm.add_periodic_neighbors(graph)
     algorithm.merge(data, graph)
-    
     areas = graph.get_all_areas()
+    algorithm.mark_domain_points(data, areas)
     
     centers = algorithm.calculate_domain_centers(atoms, combined_translation_vectors, areas)
     surface_cells = algorithm.get_domain_surface_cells(data, mask, areas)

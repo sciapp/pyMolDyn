@@ -63,6 +63,13 @@ def merge(data, graph):
                 data_neighbor = data[pos_neighbor[0]:pos_neighbor[0]+dim_neighbor[0], pos_neighbor[1]:pos_neighbor[1]+dim_neighbor[1], pos_neighbor[2]:pos_neighbor[2]+dim_neighbor[2]]
                 if is_homogenous_merge(data_node, data_neighbor):
                     graph.merge_nodes(node, neighbor)
+       
+def mark_domain_points(data, areas):
+    for i, area in enumerate(areas):
+        for node in area:
+            x, y, z = node[0]
+            w, h, d = node[1]
+            data[x:x+w, y:y+h, z:z+d] = -(i+1)
                     
 def calculate_domain_centers(atoms, combined_translation_vectors, areas):
     return calc_dom(atoms, combined_translation_vectors, areas)
