@@ -1,5 +1,5 @@
 import itertools as it
-from algorithm.split_and_merge.util.node_border_iterator import iterate_node_border
+from computation.split_and_merge.util.node_border_iterator import iterate_node_border
 
 
 class Graph(object):

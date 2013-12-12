@@ -1,5 +1,5 @@
 
-SUBDIRS = domain_centers
+SUBDIRS = computation
 
 all:
 	for i in $(SUBDIRS); do make -C $$i all; done
