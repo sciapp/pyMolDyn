@@ -1,6 +1,17 @@
 from PySide import QtCore, QtGui
 from gui.file_tab import FileTab
 
+class TabWidgetDock(QtGui.QDockWidget):
+
+    def __init__(self, parent):
+        QtGui.QDockWidget.__init__(self,"Tab", parent)
+        self.setWidget(QtGui.QWidget())
+
+        self.layout = QtGui.QHBoxLayout()
+        self.tab_widget  = TabWidget(self.widget())
+
+        self.layout.addWidget(self.tab_widget)
+        self.widget().setLayout(self.layout)
 
 class TabWidget(QtGui.QTabWidget):
 

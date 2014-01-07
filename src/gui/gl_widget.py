@@ -1,7 +1,14 @@
+# -*- coding: utf-8 -*-
 from PySide import QtCore, QtGui, QtOpenGL
 import visualization
 
 display_size = 800
+
+class UpdateGLEvent(QtCore.QEvent):
+
+    def __init__(self):
+        type = QtCore.QEvent.registerEventType()
+        QtCore.QEvent.__init__(self, QtCore.QEvent.Type(type))
 
 class GLWidget(QtOpenGL.QGLWidget):
 
@@ -9,6 +16,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         QtOpenGL.QGLWidget.__init__(self, parent)
         self.dataset_loaded = False
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
+        self.bla = False
 
     def minimumSizeHint(self):
         return QtCore.QSize(display_size, display_size)
@@ -31,13 +39,28 @@ class GLWidget(QtOpenGL.QGLWidget):
            self.updateGL()
 
     def wheelEvent(self, e):
-        self.vis.zoom(e.delta())
-        self.updateGL()
+        self.update_needed = True
+        if e.modifiers() != QtCore.Qt.ShiftModifier:
+            if e.orientation() == QtCore.Qt.Orientation.Vertical:
+                self.vis.zoom(e.delta())
+        else:
+            rot_v = 0.1
+            if e.orientation() == QtCore.Qt.Orientation.Horizontal:
+                self.vis.rotate_mouse(e.delta()*rot_v, 0)
+            else:
+                self.vis.rotate_mouse(0, e.delta()*rot_v )
+
+        QtGui.QApplication.postEvent(self, UpdateGLEvent())
 
     def mousePressEvent(self, e):
         if e.buttons() and QtCore.Qt.LeftButton:
             self.x = e.x()
             self.y = e.y()
+
+    def customEvent(self, e):
+        if self.update_needed:
+            self.updateGL()
+            self.update_needed = False
 
     def keyPressEvent(self,e):
         self.vis.process_key(e)

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 '''
 To support various materials, different Bravais lattice systems need to be used
 in pyMolDyn2, so that the shapes and periodic boundary conditions of different

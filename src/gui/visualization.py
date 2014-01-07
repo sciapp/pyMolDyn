@@ -153,9 +153,6 @@ class Visualization():
         # rotation matrix with min rotation angle
         m = self.get_rotation_matrix(rot_axis, max(self.d,20)*rot_v*(dx**2+dy**2)**0.5)
         self.mat = m.dot(self.mat)
-#        self.mat[:,0] /= np.linalg.norm(self.mat[:,0])
-#        self.mat[:,1] /= np.linalg.norm(self.mat[:,1])
-#        self.mat[:,2] /= np.linalg.norm(self.mat[:,2])
 
     def set_camera(self):
         self.rightt = self.mat[:,0]

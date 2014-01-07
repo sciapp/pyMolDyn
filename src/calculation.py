@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 '''
 This module allows the analysis of surface-based molecular cavities in various 
 volumes. To do so, a volume and a list of atom positions and their cutoff radii
@@ -812,16 +813,15 @@ def atom_volume_discretization(atoms, volume):
 def count_frames(filename):
     import pybel
 
+    print filename
     n = 0
-    generator = pybel.readfile("xyz", filename) 
+    generator = pybel.readfile("xyz", filename.encode("ascii")) 
     try:
         while 1:
             generator.next()
             n += 1
     except StopIteration:
-        if frame_nr > n:
-            print 'Error: This frame does not exist.'
-            sys.exit(0)
+        pass
     return n
 
 def calculate_domains(filename, frame_nr, volume):

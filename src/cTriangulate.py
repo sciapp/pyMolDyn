@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from ctypes import *
 import numpy as np
 _mc = CDLL('libmc.so')
