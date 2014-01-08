@@ -359,6 +359,10 @@ class DomainCalculation:
         # step 3
         self.centers, self.surface_point_list = start_split_and_merge_pipeline(self.grid, self.discretization.grid, self.atom_discretization.discrete_positions, self.discretization.combined_translation_vectors, self.discretization.get_translation_vector)
         print "number of domains:", len(self.centers)
+        self.domain_volumes = []
+        for domain_index in range(len(self.centers)):
+            domain_volume = (self.grid == -(domain_index+1)).sum()*(self.discretization.s_step**3)
+            self.domain_volumes.append(domain_volume)
         self.triangles()
 
     def triangles(self):
