@@ -70,6 +70,7 @@ import numpy as np
 import numpy.linalg as la
 import h5py
 from gr3 import triangulate
+import os.path
 
 dimension = 3
 dimensions = range(dimension)
@@ -189,7 +190,6 @@ class Discretization(object):
                     self.grid[p] = 0
                 else:
                     self.grid[p] = 1
-            
             # step 5
             for p in itertools.product(*map(range, self.d)):
                 equivalent_points = [[p[i]+v[i] for i in dimensions] for v in self.combined_translation_vectors]
@@ -198,7 +198,6 @@ class Discretization(object):
                     equivalent_points_inside = [point for point in valid_equivalent_points if self.grid[point] == 0]
                     for point in equivalent_points_inside:
                         self.grid[point] = 1
-
             # step 6 & 7
             for p in itertools.product(*map(range, self.d)):
                 equivalent_points = [([p[i]+v[i] for i in dimensions], vi) for vi, v in enumerate(self.combined_translation_vectors)]
@@ -647,14 +646,15 @@ class CavityCalculation:
         return cavity_triangles
 
 class CalculationResults(object):
-    def __init__(self, cavity_calculation_or_filename):
+    def __init__(self, cavity_calculation_or_filename, frame_nr, resolution):
         if isinstance(cavity_calculation_or_filename, CavityCalculation):
             cavity_calculation = cavity_calculation_or_filename
             domain_calculation = cavity_calculation.domain_calculation
             discretization = domain_calculation.discretization
             atom_discretization = domain_calculation.atom_discretization
             atoms = atom_discretization.atoms
-            
+            self.resolution = discretization.d_max
+
             # Atom Information
             self.number_of_atoms = len(atoms.positions)
             self.atom_positions = np.array(atoms.positions)
@@ -681,35 +681,42 @@ class CalculationResults(object):
         else:
             filename = cavity_calculation_or_filename
             with h5py.File(filename, "r") as file:
-                self.number_of_atoms = int(file["atom_information/number_of_atoms"].value)
-                self.atom_positions = np.array(file["atom_information/atom_positions"])
-                self.atom_radii = np.array(file["atom_information/atom_radii"])
+                for i, calc in enumerate(file['frame{}'.format(frame_nr)].values()):
+                    if calc.attrs['resolution'] == resolution:
+                        calculation = file["frame{}/calculation{}".format(frame_nr, i+1)]
+                        break
+
+                self.resolution = calculation.attrs['resolution']
                 
-                self.number_of_domains = int(file["domain_information/number_of_domains"].value)
-                self.domain_centers = np.array(file["domain_information/domain_centers"])
-                self.domain_volumes = np.array(file["domain_information/domain_volumes"])
-                self.domain_surface_areas = np.array(file["domain_information/domain_surface_areas"])
+                self.number_of_atoms = int(calculation["atom_information/number_of_atoms"].value)
+                self.atom_positions = np.array(calculation["atom_information/atom_positions"])
+                self.atom_radii = np.array(calculation["atom_information/atom_radii"])
+                
+                self.number_of_domains = int(calculation["domain_information/number_of_domains"].value)
+                self.domain_centers = np.array(calculation["domain_information/domain_centers"])
+                self.domain_volumes = np.array(calculation["domain_information/domain_volumes"])
+                self.domain_surface_areas = np.array(calculation["domain_information/domain_surface_areas"])
                 self.domain_triangles = []
                 for domain_index in range(self.number_of_domains):
-                    self.domain_triangles.append(np.array(file["domain_information/domain_triangles/%d" % domain_index]))
+                    self.domain_triangles.append(np.array(calculation["domain_information/domain_triangles/%d" % domain_index]))
                 
-                self.number_of_multicavities = int(file["cavity_information/number_of_multicavities"].value)
-                self.multicavity_volumes = np.array(file["cavity_information/multicavity_volumes"])
-                self.multicavity_surface_areas = np.array(file["cavity_information/multicavity_surface_areas"])
+                self.number_of_multicavities = int(calculation["cavity_information/number_of_multicavities"].value)
+                self.multicavity_volumes = np.array(calculation["cavity_information/multicavity_volumes"])
+                self.multicavity_surface_areas = np.array(calculation["cavity_information/multicavity_surface_areas"])
                 self.multicavities = []
                 self.multicavity_triangles = []
-                for multicavity_index in range(self.number_of_multicavities):
-                    self.multicavities.append(set(np.array(file["cavity_information/multicavities/%d" % multicavity_index])))
-                    self.multicavity_triangles.append(np.array(file["cavity_information/multicavity_triangles/%d" % multicavity_index]))
-                if "center_cavity_information" in file:
-                    self.number_of_center_multicavities = int(file["center_cavity_information/number_of_multicavities"].value)
-                    self.center_multicavity_volumes = np.array(file["center_cavity_information/multicavity_volumes"])
-                    self.center_multicavity_surface_areas = np.array(file["center_cavity_information/multicavity_surface_areas"])
+                for multicavity_index in range(self.number_of_multicavities): 
+                    self.multicavities.append(set(np.array(calculation["cavity_information/multicavities/%d" % multicavity_index])))
+                    self.multicavity_triangles.append(np.array(calculation["cavity_information/multicavity_triangles/%d" % multicavity_index]))
+                if "center_cavity_information" in calculation:
+                    self.number_of_center_multicavities = int(calculation["center_cavity_information/number_of_multicavities"].value)
+                    self.center_multicavity_volumes = np.array(calculation["center_cavity_information/multicavity_volumes"])
+                    self.center_multicavity_surface_areas = np.array(calculation["center_cavity_information/multicavity_surface_areas"])
                     self.center_multicavities = []
                     self.center_multicavity_triangles = []
-                    for multicavity_index in range(self.number_of_multicavities):
-                        self.center_multicavities.append(set(np.array(file["center_cavity_information/multicavities/%d" % multicavity_index])))
-                        self.center_multicavity_triangles.append(np.array(file["center_cavity_information/multicavity_triangles/%d" % multicavity_index]))
+                    for multicavity_index in range(self.number_of_center_multicavities):
+                        self.center_multicavities.append(set(np.array(calculation["center_cavity_information/multicavities/%d" % multicavity_index])))
+                        self.center_multicavity_triangles.append(np.array(calculation["center_cavity_information/multicavity_triangles/%d" % multicavity_index]))
                 else:
                     self.number_of_center_multicavities = None
                     self.center_multicavity_volumes = None
@@ -718,34 +725,54 @@ class CalculationResults(object):
                     self.center_multicavity_triangles = None
                     
         
-    def export(self, filename):
-        with h5py.File(filename, "w") as file:
-            file["atom_information/number_of_atoms"] = self.number_of_atoms
-            file["atom_information/atom_positions"] = self.atom_positions
-            file["atom_information/atom_radii"] = self.atom_radii
-            
-            file["domain_information/number_of_domains"] = self.number_of_domains
-            file["domain_information/domain_centers"] = self.domain_centers
-            file["domain_information/domain_volumes"] = self.domain_volumes
-            file["domain_information/domain_surface_areas"] = self.domain_surface_areas
-            for domain_index in range(self.number_of_domains):
-                file["domain_information/domain_triangles/%d" % domain_index] = self.domain_triangles[domain_index]
+    def export(self, filename, frame_nr, use_surface_points):
+        with h5py.File(filename, "a") as file:
+            if use_surface_points:
+                if 'frame{}'.format(frame_nr) in file:
+                    if self.resolution not in [calc.attrs['resolution'] for calc in file['frame{}'.format(frame_nr)].values()]:
+                        calculation_nr = 1
+                        while "calculation{}".format(calculation_nr) in file['frame{}'.format(frame_nr)]:
+                            calculation_nr += 1
+                    else:
+                        print 'surface-based cavity data exists'
+                        return
+                    calculation = file['frame{}'.format(frame_nr)].create_group('calculation{}'.format(calculation_nr))
+                else:
+                    calculation = file.create_group('frame{}'.format(frame_nr)).create_group('calculation1')
+            else:
+                calculation_nr = 1
+                while file['frame{}/calculation{}'.format(frame_nr, calculation_nr)].attrs['resolution'] != self.resolution:
+                    calculation_nr += 1
+                calculation = file['frame{}/calculation{}'.format(frame_nr, calculation_nr)]
+            calculation.attrs['resolution'] = self.resolution
+
+            if use_surface_points:
+                calculation["atom_information/number_of_atoms"] = self.number_of_atoms
+                calculation["atom_information/atom_positions"] = self.atom_positions
+                calculation["atom_information/atom_radii"] = self.atom_radii
                 
-            file["cavity_information/number_of_multicavities"] = self.number_of_multicavities
-            file["cavity_information/multicavity_volumes"] = self.multicavity_volumes
-            file["cavity_information/multicavity_surface_areas"] = self.multicavity_surface_areas
-            for multicavity_index in range(self.number_of_multicavities):
-                file["cavity_information/multicavities/%d" % multicavity_index] = np.array(list(self.multicavities[multicavity_index]))
-                file["cavity_information/multicavity_triangles/%d" % multicavity_index] = self.multicavity_triangles[multicavity_index]
+                calculation["domain_information/number_of_domains"] = self.number_of_domains
+                calculation["domain_information/domain_centers"] = self.domain_centers
+                calculation["domain_information/domain_volumes"] = self.domain_volumes
+                calculation["domain_information/domain_surface_areas"] = self.domain_surface_areas
+                for domain_index in range(self.number_of_domains):
+                    calculation["domain_information/domain_triangles/%d" % domain_index] = self.domain_triangles[domain_index]
+                
+                calculation["cavity_information/number_of_multicavities"] = self.number_of_multicavities
+                calculation["cavity_information/multicavity_volumes"] = self.multicavity_volumes
+                calculation["cavity_information/multicavity_surface_areas"] = self.multicavity_surface_areas
+                for multicavity_index in range(self.number_of_multicavities):
+                    calculation["cavity_information/multicavities/%d" % multicavity_index] = np.array(list(self.multicavities[multicavity_index]))
+                    calculation["cavity_information/multicavity_triangles/%d" % multicavity_index] = self.multicavity_triangles[multicavity_index]
                 
             if self.number_of_center_multicavities is not None:
-                file["center_cavity_information/number_of_multicavities"] = self.number_of_center_multicavities
-                file["center_cavity_information/multicavity_volumes"] = self.center_multicavity_volumes
-                file["center_cavity_information/multicavity_surface_areas"] = self.center_multicavity_surface_areas
+                calculation["center_cavity_information/number_of_multicavities"] = self.number_of_center_multicavities
+                calculation["center_cavity_information/multicavity_volumes"] = self.center_multicavity_volumes
+                calculation["center_cavity_information/multicavity_surface_areas"] = self.center_multicavity_surface_areas
                 for multicavity_index in range(self.number_of_center_multicavities):
-                    file["center_cavity_information/multicavities/%d" % multicavity_index] = np.array(list(self.center_multicavities[multicavity_index]))
-                    file["center_cavity_information/multicavity_triangles/%d" % multicavity_index] = self.center_multicavity_triangles[multicavity_index]
-                    
+                    calculation["center_cavity_information/multicavities/%d" % multicavity_index] = np.array(list(self.center_multicavities[multicavity_index]))
+                    calculation["center_cavity_information/multicavity_triangles/%d" % multicavity_index] = self.center_multicavity_triangles[multicavity_index]
+    
     def add_center_cavity_information(self, cavity_calculation):
         self.number_of_center_multicavities = len(cavity_calculation.multicavities)
         self.center_multicavities = cavity_calculation.multicavities
@@ -765,36 +792,62 @@ class FakeDomainCalculation(object):
         self.centers = results.domain_centers
         self.discretization = discretization
         self.atom_discretization = atom_discretization
-    
-def calculate_cavities(filename, frame_nr, volume, use_surface_points=True):
-    exp_name = ''.join(filename.split(".")[:-1]+str(frame_nr))
-    if use_surface_points:
-        domain_calculation = calculate_domains(filename, frame_nr, volume)
-        print "Cavity calculation..."
-        cavity_calculation = CavityCalculation(domain_calculation)
-        results = CalculationResults(cavity_calculation)
-        results.export("results/"+exp_name + "_cs.hdf5")
+
+def calculated(filename, frame_nr, resolution, use_surface_points):
+    with h5py.File(filename, "a") as file:
+        if use_surface_points:
+            if 'frame{}'.format(frame_nr) in file:
+                if resolution not in [calc.attrs['resolution'] for calc in file['frame{}'.format(frame_nr)].values()]:
+                    return False
+                else:
+                    return True
+            else:
+                return False
+        else:
+            for calc in file['frame{}'.format(frame_nr)].values():
+                if calc.attrs['resolution'] == resolution :
+                    if 'center_cavity_information' in calc:
+                        return True
+                    else:
+                        return False
+
+def calculate_cavities(filename, frame_nr, volume, resolution, use_surface_points=True):
+    base_name = ''.join(os.path.basename(filename).split(".")[:-1])
+    exp_name = "results/{}.hdf5".format(base_name)
+    if not calculated(exp_name, frame_nr, resolution, use_surface_points):
+        if use_surface_points:
+            domain_calculation = calculate_domains(filename, frame_nr, volume, resolution)
+            print "Cavity calculation..."
+            cavity_calculation = CavityCalculation(domain_calculation)
+            results = CalculationResults(cavity_calculation, frame_nr, resolution)
+            results.export(exp_name, frame_nr, True)
+        else:
+            import pybel
+            generator = pybel.readfile("xyz", filename.encode("ascii")) 
+            try:
+                for i in range(frame_nr):
+                    molecule = generator.next()
+            except StopIteration:
+                if frame_nr > n:
+                    print 'Error: This frame does not exist.'
+                    sys.exit(0)
+            (atom_discretization, discretization) = atom_volume_discretization(molecule.atoms, volume, resolution)
+            
+            imported_results = CalculationResults(exp_name, frame_nr, resolution)
+            domain_calculation = FakeDomainCalculation(discretization, atom_discretization, imported_results)
+            print "Cavity calculation..."
+            cavity_calculation = CavityCalculation(domain_calculation, False)
+            imported_results.add_center_cavity_information(cavity_calculation)
+            imported_results.export(exp_name, frame_nr, False)
     else:
-        import pybel
-        try:
-            for i in range(frame_nr):
-                molecule = generator.next()
-        except StopIteration:
-            if frame_nr > n:
-                print 'Error: This frame does not exist.'
-                sys.exit(0)
-        (atom_discretization, discretization) = atom_volume_discretization(molecule.atoms, volume)
-        
-        imported_results = CalculationResults("results/"+exp_name + "_cs.hdf5")
-        domain_calculation = FakeDomainCalculation(discretization, atom_discretization, imported_results)
-        print "Cavity calculation..."
-        cavity_calculation = CavityCalculation(domain_calculation, False)
-        imported_results.add_center_cavity_information(cavity_calculation)
-        imported_results.export("results/"+exp_name + "_cc.hdf5")
+        print 'filename:', filename, 'frame:', frame_nr, 'resolution:', resolution, 'use_surface_points:', use_surface_points, 'exists' 
 
-    return cavity_calculation
+    #return cavity_calculation
 
-def atom_volume_discretization(atoms, volume):
+def atom_volume_discretization(atoms, volume, resolution):
+    '''
+        TODO
+    '''
     num_atoms = len(atoms)
     atom_positions = [atom.coords for atom in atoms]
     
@@ -804,7 +857,7 @@ def atom_volume_discretization(atoms, volume):
     atoms = Atoms(atom_positions, [2.8]*num_atoms)
     print "Volume discretization..."
     discretization_cache = DiscretizationCache('cache.hdf5')
-    discretization = discretization_cache.get_discretization(volume, 192)
+    discretization = discretization_cache.get_discretization(volume, resolution)
     print "Atom discretization..."
     atom_discretization = AtomDiscretization(atoms, discretization)
 
@@ -824,7 +877,7 @@ def count_frames(filename):
         pass
     return n
 
-def calculate_domains(filename, frame_nr, volume):
+def calculate_domains(filename, frame_nr, volume, resolution):
     import pybel
     
     n = 0
@@ -836,7 +889,7 @@ def calculate_domains(filename, frame_nr, volume):
         if frame_nr > n:
             print 'Error: This frame does not exist.'
             sys.exit(0)
-    (atom_discretization, discretization) = atom_volume_discretization(molecule.atoms, volume)
+    (atom_discretization, discretization) = atom_volume_discretization(molecule.atoms, volume, resolution)
     
     print "Cavity domain calculation..."
     domain_calculation = DomainCalculation(discretization, atom_discretization)
@@ -846,11 +899,14 @@ def calculate_domains(filename, frame_nr, volume):
 if __name__ == "__main__":
     import pybel
 
-    volume = volumes.HexagonalVolume(17.68943, 22.61158)
+#    volume = volumes.HexagonalVolume(17.68943, 22.61158)
 #    xyz/structure_c.xyz
-#    box_size = 27.079855
-#    volume = volumes.CubicVolume(box_size)
-    calculate_cavities("xyz/hexagonal.xyz", 1, volume)
+    box_size = 27.079855
+    volume = volumes.CubicVolume(box_size)
+    calculate_cavities("xyz/structure_c.xyz", 1, volume, 256)
+    calculate_cavities("xyz/structure_c.xyz", 1, volume, 256, False)
+
+#    calculate_cavities("xyz/hexagonal.xyz", 1, volume, 256)
 #    /Users/knodt/Home/datasets/data
-    calculate_cavities("xyz/hexagonal.xyz", 1, volume, False)
+#    calculate_cavities("xyz/hexagonal.xyz", 1, volume, 256, False)
     

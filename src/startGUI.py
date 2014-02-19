@@ -12,6 +12,9 @@ if __name__ == '__main__':
     app.setOrganizationDomain("fz-juelich.de")
     app.setApplicationName("pyMolDyn 2")
     
+    box_size = 27.079855
+    #volume = volumes.CubicVolume(box_size)
     volume = volumes.HexagonalVolume(17.68943, 22.61158)
-    window.show_dataset(volume, 'xyz/hexagonal.xyz',1)
+    #window.show_dataset(volume, 'xyz/structure_c.xyz',1, 64)
+    window.show_dataset(volume, 'xyz/hexagonal.xyz',1, 256)
     sys.exit(app.exec_())

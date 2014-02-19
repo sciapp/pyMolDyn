@@ -5,7 +5,26 @@ import sys
 import os.path
 import calculation
 
+class FileTabDock(QtGui.QDockWidget):
+    '''
+        DockWidget to the 'file'-tab
+    '''
+    def __init__(self, parent):
+        QtGui.QDockWidget.__init__(self,"file", parent)
+        self.setWidget(QtGui.QWidget())
+
+        self.layout     = QtGui.QHBoxLayout()
+        self.file_tab   = FileTab(self.widget())
+
+        self.layout.addWidget(self.file_tab)
+        self.widget().setLayout(self.layout)
+
+        self.setFeatures(QtGui.QDockWidget.DockWidgetMovable | QtGui.QDockWidget.DockWidgetFloatable)
+
 class FileTab(QtGui.QWidget):
+    '''
+        tab 'file' in the main widget
+    '''
 
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self,parent)
@@ -30,7 +49,8 @@ class FileTab(QtGui.QWidget):
         self.vbox.addLayout(self.button_hbox)
 
         self.file_list = DragList(self)
-        self.file_list.itemDoubleClicked.connect(self.double_click_on_item)
+        self.file_list.itemDoubleClicked.connect(self.calculate)
+        self.file_list.itemSelectionChanged.connect(self.selection_changed)
         self.vbox.addWidget(self.file_list)
 
         self.frame_chooser = LabeledFrameChooser(None, 10, 50, [i for i in range(1,40,2)], 'Frame')
@@ -38,8 +58,12 @@ class FileTab(QtGui.QWidget):
 
         self.setLayout(self.vbox)
 
-    def calculate(self):
-        pass
+    def selection_changed(self):
+        sel = self.file_list.get_selection()
+        if not sel or len(self.file_list.get_selection()) > 1:
+            return
+        filename = sel[0]
+        print 'change '+filename
 
     def remove_selected_files(self):
         self.file_list.remove_selected_files()
@@ -51,10 +75,17 @@ class FileTab(QtGui.QWidget):
             if fn:
                 self.file_list.add_file(fn)
 
-    def double_click_on_item(self):
+    def calculate(self):
+        if len(self.file_list.get_selection()) > 1:
+            print 'more than one dataset selected'
+            return
         filename = self.file_list.get_selection()[0]
-        self.frame_chooser.load_dataset(filename)
-        
+        if calculation.calculated(filename):
+            print 'berechnet'
+        #show dialog
+
+        #self.frame_chooser.load_dataset(filename)
+
 
 class DragList(QtGui.QListWidget):
     
@@ -63,6 +94,7 @@ class DragList(QtGui.QListWidget):
         self.setAcceptDrops(True)
         self.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
         self.setDragEnabled(True)
+
 
         self.datalist = {}
 
@@ -103,12 +135,13 @@ class FrameBar(QtGui.QWidget):
     def __init__(self, parent, minf, maxf, calculated):
         QtGui.QWidget.__init__(self, parent)
         
-        self.minf       = minf
-        self.maxf       = maxf
-        self.calculated = calculated
-        self.width      = 300
-        self.height     = 10 
-        self.selection  = self.minf
+        self.minf           = minf
+        self.maxf           = maxf
+        self.calculated     = calculated
+        self.width          = 300
+        self.height         = 10 
+        self.selection      = [self.minf]
+        self.last_clicked   = self.minf 
 
         self.setMinimumSize(self.width+5, self.height+5)
 
@@ -120,28 +153,45 @@ class FrameBar(QtGui.QWidget):
 
         p = self.painter
         
-        p.setPen(QtCore.Qt.SolidLine)
+        p.setPen(QtCore.Qt.NoPen)
         p.setBrush(red)
         p.drawRect(0, 0, self.width, self.height)
         p.setBrush(green)
-        p.setPen(QtCore.Qt.NoPen)
         for i in self.calculated:
             p.drawRect(i*self.h, 1, self.h, self.height-1)
         p.setBrush(blue)
-        p.drawRect((self.selection-self.minf)*self.h, 1, self.h, self.height-1)
+        for sel in self.selection:
+            p.drawRect((sel-self.minf)*self.h, 1, self.h, self.height-1)
+        p.setPen(QtCore.Qt.SolidLine)
+        p.setBrush(QtCore.Qt.NoBrush)
+        p.drawRect(0, 0, self.width, self.height)
 
     def mousePressEvent(self, e):
-        if e.buttons() and QtCore.Qt.LeftButton:
-            if 0 < e.x() < self.width and 0 < e.y() < self.height:
-                self.selection = self.minf + int(e.x()/self.h)
-                self.repaint()
+        self.process_mouse_press(e)
         e.ignore()
 
-    def mouseMoveEvent(self, e):
+    def process_mouse_press(self, e):
         if e.buttons() and QtCore.Qt.LeftButton:
-            if 0 < e.x() < self.width:
-                self.selection = self.minf + int(e.x()/self.h)
-                self.repaint()
+            clicked = self.minf + int(e.x()/self.h)
+            if 0 < e.x() < self.width and 0 < e.y() < self.height:
+                if e.modifiers() == QtCore.Qt.ShiftModifier:
+                    if self.last_clicked:
+                        for i in range(min(self.last_clicked, clicked), max(self.last_clicked, clicked)+1):
+                            if i not in self.selection:
+                                self.selection.append(i)
+                        self.selection.sort()
+                elif e.modifiers() == QtCore.Qt.CTRL:
+                    if clicked not in self.selection:
+                        self.selection.append(clicked)
+                        self.selection.sort()
+                else:
+                    self.selection = [clicked]
+            self.last_clicked = clicked
+            self.repaint()
+
+#e.modifiers() != QtCore.Qt.ShiftModifier
+    def mouseMoveEvent(self, e):
+        self.process_mouse_press(e)
         e.ignore()
 
     def get_selection(self):
@@ -149,7 +199,7 @@ class FrameBar(QtGui.QWidget):
 
     def set_selection(self, value):
         if self.minf <= value <= self.maxf:
-            self.selection = value
+            self.selection = [value]
         self.repaint()
 
     def paintEvent(self, e):
@@ -160,11 +210,10 @@ class FrameBar(QtGui.QWidget):
 
     def load_dataset(self, filename):
         n_frames = calculation.count_frames(filename)
-        print n_frames
         self.minf = 1
         self.maxf = n_frames
         self.calculated = [0]
-        self.selection = 0
+        self.selection = [0]
         self.repaint()
 
 class LabeledFrameChooser(QtGui.QWidget):
@@ -174,6 +223,7 @@ class LabeledFrameChooser(QtGui.QWidget):
         
         self.framebar   = FrameBar(self, minf, maxf, calculated)
         self.text       = text
+        self.maxf       = maxf
 
         self.init_gui()
 
@@ -193,6 +243,7 @@ class LabeledFrameChooser(QtGui.QWidget):
 
         hbox.addWidget(QtGui.QLabel(self.text+':', self))
         hbox.addWidget(self.lineedit)
+        hbox.addWidget(QtGui.QLabel('/'+str(self.maxf), self))
         hbox.addStretch()
 
         vbox.addLayout(hbox)

@@ -11,12 +11,22 @@ class UpdateGLEvent(QtCore.QEvent):
         QtCore.QEvent.__init__(self, QtCore.QEvent.Type(type))
 
 class GLWidget(QtOpenGL.QGLWidget):
+    '''
+        OpenGL widget to show the 3d-scene
+    '''
 
     def __init__(self, parent=None):
         QtOpenGL.QGLWidget.__init__(self, parent)
         self.dataset_loaded = False
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.bla = False
+        self.update_needed = False
+
+    def initializeGL(self):
+        pass
+
+#        from gr3 import clear
+#        clear()
+#        self.updateGL()
 
     def minimumSizeHint(self):
         return QtCore.QSize(display_size, display_size)
@@ -24,9 +34,12 @@ class GLWidget(QtOpenGL.QGLWidget):
     def sizeHint(self):
         return QtCore.QSize(display_size, display_size)
 
-    def show_dataset(self, volume, filename, frame_nr):
+    def show_dataset(self, volume, filename, frame_nr, calculation_nr):
+        '''
+            shows calculation {calculation_nr} of frame {frame_nr} in file {filename}
+        '''
         self.dataset_loaded = True
-        self.vis = visualization.Visualization(volume, filename, frame_nr)
+        self.vis = visualization.Visualization(volume, filename, frame_nr, calculation_nr)
         self.updateGL()
 
     def mouseMoveEvent(self, e):
@@ -63,6 +76,9 @@ class GLWidget(QtOpenGL.QGLWidget):
             self.update_needed = False
 
     def keyPressEvent(self,e):
+        '''
+            catches and processes key presses
+        '''
         self.vis.process_key(e)
     
         if e.key() == QtCore.Qt.Key_Right:
@@ -84,6 +100,9 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.updateGL()
         
     def paintGL(self):
+        '''
+            refresh scene
+        '''
         if self.dataset_loaded:
             self.vis.paint(self.geometry().width(), self.geometry().height())
 
