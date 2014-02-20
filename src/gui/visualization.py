@@ -83,8 +83,6 @@ class Visualization():
         self.set_camera()
         gr3.export("test.html",800,800)
 
-    def clear():
-        gr3.clear()
 
     def create_scene(self, show_cavities=True, center_based_cavities=False):
         global domain_meshes
@@ -185,3 +183,4 @@ class Visualization():
         '''
         self.set_camera()
         gr3.drawimage(0, width, 0, height, width, height, gr3.GR3_Drawable.GR3_DRAWABLE_OPENGL)
+

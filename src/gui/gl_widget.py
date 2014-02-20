@@ -14,6 +14,7 @@ class GLWidget(QtOpenGL.QGLWidget):
     '''
         OpenGL widget to show the 3d-scene
     '''
+class GLWidget(QtOpenGL.QGLWidget):
 
     def __init__(self, parent=None):
         QtOpenGL.QGLWidget.__init__(self, parent)

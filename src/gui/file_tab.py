@@ -54,6 +54,7 @@ class FileTab(QtGui.QWidget):
         self.vbox.addWidget(self.file_list)
 
         self.frame_chooser = LabeledFrameChooser(None, 10, 50, [i for i in range(1,40,2)], 'Frame')
+
         self.vbox.addWidget(self.frame_chooser)
 
         self.setLayout(self.vbox)
@@ -154,6 +155,7 @@ class FrameBar(QtGui.QWidget):
         p = self.painter
         
         p.setPen(QtCore.Qt.NoPen)
+
         p.setBrush(red)
         p.drawRect(0, 0, self.width, self.height)
         p.setBrush(green)
@@ -192,6 +194,7 @@ class FrameBar(QtGui.QWidget):
 #e.modifiers() != QtCore.Qt.ShiftModifier
     def mouseMoveEvent(self, e):
         self.process_mouse_press(e)
+
         e.ignore()
 
     def get_selection(self):
@@ -257,6 +260,7 @@ class LabeledFrameChooser(QtGui.QWidget):
     def load_dataset(self, filename):
         self.framebar.load_dataset(filename)
 
+
     def lineedit_return_pressed(self):
         try:
             value = int(self.lineedit.text())
@@ -274,5 +278,6 @@ class LabeledFrameChooser(QtGui.QWidget):
 if __name__ == '__main__':
     app     = QtGui.QApplication(sys.argv)
     fc      = LabeledFrameChooser(None, 10, 50, [i for i in range(1,40,2)], 'Frame')
+
     sys.exit(app.exec_())
 

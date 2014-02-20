@@ -907,6 +907,5 @@ if __name__ == "__main__":
     calculate_cavities("xyz/structure_c.xyz", 1, volume, 256, False)
 
 #    calculate_cavities("xyz/hexagonal.xyz", 1, volume, 256)
-#    /Users/knodt/Home/datasets/data
 #    calculate_cavities("xyz/hexagonal.xyz", 1, volume, 256, False)
     
