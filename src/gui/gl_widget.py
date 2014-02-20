@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from PySide import QtCore, QtGui, QtOpenGL
 import visualization
+from OpenGL.GL import *
 
 display_size = 800
 
@@ -21,13 +22,11 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.dataset_loaded = False
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.update_needed = False
+        self.dataset_loaded = False
 
     def initializeGL(self):
-        pass
-
-#        from gr3 import clear
-#        clear()
-#        self.updateGL()
+        from gr3 import clear
+        clear()
 
     def minimumSizeHint(self):
         return QtCore.QSize(display_size, display_size)
@@ -44,32 +43,35 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.updateGL()
 
     def mouseMoveEvent(self, e):
-        if e.buttons() & QtCore.Qt.LeftButton:
-           dx = e.x() - self.x
-           dy = e.y() - self.y
-           self.vis.rotate_mouse(dx, dy)
-           self.x = e.x()
-           self.y = e.y()
-           self.updateGL()
+        if self.dataset_loaded:
+            if e.buttons() & QtCore.Qt.LeftButton:
+               dx = e.x() - self.x
+               dy = e.y() - self.y
+               self.vis.rotate_mouse(dx, dy)
+               self.x = e.x()
+               self.y = e.y()
+               self.updateGL()
 
     def wheelEvent(self, e):
-        self.update_needed = True
-        if e.modifiers() != QtCore.Qt.ShiftModifier:
-            if e.orientation() == QtCore.Qt.Orientation.Vertical:
-                self.vis.zoom(e.delta())
-        else:
-            rot_v = 0.1
-            if e.orientation() == QtCore.Qt.Orientation.Horizontal:
-                self.vis.rotate_mouse(e.delta()*rot_v, 0)
+        if self.dataset_loaded:
+            self.update_needed = True
+            if e.modifiers() != QtCore.Qt.ShiftModifier:
+                if e.orientation() == QtCore.Qt.Orientation.Vertical:
+                    self.vis.zoom(e.delta())
             else:
-                self.vis.rotate_mouse(0, e.delta()*rot_v )
+                rot_v = 0.1
+                if e.orientation() == QtCore.Qt.Orientation.Horizontal:
+                    self.vis.rotate_mouse(e.delta()*rot_v, 0)
+                else:
+                    self.vis.rotate_mouse(0, e.delta()*rot_v )
 
-        QtGui.QApplication.postEvent(self, UpdateGLEvent())
+            QtGui.QApplication.postEvent(self, UpdateGLEvent())
 
     def mousePressEvent(self, e):
-        if e.buttons() and QtCore.Qt.LeftButton:
-            self.x = e.x()
-            self.y = e.y()
+        if self.dataset_loaded:
+            if e.buttons() and QtCore.Qt.LeftButton:
+                self.x = e.x()
+                self.y = e.y()
 
     def customEvent(self, e):
         if self.update_needed:
@@ -80,25 +82,26 @@ class GLWidget(QtOpenGL.QGLWidget):
         '''
             catches and processes key presses
         '''
-        self.vis.process_key(e)
-    
-        if e.key() == QtCore.Qt.Key_Right:
-            self.vis.process_key('right')
-        elif e.key() == QtCore.Qt.Key_Left:
-            self.vis.process_key('left')
-        elif e.key() == QtCore.Qt.Key_Up:
-            self.vis.process_key('up')
-        elif e.key() == QtCore.Qt.Key_Down:
-            self.vis.process_key('down')
-        elif e.key() == QtCore.Qt.Key_D:
-            self.vis.process_key('d')
-        elif e.key() == QtCore.Qt.Key_C:
-            self.vis.process_key('c')
-        elif e.key() == QtCore.Qt.Key_F:
-            self.vis.process_key('f')
-        else:
-            e.ignore()
-        self.updateGL()
+        if self.dataset_loaded:
+            self.vis.process_key(e)
+        
+            if e.key() == QtCore.Qt.Key_Right:
+                self.vis.process_key('right')
+            elif e.key() == QtCore.Qt.Key_Left:
+                self.vis.process_key('left')
+            elif e.key() == QtCore.Qt.Key_Up:
+                self.vis.process_key('up')
+            elif e.key() == QtCore.Qt.Key_Down:
+                self.vis.process_key('down')
+            elif e.key() == QtCore.Qt.Key_D:
+                self.vis.process_key('d')
+            elif e.key() == QtCore.Qt.Key_C:
+                self.vis.process_key('c')
+            elif e.key() == QtCore.Qt.Key_F:
+                self.vis.process_key('f')
+            else:
+                e.ignore()
+            self.updateGL()
         
     def paintGL(self):
         '''
