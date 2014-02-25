@@ -22,6 +22,8 @@ class MainWindow(QtGui.QMainWindow):
 
         self.docks = []
         
+        self.setTabPosition(QtCore.Qt.RightDockWidgetArea, QtGui.QTabWidget.North)
+        
         for dock in (self.file_dock, self.view_dock, self.image_video_dock):
             self.docks.append(dock)
 
@@ -31,7 +33,7 @@ class MainWindow(QtGui.QMainWindow):
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.image_video_dock, QtCore.Qt.Vertical)
 
         for dock in self.docks[1:]:
-             self.tabifyDockWidget(self.file_dock, dock)
+            self.tabifyDockWidget(self.file_dock, dock)
 
         #self.setStatusBar
         self.show()

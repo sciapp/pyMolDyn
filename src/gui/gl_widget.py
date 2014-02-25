@@ -25,8 +25,9 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.dataset_loaded = False
 
     def initializeGL(self):
-        from gr3 import clear
-        clear()
+        import gr3
+        gr3.setbackgroundcolor(0.0, 0.0, 0.0, 1.0)
+        gr3.clear()
 
     def minimumSizeHint(self):
         return QtCore.QSize(display_size, display_size)
