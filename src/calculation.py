@@ -71,6 +71,8 @@ import numpy.linalg as la
 import h5py
 from gr3 import triangulate
 import os.path
+from computation.split_and_merge.pipeline import start_split_and_merge_pipeline
+import util.colored_exceptions
 
 dimension = 3
 dimensions = range(dimension)
@@ -249,6 +251,11 @@ class Discretization(object):
             combined_translation_vector_index = -self.grid[point]-1
             combined_translation_vector = self.combined_translation_vectors[combined_translation_vector_index]
             return tuple([point[i]+combined_translation_vector[i] for i in dimensions])
+        
+    def get_translation_vector(self, point):
+        combined_translation_vector_index = -self.grid[point]-1
+        combined_translation_vector = self.combined_translation_vectors[combined_translation_vector_index]
+        return combined_translation_vector
 
     def continuous_to_discrete(self,point):
         '''
@@ -317,10 +324,11 @@ class DomainCalculation:
         reused for atoms with the same discrete radius.
      3. At this point, every point in the grid which is inside of the volume and
         still has a value of zero is part of a cavity domain. To find these 
-        domains, the method walk_domain is used and for each domain, centers and
-        surface points (points with a neighbor outside of the cavity domain) are
-        stored in lists. Points inside of a domain are marked with a negative
-        value indicating which domain they are part of.
+        domains, an optimized split and merge algorithm is applied to the whole grid. 
+        It returns the center and surface points of each cavity domain (points with 
+        a neighbor outside of the cavity domain) stored in lists. Points inside 
+        of a domain are marked with a negative value indicating which domain 
+        they are part of.
     '''
     def __init__(self, discretization, atom_discretization):
         # step 1
@@ -349,51 +357,13 @@ class DomainCalculation:
                             if grid_value == 0:
                                 self.grid[tuple(p)] = atom_index+1
         # step 3
-        domain_index = 0
-        self.centers = []
-        self.surface_point_list = []
-        for p in itertools.product(*map(range,self.discretization.d)):
-            if self.grid[p] == 0 and self.discretization.grid[p] == 0:
-                center, surface_points = self.walk_domain(p, domain_index)
-                self.centers.append(center)
-                self.surface_point_list.append(surface_points)
-                domain_index += 1
-        print "number of domains:", domain_index
+        self.centers, self.surface_point_list = start_split_and_merge_pipeline(self.grid, self.discretization.grid, self.atom_discretization.discrete_positions, self.discretization.combined_translation_vectors, self.discretization.get_translation_vector)
+        print "number of domains:", len(self.centers)
         self.domain_volumes = []
         for domain_index in range(len(self.centers)):
             domain_volume = (self.grid == -(domain_index+1)).sum()*(self.discretization.s_step**3)
             self.domain_volumes.append(domain_volume)
         self.triangles()
-
-    def walk_domain(self, p, domain_index):
-        '''
-        This function 'walks' through a cavity domain with a given index,
-        starting at the point p.
-        All neighbors of a point (which is inside of the domain) which are also
-        inside of a domain are marked as part of this domain and used for
-        further 'walking'.
-        '''
-        points_to_walk = [p]
-        max_squared_distance = 0
-        surface_points = []
-        while points_to_walk:
-            p = points_to_walk.pop()
-            if self.grid[p] == 0:
-                min_squared_distance = sys.maxint
-                for real_discrete_position in self.atom_discretization.discrete_positions:
-                    for v in self.discretization.combined_translation_vectors+[(0,0,0)]:
-                        discrete_position = [real_discrete_position[i]+v[i] for i in dimensions]
-                        squared_distance = sum([(discrete_position[i]-p[i])*(discrete_position[i]-p[i]) for i in dimensions])
-                        min_squared_distance = min(squared_distance,min_squared_distance)
-                if min_squared_distance > max_squared_distance:
-                    max_squared_distance = min_squared_distance
-                    center = p
-                self.grid[p] = -domain_index-1
-                if any([self.discretization.grid[n] < 0 or self.grid[n] > 0 for n in self.discretization.get_direct_neighbors(p)]):
-                    surface_points.append(p)
-                for neighbor in self.discretization.get_neighbors_in_volume(p):
-                    points_to_walk.append(neighbor)
-        return center, surface_points
 
     def triangles(self):
         if hasattr(self, "domain_triangles"):
@@ -908,4 +878,3 @@ if __name__ == "__main__":
 
 #    calculate_cavities("xyz/hexagonal.xyz", 1, volume, 256)
 #    calculate_cavities("xyz/hexagonal.xyz", 1, volume, 256, False)
-    
