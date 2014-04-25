@@ -78,10 +78,12 @@ class FileTab(QtGui.QWidget):
 #            print 'berechnet'
         #show dialog
         dia = CalculationDialog(self, self.file_list.get_selection())
-        print 'return' + str(dia.exec_())
-        print 'res' + str(dia.result())
-        
-
+        resolution, frame, ok = dia.calculation_settings()
+        if ok:
+            print 'res:', resolution, 'frame:', frame
+        else:
+            print 'Cancel'
+            
 class DragList(QtGui.QListWidget):
     
     def __init__(self, parent):
@@ -123,13 +125,6 @@ class DragList(QtGui.QListWidget):
             del self.datalist[item.text()]
 
     def get_selection(self):
-        return [str(item.text()) for item in self.selectedItems()]
-#        return [self.datalist[str(item.text())] for item in self.selectedItems()]
-
-
-if __name__ == '__main__':
-    app     = QtGui.QApplication(sys.argv)
-    fc      = LabeledFrameChooser(None, 10, 50, [i for i in range(1,40,2)], 'Frame')
-
-    sys.exit(app.exec_())
+#        return [str(item.text()) for item in self.selectedItems()]
+        return [self.datalist[str(item.text())] for item in self.selectedItems()]
 

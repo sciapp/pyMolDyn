@@ -73,6 +73,7 @@ from gr3 import triangulate
 import os.path
 from computation.split_and_merge.pipeline import start_split_and_merge_pipeline
 import util.colored_exceptions
+import time
 
 dimension = 3
 dimensions = range(dimension)
@@ -663,6 +664,7 @@ class CalculationResults(object):
                 self.atom_radii = np.array(calculation["atom_information/atom_radii"])
                 
                 self.number_of_domains = int(calculation["domain_information/number_of_domains"].value)
+                print calculation["domain_information/domain_centers"]
                 self.domain_centers = np.array(calculation["domain_information/domain_centers"])
                 self.domain_volumes = np.array(calculation["domain_information/domain_volumes"])
                 self.domain_surface_areas = np.array(calculation["domain_information/domain_surface_areas"])
@@ -715,6 +717,8 @@ class CalculationResults(object):
                     calculation_nr += 1
                 calculation = file['frame{}/calculation{}'.format(frame_nr, calculation_nr)]
             calculation.attrs['resolution'] = self.resolution
+            ts = time.localtime()
+            calculation.attrs['timestamp'] = '{}.{}.{} {}:{}'.format(ts[2], ts[1], ts[0], ts[3], ts[4])
 
             if use_surface_points:
                 calculation["atom_information/number_of_atoms"] = self.number_of_atoms
@@ -764,27 +768,45 @@ class FakeDomainCalculation(object):
         self.atom_discretization = atom_discretization
 
 def calculated(filename, frame_nr, resolution, use_surface_points):
-    with h5py.File(filename, "a") as file:
-        if use_surface_points:
-            if 'frame{}'.format(frame_nr) in file:
-                if resolution not in [calc.attrs['resolution'] for calc in file['frame{}'.format(frame_nr)].values()]:
-                    return False
-                else:
-                    return True
-            else:
-                return False
-        else:
-            for calc in file['frame{}'.format(frame_nr)].values():
-                if calc.attrs['resolution'] == resolution :
-                    if 'center_cavity_information' in calc:
+    base_name = ''.join(os.path.basename(filename).split(".")[:-1])
+    exp_name = "results/{}.hdf5".format(base_name)
+    if os.path.isfile(exp_name): 
+        with h5py.File(exp_name, "a") as file:
+            if use_surface_points:
+                if 'frame{}'.format(frame_nr) in file:
+                    if resolution in [calc.attrs['resolution'] for calc in file['frame{}'.format(frame_nr)].values()]:
                         return True
                     else:
                         return False
+                else:
+                    return False
+            else:
+                for calc in file['frame{}'.format(frame_nr)].values():
+                    if calc.attrs['resolution'] == resolution :
+                        if 'center_cavity_information' in calc:
+                            return True
+                        else:
+                            return False
+    else:
+        return False
+
+def calculated_frames(filename, resolution):
+    base_name = ''.join(os.path.basename(filename).split(".")[:-1])
+    exp_name = "results/{}.hdf5".format(base_name)
+    calc_frames = []
+
+    if os.path.isfile(exp_name): 
+        with h5py.File(exp_name, "a") as file:
+            for frame in file:
+                if resolution in [calc.attrs['resolution'] for calc in file[frame].values()]:
+                    frame_nr = int(frame[5:])
+                    calc_frames.append(frame_nr)
+    return calc_frames
 
 def calculate_cavities(filename, frame_nr, volume, resolution, use_surface_points=True):
     base_name = ''.join(os.path.basename(filename).split(".")[:-1])
     exp_name = "results/{}.hdf5".format(base_name)
-    if not calculated(exp_name, frame_nr, resolution, use_surface_points):
+    if not calculated(filename, frame_nr, resolution, use_surface_points):
         if use_surface_points:
             domain_calculation = calculate_domains(filename, frame_nr, volume, resolution)
             print "Cavity calculation..."
@@ -824,7 +846,8 @@ def atom_volume_discretization(atoms, volume, resolution):
     print num_atoms,"atoms"
     for atom_index in range(num_atoms):
         atom_positions[atom_index] = volume.get_equivalent_point(atom_positions[atom_index])
-    atoms = Atoms(atom_positions, [2.8]*num_atoms)
+    #atoms = Atoms(atom_positions, [2.8]*num_atoms)
+    atoms = Atoms(atom_positions, [2.65]*num_atoms)
     print "Volume discretization..."
     discretization_cache = DiscretizationCache('cache.hdf5')
     discretization = discretization_cache.get_discretization(volume, resolution)
@@ -836,7 +859,6 @@ def atom_volume_discretization(atoms, volume, resolution):
 def count_frames(filename):
     import pybel
 
-    print filename
     n = 0
     generator = pybel.readfile("xyz", filename.encode("ascii")) 
     try:
@@ -873,8 +895,9 @@ if __name__ == "__main__":
 #    xyz/structure_c.xyz
     box_size = 27.079855
     volume = volumes.CubicVolume(box_size)
-    calculate_cavities("xyz/structure_c.xyz", 1, volume, 256)
-    calculate_cavities("xyz/structure_c.xyz", 1, volume, 256, False)
+    #for i in range(1, count_frames("xyz/structure_c.xyz")+1):
+    calculate_cavities("xyz/structure_c.xyz", 1, volume, 64)
+    calculate_cavities("xyz/structure_c.xyz", 1, volume, 64, False)
 
-#    calculate_cavities("xyz/hexagonal.xyz", 1, volume, 256)
-#    calculate_cavities("xyz/hexagonal.xyz", 1, volume, 256, False)
+#    calculate_cavities("xyz/hexagonal.xyz", 1, volume, 64)
+#    calculate_cavities("xyz/hexagonal.xyz", 1, volume, 64, False)

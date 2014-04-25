@@ -11,7 +11,7 @@ from calculation import *
 
 class Visualization():
 
-    def __init__(self, volume, filename, frame_nr, resolution):
+    def __init__(self, volume, filename, frame_nr, resolution, use_surface_points):
         self.domain_meshes = []
         self.cavity_meshes = []
 

@@ -1,34 +1,118 @@
 # -*- coding: utf-8 -*-
 from PySide import QtCore, QtGui
+from gui.dialogs.util.calc_table import *
+from gui.dialogs.util.framechooser import LabeledFrameChooser
+import calculation
+import os.path 
+
 
 class CalculationDialog(QtGui.QDialog):
+
+    FRAME_MIN = 32
+    FRAME_MAX = 1024
 
     def __init__(self, parent=None, filenames=[]):
         QtGui.QDialog.__init__(self, parent)
 
         vbox            = QtGui.QVBoxLayout() 
         button_hbox     = QtGui.QHBoxLayout() 
-        self.file_list  = QtGui.QListWidget(self)
+        res_hbox        = QtGui.QHBoxLayout()
 
-        for fn in filenames:
-            self.file_list.addItem(fn)
+        self.filenames  = filenames
+        self.basenames  = [os.path.basename(path) for path in filenames]
+        self.res_slider = QtGui.QSlider(QtCore.Qt.Horizontal, self)
+        self.res_slider.setMinimum(self.FRAME_MIN)
+        self.res_slider.setMaximum(self.FRAME_MAX)
+        self.res_slider.valueChanged[int].connect(self.slider_changing)
+        self.res_slider.sliderReleased.connect(self.slider_released)
+        self.lineedit   = QtGui.QLineEdit(self)
+        self.lineedit.setFocusPolicy(QtCore.Qt.StrongFocus)
+        self.lineedit.setMinimumSize(30, 1)
+        self.lineedit.setMaximumSize(40, 40)
+        self.lineedit.returnPressed.connect(self.lineedit_return)
 
-        vbox.addWidget(self.file_list)
-        if len(filenames) == 1:
-            self.frame_chooser = LabeledFrameChooser(None, 10, 50, [i for i in range(1,40,2)], 'Frame')
-            vbox.addWidget(self.frame_chooser)
+        res_hbox.addWidget(QtGui.QLabel('resolution:', self))
+        res_hbox.addWidget(self.res_slider)
+        res_hbox.addWidget(self.lineedit)
+
+        # set font
+#        font = QFont("Courier New", 14)
+#        table_view.setFont(font)
+        # set column width to fit contents (set font first!)
+        # enable sorting
+#        table_view.setSortingEnabled(True)
 
         ok_button = QtGui.QPushButton('Ok', self)
+        ok_button.setAutoDefault(False)
         ok_button.clicked.connect(self.ok)
         button_hbox.addWidget(ok_button)
 
         cancel_button = QtGui.QPushButton('Cancel', self)
+        cancel_button.setAutoDefault(False)
         cancel_button.clicked.connect(self.cancel)
         button_hbox.addWidget(cancel_button)
+        
+        resolution = 64
+        
+        self.table_view = CalculationTable(self)
+        self.update_table(resolution)
+        self.res_slider.setValue(resolution)
+
+        vbox.addLayout(res_hbox)
+        vbox.addWidget(self.table_view)
+
+        if len(filenames) == 1:
+            n_frames    = calculation.count_frames(filenames[0])
+            calc_frames = calculation.calculated_frames(filenames[0], resolution)
+            self.frame_chooser = LabeledFrameChooser(None, 0, n_frames, calc_frames, 'Frame')
+            vbox.addWidget(self.frame_chooser)
 
         vbox.addLayout(button_hbox)
         self.setLayout(vbox)
         self.setWindowTitle("Calculation Settings")
+    
+    def update_table(self, resolution):
+        self.lineedit.setText(str(resolution))
+
+        data_list  = [(filename, self.timestamp(self.filenames[i], resolution, surface_based=True), self.timestamp(self.filenames[i], resolution, surface_based=False)) for i, filename in enumerate(self.basenames)]
+        header = ['dataset', 'surface based', 'center based']
+        
+        table_model = TableModel(self, data_list, header)
+        self.table_view.setModel(table_model)
+        self.table_view.resizeColumnsToContents()
+        self.table_view.resizeRowsToContents()
+
+    def lineedit_return(self):
+        try:
+            resolution = int(self.lineedit.text())
+            self.res_slider.setValue(resolution)
+            self.update_table(resolution)
+        except ValueError:
+            pass
+            #print 'Enter a valid number'
+
+    def slider_changing(self, resolution):
+        self.lineedit.setText(str(resolution))
+
+    def slider_released(self):
+        self.update_table(self.res_slider.value())
+
+    def timestamp(self, filename, resolution, surface_based):
+        import h5py
+        print filename
+
+        if os.path.isfile(filename):
+            if all([calculation.calculated(filename, frame_nr, resolution, True) for frame_nr in range(1, calculation.count_frames(filename)+1)]):
+                if surface_based:
+                    if not all([calculation.calculated(filename, frame_nr, resolution, False) for frame_nr in range(1, calculation.count_frames(filename)+1)]):
+                        return 'X'
+                base_name = ''.join(os.path.basename(filename).split(".")[:-1])
+                exp_name = "results/{}.hdf5".format(base_name)
+                with h5py.File(exp_name, "r") as file:
+                    for calc in file['frame1'.format()].values():
+                        if calc.attrs['resolution'] == resolution:
+                            return calc.attrs['timestamp']
+        return 'X' 
 
     def ok(self):
         self.done(QtGui.QDialog.Accepted)
@@ -36,145 +120,7 @@ class CalculationDialog(QtGui.QDialog):
     def cancel(self):
         self.done(QtGui.QDialog.Rejected)
 
-class FrameBar(QtGui.QWidget):
-
-    def __init__(self, parent, minf, maxf, calculated):
-        QtGui.QWidget.__init__(self, parent)
-        
-        self.minf           = minf
-        self.maxf           = maxf
-        self.calculated     = calculated
-        self.width          = 300
-        self.height         = 10 
-        self.selection      = [self.minf]
-        self.last_clicked   = self.minf 
-
-        self.setMinimumSize(self.width+5, self.height+5)
-
-    def draw(self):
-        red     = QtGui.QColor(255,180,180)
-        green   = QtGui.QColor(180,255,180)
-        blue    = QtGui.QColor(180,180,255)
-        self.h  = float(self.width)/(self.maxf+1-self.minf)
-
-        p = self.painter
-        
-        p.setPen(QtCore.Qt.NoPen)
-
-        p.setBrush(red)
-        p.drawRect(0, 0, self.width, self.height)
-        p.setBrush(green)
-        for i in self.calculated:
-            p.drawRect(i*self.h, 1, self.h, self.height-1)
-        p.setBrush(blue)
-        for sel in self.selection:
-            p.drawRect((sel-self.minf)*self.h, 1, self.h, self.height-1)
-        p.setPen(QtCore.Qt.SolidLine)
-        p.setBrush(QtCore.Qt.NoBrush)
-        p.drawRect(0, 0, self.width, self.height)
-
-    def mousePressEvent(self, e):
-        self.process_mouse_press(e)
-        e.ignore()
-
-    def process_mouse_press(self, e):
-        if e.buttons() and QtCore.Qt.LeftButton:
-            clicked = self.minf + int(e.x()/self.h)
-            if 0 < e.x() < self.width and 0 < e.y() < self.height:
-                if e.modifiers() == QtCore.Qt.ShiftModifier:
-                    if self.last_clicked:
-                        for i in range(min(self.last_clicked, clicked), max(self.last_clicked, clicked)+1):
-                            if i not in self.selection:
-                                self.selection.append(i)
-                        self.selection.sort()
-                elif e.modifiers() == QtCore.Qt.CTRL:
-                    if clicked not in self.selection:
-                        self.selection.append(clicked)
-                        self.selection.sort()
-                else:
-                    self.selection = [clicked]
-            self.last_clicked = clicked
-            self.repaint()
-
-    def mouseMoveEvent(self, e):
-        self.process_mouse_press(e)
-
-        e.ignore()
-
-    def get_selection(self):
-        return self.selection
-
-    def set_selection(self, value):
-        if self.minf <= value <= self.maxf:
-            self.selection = [value]
-        self.repaint()
-
-    def paintEvent(self, e):
-        self.painter = QtGui.QPainter()
-        self.painter.begin(self)
-        self.draw()
-        self.painter.end()
-
-    def load_dataset(self, filename):
-        n_frames = calculation.count_frames(filename)
-        self.minf = 1
-        self.maxf = n_frames
-        self.calculated = [0]
-        self.selection = [0]
-        self.repaint()
-
-class LabeledFrameChooser(QtGui.QWidget):
-    
-    def __init__(self, parent, minf, maxf, calculated, text):
-        QtGui.QWidget.__init__(self, parent)
-        
-        self.framebar   = FrameBar(self, minf, maxf, calculated)
-        self.text       = text
-        self.maxf       = maxf
-
-        self.init_gui()
-
-    def init_gui(self):
-        
-        hbox = QtGui.QHBoxLayout()
-        vbox = QtGui.QVBoxLayout()
-    
-        self.lineedit   = QtGui.QLineEdit(self)
-
-        self.lineedit.setMinimumSize(30, 1)
-        self.lineedit.setMaximumSize(40, 40)
-        
-        self.lineedit.setText(str(self.framebar.get_selection()))
-        self.lineedit.setAlignment(QtCore.Qt.AlignRight)
-        self.lineedit.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)        
-
-        hbox.addWidget(QtGui.QLabel(self.text+':', self))
-        hbox.addWidget(self.lineedit)
-        hbox.addWidget(QtGui.QLabel('/'+str(self.maxf), self))
-        hbox.addStretch()
-
-        vbox.addLayout(hbox)
-        vbox.addWidget(self.framebar)
-
-        self.lineedit.returnPressed.connect(self.lineedit_return_pressed)
-        
-        self.setLayout(vbox)
-        self.show()
-
-    def load_dataset(self, filename):
-        self.framebar.load_dataset(filename)
-
-
-    def lineedit_return_pressed(self):
-        try:
-            value = int(self.lineedit.text())
-        except ValueError:
-            print 'Enter a valid number'
-            sys.exit()
-        self.framebar.set_selection(value)
-
-    def mousePressEvent(self, e):
-        self.lineedit.setText(str(self.framebar.get_selection()))
-
-    def mouseMoveEvent(self, e):
-        self.lineedit.setText(str(self.framebar.get_selection()))
+    def calculation_settings(self):
+        ok = self.exec_()
+        frames = [-1] if len(self.filenames) > 1 else self.frame_chooser.value()
+        return self.res_slider.value(), frames, ok

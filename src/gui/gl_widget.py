@@ -35,12 +35,12 @@ class GLWidget(QtOpenGL.QGLWidget):
     def sizeHint(self):
         return QtCore.QSize(display_size, display_size)
 
-    def show_dataset(self, volume, filename, frame_nr, calculation_nr):
+    def show_dataset(self, volume, filename, frame_nr, resolution, use_surface_points):
         '''
             shows calculation {calculation_nr} of frame {frame_nr} in file {filename}
         '''
         self.dataset_loaded = True
-        self.vis = visualization.Visualization(volume, filename, frame_nr, calculation_nr)
+        self.vis = visualization.Visualization(volume, filename, frame_nr, resolution, use_surface_points)
         self.updateGL()
 
     def mouseMoveEvent(self, e):

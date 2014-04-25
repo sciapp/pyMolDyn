@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import visualization
+import calculation
 from gui.file_tab import FileTabDock
 from gui.view_tab import ViewTabDock
 from gui.image_video_tab import ImageVideoTabDock
@@ -35,7 +36,6 @@ class MainWindow(QtGui.QMainWindow):
         for dock in self.docks[1:]:
             self.tabifyDockWidget(self.file_dock, dock)
 
-        #self.setStatusBar
         self.show()
 
     def keyPressEvent(self, e):
@@ -49,9 +49,11 @@ class MainWindow(QtGui.QMainWindow):
                     dock.show()
                 self.showNormal()
  
-    def show_dataset(self, volume, filename, frame_nr, resolution):
+    def show_dataset(self, volume, filename, frame_nr, resolution, use_surface_points):
         self.statusBar().showMessage(filename)
-        self.center.show_dataset(volume, filename, frame_nr, resolution)
+        
+        if visualization.calculated(filename, frame_nr, resolution, use_surface_points):
+            self.center.show_dataset(volume, filename, frame_nr, resolution, use_surface_points)
 
 #    def closeEvent(self, event):
 #        reply = QtGui.QMessageBox.question(self, 'Message',
@@ -78,6 +80,6 @@ class CentralWidget(QtGui.QWidget):
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setLayout(mainLayout)
 
-    def show_dataset(self, volume, filename, frame_nr, resolution):
-        self.gl_widget.show_dataset(volume, filename, frame_nr, resolution)
+    def show_dataset(self, volume, filename, frame_nr, resolution, use_surface_points):
+        self.gl_widget.show_dataset(volume, filename, frame_nr, resolution, use_surface_points)
 
