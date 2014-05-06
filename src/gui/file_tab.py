@@ -73,14 +73,32 @@ class FileTab(QtGui.QWidget):
                 self.file_list.add_file(fn)
 
     def calculate(self):
-        filename = self.file_list.get_selection()[0]
+        filenames = map(str, self.file_list.get_selection())
 #        if calculation.calculated(filename):
 #            print 'berechnet'
         #show dialog
-        dia = CalculationDialog(self, self.file_list.get_selection())
-        resolution, frame, ok = dia.calculation_settings()
+        dia = CalculationDialog(self, filenames) 
+        resolution, frames, ok = dia.calculation_settings()
+        surface_based = True
+
+        # cubic volume
+        box_size = 27.079855
+        volume = calculation.volumes.CubicVolume(box_size)
         if ok:
-            print 'res:', resolution, 'frame:', frame
+            print 'calculating'
+            if frames[0] == -1:
+                for fn in filenames:
+                    for f in calculation.count_frames(fn):
+                        print 'res:', resolution, 'frame:', f, 'filename', fn
+                        calculation.calculate_cavities(fn, frame, volume, resolution, True)
+                        if not surface_based:
+                            calculation.calculate_cavities(fn, frame, volume, resolution, False)
+            else:
+                for frame in frames:
+                    calculation.calculate_cavities(filenames[0], frame, volume, resolution)
+                    calculation.calculate_cavities(filenames[0], frame, volume, resolution, False)
+                #window.show_dataset(volume, filenames[0], frames[-1], resolution, surface_based)
+            print 'calculation finished'
         else:
             print 'Cancel'
             

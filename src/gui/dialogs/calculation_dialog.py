@@ -54,6 +54,12 @@ class CalculationDialog(QtGui.QDialog):
         
         resolution = 64
         
+
+        if len(self.filenames) == 1:
+            n_frames    = calculation.count_frames(filenames[0])
+            calc_frames = calculation.calculated_frames(filenames[0], resolution)
+            self.frame_chooser = LabeledFrameChooser(None, 1, n_frames, calc_frames, 'Frame')
+        
         self.table_view = CalculationTable(self)
         self.update_table(resolution)
         self.res_slider.setValue(resolution)
@@ -61,10 +67,7 @@ class CalculationDialog(QtGui.QDialog):
         vbox.addLayout(res_hbox)
         vbox.addWidget(self.table_view)
 
-        if len(filenames) == 1:
-            n_frames    = calculation.count_frames(filenames[0])
-            calc_frames = calculation.calculated_frames(filenames[0], resolution)
-            self.frame_chooser = LabeledFrameChooser(None, 0, n_frames, calc_frames, 'Frame')
+        if len(self.filenames) == 1:
             vbox.addWidget(self.frame_chooser)
 
         vbox.addLayout(button_hbox)
@@ -72,21 +75,37 @@ class CalculationDialog(QtGui.QDialog):
         self.setWindowTitle("Calculation Settings")
     
     def update_table(self, resolution):
-        self.lineedit.setText(str(resolution))
 
-        data_list  = [(filename, self.timestamp(self.filenames[i], resolution, surface_based=True), self.timestamp(self.filenames[i], resolution, surface_based=False)) for i, filename in enumerate(self.basenames)]
-        header = ['dataset', 'surface based', 'center based']
+        if len(self.filenames) == 1:
+            sel = self.frame_chooser.value()
+            #do while
+            i = 0
+            data_list  = [(filename, self.timestamp(self.filenames[i], resolution, surface_based=True), self.timestamp(self.filenames[i], resolution, surface_based=False)) for i, filename in enumerate(self.basenames)]
+            while not calculation.calculated(filename, sel[i], resolution, False) and i < len(sel):
+                i += 1
+                data_list  = [(filename, self.timestamp(self.filenames[i], resolution, surface_based=True), self.timestamp(self.filenames[i], resolution, surface_based=False)) for i, filename in enumerate(self.basenames)]
+        else:
+            data_list  = [(filename, self.timestamp(self.filenames[i], resolution, surface_based=True), self.timestamp(self.filenames[i], resolution, surface_based=False)) for i, filename in enumerate(self.basenames)]
         
+        header = ['dataset', 'surface based', 'center based']
         table_model = TableModel(self, data_list, header)
         self.table_view.setModel(table_model)
+        
         self.table_view.resizeColumnsToContents()
         self.table_view.resizeRowsToContents()
+
+    def update_frame_chooser(self, resolution):
+        if len(self.filenames) == 1:
+            calc_frames = calculation.calculated_frames(self.filenames[0], resolution)
+            self.frame_chooser.set_calculated_frames(calc_frames)
+            print 'resolution', resolution
 
     def lineedit_return(self):
         try:
             resolution = int(self.lineedit.text())
             self.res_slider.setValue(resolution)
             self.update_table(resolution)
+            self.update_frame_chooser(resolution)
         except ValueError:
             pass
             #print 'Enter a valid number'
@@ -95,23 +114,27 @@ class CalculationDialog(QtGui.QDialog):
         self.lineedit.setText(str(resolution))
 
     def slider_released(self):
-        self.update_table(self.res_slider.value())
+        resolution = self.res_slider.value()
+        self.update_table(resolution)
+        self.update_frame_chooser(resolution)
 
-    def timestamp(self, filename, resolution, surface_based):
+    def timestamp(self, filename, resolution, surface_based, frame_nr=-1):
         import h5py
-        print filename
 
         if os.path.isfile(filename):
-            if all([calculation.calculated(filename, frame_nr, resolution, True) for frame_nr in range(1, calculation.count_frames(filename)+1)]):
-                if surface_based:
-                    if not all([calculation.calculated(filename, frame_nr, resolution, False) for frame_nr in range(1, calculation.count_frames(filename)+1)]):
-                        return 'X'
-                base_name = ''.join(os.path.basename(filename).split(".")[:-1])
-                exp_name = "results/{}.hdf5".format(base_name)
-                with h5py.File(exp_name, "r") as file:
-                    for calc in file['frame1'.format()].values():
-                        if calc.attrs['resolution'] == resolution:
-                            return calc.attrs['timestamp']
+            if frame_nr == -1:
+                if all([calculation.calculated(filename, frame_nr, resolution, True) for frame_nr in range(1, calculation.count_frames(filename)+1)]):
+                    if surface_based:
+                        if not all([calculation.calculated(filename, frame_nr, resolution, False) for frame_nr in range(1, calculation.count_frames(filename)+1)]):
+                            return 'X'
+                    base_name = ''.join(os.path.basename(filename).split(".")[:-1])
+                    exp_name = "results/{}.hdf5".format(base_name)
+                    with h5py.File(exp_name, "r") as file:
+                        for calc in file['frame{}'.format(frame_nr)].values():
+                            if calc.attrs['resolution'] == resolution:
+                                return calc.attrs['timestamp']
+            elif calculation.calculated(filename, frame_nr, resolution, False):
+                return self.timestamp(filename, resolution, False, frame_nr)
         return 'X' 
 
     def ok(self):

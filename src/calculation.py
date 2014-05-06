@@ -870,6 +870,7 @@ def count_frames(filename):
     return n
 
 def calculate_domains(filename, frame_nr, volume, resolution):
+    print 'filename, frame_nr, volume, resolution', type(filename), type(frame_nr), type(volume), type(resolution)
     import pybel
     
     n = 0
