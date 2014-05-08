@@ -75,15 +75,17 @@ class CalculationDialog(QtGui.QDialog):
         self.setWindowTitle("Calculation Settings")
     
     def update_table(self, resolution):
-
+        print 'update_table'
         if len(self.filenames) == 1:
             sel = self.frame_chooser.value()
             #do while
-            i = 0
+            j = 0
             data_list  = [(filename, self.timestamp(self.filenames[i], resolution, surface_based=True), self.timestamp(self.filenames[i], resolution, surface_based=False)) for i, filename in enumerate(self.basenames)]
-            while not calculation.calculated(filename, sel[i], resolution, False) and i < len(sel):
-                i += 1
+            j += 1
+            while j < len(sel) and not calculation.calculated(filename, sel[j], resolution, False):
                 data_list  = [(filename, self.timestamp(self.filenames[i], resolution, surface_based=True), self.timestamp(self.filenames[i], resolution, surface_based=False)) for i, filename in enumerate(self.basenames)]
+                print j, len(sel)
+                j += 1
         else:
             data_list  = [(filename, self.timestamp(self.filenames[i], resolution, surface_based=True), self.timestamp(self.filenames[i], resolution, surface_based=False)) for i, filename in enumerate(self.basenames)]
         
@@ -104,7 +106,9 @@ class CalculationDialog(QtGui.QDialog):
         try:
             resolution = int(self.lineedit.text())
             self.res_slider.setValue(resolution)
+            print 'before update table'
             self.update_table(resolution)
+            print 'after update table'
             self.update_frame_chooser(resolution)
         except ValueError:
             pass
