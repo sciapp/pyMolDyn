@@ -20,4 +20,5 @@ calculate_domain_centers.o: calculate_domain_centers.c
 
 clean:
 	rm -rf *.o *.so
+	rm -f *.pyc *.pyo
 

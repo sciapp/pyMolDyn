@@ -5,5 +5,6 @@ all:
 	for i in $(SUBDIRS); do make -C $$i all; done
 
 clean:
+	rm -rf *.pyo *.pyc
 	for i in $(SUBDIRS); do make -C $$i clean; done
 

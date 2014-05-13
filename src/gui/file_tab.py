@@ -4,7 +4,7 @@ from PySide import QtCore, QtGui
 import sys
 import os.path
 import calculation
-from gui.dialogs.calculation_dialog import CalculationDialog
+from gui.dialogs.calc_settings_dialog import CalculationSettingsDialog
 
 class FileTabDock(QtGui.QDockWidget):
     '''
@@ -12,10 +12,10 @@ class FileTabDock(QtGui.QDockWidget):
     '''
     def __init__(self, parent):
         QtGui.QDockWidget.__init__(self,"file", parent)
-        self.setWidget(QtGui.QWidget())
+        self.setWidget(QtGui.QWidget(self))
 
         self.layout     = QtGui.QHBoxLayout()
-        self.file_tab   = FileTab(self.widget())
+        self.file_tab   = FileTab(self.widget(), parent)
 
         self.layout.addWidget(self.file_tab)
         self.widget().setLayout(self.layout)
@@ -27,9 +27,10 @@ class FileTab(QtGui.QWidget):
         tab 'file' in the main widget
     '''
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, main_window=None):
         QtGui.QWidget.__init__(self,parent)
         self.init_gui()
+        self.main_window = main_window
 
     def init_gui(self):
         self.vbox = QtGui.QVBoxLayout()
@@ -77,7 +78,7 @@ class FileTab(QtGui.QWidget):
 #        if calculation.calculated(filename):
 #            print 'berechnet'
         #show dialog
-        dia = CalculationDialog(self, filenames) 
+        dia = CalculationSettingsDialog(self, filenames) 
         resolution, frames, ok = dia.calculation_settings()
         surface_based = True
 
@@ -97,7 +98,7 @@ class FileTab(QtGui.QWidget):
                 for frame in frames:
                     calculation.calculate_cavities(filenames[0], frame, volume, resolution)
                     calculation.calculate_cavities(filenames[0], frame, volume, resolution, False)
-                #window.show_dataset(volume, filenames[0], frames[-1], resolution, surface_based)
+                self.main_window.show_dataset(volume, filenames[0], frames[-1], resolution, surface_based)
             print 'calculation finished'
         else:
             print 'Cancel'
