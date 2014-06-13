@@ -55,13 +55,14 @@ class FileTab(QtGui.QWidget):
         self.file_list.itemSelectionChanged.connect(self.selection_changed)
         self.vbox.addWidget(self.file_list)
 
+        self.file_list.add_file('/Users/knodt/Home/md/xyz/structure_c.xyz')
+
         self.setLayout(self.vbox)
 
     def selection_changed(self):
         sel = self.file_list.get_selection()
         if not sel or len(self.file_list.get_selection()) > 1:
             return
-        filename = sel[0]
 
     def remove_selected_files(self):
         self.file_list.remove_selected_files()
@@ -75,34 +76,41 @@ class FileTab(QtGui.QWidget):
 
     def calculate(self):
         filenames = map(str, self.file_list.get_selection())
-#        if calculation.calculated(filename):
-#            print 'berechnet'
-        #show dialog
+        if len(filenames) == 0:
+            QtGui.QMessageBox.information(self, 'Information', "Choose a dataset", QtGui.QMessageBox.Ok)
+            return
         dia = CalculationSettingsDialog(self, filenames) 
-        resolution, frames, ok = dia.calculation_settings()
-        surface_based = True
+        resolution, frames, use_center_points, ok = dia.calculation_settings()
 
         # cubic volume
         box_size = 27.079855
         volume = calculation.volumes.CubicVolume(box_size)
         if ok:
-            print 'calculating'
-            if frames[0] == -1:
-                for fn in filenames:
-                    for f in calculation.count_frames(fn):
-                        print 'res:', resolution, 'frame:', f, 'filename', fn
-                        calculation.calculate_cavities(fn, frame, volume, resolution, True)
-                        if not surface_based:
-                            calculation.calculate_cavities(fn, frame, volume, resolution, False)
-            else:
+            for fn in filenames:
+                frames = range(1, calculation.count_frames(fn)+1) if frames[0] == -1 else frames
                 for frame in frames:
-                    calculation.calculate_cavities(filenames[0], frame, volume, resolution)
-                    calculation.calculate_cavities(filenames[0], frame, volume, resolution, False)
-                self.main_window.show_dataset(volume, filenames[0], frames[-1], resolution, surface_based)
+                    if calculation.calculated(fn, frame, resolution, use_center_points):
+                        #show Yes No Dialog
+                        reply = QtGui.QMessageBox.warning(self, 'Warning', "Are you sure to overwrite existing results?", QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+                        if reply == QtGui.QMessageBox.No:
+                            continue
+                    self.calculate_frame(fn, frame, volume, resolution, use_center_points)
+                    self.main_window.show_dataset(volume, fn, frames[-1], resolution, use_center_points)
             print 'calculation finished'
+
+    def calculate_frame(self, filename, frame_nr, volume, resolution, use_center_points):
+        if calculation.calculated(filename, frame_nr, resolution, True):
+            base_name = ''.join(os.path.basename(filename).split(".")[:-1])
+            exp_name = "results/{}.hdf5".format(base_name)
+            calculation.delete_center_cavity_information(exp_name, frame_nr, resolution)
+
+        if use_center_points:
+            if not calculation.calculated(filename, frame_nr, resolution, False):
+                calculation.calculate_cavities(filename, frame_nr, volume, resolution, False)
+            calculation.calculate_cavities(filename, frame_nr, volume, resolution, True)
         else:
-            print 'Cancel'
-            
+            calculation.calculate_cavities(filename, frame_nr, volume, resolution, False)
+
 class DragList(QtGui.QListWidget):
     
     def __init__(self, parent):
@@ -110,8 +118,6 @@ class DragList(QtGui.QListWidget):
         self.setAcceptDrops(True)
         self.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
         self.setDragEnabled(True)
-
-
         self.datalist = {}
 
     def dragMoveEvent(self, event):
@@ -144,6 +150,5 @@ class DragList(QtGui.QListWidget):
             del self.datalist[item.text()]
 
     def get_selection(self):
-#        return [str(item.text()) for item in self.selectedItems()]
         return [self.datalist[str(item.text())] for item in self.selectedItems()]
 

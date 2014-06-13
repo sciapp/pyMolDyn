@@ -1,25 +1,22 @@
 # -*- coding: utf-8 -*-
 from PySide import QtCore, QtGui, QtOpenGL
 import visualization
-from OpenGL.GL import *
 
 display_size = 800
 
 class UpdateGLEvent(QtCore.QEvent):
 
     def __init__(self):
-        type = QtCore.QEvent.registerEventType()
-        QtCore.QEvent.__init__(self, QtCore.QEvent.Type(type))
+        t = QtCore.QEvent.registerEventType()
+        QtCore.QEvent.__init__(self, QtCore.QEvent.Type(t))
 
 class GLWidget(QtOpenGL.QGLWidget):
     '''
         OpenGL widget to show the 3d-scene
     '''
-class GLWidget(QtOpenGL.QGLWidget):
 
     def __init__(self, parent=None):
         QtOpenGL.QGLWidget.__init__(self, parent)
-        self.dataset_loaded = False
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.update_needed = False
         self.dataset_loaded = False
@@ -33,23 +30,23 @@ class GLWidget(QtOpenGL.QGLWidget):
     def sizeHint(self):
         return QtCore.QSize(display_size, display_size)
 
-    def show_dataset(self, volume, filename, frame_nr, resolution, use_surface_points):
+    def show_dataset(self, volume, filename, frame_nr, resolution, use_center_points):
         '''
             shows calculation {calculation_nr} of frame {frame_nr} in file {filename}
         '''
+        self.vis = visualization.Visualization(volume, filename, frame_nr, resolution, use_center_points)
         self.dataset_loaded = True
-        self.vis = visualization.Visualization(volume, filename, frame_nr, resolution, use_surface_points)
         self.updateGL()
 
     def mouseMoveEvent(self, e):
         if self.dataset_loaded:
             if e.buttons() & QtCore.Qt.LeftButton:
-               dx = e.x() - self.x
-               dy = e.y() - self.y
-               self.vis.rotate_mouse(dx, dy)
-               self.x = e.x()
-               self.y = e.y()
-               self.updateGL()
+                dx = e.x() - self.x
+                dy = e.y() - self.y
+                self.vis.rotate_mouse(dx, dy)
+                self.x = e.x()
+                self.y = e.y()
+                self.updateGL()
 
     def wheelEvent(self, e):
         if self.dataset_loaded:

@@ -11,7 +11,7 @@ from calculation import *
 
 class Visualization():
 
-    def __init__(self, volume, filename, frame_nr, resolution, use_surface_points):
+    def __init__(self, volume, filename, frame_nr, resolution, use_center_points):
         self.domain_meshes = []
         self.cavity_meshes = []
 
@@ -29,9 +29,8 @@ class Visualization():
             for i in range(frame_nr):
                 molecule = generator.next()
         except StopIteration:
-            if frame_nr > n:
-                print 'Error: This frame does not exist.'
-                sys.exit(0)
+            print 'Error: This frame does not exist.'
+            sys.exit(0)
         self.atoms = molecule.atoms
         self.num_atoms = len(self.atoms)
         self.atom_positions = [atom.coords for atom in self.atoms]
@@ -46,13 +45,18 @@ class Visualization():
         self.max_cavity_index = cr.number_of_multicavities
         self.cavity_vertices_list = [t[0] for t in cr.multicavity_triangles]
         self.cavity_normals_list = [t[1] for t in cr.multicavity_triangles]
-        self.max_center_cavity_index = cr.number_of_center_multicavities
-        self.center_cavity_vertices_list = [t[0] for t in cr.center_multicavity_triangles]
-        self.center_cavity_normals_list = [t[1] for t in cr.center_multicavity_triangles]
-        
-        self.init()
+        self.center_based_calculated = calculated(filename, frame_nr, resolution, True)
 
-    def init(self):
+        if use_center_points: 
+            if self.center_based_calculated:
+                self.max_center_cavity_index = cr.number_of_center_multicavities
+                self.center_cavity_vertices_list = [t[0] for t in cr.center_multicavity_triangles]
+                self.center_cavity_normals_list = [t[1] for t in cr.center_multicavity_triangles]
+            else:
+                use_center_points = False
+        self.init(use_center_points)
+
+    def init(self, use_center_points):
         self.domain_meshes = []
         for domain_index in range(self.max_domain_index):
             domain_vertices = self.domain_vertices_list[domain_index]
@@ -69,20 +73,20 @@ class Visualization():
             mesh = gr3.createmesh(num_cavity_vertices, cavity_vertices, cavity_normals, [(1,1,1)]*num_cavity_vertices)
             self.cavity_meshes.append(mesh)
             
-        self.center_cavity_meshes = []
-        for cavity_index in range(self.max_center_cavity_index):
-#        for cavity_index in range(self.max_center_cavity_index-1):  fixes Index Error 256K dataset
-            center_cavity_vertices = self.center_cavity_vertices_list[cavity_index]
-            center_cavity_normals = self.center_cavity_normals_list[cavity_index]
-            num_center_cavity_vertices = len(center_cavity_vertices)*3
-            mesh = gr3.createmesh(num_center_cavity_vertices, center_cavity_vertices, center_cavity_normals, [(1,1,1)]*num_center_cavity_vertices)
-            self.center_cavity_meshes.append(mesh)
+        if use_center_points:
+            self.center_cavity_meshes = []
+            for cavity_index in range(self.max_center_cavity_index):
+    #        for cavity_index in range(self.max_center_cavity_index-1):  fixes Index Error 256K dataset
+                center_cavity_vertices = self.center_cavity_vertices_list[cavity_index]
+                center_cavity_normals = self.center_cavity_normals_list[cavity_index]
+                num_center_cavity_vertices = len(center_cavity_vertices)*3
+                mesh = gr3.createmesh(num_center_cavity_vertices, center_cavity_vertices, center_cavity_normals, [(1,1,1)]*num_center_cavity_vertices)
+                self.center_cavity_meshes.append(mesh)
 
         self.create_scene()
         
         self.set_camera()
-        gr3.export("test.html",800,800)
-
+        #gr3.export("test.html",800,800)
 
     def create_scene(self, show_cavities=True, center_based_cavities=False):
         global domain_meshes
@@ -94,12 +98,12 @@ class Visualization():
             for domain_index in range(self.max_domain_index):
                 gr3.drawmesh(self.domain_meshes[domain_index], 1, (0,0,0), (0,0,1), (0,1,0), (0,1,0.5), (1,1,1))
         else:
-            if not center_based_cavities:
-                for cavity_index in range(self.max_cavity_index):
-                    gr3.drawmesh(self.cavity_meshes[cavity_index], 1, (0,0,0), (0,0,1), (0,1,0), (0.2,0.4,1), (1,1,1))
-            else:
+            if center_based_cavities and self.center_based_calculated:
                 for cavity_index in range(self.max_center_cavity_index):
                     gr3.drawmesh(self.center_cavity_meshes[cavity_index], 1, (0,0,0), (0,0,1), (0,1,0), (0.9,0.4,0.2), (1,1,1))
+            else:
+                for cavity_index in range(self.max_cavity_index):
+                    gr3.drawmesh(self.cavity_meshes[cavity_index], 1, (0,0,0), (0,0,1), (0,1,0), (0.2,0.4,1), (1,1,1))
 
         edges = self.volume.edges
         num_edges = len(edges)
@@ -112,7 +116,7 @@ class Visualization():
         num_corners = len(corners)
         gr3.drawspheremesh(num_corners, corners, [(1,1,1)]*num_edges, [edge_radius]*num_edges)
         gr3.drawspheremesh(len(self.atom_positions), self.atom_positions, [(1,1,1)]*len(self.atom_positions), [edge_radius*4]*len(self.atom_positions))
-        
+
     def process_key(self, key):
         '''
             process key input

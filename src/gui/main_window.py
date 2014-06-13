@@ -49,11 +49,13 @@ class MainWindow(QtGui.QMainWindow):
                     dock.show()
                 self.showNormal()
  
-    def show_dataset(self, volume, filename, frame_nr, resolution, use_surface_points):
+    def show_dataset(self, volume, filename, frame_nr, resolution, use_center_points):
         self.statusBar().showMessage(filename)
         
-        if visualization.calculated(filename, frame_nr, resolution, use_surface_points):
-            self.center.show_dataset(volume, filename, frame_nr, resolution, use_surface_points)
+        if visualization.calculated(filename, frame_nr, resolution, use_center_points):
+            self.center.show_dataset(volume, filename, frame_nr, resolution, use_center_points)
+        else:
+            print 'dataset not calculated'
 
 #    def closeEvent(self, event):
 #        reply = QtGui.QMessageBox.question(self, 'Message',
@@ -80,6 +82,6 @@ class CentralWidget(QtGui.QWidget):
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setLayout(mainLayout)
 
-    def show_dataset(self, volume, filename, frame_nr, resolution, use_surface_points):
-        self.gl_widget.show_dataset(volume, filename, frame_nr, resolution, use_surface_points)
+    def show_dataset(self, volume, filename, frame_nr, resolution, use_center_points):
+        self.gl_widget.show_dataset(volume, filename, frame_nr, resolution, use_center_points)
 

@@ -71,6 +71,7 @@ import numpy.linalg as la
 import h5py
 from gr3 import triangulate
 import os.path
+import os
 from computation.split_and_merge.pipeline import start_split_and_merge_pipeline
 import util.colored_exceptions
 import time
@@ -652,13 +653,16 @@ class CalculationResults(object):
         else:
             filename = cavity_calculation_or_filename
             with h5py.File(filename, "r") as file:
+                # initialize calculation
+                calculation = 0
                 for i, calc in enumerate(file['frame{}'.format(frame_nr)].values()):
                     if calc.attrs['resolution'] == resolution:
                         calculation = file["frame{}/calculation{}".format(frame_nr, i+1)]
                         break
 
                 self.resolution = calculation.attrs['resolution']
-                
+
+                print filename, frame_nr,resolution 
                 self.number_of_atoms = int(calculation["atom_information/number_of_atoms"].value)
                 self.atom_positions = np.array(calculation["atom_information/atom_positions"])
                 self.atom_radii = np.array(calculation["atom_information/atom_radii"])
@@ -697,9 +701,9 @@ class CalculationResults(object):
                     self.center_multicavity_triangles = None
                     
         
-    def export(self, filename, frame_nr, use_surface_points):
+    def export(self, filename, frame_nr, use_center_points):
         with h5py.File(filename, "a") as file:
-            if use_surface_points:
+            if not use_center_points:
                 if 'frame{}'.format(frame_nr) in file:
                     if self.resolution not in [calc.attrs['resolution'] for calc in file['frame{}'.format(frame_nr)].values()]:
                         calculation_nr = 1
@@ -720,7 +724,7 @@ class CalculationResults(object):
             ts = time.localtime()
             calculation.attrs['timestamp'] = '{}.{}.{} {}:{}'.format(ts[2], ts[1], ts[0], ts[3], ts[4])
 
-            if use_surface_points:
+            if not use_center_points:
                 calculation["atom_information/number_of_atoms"] = self.number_of_atoms
                 calculation["atom_information/atom_positions"] = self.atom_positions
                 calculation["atom_information/atom_radii"] = self.atom_radii
@@ -767,12 +771,18 @@ class FakeDomainCalculation(object):
         self.discretization = discretization
         self.atom_discretization = atom_discretization
 
-def calculated(filename, frame_nr, resolution, use_surface_points):
+def delete_center_cavity_information(filename, frame_nr, resolution):
+    with h5py.File(filename, "a") as file:
+        for calc in file['frame{}'.format(frame_nr)].values():
+            if calc.attrs['resolution'] == resolution:
+                del calc['center_cavity_information']
+
+def calculated(filename, frame_nr, resolution, use_center_points):
     base_name = ''.join(os.path.basename(filename).split(".")[:-1])
     exp_name = "results/{}.hdf5".format(base_name)
     if os.path.isfile(exp_name): 
         with h5py.File(exp_name, "a") as file:
-            if use_surface_points:
+            if not use_center_points:
                 if 'frame{}'.format(frame_nr) in file:
                     if resolution in [calc.attrs['resolution'] for calc in file['frame{}'.format(frame_nr)].values()]:
                         return True
@@ -781,12 +791,15 @@ def calculated(filename, frame_nr, resolution, use_surface_points):
                 else:
                     return False
             else:
-                for calc in file['frame{}'.format(frame_nr)].values():
-                    if calc.attrs['resolution'] == resolution :
-                        if 'center_cavity_information' in calc:
-                            return True
-                        else:
-                            return False
+                if 'frame{}'.format(frame_nr) in file:
+                    for calc in file['frame{}'.format(frame_nr)].values():
+                        if calc.attrs['resolution'] == resolution :
+                            if 'center_cavity_information' in calc:
+                                return True
+                            else:
+                                return False
+                else:
+                    return False
     else:
         return False
 
@@ -803,38 +816,39 @@ def calculated_frames(filename, resolution):
                     calc_frames.append(frame_nr)
     return calc_frames
 
-def calculate_cavities(filename, frame_nr, volume, resolution, use_surface_points=True):
+def calculate_cavities(filename, frame_nr, volume, resolution, use_center_points=False):
     base_name = ''.join(os.path.basename(filename).split(".")[:-1])
     exp_name = "results/{}.hdf5".format(base_name)
-    if not calculated(filename, frame_nr, resolution, use_surface_points):
-        if use_surface_points:
-            domain_calculation = calculate_domains(filename, frame_nr, volume, resolution)
-            print "Cavity calculation..."
-            cavity_calculation = CavityCalculation(domain_calculation)
-            results = CalculationResults(cavity_calculation, frame_nr, resolution)
-            results.export(exp_name, frame_nr, True)
-        else:
-            import pybel
-            generator = pybel.readfile("xyz", filename.encode("ascii")) 
-            try:
-                for i in range(frame_nr):
-                    molecule = generator.next()
-            except StopIteration:
-                if frame_nr > n:
-                    print 'Error: This frame does not exist.'
-                    sys.exit(0)
-            (atom_discretization, discretization) = atom_volume_discretization(molecule.atoms, volume, resolution)
-            
-            imported_results = CalculationResults(exp_name, frame_nr, resolution)
-            domain_calculation = FakeDomainCalculation(discretization, atom_discretization, imported_results)
-            print "Cavity calculation..."
-            cavity_calculation = CavityCalculation(domain_calculation, False)
-            imported_results.add_center_cavity_information(cavity_calculation)
-            imported_results.export(exp_name, frame_nr, False)
+    
+    tmp_exp = "{}.tmp".format(exp_name)
+    if not use_center_points:
+        domain_calculation = calculate_domains(filename, frame_nr, volume, resolution)
+        print "Cavity calculation..."
+        cavity_calculation = CavityCalculation(domain_calculation)
+        results = CalculationResults(cavity_calculation, frame_nr, resolution)
+        results.export(exp_name, frame_nr, use_center_points=False)
+#        results.export(tmp_exp, frame_nr, False)
+#        if os.path.isfile(exp_name):
+#            os.remove(exp_name)
+#        os.rename(tmp_exp, exp_name)
     else:
-        print 'filename:', filename, 'frame:', frame_nr, 'resolution:', resolution, 'use_surface_points:', use_surface_points, 'exists' 
-
-    #return cavity_calculation
+        import pybel
+        generator = pybel.readfile("xyz", filename.encode("ascii")) 
+        try:
+            for i in range(frame_nr):
+                molecule = generator.next()
+        except StopIteration:
+            if frame_nr > count_frames(filename):
+                print 'Error: This frame does not exist.'
+                sys.exit(0)
+        (atom_discretization, discretization) = atom_volume_discretization(molecule.atoms, volume, resolution)
+        
+        imported_results = CalculationResults(exp_name, frame_nr, resolution)
+        domain_calculation = FakeDomainCalculation(discretization, atom_discretization, imported_results)
+        print "Cavity calculation..."
+        cavity_calculation = CavityCalculation(domain_calculation, False)
+        imported_results.add_center_cavity_information(cavity_calculation)
+        imported_results.export(exp_name, frame_nr, True)
 
 def atom_volume_discretization(atoms, volume, resolution):
     '''
@@ -896,8 +910,8 @@ if __name__ == "__main__":
     box_size = 27.079855
     volume = volumes.CubicVolume(box_size)
     #for i in range(1, count_frames("xyz/structure_c.xyz")+1):
-    calculate_cavities("xyz/structure_c.xyz", 1, volume, 64)
-    calculate_cavities("xyz/structure_c.xyz", 1, volume, 64, False)
+    calculate_cavities("../xyz/structure_c.xyz", 1, volume, 64)
+    calculate_cavities("../xyz/structure_c.xyz", 1, volume, 64, True)
 
 #    calculate_cavities("xyz/hexagonal.xyz", 1, volume, 64)
 #    calculate_cavities("xyz/hexagonal.xyz", 1, volume, 64, False)

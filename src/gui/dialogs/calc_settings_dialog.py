@@ -14,6 +14,11 @@ class CalculationSettingsDialog(QtGui.QDialog):
     def __init__(self, parent=None, filenames=[]):
         QtGui.QDialog.__init__(self, parent)
 
+        self.init_gui(filenames)
+        self.setWindowTitle("Calculation Settings")
+    
+    def init_gui(self, filenames):
+
         vbox            = QtGui.QVBoxLayout() 
         button_hbox     = QtGui.QHBoxLayout() 
         res_hbox        = QtGui.QHBoxLayout()
@@ -53,39 +58,37 @@ class CalculationSettingsDialog(QtGui.QDialog):
         button_hbox.addWidget(cancel_button)
         
         resolution = 64
-        
-
         if len(self.filenames) == 1:
             n_frames    = calculation.count_frames(filenames[0])
             calc_frames = calculation.calculated_frames(filenames[0], resolution)
-            self.frame_chooser = LabeledFrameChooser(None, 1, n_frames, calc_frames, 'Frame')
+            self.frame_chooser = LabeledFrameChooser(self, 1, n_frames, calc_frames, 'Frame')
         
         self.table_view = CalculationTable(self)
         self.update_table(resolution)
         self.res_slider.setValue(resolution)
+        
+        self.checkbox = QtGui.QCheckBox('calculate center based cavities', self)
 
         vbox.addLayout(res_hbox)
         vbox.addWidget(self.table_view)
-
+        vbox.addWidget(self.checkbox)
         if len(self.filenames) == 1:
             vbox.addWidget(self.frame_chooser)
-
         vbox.addLayout(button_hbox)
         self.setLayout(vbox)
-        self.setWindowTitle("Calculation Settings")
-    
+
     def update_table(self, resolution):
         if len(self.filenames) == 1:
             sel = self.frame_chooser.value()
             #do while
             j = 0
-            data_list  = [(filename, self.timestamp(self.filenames[i], resolution, surface_based=True), self.timestamp(self.filenames[i], resolution, surface_based=False)) for i, filename in enumerate(self.basenames)]
+            data_list  = [(filename, self.timestamp(self.filenames[i], resolution, center_based=True), self.timestamp(self.filenames[i], resolution, center_based=False)) for i, filename in enumerate(self.basenames)]
             j += 1
             while j < len(sel) and not calculation.calculated(filename, sel[j], resolution, False):
-                data_list  = [(filename, self.timestamp(self.filenames[i], resolution, surface_based=True), self.timestamp(self.filenames[i], resolution, surface_based=False)) for i, filename in enumerate(self.basenames)]
+                data_list  = [(filename, self.timestamp(self.filenames[i], resolution, center_based=True), self.timestamp(self.filenames[i], resolution, center_based=False)) for i, filename in enumerate(self.basenames)]
                 j += 1
         else:
-            data_list  = [(filename, self.timestamp(self.filenames[i], resolution, surface_based=True), self.timestamp(self.filenames[i], resolution, surface_based=False)) for i, filename in enumerate(self.basenames)]
+            data_list  = [(filename, self.timestamp(self.filenames[i], resolution, center_based=True), self.timestamp(self.filenames[i], resolution, center_based=False)) for i, filename in enumerate(self.basenames)]
         
         header = ['dataset', 'surface based', 'center based']
         table_model = TableModel(self, data_list, header)
@@ -117,14 +120,14 @@ class CalculationSettingsDialog(QtGui.QDialog):
         self.update_table(resolution)
         self.update_frame_chooser(resolution)
 
-    def timestamp(self, filename, resolution, surface_based, frame_nr=-1):
+    def timestamp(self, filename, resolution, center_based, frame_nr=-1):
         import h5py
 
         if os.path.isfile(filename):
             if frame_nr == -1:
-                if all([calculation.calculated(filename, frame_nr, resolution, True) for frame_nr in range(1, calculation.count_frames(filename)+1)]):
-                    if surface_based:
-                        if not all([calculation.calculated(filename, frame_nr, resolution, False) for frame_nr in range(1, calculation.count_frames(filename)+1)]):
+                if all([calculation.calculated(filename, frame_nr, resolution, False) for frame_nr in range(1, calculation.count_frames(filename)+1)]):
+                    if center_based:
+                        if not all([calculation.calculated(filename, frame_nr, resolution, True) for frame_nr in range(1, calculation.count_frames(filename)+1)]):
                             return 'X'
                     base_name = ''.join(os.path.basename(filename).split(".")[:-1])
                     exp_name = "results/{}.hdf5".format(base_name)
@@ -145,4 +148,6 @@ class CalculationSettingsDialog(QtGui.QDialog):
     def calculation_settings(self):
         ok = self.exec_()
         frames = [-1] if len(self.filenames) > 1 else self.frame_chooser.value()
-        return self.res_slider.value(), frames, ok
+        center_based = True if self.checkbox.checkState() == QtCore.Qt.CheckState.Checked else False
+        print 'center_based', center_based
+        return self.res_slider.value(), frames, center_based, ok
