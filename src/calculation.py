@@ -778,6 +778,9 @@ def delete_center_cavity_information(filename, frame_nr, resolution):
                 del calc['center_cavity_information']
 
 def calculated(filename, frame_nr, resolution, use_center_points):
+    '''
+    returns whether the given 
+    '''
     base_name = ''.join(os.path.basename(filename).split(".")[:-1])
     exp_name = "results/{}.hdf5".format(base_name)
     if os.path.isfile(exp_name): 
@@ -804,6 +807,9 @@ def calculated(filename, frame_nr, resolution, use_center_points):
         return False
 
 def calculated_frames(filename, resolution):
+    '''
+    returns the calculated frames for the file filename and the given resolution
+    '''
     base_name = ''.join(os.path.basename(filename).split(".")[:-1])
     exp_name = "results/{}.hdf5".format(base_name)
     calc_frames = []
@@ -817,6 +823,9 @@ def calculated_frames(filename, resolution):
     return calc_frames
 
 def calculate_cavities(filename, frame_nr, volume, resolution, use_center_points=False):
+    '''
+    calculates the cavities for the given file
+    '''
     base_name = ''.join(os.path.basename(filename).split(".")[:-1])
     exp_name = "results/{}.hdf5".format(base_name)
     
@@ -852,7 +861,7 @@ def calculate_cavities(filename, frame_nr, volume, resolution, use_center_points
 
 def atom_volume_discretization(atoms, volume, resolution):
     '''
-        TODO
+    calculates the discretization of the volume and the atoms from the given resolution
     '''
     num_atoms = len(atoms)
     atom_positions = [atom.coords for atom in atoms]
@@ -911,7 +920,7 @@ if __name__ == "__main__":
     volume = volumes.CubicVolume(box_size)
     #for i in range(1, count_frames("xyz/structure_c.xyz")+1):
     calculate_cavities("../xyz/structure_c.xyz", 1, volume, 64)
-    calculate_cavities("../xyz/structure_c.xyz", 1, volume, 64, True)
+    calculate_cavities("../xyz/structure_c.xyz", 1, volume, 64, False)
 
 #    calculate_cavities("xyz/hexagonal.xyz", 1, volume, 64)
 #    calculate_cavities("xyz/hexagonal.xyz", 1, volume, 64, False)
