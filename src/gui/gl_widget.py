@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from PySide import QtCore, QtGui, QtOpenGL
-import visualization
+from visualization import visualization
 
 display_size = 800
 

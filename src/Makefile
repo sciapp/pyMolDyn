@@ -1,5 +1,5 @@
 
-SUBDIRS = computation gui util
+SUBDIRS = computation gui util visualization
 
 all:
 	for i in $(SUBDIRS); do make -C $$i all; done

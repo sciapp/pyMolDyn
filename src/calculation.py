@@ -79,7 +79,10 @@ import time
 dimension = 3
 dimensions = range(dimension)
 
-import volumes
+import visualization.volumes
+
+progress = None
+print_message = None
 
 class DiscretizationCache(object):
     '''
@@ -98,7 +101,7 @@ class DiscretizationCache(object):
         cache file and then return it.
         '''
         discretization_repr = repr(volume) + " d_max=%d" %d_max
-        print discretization_repr
+        print_message(discretization_repr)
         if discretization_repr in self.file['/discretizations']:
             stored_discretization = self.file['/discretizations/'+discretization_repr]
             grid = np.array(stored_discretization)
@@ -169,14 +172,14 @@ class Discretization(object):
         if self.d_max%2 == 1:
             self.d_max -= 1
         self.s_step = self.s_max/(self.d_max-4)
-        print "s_step",self.s_step
+        print_message("s_step",self.s_step)
         
         #step 2
         self.d = [int(floor(self.s[i]/self.s_step)+4) for i in dimensions]
         for i in dimensions:
             if self.d[i]%2 == 1:
                 self.d[i] += 1
-        print "d", self.d
+        print_message("d", self.d)
         self.s_tilde = [(self.d[i]-1)*self.s_step for i in dimensions]
         
         # step 3
@@ -223,7 +226,7 @@ class Discretization(object):
                     else:
                         combined_translation_vector_index = equivalent_points_inside[0][1]
                         self.grid[p] = -(combined_translation_vector_index+1)
-        print "translation vectors", self.translation_vectors
+        print_message("translation vectors", self.translation_vectors)
 
     def get_direct_neighbors(self, point):
         '''
@@ -312,7 +315,7 @@ class AtomDiscretization:
         for radius in self.atoms.sorted_radii:
             discrete_radius = int(floor(radius/self.discretization.s_step+0.5))
             self.sorted_discrete_radii.append(discrete_radius)
-        print "maximum radius:", self.sorted_discrete_radii[0]
+        print_message("maximum radius:", self.sorted_discrete_radii[0])
 
 
 class DomainCalculation:
@@ -360,7 +363,7 @@ class DomainCalculation:
                                 self.grid[tuple(p)] = atom_index+1
         # step 3
         self.centers, self.surface_point_list = start_split_and_merge_pipeline(self.grid, self.discretization.grid, self.atom_discretization.discrete_positions, self.discretization.combined_translation_vectors, self.discretization.get_translation_vector)
-        print "number of domains:", len(self.centers)
+        print_message("number of domains:", len(self.centers))
         self.domain_volumes = []
         for domain_index in range(len(self.centers)):
             domain_volume = (self.grid == -(domain_index+1)).sum()*(self.discretization.s_step**3)
@@ -371,13 +374,13 @@ class DomainCalculation:
         if hasattr(self, "domain_triangles"):
             return self.domain_triangles
         number_of_domains = len(self.centers)
-        print number_of_domains
+        print_message(number_of_domains)
         domain_triangles = []
         domain_surface_areas = []
         step = (self.discretization.s_step,)*3
         offset = self.discretization.discrete_to_continuous((0, 0, 0))
         for domain_index in range(number_of_domains):
-            print "Calculating triangles for domain", domain_index
+            print_message("Calculating triangles for domain", domain_index)
             grid_value = -(domain_index+1)
             grid = (self.grid == grid_value)
             views = []
@@ -448,7 +451,7 @@ class CavityCalculation:
         if use_surface_points:
             self.grid = self.domain_calculation.grid
             num_surface_points = sum(map(len, self.domain_calculation.surface_point_list))
-            print "number of surface points:", num_surface_points
+            print_message("number of surface points:", num_surface_points)
         
         # step 1
         max_radius = self.domain_calculation.atom_discretization.sorted_discrete_radii[0]
@@ -553,9 +556,9 @@ class CavityCalculation:
         self.multicavity_volumes = []
         for multicavity in multicavities:
             self.multicavity_volumes.append(sum(self.cavity_volumes[cavity_index] for cavity_index in multicavity))
-        print "multicavity volumes:", self.multicavity_volumes
+        print_message("multicavity volumes:", self.multicavity_volumes)
         
-        print "multicavities:", multicavities
+        print_message("multicavities:", multicavities)
         
         self.triangles()
 
@@ -586,7 +589,7 @@ class CavityCalculation:
         offset = self.domain_calculation.discretization.discrete_to_continuous((0, 0, 0))
         cavity_surface_areas = []
         for multicavity in self.multicavities:
-            print multicavity
+            print_message(multicavity)
             grid = np.zeros(self.grid3.shape, dtype=np.bool)
             for cavity_index in multicavity:
                 grid = np.logical_or(grid, self.grid3 == -(cavity_index+1))
@@ -662,13 +665,13 @@ class CalculationResults(object):
 
                 self.resolution = calculation.attrs['resolution']
 
-                print filename, frame_nr,resolution 
+                print_message(filename, frame_nr,resolution)
                 self.number_of_atoms = int(calculation["atom_information/number_of_atoms"].value)
                 self.atom_positions = np.array(calculation["atom_information/atom_positions"])
                 self.atom_radii = np.array(calculation["atom_information/atom_radii"])
                 
                 self.number_of_domains = int(calculation["domain_information/number_of_domains"].value)
-                print calculation["domain_information/domain_centers"]
+                print_message(calculation["domain_information/domain_centers"])
                 self.domain_centers = np.array(calculation["domain_information/domain_centers"])
                 self.domain_volumes = np.array(calculation["domain_information/domain_volumes"])
                 self.domain_surface_areas = np.array(calculation["domain_information/domain_surface_areas"])
@@ -710,7 +713,7 @@ class CalculationResults(object):
                         while "calculation{}".format(calculation_nr) in file['frame{}'.format(frame_nr)]:
                             calculation_nr += 1
                     else:
-                        print 'surface-based cavity data exists'
+                        print_message('surface-based cavity data exists')
                         return
                     calculation = file['frame{}'.format(frame_nr)].create_group('calculation{}'.format(calculation_nr))
                 else:
@@ -832,7 +835,7 @@ def calculate_cavities(filename, frame_nr, volume, resolution, use_center_points
     tmp_exp = "{}.tmp".format(exp_name)
     if not use_center_points:
         domain_calculation = calculate_domains(filename, frame_nr, volume, resolution)
-        print "Cavity calculation..."
+        print_message("Cavity calculation...")
         cavity_calculation = CavityCalculation(domain_calculation)
         results = CalculationResults(cavity_calculation, frame_nr, resolution)
         results.export(exp_name, frame_nr, use_center_points=False)
@@ -848,16 +851,18 @@ def calculate_cavities(filename, frame_nr, volume, resolution, use_center_points
                 molecule = generator.next()
         except StopIteration:
             if frame_nr > count_frames(filename):
-                print 'Error: This frame does not exist.'
+                print_message('Error: This frame does not exist.')
                 sys.exit(0)
         (atom_discretization, discretization) = atom_volume_discretization(molecule.atoms, volume, resolution)
         
         imported_results = CalculationResults(exp_name, frame_nr, resolution)
         domain_calculation = FakeDomainCalculation(discretization, atom_discretization, imported_results)
-        print "Cavity calculation..."
+        print_message("Cavity calculation...")
         cavity_calculation = CavityCalculation(domain_calculation, False)
         imported_results.add_center_cavity_information(cavity_calculation)
         imported_results.export(exp_name, frame_nr, True)
+    progress(100)
+    print_message('calculation finished')
 
 def atom_volume_discretization(atoms, volume, resolution):
     '''
@@ -866,15 +871,15 @@ def atom_volume_discretization(atoms, volume, resolution):
     num_atoms = len(atoms)
     atom_positions = [atom.coords for atom in atoms]
     
-    print num_atoms,"atoms"
+    print_message(num_atoms,"atoms")
     for atom_index in range(num_atoms):
         atom_positions[atom_index] = volume.get_equivalent_point(atom_positions[atom_index])
     #atoms = Atoms(atom_positions, [2.8]*num_atoms)
     atoms = Atoms(atom_positions, [2.65]*num_atoms)
-    print "Volume discretization..."
+    print_message("Volume discretization...")
     discretization_cache = DiscretizationCache('cache.hdf5')
     discretization = discretization_cache.get_discretization(volume, resolution)
-    print "Atom discretization..."
+    print_message("Atom discretization...")
     atom_discretization = AtomDiscretization(atoms, discretization)
 
     return (atom_discretization, discretization)
@@ -902,14 +907,20 @@ def calculate_domains(filename, frame_nr, volume, resolution):
             molecule = generator.next()
     except StopIteration:
         if frame_nr > n:
-            print 'Error: This frame does not exist.'
+            print_message('Error: This frame does not exist.')
             sys.exit(0)
     (atom_discretization, discretization) = atom_volume_discretization(molecule.atoms, volume, resolution)
     
-    print "Cavity domain calculation..."
+    print_message("Cavity domain calculation...")
     domain_calculation = DomainCalculation(discretization, atom_discretization)
 
     return domain_calculation
+
+def set_output_callbacks(progress_func, print_func):
+    global progress, print_message
+
+    progress =  progress_func
+    print_message = print_func
 
 if __name__ == "__main__":
     import pybel

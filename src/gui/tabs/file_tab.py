@@ -4,7 +4,9 @@ from PySide import QtCore, QtGui
 import sys
 import os.path
 import calculation
+from visualization import volumes
 from gui.dialogs.calc_settings_dialog import CalculationSettingsDialog
+from gui.dialogs.progress_dialog import ProgressDialog
 
 class FileTabDock(QtGui.QDockWidget):
     '''
@@ -22,6 +24,21 @@ class FileTabDock(QtGui.QDockWidget):
 
         self.setFeatures(QtGui.QDockWidget.DockWidgetMovable | QtGui.QDockWidget.DockWidgetFloatable)
 
+class CalculationThread(QtCore.QThread):
+    """
+        Thread to calculate the cavities
+    """
+    def __init__(self, parent, fn, frame, volume, resolution, use_center_points):
+        QtCore.QThread.__init__(self, parent)
+        self.filename = fn
+        self.frame = frame
+        self.volume = volume
+        self.resolution = resolution
+        self.use_center_points = use_center_points
+
+    def run(self):
+        calculation.calculate_cavities(self.filename, self.frame, self.volume, self.resolution, self.use_center_points)
+
 class FileTab(QtGui.QWidget):
     '''
         tab 'file' in the main widget
@@ -31,6 +48,8 @@ class FileTab(QtGui.QWidget):
         QtGui.QWidget.__init__(self,parent)
         self.init_gui()
         self.main_window = main_window
+        self.progress_dialog = ProgressDialog(self)
+        self.main_window.set_output_callbacks(self.progress_dialog.progress, self.progress_dialog.print_step)
 
     def init_gui(self):
         self.vbox = QtGui.QVBoxLayout()
@@ -84,7 +103,7 @@ class FileTab(QtGui.QWidget):
 
         # cubic volume
         box_size = 27.079855
-        volume = calculation.volumes.CubicVolume(box_size)
+        volume = volumes.CubicVolume(box_size)
         if ok:
             for fn in filenames:
                 frames = range(1, calculation.count_frames(fn)+1) if frames[0] == -1 else frames
@@ -106,10 +125,11 @@ class FileTab(QtGui.QWidget):
 
         if use_center_points:
             if not calculation.calculated(filename, frame_nr, resolution, False):
-                calculation.calculate_cavities(filename, frame_nr, volume, resolution, False)
-            calculation.calculate_cavities(filename, frame_nr, volume, resolution, True)
-        else:
-            calculation.calculate_cavities(filename, frame_nr, volume, resolution, False)
+                thread = CalculationThread(self, filename, frame_nr, volume, resolution, False)
+
+        thread = CalculationThread(self, filename, frame_nr, volume, resolution, use_center_points)
+        thread.start()
+        self.progress_dialog.exec_()
 
 class DragList(QtGui.QListWidget):
     

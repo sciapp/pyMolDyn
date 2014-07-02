@@ -1,5 +1,5 @@
 
-SUBDIRS = dialogs
+SUBDIRS = dialogs tabs
 
 all:
 	for i in $(SUBDIRS); do make -C $$i all; done

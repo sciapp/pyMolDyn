@@ -1,4 +1,4 @@
-from Pyside import QtGui, QtCore
+from PySide import QtGui, QtCore
 
 class ProgressDialog(QtGui.QDialog):
     def __init__(self, parent=None):
@@ -6,8 +6,8 @@ class ProgressDialog(QtGui.QDialog):
 
         self.initUI()
 
-    def initUI():
-        hbox = QtGui.QHBoxLayout()
+    def initUI(self):
+        hbox = QtGui.QVBoxLayout()
         self.label = QtGui.QLabel('starting calculation', self)
         self.progressbar = QtGui.QProgressBar(self)
         self.cancel_btn = QtGui.QPushButton('Cancel', self)
@@ -19,12 +19,16 @@ class ProgressDialog(QtGui.QDialog):
 
         self.setLayout(hbox)
 
-    def progress(value):
+    def progress(self, value):
         self.progressbar.setValue(value)
         
-    def print_step(self, text):
-        self.label.setText()
+    def print_step(self, *text):
+        tmp = str(text[0])
+        for t in text[1:]:
+            tmp += ' {}'.format(t)
+        self.label.setText(tmp)
 
     def cancel(self):
+        print 'canceled calculation'
         pass
 
