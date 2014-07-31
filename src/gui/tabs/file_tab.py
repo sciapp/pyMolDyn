@@ -4,7 +4,9 @@ from PySide import QtCore, QtGui
 import sys
 import os.path
 import calculation
+from visualization import volumes
 from gui.dialogs.calc_settings_dialog import CalculationSettingsDialog
+from gui.dialogs.progress_dialog import ProgressDialog
 
 class FileTabDock(QtGui.QDockWidget):
     '''
@@ -22,6 +24,21 @@ class FileTabDock(QtGui.QDockWidget):
 
         self.setFeatures(QtGui.QDockWidget.DockWidgetMovable | QtGui.QDockWidget.DockWidgetFloatable)
 
+class CalculationThread(QtCore.QThread):
+    """
+        Thread to calculate the cavities
+    """
+    def __init__(self, parent, fn, frame, volume, resolution, use_center_points):
+        QtCore.QThread.__init__(self, parent)
+        self.filename = fn
+        self.frame = frame
+        self.volume = volume
+        self.resolution = resolution
+        self.use_center_points = use_center_points
+
+    def run(self):
+        calculation.calculate_cavities(self.filename, self.frame, self.volume, self.resolution, self.use_center_points)
+
 class FileTab(QtGui.QWidget):
     '''
         tab 'file' in the main widget
@@ -31,6 +48,9 @@ class FileTab(QtGui.QWidget):
         QtGui.QWidget.__init__(self,parent)
         self.init_gui()
         self.main_window = main_window
+        self.progress_dialog = ProgressDialog(self)
+        p = self.progress_dialog
+        self.main_window.set_output_callbacks(p.progress, p.print_step, p.calculation_finished)
 
     def init_gui(self):
         self.vbox = QtGui.QVBoxLayout()
@@ -82,11 +102,10 @@ class FileTab(QtGui.QWidget):
         dia = CalculationSettingsDialog(self, filenames) 
         resolution, frames, use_center_points, ok = dia.calculation_settings()
 
-        # cubic volume
-        box_size = 27.079855
-        volume = calculation.volumes.CubicVolume(box_size)
         if ok:
             for fn in filenames:
+                # TODO optimize
+                volume = volumes.get_volume_from_file(fn)
                 frames = range(1, calculation.count_frames(fn)+1) if frames[0] == -1 else frames
                 for frame in frames:
                     if calculation.calculated(fn, frame, resolution, use_center_points):
@@ -96,23 +115,23 @@ class FileTab(QtGui.QWidget):
                             continue
                     self.calculate_frame(fn, frame, volume, resolution, use_center_points)
                     self.main_window.show_dataset(volume, fn, frames[-1], resolution, use_center_points)
-            print 'calculation finished'
+            #print 'calculation finished'
 
     def calculate_frame(self, filename, frame_nr, volume, resolution, use_center_points):
         if calculation.calculated(filename, frame_nr, resolution, True):
             base_name = ''.join(os.path.basename(filename).split(".")[:-1])
-            exp_name = "results/{}.hdf5".format(base_name)
+            exp_name = "../results/{}.hdf5".format(base_name)
             calculation.delete_center_cavity_information(exp_name, frame_nr, resolution)
 
         if use_center_points:
             if not calculation.calculated(filename, frame_nr, resolution, False):
-                calculation.calculate_cavities(filename, frame_nr, volume, resolution, False)
-            calculation.calculate_cavities(filename, frame_nr, volume, resolution, True)
-        else:
-            calculation.calculate_cavities(filename, frame_nr, volume, resolution, False)
+                thread = CalculationThread(self, filename, frame_nr, volume, resolution, False)
+
+        thread = CalculationThread(self, filename, frame_nr, volume, resolution, use_center_points)
+        thread.start()
+        self.progress_dialog.exec_()
 
 class DragList(QtGui.QListWidget):
-    
     def __init__(self, parent):
         super(DragList, self).__init__(parent)
         self.setAcceptDrops(True)

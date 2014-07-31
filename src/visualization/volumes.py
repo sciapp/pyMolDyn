@@ -21,6 +21,7 @@ cot = lambda alpha: cos(alpha)/sin(alpha)
 import itertools
 import numpy as np
 import numpy.linalg as la
+from math import acos
 
 class HexagonalVolume(object):
     '''
@@ -34,7 +35,7 @@ class HexagonalVolume(object):
         
         #: The lattice system translation vectors (`right`, `right-up`, `forward`)
         self.translation_vectors = [(cos(pi*i/3)*f, sin(pi*i/3)*f, 0) for i in range(2)] + [(0, 0, self.c)]
-        
+      
         #: The side lengths of an axis-aligned bounding box
         self.side_lengths = [2*self.a*sin(pi/3), 2*self.a, self.c]
         
@@ -110,33 +111,53 @@ class TriclinicVolume(object):
     ``beta``, ``gamma`` and the side lengths ``a``, ``b`` and ``c``. It has the 
     shape of a parallelepiped.
     '''
-    def __init__(self, a, b, c, alpha, beta, gamma):
-        a = float(a)
-        b = float(b)
-        c = float(c)
-        alpha = float(alpha)
-        beta = float(beta)
-        gamma = float(gamma)
-        self.a = a
-        self.b = b
-        self.c = c
-        self.alpha = alpha
-        self.beta = beta
-        self.gamma = gamma
-        V = (1-cos(alpha)**2-cos(beta)**2-cos(gamma)**2+2*cos(alpha)*cos(beta)*cos(gamma))**0.5
-        #: The cartesian-to-fractional transformation matrix
-        self.M = np.matrix([[1/a, 1/a * (-cos(gamma)/sin(gamma)), 1/a * (cos(alpha)*cos(gamma)-cos(beta))/(V*sin(gamma))],
-                            [  0, 1/b *             1/sin(gamma), 1/b * (cos(beta)*cos(gamma)-cos(alpha))/(V*sin(gamma))],
-                            [  0,                              0, 1/c * sin(gamma)/V]])
-        Minv = la.inv(self.M)
-        #: The fracional-to-cartesian transformation matrix
-        self.Minv = Minv
+    def __init__(self, *args):
+        if len(args) == 6:
+            a           = args[0]
+            b           = args[1]
+            c           = args[2]
+            alpha       = args[3]
+            beta        = args[4]
+            gamma       = args[5]
+            self.a      = a
+            self.b      = b
+            self.c      = c
+            self.alpha  = alpha
+            self.beta   = beta
+            self.gamma  = gamma
+            self.V = (1-cos(alpha)**2-cos(beta)**2-cos(gamma)**2+2*cos(alpha)*cos(beta)*cos(gamma))**0.5
+            #: The cartesian-to-fractional transformation matrix
+            self.M = np.matrix([[1/a, 1/a * (-cos(gamma)/sin(gamma)), 1/a * (cos(alpha)*cos(gamma)-cos(beta))/(self.V*sin(gamma))],
+                                [  0, 1/b *             1/sin(gamma), 1/b * (cos(beta)*cos(gamma)-cos(alpha))/(self.V*sin(gamma))],
+                                [  0,                              0, 1/c * sin(gamma)/self.V]])
+            Minv = la.inv(self.M)
+            #: The fracional-to-cartesian transformation matrix
+            self.Minv = Minv
+        else:
+            v1 = np.array([float(f) for f in args[0:3]])
+            v2 = np.array([float(f) for f in args[3:6]])
+            v3 = np.array([float(f) for f in args[6:]])
+            self.a = la.norm(v1)
+            self.b = la.norm(v2)
+            self.c = la.norm(v3)
+
+            alpha = acos((v1.dot(v3))/(self.a * self.c))
+            beta  = acos((v2.dot(v3))/(self.b * self.c))
+            gamma = acos((v1.dot(v2))/(self.a * self.b))
+            self.alpha  = alpha
+            self.beta   = beta
+            self.gamma  = gamma
+
+            self.V      = (1-cos(alpha)**2-cos(beta)**2-cos(gamma)**2+2*cos(alpha)*cos(beta)*cos(gamma))**0.5
+            self.Minv   = np.matrix(np.array([v1,v2,v3]).T)
+            self.M      = np.matrix(la.inv(self.Minv))
+
         #: The lattice system translation vectors (`right`, `up`, `forward`)
-        self.translation_vectors = [tuple(Minv.T[i].tolist()[0]) for i in range(3)]
+        self.translation_vectors = [tuple(self.Minv.T[i].tolist()[0]) for i in range(3)]
         min_point = [float('inf')]*3
         max_point = [float('-inf')]*3
         for i, j, k in itertools.product((-0.5,0,0.5),repeat=3):
-            point = Minv*np.matrix((i,j,k)).T
+            point = self.Minv*np.matrix((i,j,k)).T
             point = point.T.tolist()[0]
             for l in range(3):
                 min_point[l] = min(min_point[l], point[l])
@@ -146,7 +167,7 @@ class TriclinicVolume(object):
         self.side_lengths = [d-c for c,d in zip(min_point, max_point)]
         
         #: The cell volume
-        self.volume = V*self.a*self.b*self.c
+        self.volume = self.V*self.a*self.b*self.c
         
         edges = [((-0.5, -0.5, -0.5), (-0.5, -0.5, 0.5)), ((-0.5, -0.5, -0.5), (-0.5, 0.5, -0.5)), ((-0.5, -0.5, -0.5), (0.5, -0.5, -0.5)), ((-0.5, -0.5, 0.5), (-0.5, 0.5, 0.5)), ((-0.5, -0.5, 0.5), (0.5, -0.5, 0.5)), ((-0.5, 0.5, -0.5), (-0.5, 0.5, 0.5)), ((-0.5, 0.5, -0.5), (0.5, 0.5, -0.5)), ((-0.5, 0.5, 0.5), (0.5, 0.5, 0.5)), ((0.5, -0.5, -0.5), (0.5, -0.5, 0.5)), ((0.5, -0.5, -0.5), (0.5, 0.5, -0.5)), ((0.5, -0.5, 0.5), (0.5, 0.5, 0.5)), ((0.5, 0.5, -0.5), (0.5, 0.5, 0.5))]
         new_edges = []
@@ -166,7 +187,7 @@ class TriclinicVolume(object):
         '''
         fractional_point = self.M*np.matrix(point).T
         return all((-0.5 < float(c) < 0.5 for c in fractional_point))
-        
+                
     def get_equivalent_point(self, point):
         '''
         For a given point, this method returns an equivalent point inside the volume.
@@ -186,11 +207,22 @@ class MonoclinicVolume(TriclinicVolume):
     '''
     A monoclinic volume, a special case of a triclinic volume with and ``alpha=gamma=pi/2``
     '''
-    def __init__(self, a, b, c, beta):
-        alpha = pi/2
-        gamma = pi/2
-        TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
-        
+
+    def __init__(self, *args):
+        if len(args) == 4:
+            a     = args[0]
+            b     = args[1]
+            c     = args[2]
+            beta  = args[3]
+            alpha = pi/2
+            gamma = pi/2
+            TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
+        else:
+            v1 = np.array([float(f) for f in args[0:3]])
+            v2 = np.array([float(f) for f in args[3:6]])
+            v3 = np.array([float(f) for f in args[6:]])
+            TriclinicVolume.__init__(self, v1, v2, v3)
+
     def __repr__(self):
         return "MONOCLINIC a=%f b=%f c=%f beta=%f" % (self.a, self.b, self.c, self.beta)
         
@@ -198,12 +230,21 @@ class OrthorhombicVolume(TriclinicVolume):
     '''
     An orthorhombic volume, a special case of a triclinic volume with ``alpha=beta=gamma=pi/2``
     '''
-    def __init__(self, a, b, c):
-        alpha = pi/2
-        beta = pi/2
-        gamma = pi/2
-        TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
-        
+    def __init__(self, *args):
+        if len(args) == 3:
+            a     = args[0]
+            b     = args[1]
+            c     = args[2]
+            alpha = pi/2
+            beta = pi/2
+            gamma = pi/2
+            TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
+        else: # cell vectors
+            v1 = np.array([float(f) for f in args[0:3]])
+            v2 = np.array([float(f) for f in args[3:6]])
+            v3 = np.array([float(f) for f in args[6:]])
+            TriclinicVolume.__init__(self, v1, v2, v3)
+
     def __repr__(self):
         return "ORTHORHOMBIC a=%f b=%f c=%f" % (self.a, self.b, self.c)
         
@@ -211,13 +252,19 @@ class TetragonalVolume(TriclinicVolume):
     '''
     A tetragonal volume, a special case of a triclinic volume with ``a=b`` and ``alpha=beta=gamma=pi/2``
     '''
-    def __init__(self, a, c):
-        b = a
-        alpha = pi/2
-        beta = pi/2
-        gamma = pi/2
-        TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
-        
+    def __init__(self, *args):
+        if len(args) == 2:
+            b = a
+            alpha = pi/2
+            beta = pi/2
+            gamma = pi/2
+            TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
+        else: # cell vectors
+            v1 = np.array([float(f) for f in args[0:3]])
+            v2 = np.array([float(f) for f in args[3:6]])
+            v3 = np.array([float(f) for f in args[6:]])
+            TriclinicVolume.__init__(self, v1, v2, v3)
+
     def __repr__(self):
         return "TETRAGONAL a=%f c=%f" % (self.a, self.c)
 
@@ -225,13 +272,21 @@ class RhombohedralVolume(TriclinicVolume):
     '''
     A rhombohedral volume, a special case of a triclinic volume with ``a=b=c`` and ``alpha=beta=gamma``.
     '''
-    def __init__(self, a, alpha):
-        b = a
-        c = a
-        beta = alpha
-        gamma = alpha
-        TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
-        
+    def __init__(self, *args):
+        if len(args) == 2:
+            a     = args[0]
+            alpha = args[1]
+            b     = a
+            c     = a
+            beta  = alpha
+            gamma = alpha
+            TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
+        else: # cell vectors
+            v1 = np.array([float(f) for f in args[0:3]])
+            v2 = np.array([float(f) for f in args[3:6]])
+            v3 = np.array([float(f) for f in args[6:]])
+            TriclinicVolume.__init__(self, v1, v2, v3)
+
     def __repr__(self):
         return "RHOMBOHEDRAL a=%f alpha=%f" % (self.a, self.alpha)
         
@@ -239,13 +294,56 @@ class CubicVolume(TriclinicVolume):
     '''
     A cubic volume, a special case of a triclinic volume with ``a=b=c`` and ``alpha=beta=gamma=pi/2``
     '''
-    def __init__(self, a):
-        b = a
-        c = a
-        alpha = pi/2
-        beta = pi/2
-        gamma = pi/2
-        TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
+    def __init__(self, *args):
+        if len(args) == 1:
+            a = args[0]
+            b = a
+            c = a
+            alpha = pi/2
+            beta = pi/2
+            gamma = pi/2
+            TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
+        else: # cell vectors
+            v1 = np.array([float(f) for f in args[0:3]])
+            v2 = np.array([float(f) for f in args[3:6]])
+            v3 = np.array([float(f) for f in args[6:]])
+            TriclinicVolume.__init__(self, v1, v2, v3)
         
     def __repr__(self):
         return "CUBIC a=%f" % self.a
+
+volumes = {
+    'HEX' : (HexagonalVolume, 'ff'),
+    'MON' : (MonoclinicVolume, 'ffff'),
+    'TRI' : (TriclinicVolume, 'ffffff'),
+    'ORT' : (OrthorhombicVolume, 'fff'),
+    'TET' : (TetragonalVolume, 'ff'),
+    'RHO' : (RhombohedralVolume,'ff'),
+    'CUB' : (CubicVolume, 'f')
+}
+
+convert_functions = {
+    'f' : float,
+    'i' : int,
+    's' : str
+}
+
+def get_volume_from_file(filename):
+    with open(filename,'r') as f:
+        f.readline()
+        s = f.readline().split(' ')
+        t = s[0].upper() # volume type
+        cl = volumes[t][0] # volume class
+        print len(s), s
+        if len(s) == 10: # cell vectors given
+            param = [float(f) for f in s[1:]]
+        else:
+            param_list = s[1:]
+            param = [convert_functions[p](param_list[i]) for i,p in enumerate(volumes[t][1])] # parsing parameter
+        return cl(*param)
+
+if __name__ == '__main__':
+    fn = '../xyz/structure_c.xyz'
+    print get_volume_from_file(fn)
+    fn = '../xyz/hexagonal.xyz'
+    print get_volume_from_file(fn)

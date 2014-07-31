@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import visualization
+import visualization.visualization
 import calculation
-from gui.file_tab import FileTabDock
-from gui.view_tab import ViewTabDock
-from gui.image_video_tab import ImageVideoTabDock
+from gui.tabs.file_tab import FileTabDock
+from gui.tabs.view_tab import ViewTabDock
+from gui.tabs.image_video_tab import ImageVideoTabDock
 from gui.gl_widget import GLWidget
 import gr3
 from PySide import QtCore, QtGui, QtOpenGL
@@ -15,16 +15,16 @@ import math
 class MainWindow(QtGui.QMainWindow):
     def __init__(self, parent=None):
         QtGui.QMainWindow.__init__(self, parent)
-        
+
         self.center             = CentralWidget(self)
         self.file_dock          = FileTabDock(self)
         self.view_dock          = ViewTabDock(self)
         self.image_video_dock   = ImageVideoTabDock(self)
 
         self.docks = []
-        
+
         self.setTabPosition(QtCore.Qt.RightDockWidgetArea, QtGui.QTabWidget.North)
-        
+
         for dock in (self.file_dock, self.view_dock, self.image_video_dock):
             self.docks.append(dock)
 
@@ -48,14 +48,17 @@ class MainWindow(QtGui.QMainWindow):
                 for dock in self.docks:
                     dock.show()
                 self.showNormal()
- 
+
+    def set_output_callbacks(self, progress_func, print_func, finish_func):
+        calculation.set_output_callbacks(progress_func, print_func, finish_func)
+
     def show_dataset(self, volume, filename, frame_nr, resolution, use_center_points):
         self.statusBar().showMessage(filename)
-        
-        if visualization.calculated(filename, frame_nr, resolution, use_center_points):
-            self.center.show_dataset(volume, filename, frame_nr, resolution, use_center_points)
-        else:
-            print 'dataset not calculated'
+
+        #if calculation.calculated(filename, frame_nr, resolution, use_center_points):
+        self.center.show_dataset(volume, filename, frame_nr, resolution, use_center_points)
+        #else:
+        #    print 'dataset not calculated'
 
 #    def closeEvent(self, event):
 #        reply = QtGui.QMessageBox.question(self, 'Message',
@@ -78,10 +81,9 @@ class CentralWidget(QtGui.QWidget):
 
         mainLayout = QtGui.QHBoxLayout()
         mainLayout.addWidget(self.gl_widget)
-        
+
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setLayout(mainLayout)
 
     def show_dataset(self, volume, filename, frame_nr, resolution, use_center_points):
         self.gl_widget.show_dataset(volume, filename, frame_nr, resolution, use_center_points)
-

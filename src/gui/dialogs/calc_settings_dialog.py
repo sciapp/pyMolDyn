@@ -50,12 +50,16 @@ class CalculationSettingsDialog(QtGui.QDialog):
         ok_button = QtGui.QPushButton('Ok', self)
         ok_button.setAutoDefault(False)
         ok_button.clicked.connect(self.ok)
-        button_hbox.addWidget(ok_button)
 
         cancel_button = QtGui.QPushButton('Cancel', self)
         cancel_button.setAutoDefault(False)
         cancel_button.clicked.connect(self.cancel)
+        
+        button_hbox.addStretch()
+        button_hbox.addWidget(ok_button)
+        button_hbox.addStretch()
         button_hbox.addWidget(cancel_button)
+        button_hbox.addStretch()
         
         resolution = 64
         if len(self.filenames) == 1:
@@ -130,7 +134,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
                         if not all([calculation.calculated(filename, frame_nr, resolution, True) for frame_nr in range(1, calculation.count_frames(filename)+1)]):
                             return 'X'
                     base_name = ''.join(os.path.basename(filename).split(".")[:-1])
-                    exp_name = "results/{}.hdf5".format(base_name)
+                    exp_name = "../results/{}.hdf5".format(base_name)
                     with h5py.File(exp_name, "r") as file:
                         for calc in file['frame{}'.format(frame_nr)].values():
                             if calc.attrs['resolution'] == resolution:
@@ -149,5 +153,5 @@ class CalculationSettingsDialog(QtGui.QDialog):
         ok = self.exec_()
         frames = [-1] if len(self.filenames) > 1 else self.frame_chooser.value()
         center_based = True if self.checkbox.checkState() == QtCore.Qt.CheckState.Checked else False
-        print 'center_based', center_based
+        #print 'center_based', center_based
         return self.res_slider.value(), frames, center_based, ok
