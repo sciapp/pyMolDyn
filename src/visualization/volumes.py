@@ -334,7 +334,6 @@ def get_volume_from_file(filename):
         s = f.readline().split(' ')
         t = s[0].upper() # volume type
         cl = volumes[t][0] # volume class
-        print len(s), s
         if len(s) == 10: # cell vectors given
             param = [float(f) for f in s[1:]]
         else:
