@@ -49,16 +49,16 @@ class MainWindow(QtGui.QMainWindow):
                     dock.show()
                 self.showNormal()
 
-    def set_output_callbacks(self, progress_func, print_func):
-        calculation.set_output_callbacks(progress_func, print_func)
+    def set_output_callbacks(self, progress_func, print_func, finish_func):
+        calculation.set_output_callbacks(progress_func, print_func, finish_func)
 
     def show_dataset(self, volume, filename, frame_nr, resolution, use_center_points):
         self.statusBar().showMessage(filename)
 
-        if calculation.calculated(filename, frame_nr, resolution, use_center_points):
-            self.center.show_dataset(volume, filename, frame_nr, resolution, use_center_points)
-        else:
-            print 'dataset not calculated'
+        #if calculation.calculated(filename, frame_nr, resolution, use_center_points):
+        self.center.show_dataset(volume, filename, frame_nr, resolution, use_center_points)
+        #else:
+        #    print 'dataset not calculated'
 
 #    def closeEvent(self, event):
 #        reply = QtGui.QMessageBox.question(self, 'Message',

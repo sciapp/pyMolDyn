@@ -49,7 +49,8 @@ class FileTab(QtGui.QWidget):
         self.init_gui()
         self.main_window = main_window
         self.progress_dialog = ProgressDialog(self)
-        self.main_window.set_output_callbacks(self.progress_dialog.progress, self.progress_dialog.print_step)
+        p = self.progress_dialog
+        self.main_window.set_output_callbacks(p.progress, p.print_step, p.calculation_finished)
 
     def init_gui(self):
         self.vbox = QtGui.QVBoxLayout()
@@ -101,11 +102,10 @@ class FileTab(QtGui.QWidget):
         dia = CalculationSettingsDialog(self, filenames) 
         resolution, frames, use_center_points, ok = dia.calculation_settings()
 
-        # cubic volume
-        box_size = 27.079855
-        volume = volumes.CubicVolume(box_size)
         if ok:
             for fn in filenames:
+                # TODO optimize
+                volume = volumes.get_volume_from_file(fn)
                 frames = range(1, calculation.count_frames(fn)+1) if frames[0] == -1 else frames
                 for frame in frames:
                     if calculation.calculated(fn, frame, resolution, use_center_points):
@@ -115,12 +115,12 @@ class FileTab(QtGui.QWidget):
                             continue
                     self.calculate_frame(fn, frame, volume, resolution, use_center_points)
                     self.main_window.show_dataset(volume, fn, frames[-1], resolution, use_center_points)
-            print 'calculation finished'
+            #print 'calculation finished'
 
     def calculate_frame(self, filename, frame_nr, volume, resolution, use_center_points):
         if calculation.calculated(filename, frame_nr, resolution, True):
             base_name = ''.join(os.path.basename(filename).split(".")[:-1])
-            exp_name = "results/{}.hdf5".format(base_name)
+            exp_name = "../results/{}.hdf5".format(base_name)
             calculation.delete_center_cavity_information(exp_name, frame_nr, resolution)
 
         if use_center_points:
@@ -132,7 +132,6 @@ class FileTab(QtGui.QWidget):
         self.progress_dialog.exec_()
 
 class DragList(QtGui.QListWidget):
-    
     def __init__(self, parent):
         super(DragList, self).__init__(parent)
         self.setAcceptDrops(True)

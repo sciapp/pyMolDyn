@@ -79,22 +79,21 @@ class GLWidget(QtOpenGL.QGLWidget):
             catches and processes key presses
         '''
         if self.dataset_loaded:
-            self.vis.process_key(e)
-        
+            rot_v_key = 15
             if e.key() == QtCore.Qt.Key_Right:
-                self.vis.process_key('right')
+                self.vis.rotate_mouse(rot_v_key, 0)
             elif e.key() == QtCore.Qt.Key_Left:
-                self.vis.process_key('left')
+                self.vis.rotate_mouse(-rot_v_key, 0)
             elif e.key() == QtCore.Qt.Key_Up:
-                self.vis.process_key('up')
+                self.vis.rotate_mouse(0, -rot_v_key)
             elif e.key() == QtCore.Qt.Key_Down:
-                self.vis.process_key('down')
-            elif e.key() == QtCore.Qt.Key_D:
-                self.vis.process_key('d')
-            elif e.key() == QtCore.Qt.Key_C:
-                self.vis.process_key('c')
-            elif e.key() == QtCore.Qt.Key_F:
-                self.vis.process_key('f')
+                self.vis.rotate_mouse(0, rot_v_key)
+            elif e.key() == QtCore.Qt.Key_D:            # Domains
+                self.vis.create_scene(False)
+            elif e.key() == QtCore.Qt.Key_C:            # Cavities
+                self.vis.create_scene(True)
+            elif e.key() == QtCore.Qt.Key_F:            # center based cavities
+                self.vis.create_scene(True,True)
             else:
                 e.ignore()
             self.updateGL()

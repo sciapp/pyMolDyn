@@ -83,6 +83,7 @@ import visualization.volumes
 
 progress = None
 print_message = None
+finish = None
 
 class DiscretizationCache(object):
     '''
@@ -197,35 +198,36 @@ class Discretization(object):
                     self.grid[p] = 0
                 else:
                     self.grid[p] = 1
-            # step 5
-            for p in itertools.product(*map(range, self.d)):
-                equivalent_points = [[p[i]+v[i] for i in dimensions] for v in self.combined_translation_vectors]
-                valid_equivalent_points = [tuple(point) for point in equivalent_points if all([0 <= point[i] <= self.d[i]-1 for i in dimensions])]
-                if self.grid[p] == 0:
-                    equivalent_points_inside = [point for point in valid_equivalent_points if self.grid[point] == 0]
-                    for point in equivalent_points_inside:
-                        self.grid[point] = 1
-            # step 6 & 7
-            for p in itertools.product(*map(range, self.d)):
-                equivalent_points = [([p[i]+v[i] for i in dimensions], vi) for vi, v in enumerate(self.combined_translation_vectors)]
-                valid_equivalent_points = [(tuple(point), vi) for point, vi in equivalent_points if all([0 <= point[i] <= self.d[i]-1 for i in dimensions])]
-                if self.grid[p] == 1:
-                    equivalent_points_inside = [(point, vi) for point, vi in valid_equivalent_points if self.grid[point] == 0]
-                    if not equivalent_points_inside:
-                        nearest_to_center = p
-                        nearest_to_center_index = -1 # -1 -> -(-1+1) == 0
-                        min_d_center = sum([(p[i] - self.d[i]/2)*(p[i] - self.d[i]/2) for i in dimensions])
-                        for p2,vi in valid_equivalent_points:
-                            d_center = sum([(p2[i] - self.d[i]/2)*(p2[i] - self.d[i]/2) for i in dimensions])
-                            if d_center < min_d_center:
-                                min_d_center = d_center
-                                nearest_to_center = p2
-                                nearest_to_center_index = vi
-                        self.grid[nearest_to_center] = 0
-                        self.grid[p] = -(nearest_to_center_index+1)
-                    else:
-                        combined_translation_vector_index = equivalent_points_inside[0][1]
-                        self.grid[p] = -(combined_translation_vector_index+1)
+            if False:
+                # step 5
+                for p in itertools.product(*map(range, self.d)):
+                    equivalent_points = [[p[i]+v[i] for i in dimensions] for v in self.combined_translation_vectors]
+                    valid_equivalent_points = [tuple(point) for point in equivalent_points if all([0 <= point[i] <= self.d[i]-1 for i in dimensions])]
+                    if self.grid[p] == 0:
+                        equivalent_points_inside = [point for point in valid_equivalent_points if self.grid[point] == 0]
+                        for point in equivalent_points_inside:
+                            self.grid[point] = 1
+                # step 6 & 7
+                for p in itertools.product(*map(range, self.d)):
+                    equivalent_points = [([p[i]+v[i] for i in dimensions], vi) for vi, v in enumerate(self.combined_translation_vectors)]
+                    valid_equivalent_points = [(tuple(point), vi) for point, vi in equivalent_points if all([0 <= point[i] <= self.d[i]-1 for i in dimensions])]
+                    if self.grid[p] == 1:
+                        equivalent_points_inside = [(point, vi) for point, vi in valid_equivalent_points if self.grid[point] == 0]
+                        if not equivalent_points_inside:
+                            nearest_to_center = p
+                            nearest_to_center_index = -1 # -1 -> -(-1+1) == 0
+                            min_d_center = sum([(p[i] - self.d[i]/2)*(p[i] - self.d[i]/2) for i in dimensions])
+                            for p2,vi in valid_equivalent_points:
+                                d_center = sum([(p2[i] - self.d[i]/2)*(p2[i] - self.d[i]/2) for i in dimensions])
+                                if d_center < min_d_center:
+                                    min_d_center = d_center
+                                    nearest_to_center = p2
+                                    nearest_to_center_index = vi
+                            self.grid[nearest_to_center] = 0
+                            self.grid[p] = -(nearest_to_center_index+1)
+                        else:
+                            combined_translation_vector_index = equivalent_points_inside[0][1]
+                            self.grid[p] = -(combined_translation_vector_index+1)
         print_message("translation vectors", self.translation_vectors)
 
     def get_direct_neighbors(self, point):
@@ -785,36 +787,21 @@ def calculated(filename, frame_nr, resolution, use_center_points):
     returns whether the given 
     '''
     base_name = ''.join(os.path.basename(filename).split(".")[:-1])
-    exp_name = "results/{}.hdf5".format(base_name)
+    exp_name = "../results/{}.hdf5".format(base_name)
     if os.path.isfile(exp_name): 
         with h5py.File(exp_name, "a") as file:
-            if not use_center_points:
-                if 'frame{}'.format(frame_nr) in file:
-                    if resolution in [calc.attrs['resolution'] for calc in file['frame{}'.format(frame_nr)].values()]:
+            if 'frame{}'.format(frame_nr) in file:
+                for calc in file['frame{}'.format(frame_nr)].values():
+                    if resolution == calc.attrs['resolution'] and (not use_center_points or (use_center_points and 'center_cavity_information' in calc)):
                         return True
-                    else:
-                        return False
-                else:
-                    return False
-            else:
-                if 'frame{}'.format(frame_nr) in file:
-                    for calc in file['frame{}'.format(frame_nr)].values():
-                        if calc.attrs['resolution'] == resolution :
-                            if 'center_cavity_information' in calc:
-                                return True
-                            else:
-                                return False
-                else:
-                    return False
-    else:
-        return False
+    return False
 
 def calculated_frames(filename, resolution):
     '''
     returns the calculated frames for the file filename and the given resolution
     '''
     base_name = ''.join(os.path.basename(filename).split(".")[:-1])
-    exp_name = "results/{}.hdf5".format(base_name)
+    exp_name = "../results/{}.hdf5".format(base_name)
     calc_frames = []
 
     if os.path.isfile(exp_name): 
@@ -830,7 +817,7 @@ def calculate_cavities(filename, frame_nr, volume, resolution, use_center_points
     calculates the cavities for the given file
     '''
     base_name = ''.join(os.path.basename(filename).split(".")[:-1])
-    exp_name = "results/{}.hdf5".format(base_name)
+    exp_name = "../results/{}.hdf5".format(base_name)
     
     tmp_exp = "{}.tmp".format(exp_name)
     if not use_center_points:
@@ -863,6 +850,7 @@ def calculate_cavities(filename, frame_nr, volume, resolution, use_center_points
         imported_results.export(exp_name, frame_nr, True)
     progress(100)
     print_message('calculation finished')
+    finish()
 
 def atom_volume_discretization(atoms, volume, resolution):
     '''
@@ -916,11 +904,12 @@ def calculate_domains(filename, frame_nr, volume, resolution):
 
     return domain_calculation
 
-def set_output_callbacks(progress_func, print_func):
-    global progress, print_message
+def set_output_callbacks(progress_func, print_func, finished_func):
+    global progress, print_message, finish
 
     progress =  progress_func
     print_message = print_func
+    finish = finished_func
 
 if __name__ == "__main__":
     import pybel

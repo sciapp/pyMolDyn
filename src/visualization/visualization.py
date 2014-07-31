@@ -37,15 +37,18 @@ class Visualization():
         for atom_index in range(self.num_atoms):
             self.atom_positions[atom_index] = self.volume.get_equivalent_point(self.atom_positions[atom_index])
 
-        res_name = "results/"+''.join(os.path.basename(filename).split(".")[:-1])+".hdf5"
-        cr = CalculationResults(res_name, frame_nr, resolution)
-        self.max_domain_index = cr.number_of_domains
-        self.domain_vertices_list = [t[0] for t in cr.domain_triangles]
-        self.domain_normals_list = [t[1] for t in cr.domain_triangles]
-        self.max_cavity_index = cr.number_of_multicavities
-        self.cavity_vertices_list = [t[0] for t in cr.multicavity_triangles]
-        self.cavity_normals_list = [t[1] for t in cr.multicavity_triangles]
+        self.calculated = calculated(filename, frame_nr, resolution, False)
         self.center_based_calculated = calculated(filename, frame_nr, resolution, True)
+
+        if self.calculated:
+            res_name = "../results/"+''.join(os.path.basename(filename).split(".")[:-1])+".hdf5"
+            cr = CalculationResults(res_name, frame_nr, resolution)
+            self.max_domain_index = cr.number_of_domains
+            self.domain_vertices_list = [t[0] for t in cr.domain_triangles]
+            self.domain_normals_list = [t[1] for t in cr.domain_triangles]
+            self.max_cavity_index = cr.number_of_multicavities
+            self.cavity_vertices_list = [t[0] for t in cr.multicavity_triangles]
+            self.cavity_normals_list = [t[1] for t in cr.multicavity_triangles]
 
         if use_center_points: 
             if self.center_based_calculated:
@@ -57,21 +60,22 @@ class Visualization():
         self.init(use_center_points)
 
     def init(self, use_center_points):
-        self.domain_meshes = []
-        for domain_index in range(self.max_domain_index):
-            domain_vertices = self.domain_vertices_list[domain_index]
-            domain_normals = self.domain_normals_list[domain_index]
-            num_domain_vertices = len(domain_vertices)*3
-            mesh = gr3.createmesh(num_domain_vertices, domain_vertices, domain_normals, [(1,1,1)]*num_domain_vertices)
-            self.domain_meshes.append(mesh)
-            
-        self.cavity_meshes = []
-        for cavity_index in range(self.max_cavity_index):
-            cavity_vertices = self.cavity_vertices_list[cavity_index]
-            cavity_normals = self.cavity_normals_list[cavity_index]
-            num_cavity_vertices = len(cavity_vertices)*3
-            mesh = gr3.createmesh(num_cavity_vertices, cavity_vertices, cavity_normals, [(1,1,1)]*num_cavity_vertices)
-            self.cavity_meshes.append(mesh)
+        if self.calculated:
+            self.domain_meshes = []
+            for domain_index in range(self.max_domain_index):
+                domain_vertices = self.domain_vertices_list[domain_index]
+                domain_normals = self.domain_normals_list[domain_index]
+                num_domain_vertices = len(domain_vertices)*3
+                mesh = gr3.createmesh(num_domain_vertices, domain_vertices, domain_normals, [(1,1,1)]*num_domain_vertices)
+                self.domain_meshes.append(mesh)
+                
+            self.cavity_meshes = []
+            for cavity_index in range(self.max_cavity_index):
+                cavity_vertices = self.cavity_vertices_list[cavity_index]
+                cavity_normals = self.cavity_normals_list[cavity_index]
+                num_cavity_vertices = len(cavity_vertices)*3
+                mesh = gr3.createmesh(num_cavity_vertices, cavity_vertices, cavity_normals, [(1,1,1)]*num_cavity_vertices)
+                self.cavity_meshes.append(mesh)
             
         if use_center_points:
             self.center_cavity_meshes = []
@@ -93,17 +97,20 @@ class Visualization():
         global cavity_meshes
         global center_cavity_meshes
         
+        if center_based_cavities and not self.center_based_calculated:
+            return
         gr3.clear()
-        if not show_cavities:
-            for domain_index in range(self.max_domain_index):
-                gr3.drawmesh(self.domain_meshes[domain_index], 1, (0,0,0), (0,0,1), (0,1,0), (0,1,0.5), (1,1,1))
-        else:
-            if center_based_cavities and self.center_based_calculated:
-                for cavity_index in range(self.max_center_cavity_index):
-                    gr3.drawmesh(self.center_cavity_meshes[cavity_index], 1, (0,0,0), (0,0,1), (0,1,0), (0.9,0.4,0.2), (1,1,1))
+        if self.calculated:
+            if not show_cavities:
+                for domain_index in range(self.max_domain_index):
+                    gr3.drawmesh(self.domain_meshes[domain_index], 1, (0,0,0), (0,0,1), (0,1,0), (0,1,0.5), (1,1,1))
             else:
-                for cavity_index in range(self.max_cavity_index):
-                    gr3.drawmesh(self.cavity_meshes[cavity_index], 1, (0,0,0), (0,0,1), (0,1,0), (0.2,0.4,1), (1,1,1))
+                if center_based_cavities and self.center_based_calculated:
+                    for cavity_index in range(self.max_center_cavity_index):
+                        gr3.drawmesh(self.center_cavity_meshes[cavity_index], 1, (0,0,0), (0,0,1), (0,1,0), (0.9,0.4,0.2), (1,1,1))
+                else:
+                    for cavity_index in range(self.max_cavity_index):
+                        gr3.drawmesh(self.cavity_meshes[cavity_index], 1, (0,0,0), (0,0,1), (0,1,0), (0.2,0.4,1), (1,1,1))
 
         edges = self.volume.edges
         num_edges = len(edges)
@@ -116,26 +123,6 @@ class Visualization():
         num_corners = len(corners)
         gr3.drawspheremesh(num_corners, corners, [(1,1,1)]*num_edges, [edge_radius]*num_edges)
         gr3.drawspheremesh(len(self.atom_positions), self.atom_positions, [(1,1,1)]*len(self.atom_positions), [edge_radius*4]*len(self.atom_positions))
-
-    def process_key(self, key):
-        '''
-            process key input
-        '''
-        rot_v_key = 15
-        if key == 'right':
-            self.rotate_mouse(rot_v_key, 0)
-        elif key == 'left':
-            self.rotate_mouse(-rot_v_key, 0)
-        elif key == 'up':
-            self.rotate_mouse(0, -rot_v_key)
-        elif key == 'down':
-            self.rotate_mouse(0, rot_v_key)
-        if key == 'd': # Domains
-            self.create_scene(False)
-        elif key == 'c': # Cavities
-            self.create_scene(True) 
-        elif key == 'f': # center based Cavities
-            self.create_scene(True,True)
 
     def zoom(self, delta):
         '''
@@ -151,9 +138,9 @@ class Visualization():
             Returns the rotation matrix to a rotation axis n and an angle alpha
         '''
         a = alpha
-        rot_mat = np.array(([n[0]**2*(1-cos(a)) + cos(a),               n[0]*n[1]*(1-cos(a)) - n[2]*sin(a),     n[0]*n[2]*(1-cos(a)) + n[1]*sin(a)],
-                            [n[0]*n[1]*(1-cos(a)) + n[2]*sin(a),        n[1]**2*(1-cos(a)) + cos(a),            n[1]*n[2]*(1-cos(a)) - n[0]*sin(a)],
-                            [n[2]*n[0]*(1-cos(a)) - n[1]*sin(a),        n[2]*n[1]*(1-cos(a)) + n[0]*sin(a),     n[2]**2*(1-cos(a)) + cos(a)]))
+        rot_mat = np.array(([n[0]**2*(1-cos(a)) + cos(a),           n[0]*n[1]*(1-cos(a)) - n[2]*sin(a),     n[0]*n[2]*(1-cos(a)) + n[1]*sin(a)],
+                            [n[0]*n[1]*(1-cos(a)) + n[2]*sin(a),    n[1]**2*(1-cos(a)) + cos(a),            n[1]*n[2]*(1-cos(a)) - n[0]*sin(a)],
+                            [n[2]*n[0]*(1-cos(a)) - n[1]*sin(a),    n[2]*n[1]*(1-cos(a)) + n[0]*sin(a),     n[2]**2*(1-cos(a)) + cos(a)]))
         return rot_mat
 
     def rotate_mouse(self, dx, dy):
