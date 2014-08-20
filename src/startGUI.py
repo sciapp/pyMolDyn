@@ -2,8 +2,7 @@
 
 import util.colored_exceptions
 from gui import main_window
-from visualization import visualization, volumes
-import calculation
+import volumes
 from PySide import QtCore, QtGui
 import sys
 

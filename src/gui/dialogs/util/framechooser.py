@@ -2,7 +2,8 @@
 from PySide import QtCore, QtGui
 
 class LabeledFrameChooser(QtGui.QWidget):
-    
+    value_changed = QtCore.Signal()
+
     def __init__(self, parent, minf, maxf, calculated, text):
         QtGui.QWidget.__init__(self, parent)
         
@@ -39,6 +40,9 @@ class LabeledFrameChooser(QtGui.QWidget):
         self.setLayout(vbox)
         self.show()
 
+    def emit_value_changed(self):
+        self.value_changed.emit()
+
     def load_dataset(self, filename):
         self.framebar.load_dataset(filename)
 
@@ -69,6 +73,7 @@ class FrameBar(QtGui.QWidget):
     def __init__(self, parent, minf, maxf, calculated):
         QtGui.QWidget.__init__(self, parent)
         
+        self.parent         = parent
         self.minf           = minf
         self.maxf           = maxf
         self.calculated     = calculated
@@ -135,8 +140,7 @@ class FrameBar(QtGui.QWidget):
             self.selection = [clicked]
         self.last_clicked = clicked
         self.repaint()
-            
-
+        self.parent.emit_value_changed()
 
     def mouseMoveEvent(self, e):
         if e.buttons() and QtCore.Qt.LeftButton:
@@ -144,6 +148,7 @@ class FrameBar(QtGui.QWidget):
             if 0 < e.x() < self.width:
                 self.process_mouse_event(clicked, e)
         e.ignore()
+
     def get_selection(self):
         return self.selection
 

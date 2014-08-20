@@ -79,7 +79,7 @@ import time
 dimension = 3
 dimensions = range(dimension)
 
-import visualization.volumes
+import volumes
 
 progress = None
 print_message = None
@@ -392,7 +392,7 @@ class DomainCalculation:
             grid = np.zeros(grid.shape, np.uint16)
             grid[:,:,:] = 0
             grid[1:-1, 1:-1, 1:-1] = sum(views)+100
-            domain_triangles.append(triangulate(grid, step, offset, 100))
+            domain_triangles.append(triangulate(grid, step, offset, 101))
             domain_surface_area = 0
             for domain_triangle in domain_triangles[-1][0]:
                 any_outside = False
@@ -727,7 +727,7 @@ class CalculationResults(object):
                 calculation = file['frame{}/calculation{}'.format(frame_nr, calculation_nr)]
             calculation.attrs['resolution'] = self.resolution
             ts = time.localtime()
-            calculation.attrs['timestamp'] = '{}.{}.{} {}:{}'.format(ts[2], ts[1], ts[0], ts[3], ts[4])
+            calculation.attrs['timestamp'] = '{0}.{1}.{2} {3:02d}:{4:02d}'.format(ts[2], ts[1], ts[0], ts[3], ts[4])
 
             if not use_center_points:
                 calculation["atom_information/number_of_atoms"] = self.number_of_atoms
@@ -818,7 +818,6 @@ def calculate_cavities(filename, frame_nr, volume, resolution, use_center_points
     '''
     base_name = ''.join(os.path.basename(filename).split(".")[:-1])
     exp_name = "../results/{}.hdf5".format(base_name)
-    
     tmp_exp = "{}.tmp".format(exp_name)
     if not use_center_points:
         domain_calculation = calculate_domains(filename, frame_nr, volume, resolution)

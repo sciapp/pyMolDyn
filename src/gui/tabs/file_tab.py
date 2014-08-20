@@ -4,7 +4,7 @@ from PySide import QtCore, QtGui
 import sys
 import os.path
 import calculation
-from visualization import volumes
+import volumes
 from gui.dialogs.calc_settings_dialog import CalculationSettingsDialog
 from gui.dialogs.progress_dialog import ProgressDialog
 
@@ -114,7 +114,7 @@ class FileTab(QtGui.QWidget):
                         if reply == QtGui.QMessageBox.No:
                             continue
                     self.calculate_frame(fn, frame, volume, resolution, use_center_points)
-                    self.main_window.show_dataset(volume, fn, frames[-1], resolution, use_center_points)
+            self.main_window.show_dataset(volume, fn, frames[-1], resolution, use_center_points)
             #print 'calculation finished'
 
     def calculate_frame(self, filename, frame_nr, volume, resolution, use_center_points):
@@ -126,6 +126,9 @@ class FileTab(QtGui.QWidget):
         if use_center_points:
             if not calculation.calculated(filename, frame_nr, resolution, False):
                 thread = CalculationThread(self, filename, frame_nr, volume, resolution, False)
+                thread.start()
+                self.progress_dialog.exec_()
+                thread.wait()
 
         thread = CalculationThread(self, filename, frame_nr, volume, resolution, use_center_points)
         thread.start()
