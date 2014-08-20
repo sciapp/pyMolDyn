@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import util.colored_exceptions
-from gui import main_window
+from gui import main_window,myApplication 
 import volumes
 from PySide import QtCore, QtGui
 import sys
 
 if __name__ == '__main__':
-    app = QtGui.QApplication(sys.argv)
+#    app = QtGui.QApplication(sys.argv)
+    app = myApplication.MyApplication(sys.argv)
     window = main_window.MainWindow()
     app.setOrganizationName("Forschungszentrum Jülich GmbH")
     app.setOrganizationDomain("fz-juelich.de")

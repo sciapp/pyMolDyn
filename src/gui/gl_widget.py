@@ -4,11 +4,11 @@ from visualization import visualization
 
 display_size = 800
 
-class UpdateGLEvent(QtCore.QEvent):
-
-    def __init__(self):
-        t = QtCore.QEvent.registerEventType()
-        QtCore.QEvent.__init__(self, QtCore.QEvent.Type(t))
+#class UpdateGLEvent(QtCore.QEvent):
+#
+#    def __init__(self):
+#        t = QtCore.QEvent.registerEventType()
+#        QtCore.QEvent.__init__(self, QtCore.QEvent.Type(t))
 
 class GLWidget(QtOpenGL.QGLWidget):
     '''
@@ -60,7 +60,7 @@ class GLWidget(QtOpenGL.QGLWidget):
                     self.vis.rotate_mouse(e.delta()*rot_v, 0)
                 else:
                     self.vis.rotate_mouse(0, e.delta()*rot_v )
-
+            print 'test'
             QtGui.QApplication.postEvent(self, UpdateGLEvent())
 
     def mousePressEvent(self, e):
@@ -73,6 +73,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         if self.update_needed:
             self.updateGL()
             self.update_needed = False
+        print 'nicht abgefangen'
 
     def keyPressEvent(self,e):
         '''
