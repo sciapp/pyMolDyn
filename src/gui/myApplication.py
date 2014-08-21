@@ -59,7 +59,9 @@ ignore_list = [QtCore.QEvent.Type.HideToParent,
                 QtCore.QEvent.Type.EnabledChange,
                 QtCore.QEvent.Type.WindowUnblocked,
                 QtCore.QEvent.Type.KeyRelease,
-                QtCore.QEvent.Type.NativeGesture
+                QtCore.QEvent.Type.NativeGesture,
+                QtCore.QEvent.Type.KeyboardLayoutChange,
+                QtCore.QEvent.Type.ToolTip
                 ]
 test=QtCore.QEvent.registerEventType()
 print test
@@ -114,31 +116,29 @@ class MyApplication(QtGui.QApplication):
                     receiver.y = event.y()
                     return True
                     
-        if(event.type() == t and isinstance(receiver, gl_widget.GLWidget)):
-            #print("abgefangen")
+        if event.type() == t and isinstance(receiver, gl_widget.GLWidget):
             if receiver.update_needed:
                 receiver.updateGL()
                 receiver.update_needed = False
-                return True
+            return True
             
         if(event.type() == QtCore.QEvent.KeyPress and isinstance(receiver, gl_widget.GLWidget)):
             if receiver.dataset_loaded:
-                receiver.vis.process_key(event)
-            
+                rot_v_key = 15
                 if event.key() == QtCore.Qt.Key_Right:
-                    receiver.vis.process_key('right')
+                    receiver.vis.rotate_mouse(rot_v_key, 0)
                 elif event.key() == QtCore.Qt.Key_Left:
-                    receiver.vis.process_key('left')
+                    receiver.vis.rotate_mouse(-rot_v_key, 0)
                 elif event.key() == QtCore.Qt.Key_Up:
-                    receiver.vis.process_key('up')
+                    receiver.vis.rotate_mouse(0, -rot_v_key)
                 elif event.key() == QtCore.Qt.Key_Down:
-                    receiver.vis.process_key('down')
-                elif event.key() == QtCore.Qt.Key_D:
-                    receiver.vis.process_key('d')
-                elif event.key() == QtCore.Qt.Key_C:
-                    receiver.vis.process_key('c')
-                elif event.key() == QtCore.Qt.Key_F:
-                    receiver.vis.process_key('f')
+                    receiver.vis.rotate_mouse(0, rot_v_key)
+                elif event.key() == QtCore.Qt.Key_D:            # Domains
+                    receiver.vis.create_scene(False)
+                elif event.key() == QtCore.Qt.Key_C:            # Cavities
+                    receiver.vis.create_scene(True)
+                elif event.key() == QtCore.Qt.Key_F:            # center based cavities
+                    receiver.vis.create_scene(True,True)
                 else:
                     event.ignore()
                 receiver.updateGL()

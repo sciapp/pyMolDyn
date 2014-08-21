@@ -73,7 +73,6 @@ class GLWidget(QtOpenGL.QGLWidget):
         if self.update_needed:
             self.updateGL()
             self.update_needed = False
-        print 'nicht abgefangen'
 
     def keyPressEvent(self,e):
         '''
