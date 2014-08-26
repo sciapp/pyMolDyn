@@ -57,9 +57,9 @@ class GLWidget(QtOpenGL.QGLWidget):
             else:
                 rot_v = 0.1
                 if e.orientation() == QtCore.Qt.Orientation.Horizontal:
-                    self.vis.rotate_mouse(e.delta()*rot_v, 0)
+                    self.vis.rotate_mouse(e.delta() * rot_v, 0)
                 else:
-                    self.vis.rotate_mouse(0, e.delta()*rot_v )
+                    self.vis.rotate_mouse(0, e.delta() * rot_v )
 
             QtGui.QApplication.postEvent(self, UpdateGLEvent())
 
@@ -74,7 +74,7 @@ class GLWidget(QtOpenGL.QGLWidget):
             self.updateGL()
             self.update_needed = False
 
-    def keyPressEvent(self,e):
+    def keyPressEvent(self, e):
         '''
             catches and processes key presses
         '''
@@ -106,9 +106,6 @@ class GLWidget(QtOpenGL.QGLWidget):
             self.vis.paint(self.geometry().width(), self.geometry().height())
         else:
             import gr3
-#            glClearColor(0,0,0,1)
-#            glClear(GL_COLOR_BUFFER_BIT)
-
             gr3.setbackgroundcolor(0.0, 0.0, 0.0, 1.0)
             gr3.drawimage(0, display_size, 0, display_size, display_size, display_size, gr3.GR3_Drawable.GR3_DRAWABLE_OPENGL)
             

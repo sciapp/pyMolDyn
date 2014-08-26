@@ -43,8 +43,8 @@ class LabeledFrameChooser(QtGui.QWidget):
     def emit_value_changed(self):
         self.value_changed.emit()
 
-    def load_dataset(self, filename):
-        self.framebar.load_dataset(filename)
+#    def load_dataset(self, filename):
+#        self.framebar.load_dataset(filename)
 
     def set_calculated_frames(self, calculated):
         self.framebar.set_calculated(calculated)
@@ -165,10 +165,10 @@ class FrameBar(QtGui.QWidget):
         self.draw()
         self.painter.end()
 
-    def load_dataset(self, filename):
-        n_frames = calculation.count_frames(filename)
-        self.minf = 1
-        self.maxf = n_frames
-        self.calculated = [0]
-        self.selection = [0]
-        self.repaint()
+#    def load_dataset(self, filename):
+#        n_frames = calculation.count_frames(filename)
+#        self.minf = 1
+#        self.maxf = n_frames
+#        self.calculated = [0]
+#        self.selection = [0]
+#        self.repaint()
