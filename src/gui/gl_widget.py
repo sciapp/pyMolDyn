@@ -20,7 +20,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.update_needed = False
         self.dataset_loaded = False
-x
+
     def initializeGL(self):
         pass
 
