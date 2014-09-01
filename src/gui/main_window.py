@@ -50,11 +50,7 @@ class MainWindow(QtGui.QMainWindow):
 
     def show_dataset(self, volume, filename, frame_nr, resolution, use_center_points):
         self.statusBar().showMessage(filename)
-
-        #if calculation.calculated(filename, frame_nr, resolution, use_center_points):
         self.center.show_dataset(volume, filename, frame_nr, resolution, use_center_points)
-        #else:
-        #    print 'dataset not calculated'
 
 #    def closeEvent(self, event):
 #        reply = QtGui.QMessageBox.question(self, 'Message',
@@ -75,11 +71,11 @@ class CentralWidget(QtGui.QWidget):
     def init_gui(self):
         self.gl_widget  = GLWidget(self)
 
-        mainLayout = QtGui.QHBoxLayout()
-        mainLayout.addWidget(self.gl_widget)
+        main_layout = QtGui.QHBoxLayout()
+        main_layout.addWidget(self.gl_widget)
 
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.setLayout(mainLayout)
+        self.setLayout(main_layout)
 
     def show_dataset(self, volume, filename, frame_nr, resolution, use_center_points):
         self.gl_widget.show_dataset(volume, filename, frame_nr, resolution, use_center_points)

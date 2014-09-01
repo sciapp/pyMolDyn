@@ -2,13 +2,14 @@
 
 import util.colored_exceptions
 from gui import main_window
-from core import volumes
+from core import volumes, control
 from PySide import QtGui
 import sys
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
-    window = main_window.MainWindow()
+    control = control.Control()
+    window = main_window.MainWindow(control.config) #TODO change constructor
     app.setOrganizationName("Forschungszentrum Jülich GmbH")
     app.setOrganizationDomain("fz-juelich.de")
     app.setApplicationName("pyMolDyn 2")

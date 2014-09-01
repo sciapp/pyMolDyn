@@ -12,7 +12,7 @@ class FileTabDock(QtGui.QDockWidget):
         DockWidget to the 'file'-tab
     """
     def __init__(self, parent):
-        QtGui.QDockWidget.__init__(self,"file", parent)
+        QtGui.QDockWidget.__init__(self, "file", parent)
         self.setWidget(QtGui.QWidget(self))
 
         self.layout     = QtGui.QHBoxLayout()
@@ -46,7 +46,7 @@ class FileTab(QtGui.QWidget):
     """
 
     def __init__(self, parent=None, main_window=None):
-        QtGui.QWidget.__init__(self,parent)
+        QtGui.QWidget.__init__(self, parent)
         self.init_gui()
         self.main_window = main_window
         self.progress_dialog = ProgressDialog(self)
@@ -107,11 +107,15 @@ class FileTab(QtGui.QWidget):
             for fn in filenames:
                 # TODO optimize
                 volume = volumes.get_volume_from_file(fn)
-                frames = range(1, calculation.count_frames(fn)+1) if frames[0] == -1 else frames
+                frames = range(1, calculation.count_frames(fn) + 1) if frames[0] == -1 else frames
                 for frame in frames:
                     if calculation.calculated(fn, frame, resolution, use_center_points):
                         #show Yes No Dialog
-                        reply = QtGui.QMessageBox.warning(self, 'Warning', "Are you sure to overwrite existing results?", QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+                        reply = QtGui.QMessageBox.warning(self,
+                                                        'Warning',
+                                                        "Are you sure that the existing results should be overwritten?",
+                                                        QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
+                                                        QtGui.QMessageBox.No)
                         if reply == QtGui.QMessageBox.No:
                             continue
                     self.calculate_frame(fn, frame, volume, resolution, use_center_points)
@@ -175,4 +179,3 @@ class DragList(QtGui.QListWidget):
 
     def get_selection(self):
         return [self.datalist[str(item.text())] for item in self.selectedItems()]
-

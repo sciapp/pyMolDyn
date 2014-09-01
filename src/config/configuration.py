@@ -3,8 +3,8 @@ import validate
 import os.path
 import inspect
 
-CONFIG_FILE = 'config.cfg'
-CONFIG_SPEC_FILE = 'config.spec'
+CONFIG_FILE = 'config/config.cfg'
+CONFIG_SPEC_FILE = 'config/config.spec'
 
 # second string is the list type name
 type_dict = {
@@ -39,20 +39,20 @@ class Configuration:
         ATOM_RADIUS     = 2.8
 
     def __init__(self):
-        self.file = ConfigFile(self)
-        self.file.read()
+        self._file = ConfigFile(self)
+        self._file.read()
 
     def save(self):
         """
         write configuration to file
         """
-        self.file.obj2file()
+        self._file.obj2file()
 
     def read(self):
         """
         read configuration from file
         """
-        self.file.read()
+        self._file.read()
 
 
 class ConfigFile:
@@ -98,10 +98,11 @@ class ConfigFile:
         """
         for attr_str in dir(cls):
             attr = getattr(cls, attr_str)
+            print attr_str
             if inspect.isclass(attr):
                 config_file[attr.__name__] = {}
                 self.parse_class(attr, config_file[attr.__name__])
-            elif not inspect.ismethod(attr) and not attr_str.startswith('__'):
+            elif not inspect.ismethod(attr) and not attr_str.startswith('_'):
                 config_file[attr_str] = attr
             else:
                 pass
@@ -111,7 +112,7 @@ class ConfigFile:
         """
         read a configuration from file
         """
-        if not os.path.isfile(CONFIG_SPEC_FILE) or not not os.path.isfile(CONFIG_FILE):
+        if not os.path.isfile(CONFIG_SPEC_FILE) or not os.path.isfile(CONFIG_FILE):
             self.obj2file()
         else:
             validator = validate.Validator()
