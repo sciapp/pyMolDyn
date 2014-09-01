@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from PySide import QtCore, QtGui
+from PySide import QtGui
 
 
 class ImageVideoTabDock(QtGui.QDockWidget):

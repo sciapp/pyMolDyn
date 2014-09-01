@@ -2,8 +2,8 @@
 
 import util.colored_exceptions
 from gui import main_window
-import volumes
-from PySide import QtCore, QtGui
+from core import volumes
+from PySide import QtGui
 import sys
 
 if __name__ == '__main__':

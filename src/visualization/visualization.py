@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import sys
-from math import pi, sin, cos, acos
-import numpy as np
+from math import sin, cos
 import gr3
 import pybel
-import volumes
-import os.path
-from calculation import *
+from core.calculation import *
+
 
 class Visualization():
 
@@ -93,10 +90,7 @@ class Visualization():
         #gr3.export("test.html",800,800)
 
     def create_scene(self, show_cavities=True, center_based_cavities=False):
-        global domain_meshes
-        global cavity_meshes
-        global center_cavity_meshes
-        
+
         if center_based_cavities and not self.center_based_calculated:
             return
         gr3.clear()
@@ -125,18 +119,18 @@ class Visualization():
         gr3.drawspheremesh(len(self.atom_positions), self.atom_positions, [(1,1,1)]*len(self.atom_positions), [edge_radius*4]*len(self.atom_positions))
 
     def zoom(self, delta):
-        '''
+        """
             camera_zoom
-        '''
+        """
         zoom_v = 1./20
         zoom_cap = self.d + zoom_v*delta < max(self.volume.side_lengths)*4
         if self.d + zoom_v*delta > 0 and zoom_cap:
             self.d += zoom_v*delta
 
     def get_rotation_matrix(self, n, alpha):
-        '''
+        """
             Returns the rotation matrix to a rotation axis n and an angle alpha
-        '''
+        """
         a = alpha
         rot_mat = np.array(([n[0]**2*(1-cos(a)) + cos(a),           n[0]*n[1]*(1-cos(a)) - n[2]*sin(a),     n[0]*n[2]*(1-cos(a)) + n[1]*sin(a)],
                             [n[0]*n[1]*(1-cos(a)) + n[2]*sin(a),    n[1]**2*(1-cos(a)) + cos(a),            n[1]*n[2]*(1-cos(a)) - n[0]*sin(a)],
@@ -144,34 +138,34 @@ class Visualization():
         return rot_mat
 
     def rotate_mouse(self, dx, dy):
-        '''
+        """
             calculates rotation to a given dx and dy on the screen
-        '''
+        """
         rot_v = 1./13000
         diff_vec = (dx*self.rightt + (-1*dy)*self.upt)
         if all(diff_vec == np.zeros(3)):
             return
         rot_axis = np.cross(diff_vec, self.pt)
-        rot_axis = rot_axis/np.linalg.norm(rot_axis)
+        rot_axis /= np.linalg.norm(rot_axis)
 
         # rotation matrix with min rotation angle
         m = self.get_rotation_matrix(rot_axis, max(self.d,20)*rot_v*(dx**2+dy**2)**0.5)
         self.mat = m.dot(self.mat)
 
     def set_camera(self):
-        '''
+        """
             updates the shown scene after perspektive has changed
-        '''
-        self.rightt = self.mat[:,0]
-        self.upt = self.mat[:,1]
-        self.pt = self.mat[:,2]*self.d
+        """
+        self.rightt = self.mat[:, 0]
+        self.upt = self.mat[:, 1]
+        self.pt = self.mat[:, 2] * self.d
 
         gr3.cameralookat(self.pt[0], self.pt[1], self.pt[2], 0, 0, 0, self.upt[0], self.upt[1], self.upt[2])
 
     def paint(self, width, height):
-        '''
+        """
             refreshes the OpenGL scene
-        '''
+        """
         self.set_camera()
         gr3.drawimage(0, width, 0, height, width, height, gr3.GR3_Drawable.GR3_DRAWABLE_OPENGL)
 

@@ -16,9 +16,9 @@ type_dict = {
 
 
 class Configuration:
-    '''
+    """
     Configuration Object that contains the application settings
-    '''
+    """
 
     # standard configuration
     RESULT_DIR      = '../results/'
@@ -43,38 +43,38 @@ class Configuration:
         self.file.read()
 
     def save(self):
-        '''
+        """
         write configuration to file
-        '''
+        """
         self.file.obj2file()
 
     def read(self):
-        '''
+        """
         read configuration from file
-        '''
+        """
         self.file.read()
 
 
 class ConfigFile:
-    '''
+    """
     ConfigFile that parses the settings to a configuration file using ConfigObj 4
-    '''
+    """
 
     def __init__(self, config):
         self.config = config
 
     def generate_configspec(self):
-        '''
+        """
         generates the type specification for the configuration data
-        '''
+        """
         spec_file = configobj.ConfigObj(CONFIG_SPEC_FILE)
         self.generate_spec_for_section(self.file, spec_file)
         spec_file.write()
 
     def generate_spec_for_section(self, section, spec_section):
-        '''
+        """
         recursive type specification for each subtree
-        '''
+        """
         for scalar in section.scalars:
             t = type(section[scalar])
             type_string = type_dict[t][0] if t is not list else type_dict[type(section[scalar][0])][1] + '_list'
@@ -84,18 +84,18 @@ class ConfigFile:
             self.generate_spec_for_section(section[sect], spec_section[sect])
 
     def obj2file(self):
-        '''
+        """
         recursively reads the object and saves it to the ConfigFile object and finally writes it into the file
-        '''
+        """
         self.file = configobj.ConfigObj(CONFIG_FILE)
         self.parse_class(self.config, self.file)
         self.generate_configspec()
         self.file.write()
 
     def parse_class(self, cls, config_file):
-        '''
+        """
         parses a class subtree
-        '''
+        """
         for attr_str in dir(cls):
             attr = getattr(cls, attr_str)
             if inspect.isclass(attr):
@@ -108,9 +108,9 @@ class ConfigFile:
                 #print attr_str, 'NOT PROCESSED'
 
     def read(self):
-        '''
+        """
         read a configuration from file
-        '''
+        """
         if not os.path.isfile(CONFIG_SPEC_FILE) or not not os.path.isfile(CONFIG_FILE):
             self.obj2file()
         else:
@@ -120,6 +120,9 @@ class ConfigFile:
             self.parse_section(self.file, self.config)
 
     def parse_section(self, section, config_obj):
+        """
+        parses a config section
+        """
         for scalar in section.scalars:
             setattr(config_obj, scalar, section[scalar])
         for sec in section.sections:

@@ -1,9 +1,11 @@
 from PySide import QtCore, QtGui
 
+
 class CalculationTable(QtGui.QTableView):
     def __init__(self, parent):
         QtGui.QTableView.__init__(self,parent)
         self.setSelectionMode(QtGui.QAbstractItemView.NoSelection)
+
 
 class TableModel(QtCore.QAbstractTableModel):
     def __init__(self, parent, data, header):

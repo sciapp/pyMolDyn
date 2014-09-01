@@ -38,7 +38,7 @@ BOMS = {
     BOM_UTF16: ('utf_16', 'utf_16'),
     }
 # All legal variants of the BOM codecs.
-# TODO: the list of aliases is not meant to be exhaustive, is there a
+# TO_DO: the list of aliases is not meant to be exhaustive, is there a
 #   better way ?
 BOM_LIST = {
     'utf_16': 'utf_16',
@@ -973,7 +973,7 @@ class Section(dict):
         else:
             try:
                 if not isinstance(val, basestring):
-                    # TODO: Why do we raise a KeyError here?
+                    # TO_DO: Why do we raise a KeyError here?
                     raise KeyError()
                 else:
                     return self.main._bools[val.lower()]
@@ -1112,7 +1112,7 @@ class ConfigObj(Section):
 
     # this regexp pulls list values out as a single string
     # or single values and comments
-    # FIXME: this regex adds a '' to the end of comma terminated lists
+    # FIX_ME: this regex adds a '' to the end of comma terminated lists
     #   workaround in ``_handle_value``
     _valueexp = re.compile(r'''^
         (?:
@@ -1220,7 +1220,7 @@ class ConfigObj(Section):
                           'deprecated. Use **options instead.',
                           DeprecationWarning, stacklevel=2)
             
-            # TODO: check the values too.
+            # TO_DO: check the values too.
             for entry in options:
                 if entry not in OPTION_DEFAULTS:
                     raise TypeError('Unrecognised option "%s".' % entry)
@@ -1418,8 +1418,8 @@ class ConfigObj(Section):
         if self.encoding is not None:
             # encoding explicitly supplied
             # And it could have an associated BOM
-            # TODO: if encoding is just UTF16 - we ought to check for both
-            # TODO: big endian and little endian versions.
+            # TO_DO: if encoding is just UTF16 - we ought to check for both
+            # TO_DO: big endian and little endian versions.
             enc = BOM_LIST[self.encoding.lower()]
             if enc == 'utf_16':
                 # For UTF16 we try big endian and little endian
@@ -1868,7 +1868,7 @@ class ConfigObj(Section):
         if single is not None:
             # handle empty values
             if list_values and not single:
-                # FIXME: the '' is a workaround because our regex now matches
+                # FIX_ME: the '' is a workaround because our regex now matches
                 #   '' at the end of a list if it has a trailing comma
                 single = None
             else:
@@ -1921,7 +1921,7 @@ class ConfigObj(Section):
 
     def _handle_configspec(self, configspec):
         """Parse the configspec."""
-        # FIXME: Should we check that the configspec was created with the 
+        # FIX_ME: Should we check that the configspec was created with the 
         #        correct settings ? (i.e. ``list_values=False``)
         if not isinstance(configspec, ConfigObj):
             try:
@@ -1930,7 +1930,7 @@ class ConfigObj(Section):
                                        file_error=True,
                                        _inspec=True)
             except ConfigObjError, e:
-                # FIXME: Should these errors have a reference
+                # FIX_ME: Should these errors have a reference
                 #        to the already parsed ConfigObj ?
                 raise ConfigspecError('Parsing configspec failed: %s' % e)
             except IOError, e:
@@ -2007,7 +2007,7 @@ class ConfigObj(Section):
         """
         Write the current ConfigObj as a file
         
-        tekNico: FIXME: use StringIO instead of real files
+        tekNico: FIX_ME: use StringIO instead of real files
         
         >>> filename = a.filename
         >>> a.filename = 'test.ini'
@@ -2283,7 +2283,7 @@ class ConfigObj(Section):
         # Missing sections will have been created as empty ones when the
         # configspec was read.
         for entry in section.sections:
-            # FIXME: this means DEFAULT is not copied in copy mode
+            # FIX_ME: this means DEFAULT is not copied in copy mode
             if section is self and entry == 'DEFAULT':
                 continue
             if section[entry].configspec is None:
@@ -2324,7 +2324,7 @@ class ConfigObj(Section):
         """Clear ConfigObj instance and restore to 'freshly created' state."""
         self.clear()
         self._initialise()
-        # FIXME: Should be done by '_initialise', but ConfigObj constructor (and reload)
+        # FIX_ME: Should be done by '_initialise', but ConfigObj constructor (and reload)
         #        requires an empty dictionary
         self.configspec = None
         # Just to be sure ;-)

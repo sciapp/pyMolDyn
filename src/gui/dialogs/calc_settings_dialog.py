@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-from PySide import QtCore, QtGui
 from gui.dialogs.util.calc_table import *
 from gui.dialogs.util.framechooser import LabeledFrameChooser
-import calculation
+from core import calculation
 import os.path 
 
 
@@ -92,13 +91,22 @@ class CalculationSettingsDialog(QtGui.QDialog):
                 sel = [1]
             #do while
             j = 0
-            data_list  = [(filename, self.timestamp(self.filenames[i], self.resolution, center_based=False, frames=sel), self.timestamp(self.filenames[i], self.resolution, center_based=True, frames=sel)) for i, filename in enumerate(self.basenames)]
+            data_list  = [( filename,
+                            self.timestamp(self.filenames[i], self.resolution, center_based=False, frames=sel),
+                            self.timestamp(self.filenames[i], self.resolution, center_based=True, frames=sel))
+                            for i, filename in enumerate(self.basenames)]
             j += 1
             while j < len(sel) and not calculation.calculated(filename, sel[j], self.resolution, False):
-                data_list  = [(filename, self.timestamp(self.filenames[i], self.resolution, center_based=True, frames=sel), self.timestamp(self.filenames[i], self.resolution, center_based=False, frames=sel)) for i, filename in enumerate(self.basenames)]
+                data_list  = [( filename,
+                                self.timestamp(self.filenames[i], self.resolution, center_based=True, frames=sel),
+                                self.timestamp(self.filenames[i], self.resolution, center_based=False, frames=sel))
+                                for i, filename in enumerate(self.basenames)]
                 j += 1
         else:
-            data_list  = [(filename, self.timestamp(self.filenames[i], self.resolution, center_based=True), self.timestamp(self.filenames[i], self.resolution, center_based=False)) for i, filename in enumerate(self.basenames)]
+            data_list  = [( filename,
+                            self.timestamp(self.filenames[i], self.resolution, center_based=True),
+                            self.timestamp(self.filenames[i], self.resolution, center_based=False))
+                            for i, filename in enumerate(self.basenames)]
         
         header = ['dataset', 'surface based', 'center based']
         table_model = TableModel(self, data_list, header)

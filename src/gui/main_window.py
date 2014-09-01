@@ -1,15 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import visualization.visualization
-import calculation
+from core import calculation
 from gui.tabs.file_tab import FileTabDock
 from gui.tabs.view_tab import ViewTabDock
 from gui.tabs.image_video_tab import ImageVideoTabDock
 from gui.gl_widget import GLWidget
-import gr3
-from PySide import QtCore, QtGui, QtOpenGL
-import numpy
-import math
+from PySide import QtCore, QtGui
 
 
 class MainWindow(QtGui.QMainWindow):

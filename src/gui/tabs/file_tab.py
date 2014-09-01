@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 
 from PySide import QtCore, QtGui
-import sys
 import os.path
-import calculation
-import volumes
+from core import calculation, volumes
 from gui.dialogs.calc_settings_dialog import CalculationSettingsDialog
 from gui.dialogs.progress_dialog import ProgressDialog
 
+
 class FileTabDock(QtGui.QDockWidget):
-    '''
+    """
         DockWidget to the 'file'-tab
-    '''
+    """
     def __init__(self, parent):
         QtGui.QDockWidget.__init__(self,"file", parent)
         self.setWidget(QtGui.QWidget(self))
@@ -23,6 +22,7 @@ class FileTabDock(QtGui.QDockWidget):
         self.widget().setLayout(self.layout)
 
         self.setFeatures(QtGui.QDockWidget.DockWidgetMovable | QtGui.QDockWidget.DockWidgetFloatable)
+
 
 class CalculationThread(QtCore.QThread):
     """
@@ -39,10 +39,11 @@ class CalculationThread(QtCore.QThread):
     def run(self):
         calculation.calculate_cavities(self.filename, self.frame, self.volume, self.resolution, self.use_center_points)
 
+
 class FileTab(QtGui.QWidget):
-    '''
+    """
         tab 'file' in the main widget
-    '''
+    """
 
     def __init__(self, parent=None, main_window=None):
         QtGui.QWidget.__init__(self,parent)
@@ -133,6 +134,7 @@ class FileTab(QtGui.QWidget):
         thread = CalculationThread(self, filename, frame_nr, volume, resolution, use_center_points)
         thread.start()
         self.progress_dialog.exec_()
+
 
 class DragList(QtGui.QListWidget):
     def __init__(self, parent):
