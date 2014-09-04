@@ -1,25 +1,22 @@
 # -*- coding: utf-8 -*-
 
-import visualization.visualization
-import calculation
+from core import calculation
 from gui.tabs.file_tab import FileTabDock
 from gui.tabs.view_tab import ViewTabDock
 from gui.tabs.image_video_tab import ImageVideoTabDock
 from gui.gl_widget import GLWidget
-import gr3
-from PySide import QtCore, QtGui, QtOpenGL
-import numpy
-import math
+from PySide import QtCore, QtGui
 
 
 class MainWindow(QtGui.QMainWindow):
-    def __init__(self, parent=None):
-        QtGui.QMainWindow.__init__(self, parent)
+    def __init__(self, control):
+        QtGui.QMainWindow.__init__(self, None)
 
         self.center             = CentralWidget(self)
         self.file_dock          = FileTabDock(self)
         self.view_dock          = ViewTabDock(self)
         self.image_video_dock   = ImageVideoTabDock(self)
+        self.control            = control
 
         self.docks = []
 
@@ -54,20 +51,17 @@ class MainWindow(QtGui.QMainWindow):
 
     def show_dataset(self, volume, filename, frame_nr, resolution, use_center_points):
         self.statusBar().showMessage(filename)
-
-        #if calculation.calculated(filename, frame_nr, resolution, use_center_points):
         self.center.show_dataset(volume, filename, frame_nr, resolution, use_center_points)
-        #else:
-        #    print 'dataset not calculated'
 
 #    def closeEvent(self, event):
 #        reply = QtGui.QMessageBox.question(self, 'Message',
-#            "Are you sure to quit?", QtGui.QMessageBox.Yes | 
+#            "Are you sure to quit?", QtGui.QMessageBox.Yes |
 #            QtGui.QMessageBox.No, QtGui.QMessageBox.No)
 #        if reply == QtGui.QMessageBox.Yes:
 #            event.accept()
 #        else:
 #            event.ignore() 
+
 
 class CentralWidget(QtGui.QWidget):
 
@@ -79,11 +73,11 @@ class CentralWidget(QtGui.QWidget):
     def init_gui(self):
         self.gl_widget  = GLWidget(self)
 
-        mainLayout = QtGui.QHBoxLayout()
-        mainLayout.addWidget(self.gl_widget)
+        main_layout = QtGui.QHBoxLayout()
+        main_layout.addWidget(self.gl_widget)
 
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.setLayout(mainLayout)
+        self.setLayout(main_layout)
 
     def show_dataset(self, volume, filename, frame_nr, resolution, use_center_points):
         self.gl_widget.show_dataset(volume, filename, frame_nr, resolution, use_center_points)

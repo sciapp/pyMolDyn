@@ -16,8 +16,8 @@ http://en.wikipedia.org/wiki/Bravais_lattice
 Author: Florian Rhiem <f.rhiem@fz-juelich.de>
 '''
 
-from math import ceil, floor, sin, cos, pi
-cot = lambda alpha: cos(alpha)/sin(alpha)
+from math import ceil, sin, cos, pi
+cot = lambda alpha: cos(alpha) / sin(alpha)
 import itertools
 import numpy as np
 import numpy.linalg as la

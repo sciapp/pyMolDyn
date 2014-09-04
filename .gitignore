@@ -13,3 +13,5 @@ src/xyz
 doc/_build
 src/.idea
 *.hdf5
+*.cfg
+*.spec

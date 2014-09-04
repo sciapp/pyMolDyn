@@ -1,5 +1,4 @@
-from PySide import QtCore, QtGui, QtOpenGL
-import visualization
+from PySide import QtCore, QtGui
 import gl_widget
 import main_window
 

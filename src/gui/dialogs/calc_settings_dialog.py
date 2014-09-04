@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
-from PySide import QtCore, QtGui
 from gui.dialogs.util.calc_table import *
 from gui.dialogs.util.framechooser import LabeledFrameChooser
-import calculation
+from core import calculation
 import os.path 
-
+from config.configuration import config
 
 class CalculationSettingsDialog(QtGui.QDialog):
 
     FRAME_MIN = 32
     FRAME_MAX = 1024
 
-    def __init__(self, parent=None, filenames=[]):
+    def __init__(self, parent, filenames):
         QtGui.QDialog.__init__(self, parent)
 
         self.init_gui(filenames)
@@ -22,7 +21,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
         vbox            = QtGui.QVBoxLayout() 
         button_hbox     = QtGui.QHBoxLayout() 
         res_hbox        = QtGui.QHBoxLayout()
-        self.resolution = 64
+        self.resolution = config.STD_RESOLUTION
 
         self.filenames  = filenames
         self.basenames  = [os.path.basename(path) for path in filenames]
@@ -92,13 +91,22 @@ class CalculationSettingsDialog(QtGui.QDialog):
                 sel = [1]
             #do while
             j = 0
-            data_list  = [(filename, self.timestamp(self.filenames[i], self.resolution, center_based=False, frames=sel), self.timestamp(self.filenames[i], self.resolution, center_based=True, frames=sel)) for i, filename in enumerate(self.basenames)]
+            data_list  = [( filename,
+                            self.timestamp(self.filenames[i], self.resolution, center_based=False, frames=sel),
+                            self.timestamp(self.filenames[i], self.resolution, center_based=True, frames=sel))
+                            for i, filename in enumerate(self.basenames)]
             j += 1
             while j < len(sel) and not calculation.calculated(filename, sel[j], self.resolution, False):
-                data_list  = [(filename, self.timestamp(self.filenames[i], self.resolution, center_based=True, frames=sel), self.timestamp(self.filenames[i], self.resolution, center_based=False, frames=sel)) for i, filename in enumerate(self.basenames)]
+                data_list  = [( filename,
+                                self.timestamp(self.filenames[i], self.resolution, center_based=True, frames=sel),
+                                self.timestamp(self.filenames[i], self.resolution, center_based=False, frames=sel))
+                                for i, filename in enumerate(self.basenames)]
                 j += 1
         else:
-            data_list  = [(filename, self.timestamp(self.filenames[i], self.resolution, center_based=True), self.timestamp(self.filenames[i], self.resolution, center_based=False)) for i, filename in enumerate(self.basenames)]
+            data_list  = [( filename,
+                            self.timestamp(self.filenames[i], self.resolution, center_based=True),
+                            self.timestamp(self.filenames[i], self.resolution, center_based=False))
+                            for i, filename in enumerate(self.basenames)]
         
         header = ['dataset', 'surface based', 'center based']
         table_model = TableModel(self, data_list, header)
@@ -142,7 +150,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
                     if not all([calculation.calculated(filename, frame, resolution, True) for frame in frames]):
                         return 'X'
                 base_name = ''.join(os.path.basename(filename).split(".")[:-1])
-                exp_name = "../results/{}.hdf5".format(base_name)
+                exp_name = "{}{}.hdf5".format(config.RESULT_DIR, base_name)
                 with h5py.File(exp_name, "r") as file:
                     for calc in file['frame{}'.format(frames[0])].values():
                         if calc.attrs['resolution'] == resolution:

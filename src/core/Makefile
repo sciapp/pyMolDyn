@@ -1,5 +1,5 @@
 
-SUBDIRS = computation gui util visualization config core
+SUBDIRS = 
 
 all:
 	for i in $(SUBDIRS); do make -C $$i all; done
