@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import util.colored_exceptions
+<<<<<<< HEAD
 from gui import main_window
 from core import volumes, control
 from PySide import QtGui
@@ -10,6 +11,7 @@ if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
     control = control.Control()
     window = main_window.MainWindow(control)
+
     app.setOrganizationName("Forschungszentrum Jülich GmbH")
     app.setOrganizationDomain("fz-juelich.de")
     app.setApplicationName("pyMolDyn 2")
