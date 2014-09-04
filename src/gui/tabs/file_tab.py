@@ -5,6 +5,7 @@ import os.path
 from core import calculation, volumes
 from gui.dialogs.calc_settings_dialog import CalculationSettingsDialog
 from gui.dialogs.progress_dialog import ProgressDialog
+from config.configuration import config
 
 
 class FileTabDock(QtGui.QDockWidget):
@@ -45,11 +46,12 @@ class FileTab(QtGui.QWidget):
         tab 'file' in the main widget
     """
 
-    def __init__(self, parent=None, main_window=None):
+    def __init__(self, parent, main_window):
         QtGui.QWidget.__init__(self, parent)
         self.init_gui()
         self.main_window = main_window
         self.progress_dialog = ProgressDialog(self)
+
         p = self.progress_dialog
         self.main_window.set_output_callbacks(p.progress, p.print_step, p.calculation_finished)
 
@@ -68,7 +70,7 @@ class FileTab(QtGui.QWidget):
         self.calculate_button = QtGui.QPushButton('Calculate', self)
         self.calculate_button.clicked.connect(self.calculate)
         self.button_hbox.addWidget(self.calculate_button)
-        
+
         self.vbox.addLayout(self.button_hbox)
 
         self.file_list = DragList(self)
@@ -100,7 +102,7 @@ class FileTab(QtGui.QWidget):
         if len(filenames) == 0:
             QtGui.QMessageBox.information(self, 'Information', "Choose a dataset", QtGui.QMessageBox.Ok)
             return
-        dia = CalculationSettingsDialog(self, filenames) 
+        dia = CalculationSettingsDialog(self, filenames)
         resolution, frames, use_center_points, ok = dia.calculation_settings()
 
         if ok:
@@ -125,7 +127,7 @@ class FileTab(QtGui.QWidget):
     def calculate_frame(self, filename, frame_nr, volume, resolution, use_center_points):
         if calculation.calculated(filename, frame_nr, resolution, True):
             base_name = ''.join(os.path.basename(filename).split(".")[:-1])
-            exp_name = "../results/{}.hdf5".format(base_name)
+            exp_name = "{}{}.hdf5".format(config.RESULT_DIR, base_name)
             calculation.delete_center_cavity_information(exp_name, frame_nr, resolution)
 
         if use_center_points:
@@ -165,7 +167,7 @@ class DragList(QtGui.QListWidget):
                 e.ignore()
         else:
             e.ignore()
-            
+
     def dropEvent(self, e):
         for f in e.mimeData().urls():
             if os.path.isfile(f.path()):

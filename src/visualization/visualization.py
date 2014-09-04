@@ -2,20 +2,21 @@
 
 from math import sin, cos
 import gr3
-import pybel
 from core.calculation import *
-
+from config.configuration import config
+import pybel
 
 class Visualization():
 
     def __init__(self, volume, filename, frame_nr, resolution, use_center_points):
         self.domain_meshes = []
         self.cavity_meshes = []
+        self.center_cavity_meshes = []
 
         self.mat = np.array(([1, 0, 0],
                             [0, 1, 0],
                             [0, 0, 1]))
-        self.d = max(volume.side_lengths)*2
+        self.d = max(volume.side_lengths) * 2
         self.pos = np.array((0, 0, self.d))
         self.up = np.array((0, 1, 0))
         self.right = np.array((1, 0, 0))
@@ -38,7 +39,7 @@ class Visualization():
         self.center_based_calculated = calculated(filename, frame_nr, resolution, True)
 
         if self.calculated:
-            res_name = "../results/"+''.join(os.path.basename(filename).split(".")[:-1])+".hdf5"
+            res_name = '{}{}.hdf5'.format(config.RESULT_DIR, ''.join(os.path.basename(filename).split(".")[:-1]))
             cr = CalculationResults(res_name, frame_nr, resolution)
             self.max_domain_index = cr.number_of_domains
             self.domain_vertices_list = [t[0] for t in cr.domain_triangles]
@@ -62,16 +63,16 @@ class Visualization():
             for domain_index in range(self.max_domain_index):
                 domain_vertices = self.domain_vertices_list[domain_index]
                 domain_normals = self.domain_normals_list[domain_index]
-                num_domain_vertices = len(domain_vertices)*3
-                mesh = gr3.createmesh(num_domain_vertices, domain_vertices, domain_normals, [(1,1,1)]*num_domain_vertices)
+                num_domain_vertices = len(domain_vertices) * 3
+                mesh = gr3.createmesh(num_domain_vertices, domain_vertices, domain_normals, [config.Colors.DOMAIN]*num_domain_vertices)
                 self.domain_meshes.append(mesh)
                 
             self.cavity_meshes = []
             for cavity_index in range(self.max_cavity_index):
                 cavity_vertices = self.cavity_vertices_list[cavity_index]
                 cavity_normals = self.cavity_normals_list[cavity_index]
-                num_cavity_vertices = len(cavity_vertices)*3
-                mesh = gr3.createmesh(num_cavity_vertices, cavity_vertices, cavity_normals, [(1,1,1)]*num_cavity_vertices)
+                num_cavity_vertices = len(cavity_vertices) * 3
+                mesh = gr3.createmesh(num_cavity_vertices, cavity_vertices, cavity_normals, [config.Colors.CAVITY]*num_cavity_vertices)
                 self.cavity_meshes.append(mesh)
             
         if use_center_points:
@@ -80,8 +81,8 @@ class Visualization():
     #        for cavity_index in range(self.max_center_cavity_index-1):  fixes Index Error 256K dataset
                 center_cavity_vertices = self.center_cavity_vertices_list[cavity_index]
                 center_cavity_normals = self.center_cavity_normals_list[cavity_index]
-                num_center_cavity_vertices = len(center_cavity_vertices)*3
-                mesh = gr3.createmesh(num_center_cavity_vertices, center_cavity_vertices, center_cavity_normals, [(1,1,1)]*num_center_cavity_vertices)
+                num_center_cavity_vertices = len(center_cavity_vertices) * 3
+                mesh = gr3.createmesh(num_center_cavity_vertices, center_cavity_vertices, center_cavity_normals, [config.Colors.ALT_CAVITY]*num_center_cavity_vertices)
                 self.center_cavity_meshes.append(mesh)
 
         self.create_scene()
@@ -97,14 +98,14 @@ class Visualization():
         if self.calculated:
             if not show_cavities:
                 for domain_index in range(self.max_domain_index):
-                    gr3.drawmesh(self.domain_meshes[domain_index], 1, (0,0,0), (0,0,1), (0,1,0), (0,1,0.5), (1,1,1))
+                    gr3.drawmesh(self.domain_meshes[domain_index], 1, (0,0,0), (0,0,1), (0,1,0), config.Colors.DOMAIN, (1,1,1))
             else:
                 if center_based_cavities and self.center_based_calculated:
                     for cavity_index in range(self.max_center_cavity_index):
-                        gr3.drawmesh(self.center_cavity_meshes[cavity_index], 1, (0,0,0), (0,0,1), (0,1,0), (0.9,0.4,0.2), (1,1,1))
+                        gr3.drawmesh(self.center_cavity_meshes[cavity_index], 1, (0,0,0), (0,0,1), (0,1,0), config.Colors.ALT_CAVITY, (1,1,1))
                 else:
                     for cavity_index in range(self.max_cavity_index):
-                        gr3.drawmesh(self.cavity_meshes[cavity_index], 1, (0,0,0), (0,0,1), (0,1,0), (0.2,0.4,1), (1,1,1))
+                        gr3.drawmesh(self.cavity_meshes[cavity_index], 1, (0,0,0), (0,0,1), (0,1,0), config.Colors.CAVITY, (1,1,1))
 
         edges = self.volume.edges
         num_edges = len(edges)
@@ -112,11 +113,11 @@ class Visualization():
         edge_directions = [[edge[1][i]-edge[0][i] for i in range(3)] for edge in edges]
         edge_lengths = [sum([c*c for c in edge])**0.5 for edge in edge_directions]
         edge_radius = min(edge_lengths)/200
-        gr3.drawcylindermesh(num_edges, edge_positions, edge_directions, [(1,1,1)]*num_edges, [edge_radius]*num_edges, edge_lengths)
+        gr3.drawcylindermesh(num_edges, edge_positions, edge_directions, [config.Colors.BOUNDING_BOX]*num_edges, [edge_radius]*num_edges, edge_lengths)
         corners = list(set([tuple(edge[0]) for edge in edges] + [tuple(edge[1]) for edge in edges]))
         num_corners = len(corners)
         gr3.drawspheremesh(num_corners, corners, [(1,1,1)]*num_edges, [edge_radius]*num_edges)
-        gr3.drawspheremesh(len(self.atom_positions), self.atom_positions, [(1,1,1)]*len(self.atom_positions), [edge_radius*4]*len(self.atom_positions))
+        gr3.drawspheremesh(len(self.atom_positions), self.atom_positions, [config.Colors.BOUNDING_BOX]*len(self.atom_positions), [edge_radius*4]*len(self.atom_positions))
 
     def zoom(self, delta):
         """
@@ -124,8 +125,8 @@ class Visualization():
         """
         zoom_v = 1./20
         zoom_cap = self.d + zoom_v*delta < max(self.volume.side_lengths)*4
-        if self.d + zoom_v*delta > 0 and zoom_cap:
-            self.d += zoom_v*delta
+        if self.d + zoom_v * delta > 0 and zoom_cap:
+            self.d += zoom_v * delta
 
     def get_rotation_matrix(self, n, alpha):
         """

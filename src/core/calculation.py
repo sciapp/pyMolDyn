@@ -70,6 +70,7 @@ import numpy as np
 import numpy.linalg as la
 import h5py
 from gr3 import triangulate
+from config.configuration import config
 
 import os
 from computation.split_and_merge.pipeline import start_split_and_merge_pipeline
@@ -832,45 +833,45 @@ def delete_center_cavity_information(filename, frame_nr, resolution):
 
 
 def calculated(filename, frame_nr, resolution, use_center_points):
-    '''
-    returns whether the given 
-    '''
+    """
+    returns whether there is a result for the given parameters
+    """
     base_name = ''.join(os.path.basename(filename).split(".")[:-1])
     exp_name = "../results/{}.hdf5".format(base_name)
     if os.path.isfile(exp_name):
-        with h5py.File(exp_name, "a") as file:
-            if 'frame{}'.format(frame_nr) in file:
-                for calc in file['frame{}'.format(frame_nr)].values():
-                    if resolution == calc.attrs['resolution'] and (
-                                not use_center_points or (use_center_points and 'center_cavity_information' in calc)):
+        with h5py.File(exp_name, "a") as f:
+            if 'frame{}'.format(frame_nr) in f:
+                for calc in f['frame{}'.format(frame_nr)].values():
+                    if resolution == calc.attrs['resolution'] and \
+                            (not use_center_points or (use_center_points and 'center_cavity_information' in calc)):
                         return True
     return False
 
 
 def calculated_frames(filename, resolution):
-    '''
+    """
     returns the calculated frames for the file filename and the given resolution
-    '''
+    """
     base_name = ''.join(os.path.basename(filename).split(".")[:-1])
-    exp_name = "../results/{}.hdf5".format(base_name)
+    exp_name = config.RESULT_DIR + "{}.hdf5".format(base_name)
     calc_frames = []
 
     if os.path.isfile(exp_name):
-        with h5py.File(exp_name, "a") as file:
-            for frame in file:
-                if resolution in [calc.attrs['resolution'] for calc in file[frame].values()]:
+        with h5py.File(exp_name, "a") as f:
+            for frame in f:
+                if resolution in [calc.attrs['resolution'] for calc in f[frame].values()]:
                     frame_nr = int(frame[5:])
                     calc_frames.append(frame_nr)
     return calc_frames
 
 
 def calculate_cavities(filename, frame_nr, volume, resolution, use_center_points=False):
-    '''
+    """
     calculates the cavities for the given file
-    '''
+    """
     base_name = ''.join(os.path.basename(filename).split(".")[:-1])
-    exp_name = "../results/{}.hdf5".format(base_name)
-    tmp_exp = "{}.tmp".format(exp_name)
+    exp_name = config.RESULT_DIR + "{}.hdf5".format(base_name)
+    #tmp_exp = "{}.tmp".format(exp_name)
     if not use_center_points:
         domain_calculation = calculate_domains(filename, frame_nr, volume, resolution)
         print_message("Cavity calculation...")
@@ -906,17 +907,16 @@ def calculate_cavities(filename, frame_nr, volume, resolution, use_center_points
 
 
 def atom_volume_discretization(atoms, volume, resolution):
-    '''
+    """
     calculates the discretization of the volume and the atoms from the given resolution
-    '''
+    """
     num_atoms = len(atoms)
     atom_positions = [atom.coords for atom in atoms]
 
     print_message(num_atoms, "atoms")
     for atom_index in range(num_atoms):
         atom_positions[atom_index] = volume.get_equivalent_point(atom_positions[atom_index])
-    # atoms = Atoms(atom_positions, [2.8]*num_atoms)
-    atoms = Atoms(atom_positions, [2.65] * num_atoms)
+    atoms = Atoms(atom_positions, [config.OpenGL.ATOM_RADIUS] * num_atoms)
     print_message("Volume discretization...")
     discretization_cache = DiscretizationCache('cache.hdf5')
     discretization = discretization_cache.get_discretization(volume, resolution)

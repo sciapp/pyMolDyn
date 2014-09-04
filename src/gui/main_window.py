@@ -9,13 +9,14 @@ from PySide import QtCore, QtGui
 
 
 class MainWindow(QtGui.QMainWindow):
-    def __init__(self, parent=None):
-        QtGui.QMainWindow.__init__(self, parent)
+    def __init__(self, control):
+        QtGui.QMainWindow.__init__(self, None)
 
         self.center             = CentralWidget(self)
         self.file_dock          = FileTabDock(self)
         self.view_dock          = ViewTabDock(self)
         self.image_video_dock   = ImageVideoTabDock(self)
+        self.control            = control
 
         self.docks = []
 
@@ -54,12 +55,13 @@ class MainWindow(QtGui.QMainWindow):
 
 #    def closeEvent(self, event):
 #        reply = QtGui.QMessageBox.question(self, 'Message',
-#            "Are you sure to quit?", QtGui.QMessageBox.Yes | 
+#            "Are you sure to quit?", QtGui.QMessageBox.Yes |
 #            QtGui.QMessageBox.No, QtGui.QMessageBox.No)
 #        if reply == QtGui.QMessageBox.Yes:
 #            event.accept()
 #        else:
 #            event.ignore() 
+
 
 class CentralWidget(QtGui.QWidget):
 

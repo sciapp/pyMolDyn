@@ -36,11 +36,10 @@ class Configuration:
     class OpenGL:
        # CAMERA_POSITION =
        # OFFSET          = (0.0, 0.0, 0.0)
-        ATOM_RADIUS     = 2.8
+        ATOM_RADIUS     = 2.65
 
     def __init__(self):
         self._file = ConfigFile(self)
-        self._file.read()
 
     def save(self):
         """
@@ -52,6 +51,7 @@ class Configuration:
         """
         read configuration from file
         """
+        self._file = ConfigFile(self)
         self._file.read()
 
 
@@ -98,7 +98,6 @@ class ConfigFile:
         """
         for attr_str in dir(cls):
             attr = getattr(cls, attr_str)
-            print attr_str
             if inspect.isclass(attr):
                 config_file[attr.__name__] = {}
                 self.parse_class(attr, config_file[attr.__name__])
@@ -129,9 +128,5 @@ class ConfigFile:
         for sec in section.sections:
             self.parse_section(section[sec], getattr(config_obj, sec))
 
-if __name__ == '__main__':
-    c = Configuration()
-    f = ConfigFile(c)
-    #f.obj2file()
-    f.read()
-    print c.Colors.ALT_CAVITY
+config = Configuration()
+
