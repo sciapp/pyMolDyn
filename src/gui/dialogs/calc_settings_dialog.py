@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-from gui.dialogs.util.calc_table import *
+from gui.dialogs.util.calc_table import CalculationTable, TableModel
 from gui.dialogs.util.framechooser import LabeledFrameChooser
 from core import calculation
-import os.path 
+import os.path
 from config.configuration import config
+from PySide import QtGui, QtCore
 
 class CalculationSettingsDialog(QtGui.QDialog):
 

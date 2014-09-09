@@ -33,7 +33,18 @@ class MainWindow(QtGui.QMainWindow):
         for dock in self.docks[1:]:
             self.tabifyDockWidget(self.file_dock, dock)
 
+        self.init_menu()
+
         self.show()
+
+    def init_menu(self):
+        open_action = QtGui.QAction('&Open dataset', self)
+        open_action.setShortcut('Ctrl+O')
+        open_action.triggered.connect(self.file_dock.file_tab.open_file_dialog)
+
+        menubar = self.menuBar()
+        file_menu = menubar.addMenu('&File')
+        file_menu.addAction(open_action)
 
     def keyPressEvent(self, e):
         if e.key() == QtCore.Qt.Key_M:

@@ -5,11 +5,13 @@ from config.configuration import config
 
 display_size = config.GL_WINDOW_SIZE
 
+
 class UpdateGLEvent(QtCore.QEvent):
 
     def __init__(self):
         t = QtCore.QEvent.registerEventType()
         QtCore.QEvent.__init__(self, QtCore.QEvent.Type(t))
+
 
 class GLWidget(QtOpenGL.QGLWidget):
     """
@@ -60,7 +62,7 @@ class GLWidget(QtOpenGL.QGLWidget):
                 if e.orientation() == QtCore.Qt.Orientation.Horizontal:
                     self.vis.rotate_mouse(e.delta() * rot_v, 0)
                 else:
-                    self.vis.rotate_mouse(0, e.delta() * rot_v )
+                    self.vis.rotate_mouse(0, e.delta() * rot_v)
 
             QtGui.QApplication.postEvent(self, UpdateGLEvent())
 
@@ -98,7 +100,7 @@ class GLWidget(QtOpenGL.QGLWidget):
             else:
                 e.ignore()
             self.updateGL()
-        
+
     def paintGL(self):
         """
             refresh scene
