@@ -1,2 +1,17 @@
 ._*
 .DS_Store
+*.pyc
+*.pyo
+*.npy
+*.html
+*.data
+*.o
+*.so
+*.swp
+src/results
+src/xyz
+doc/_build
+src/.idea
+*.hdf5
+*.cfg
+*.spec
