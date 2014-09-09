@@ -156,7 +156,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
                     for calc in file['frame{}'.format(frames[0])].values():
                         if calc.attrs['resolution'] == resolution:
                             return calc.attrs['timestamp']
-        return 'X' 
+        return 'X'
 
     def ok(self):
         self.done(QtGui.QDialog.Accepted)

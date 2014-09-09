@@ -6,6 +6,7 @@ from gui.tabs.view_tab import ViewTabDock
 from gui.tabs.image_video_tab import ImageVideoTabDock
 from gui.gl_widget import GLWidget
 from PySide import QtCore, QtGui
+from gui.dialogs.settings_dialog import SettingsDialog
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -19,6 +20,8 @@ class MainWindow(QtGui.QMainWindow):
         self.control            = control
 
         self.docks = []
+
+        self.shown_dataset      = []
 
         self.setTabPosition(QtCore.Qt.RightDockWidgetArea, QtGui.QTabWidget.North)
 
@@ -42,9 +45,18 @@ class MainWindow(QtGui.QMainWindow):
         open_action.setShortcut('Ctrl+O')
         open_action.triggered.connect(self.file_dock.file_tab.open_file_dialog)
 
+        settings_action = QtGui.QAction('&Settings', self)
+        settings_action.setShortcut('Ctrl+I')
+        settings_action.triggered.connect(self.show_settings)
+
         menubar = self.menuBar()
         file_menu = menubar.addMenu('&File')
         file_menu.addAction(open_action)
+        file_menu.addAction(settings_action)
+
+    def show_settings(self):
+        SettingsDialog()
+        self.show_dataset(*self.shown_dataset)
 
     def keyPressEvent(self, e):
         if e.key() == QtCore.Qt.Key_M:
@@ -61,6 +73,8 @@ class MainWindow(QtGui.QMainWindow):
         calculation.set_output_callbacks(progress_func, print_func, finish_func)
 
     def show_dataset(self, volume, filename, frame_nr, resolution, use_center_points):
+        print 'show_dataset main_window'
+        self.shown_dataset = [volume, filename, frame_nr, resolution, use_center_points]
         self.statusBar().showMessage(filename)
         self.center.show_dataset(volume, filename, frame_nr, resolution, use_center_points)
 
