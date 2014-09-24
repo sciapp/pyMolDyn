@@ -15,36 +15,61 @@ type_dict = {
 }
 
 
-class Configuration:
+class ConfigNode:
+
+    def __init__(self):
+        pass
+
+
+class Configuration(ConfigNode):
     """
     Configuration Object that contains the application settings
     """
 
-    # standard configuration
-    RESULT_DIR      = '../results/'
-    GL_WINDOW_SIZE  = [800, 800]
-    WINDOW_POSITION = [-1, -1]
-    STD_RESOLUTION  = 64
+    class Colors(ConfigNode):
 
-    class Colors:
-        CAVITY          = [0.2, 0.4, 1.]
-        DOMAIN          = [0., 1., 0.5]
-        ALT_CAVITY      = [0.9, 0.4, 0.2]
-        BACKGROUND      = [0.0, 0.0, 0.0]
-        BOUNDING_BOX    = [1.0, 1.0, 1.0]
+        def __init__(self):
+            self.CAVITY         = [0.2, 0.4, 1.]
+            self.DOMAIN         = [0., 1., 0.5]
+            self.ALT_CAVITY     = [0.9, 0.4, 0.2]
+            self.BACKGROUND     = [0.0, 0.0, 0.0]
+            self.BOUNDING_BOX   = [1.0, 1.0, 1.0]
+            self.ATOMS          = [1.0, 1.0, 1.0]
 
-    class OpenGL:
-       # CAMERA_POSITION =
-       # OFFSET          = (0.0, 0.0, 0.0)
-        ATOM_RADIUS     = 2.65
+    class OpenGL(ConfigNode):
+
+        def __init__(self):
+           # CAMERA_POSITION =
+           # OFFSET          = (0.0, 0.0, 0.0)
+            pass
+
+    class Computation(ConfigNode):
+        def __init__(self):
+            self.ATOM_RADIUS     = 2.65
+
+    class Path(ConfigNode):
+
+        def __init__(self):
+            self.RESULT_DIR = '../results/'
+            self.FFMPEG     = '/usr/local/bin/ffmpeg'
 
     def __init__(self):
+        # standard configuration
+        self.GL_WINDOW_SIZE  = [800, 800]
+        self.WINDOW_POSITION = [-1, -1]
+        self.STD_RESOLUTION  = 64
+        self.Colors          = Configuration.Colors()
+        self.OpenGL          = Configuration.OpenGL()
+        self.Computation     = Configuration.Computation()
+        self.Path            = Configuration.Path()
+
         self._file = ConfigFile(self)
 
     def save(self):
         """
         write configuration to file
         """
+
         self._file.obj2file()
 
     def read(self):
@@ -60,8 +85,8 @@ class ConfigFile:
     ConfigFile that parses the settings to a configuration file using ConfigObj 4
     """
 
-    def __init__(self, config):
-        self.config = config
+    def __init__(self, cfg):
+        self.config = cfg
 
     def generate_configspec(self):
         """
@@ -88,19 +113,19 @@ class ConfigFile:
         recursively reads the object and saves it to the ConfigFile object and finally writes it into the file
         """
         self.file = configobj.ConfigObj(CONFIG_FILE)
-        self.parse_class(self.config, self.file)
+        self.parse_node(self.config, self.file)
         self.generate_configspec()
         self.file.write()
 
-    def parse_class(self, cls, config_file):
+    def parse_node(self, cls, config_file):
         """
         parses a class subtree
         """
         for attr_str in dir(cls):
             attr = getattr(cls, attr_str)
-            if inspect.isclass(attr):
-                config_file[attr.__name__] = {}
-                self.parse_class(attr, config_file[attr.__name__])
+            if isinstance(attr, ConfigNode):
+                config_file[attr.__class__.__name__] = {}
+                self.parse_node(attr, config_file[attr.__class__.__name__])
             elif not inspect.ismethod(attr) and not attr_str.startswith('_'):
                 config_file[attr_str] = attr
             else:
@@ -129,4 +154,5 @@ class ConfigFile:
             self.parse_section(section[sec], getattr(config_obj, sec))
 
 config = Configuration()
+config.read()
 

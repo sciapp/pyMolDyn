@@ -94,6 +94,7 @@ class Visualization():
 
         if center_based_cavities and not self.center_based_calculated:
             return
+        gr3.setbackgroundcolor(config.Colors.BACKGROUND[0], config.Colors.BACKGROUND[1], config.Colors.BACKGROUND[2], 1.0)
         gr3.clear()
         if self.calculated:
             if not show_cavities:
@@ -117,7 +118,7 @@ class Visualization():
         corners = list(set([tuple(edge[0]) for edge in edges] + [tuple(edge[1]) for edge in edges]))
         num_corners = len(corners)
         gr3.drawspheremesh(num_corners, corners, [(1,1,1)]*num_edges, [edge_radius]*num_edges)
-        gr3.drawspheremesh(len(self.atom_positions), self.atom_positions, [config.Colors.BOUNDING_BOX]*len(self.atom_positions), [edge_radius*4]*len(self.atom_positions))
+        gr3.drawspheremesh(len(self.atom_positions), self.atom_positions, [config.Colors.ATOMS]*len(self.atom_positions), [edge_radius*4]*len(self.atom_positions))
 
     def zoom(self, delta):
         """

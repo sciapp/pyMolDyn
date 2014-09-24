@@ -39,6 +39,14 @@ class MainWindow(QtGui.QMainWindow):
         self.init_menu()
 
         self.show()
+        # get Dock Widgets TabBar and set the first one to current
+        self.file_dock.show()
+        self.file_dock.raise_()
+
+        # another workaround to do the same
+        #tabbars = self.findChildren(QtGui.QTabBar)
+        #tabbars[0].setCurrentIndex(0)
+
 
     def init_menu(self):
         open_action = QtGui.QAction('&Open dataset', self)
@@ -73,7 +81,6 @@ class MainWindow(QtGui.QMainWindow):
         calculation.set_output_callbacks(progress_func, print_func, finish_func)
 
     def show_dataset(self, volume, filename, frame_nr, resolution, use_center_points):
-        print 'show_dataset main_window'
         self.shown_dataset = [volume, filename, frame_nr, resolution, use_center_points]
         self.statusBar().showMessage(filename)
         self.center.show_dataset(volume, filename, frame_nr, resolution, use_center_points)
