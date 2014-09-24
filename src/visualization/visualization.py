@@ -39,7 +39,7 @@ class Visualization():
         self.center_based_calculated = calculated(filename, frame_nr, resolution, True)
 
         if self.calculated:
-            res_name = '{}{}.hdf5'.format(config.RESULT_DIR, ''.join(os.path.basename(filename).split(".")[:-1]))
+            res_name = '{}{}.hdf5'.format(config.Path.RESULT_DIR, ''.join(os.path.basename(filename).split(".")[:-1]))
             cr = CalculationResults(res_name, frame_nr, resolution)
             self.max_domain_index = cr.number_of_domains
             self.domain_vertices_list = [t[0] for t in cr.domain_triangles]
