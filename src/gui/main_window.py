@@ -6,6 +6,7 @@ from gui.tabs.view_tab import ViewTabDock
 from gui.tabs.image_video_tab import ImageVideoTabDock
 from gui.gl_widget import GLWidget
 from PySide import QtCore, QtGui
+from gui.dialogs.settings_dialog import SettingsDialog
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -20,6 +21,8 @@ class MainWindow(QtGui.QMainWindow):
 
         self.docks = []
 
+        self.shown_dataset      = []
+
         self.setTabPosition(QtCore.Qt.RightDockWidgetArea, QtGui.QTabWidget.North)
 
         for dock in (self.file_dock, self.view_dock, self.image_video_dock):
@@ -33,7 +36,35 @@ class MainWindow(QtGui.QMainWindow):
         for dock in self.docks[1:]:
             self.tabifyDockWidget(self.file_dock, dock)
 
+        self.init_menu()
+
         self.show()
+        # get Dock Widgets TabBar and set the first one to current
+        self.file_dock.show()
+        self.file_dock.raise_()
+
+        # another workaround to do the same
+        #tabbars = self.findChildren(QtGui.QTabBar)
+        #tabbars[0].setCurrentIndex(0)
+
+
+    def init_menu(self):
+        open_action = QtGui.QAction('&Open dataset', self)
+        open_action.setShortcut('Ctrl+O')
+        open_action.triggered.connect(self.file_dock.file_tab.open_file_dialog)
+
+        settings_action = QtGui.QAction('&Settings', self)
+        settings_action.setShortcut('Ctrl+I')
+        settings_action.triggered.connect(self.show_settings)
+
+        menubar = self.menuBar()
+        file_menu = menubar.addMenu('&File')
+        file_menu.addAction(open_action)
+        file_menu.addAction(settings_action)
+
+    def show_settings(self):
+        SettingsDialog()
+        self.show_dataset(*self.shown_dataset)
 
     def keyPressEvent(self, e):
         if e.key() == QtCore.Qt.Key_M:
@@ -50,6 +81,7 @@ class MainWindow(QtGui.QMainWindow):
         calculation.set_output_callbacks(progress_func, print_func, finish_func)
 
     def show_dataset(self, volume, filename, frame_nr, resolution, use_center_points):
+        self.shown_dataset = [volume, filename, frame_nr, resolution, use_center_points]
         self.statusBar().showMessage(filename)
         self.center.show_dataset(volume, filename, frame_nr, resolution, use_center_points)
 

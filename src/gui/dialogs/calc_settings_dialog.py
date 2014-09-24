@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-from gui.dialogs.util.calc_table import *
+from gui.dialogs.util.calc_table import CalculationTable, TableModel
 from gui.dialogs.util.framechooser import LabeledFrameChooser
 from core import calculation
-import os.path 
+import os.path
 from config.configuration import config
+from PySide import QtGui, QtCore
 
 class CalculationSettingsDialog(QtGui.QDialog):
 
@@ -155,7 +156,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
                     for calc in file['frame{}'.format(frames[0])].values():
                         if calc.attrs['resolution'] == resolution:
                             return calc.attrs['timestamp']
-        return 'X' 
+        return 'X'
 
     def ok(self):
         self.done(QtGui.QDialog.Accepted)

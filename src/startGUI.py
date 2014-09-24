@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import util.colored_exceptions
-<<<<<<< HEAD
 from gui import main_window
 from core import volumes, control
 from PySide import QtGui
