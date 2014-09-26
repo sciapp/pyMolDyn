@@ -78,7 +78,9 @@ class FileTab(QtGui.QWidget):
         self.file_list.itemSelectionChanged.connect(self.selection_changed)
         self.vbox.addWidget(self.file_list)
 
-        self.file_list.add_file('../xyz/structure_c.xyz')
+        for f in os.listdir("../xyz"):
+            if f.endswith(".xyz"):
+                self.file_list.add_file(os.path.join("../xyz", f))
 
         self.setLayout(self.vbox)
 
