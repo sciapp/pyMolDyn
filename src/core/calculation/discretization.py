@@ -10,6 +10,7 @@ import itertools
 import numpy as np
 import h5py
 from util.message import print_message, progress, finish
+from util.trap import trap
 
 
 #TODO: same as in algorithm.py
@@ -234,6 +235,7 @@ class Atoms:
     '''
 
     def __init__(self, atom_positions, atom_radii):
+        trap()
         self.positions = atom_positions
         self.radii = atom_radii
         self.sorted_radii = sorted(list(set(self.radii)), reverse=True)

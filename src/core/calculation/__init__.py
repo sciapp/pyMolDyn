@@ -82,6 +82,8 @@ dimensions = range(dimension)
 
 import core.volumes
 
+from util.trap import trap
+
 progress = None
 print_message = None
 finish = None
@@ -168,6 +170,7 @@ class Discretization(object):
     '''
 
     def __init__(self, volume, d_max, grid=None):
+        trap()
         # step 1
         self.d_max = d_max
         self.volume = volume
@@ -303,6 +306,7 @@ class Atoms:
     '''
 
     def __init__(self, atom_positions, atom_radii):
+        trap()
         self.positions = atom_positions
         self.radii = atom_radii
         self.sorted_radii = sorted(list(set(self.radii)), reverse=True)
@@ -321,6 +325,7 @@ class AtomDiscretization:
     '''
 
     def __init__(self, atoms, discretization):
+        trap()
         self.discretization = discretization
         self.atoms = atoms
         self.sorted_discrete_radii = []
@@ -355,6 +360,7 @@ class DomainCalculation:
     '''
 
     def __init__(self, discretization, atom_discretization):
+        trap()
         # step 1
         self.discretization = discretization
         self.atom_discretization = atom_discretization
@@ -474,6 +480,7 @@ class CavityCalculation:
     '''
 
     def __init__(self, domain_calculation, use_surface_points=True):
+        trap()
         self.domain_calculation = domain_calculation
         if use_surface_points:
             self.grid = self.domain_calculation.grid
@@ -654,6 +661,7 @@ class CavityCalculation:
 
 class CalculationResults(object):
     def __init__(self, cavity_calculation_or_filename, frame_nr, resolution):
+        trap("EVIL:")
         if isinstance(cavity_calculation_or_filename, CavityCalculation):
             cavity_calculation = cavity_calculation_or_filename
             domain_calculation = cavity_calculation.domain_calculation
@@ -745,6 +753,7 @@ class CalculationResults(object):
 
 
     def export(self, filename, frame_nr, use_center_points):
+        trap("EVIL:")
         with h5py.File(filename, "a") as file:
             if not use_center_points:
                 if 'frame{}'.format(frame_nr) in file:
@@ -803,6 +812,7 @@ class CalculationResults(object):
                         self.center_multicavity_triangles[multicavity_index]
 
     def add_center_cavity_information(self, cavity_calculation):
+        trap("EVIL:")
         self.number_of_center_multicavities = len(cavity_calculation.multicavities)
         self.center_multicavities = cavity_calculation.multicavities
         self.center_multicavity_triangles = cavity_calculation.cavity_triangles
@@ -820,12 +830,14 @@ class FakeDomainCalculation(object):
     '''
 
     def __init__(self, discretization, atom_discretization, results):
+        trap()
         self.centers = results.domain_centers
         self.discretization = discretization
         self.atom_discretization = atom_discretization
 
 
 def delete_center_cavity_information(filename, frame_nr, resolution):
+    trap("EVIL:")
     with h5py.File(filename, "a") as f:
         for calc in f['frame{}'.format(frame_nr)].values():
             if calc.attrs['resolution'] == resolution:
@@ -836,6 +848,7 @@ def calculated(filename, frame_nr, resolution, use_center_points):
     """
     returns whether there is a result for the given parameters
     """
+    trap("EVIL:")
     base_name = ''.join(os.path.basename(filename).split(".")[:-1])
     exp_name = "../results/{}.hdf5".format(base_name)
     if os.path.isfile(exp_name):
@@ -852,6 +865,7 @@ def calculated_frames(filename, resolution):
     """
     returns the calculated frames for the file filename and the given resolution
     """
+    trap("EVIL:")
     base_name = ''.join(os.path.basename(filename).split(".")[:-1])
     exp_name = config.Path.RESULT_DIR + "{}.hdf5".format(base_name)
     calc_frames = []
@@ -869,6 +883,7 @@ def calculate_cavities(filename, frame_nr, volume, resolution, use_center_points
     """
     calculates the cavities for the given file
     """
+    trap("EVIL:")
     base_name = ''.join(os.path.basename(filename).split(".")[:-1])
     exp_name = config.Path.RESULT_DIR + "{}.hdf5".format(base_name)
     #tmp_exp = "{}.tmp".format(exp_name)
@@ -910,6 +925,7 @@ def atom_volume_discretization(atoms, volume, resolution):
     """
     calculates the discretization of the volume and the atoms from the given resolution
     """
+    trap()
     num_atoms = len(atoms)
     atom_positions = [atom.coords for atom in atoms]
 
@@ -929,6 +945,7 @@ def atom_volume_discretization(atoms, volume, resolution):
 def count_frames(filename):
     import pybel
 
+    trap()
     n = 0
     generator = pybel.readfile("xyz", filename.encode("ascii"))
     try:
@@ -943,6 +960,7 @@ def count_frames(filename):
 def calculate_domains(filename, frame_nr, volume, resolution):
     import pybel
 
+    trap()
     n = 0
     generator = pybel.readfile("xyz", filename)
     molecule = None
