@@ -328,18 +328,22 @@ convert_functions = {
     's' : str
 }
 
+def get_volume_from_string(s):
+    s = s.split(' ')
+    t = s[0].upper() # volume type
+    cl = volumes[t][0] # volume class
+    if len(s) == 10: # cell vectors given
+        param = [float(f) for f in s[1:]]
+    else:
+        param_list = s[1:]
+        param = [convert_functions[p](param_list[i]) for i,p in enumerate(volumes[t][1])] # parsing parameter
+    return cl(*param)
+
 def get_volume_from_file(filename):
     with open(filename,'r') as f:
         f.readline()
-        s = f.readline().split(' ')
-        t = s[0].upper() # volume type
-        cl = volumes[t][0] # volume class
-        if len(s) == 10: # cell vectors given
-            param = [float(f) for f in s[1:]]
-        else:
-            param_list = s[1:]
-            param = [convert_functions[p](param_list[i]) for i,p in enumerate(volumes[t][1])] # parsing parameter
-        return cl(*param)
+        s = f.readline()
+    return get_volume_from_string(s)
 
 if __name__ == '__main__':
     fn = '../xyz/structure_c.xyz'
