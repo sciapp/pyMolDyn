@@ -294,9 +294,6 @@ class CalculationCache(FileManager):
     def filelist(self):
         return list(self.index.keys())
 
-    def __getitem__(self, filename):
-        return self.getfile(filename)
-
     def cachefile(self, filepath):
         return sha256(filepath).hexdigest() + ".hdf5"
 
