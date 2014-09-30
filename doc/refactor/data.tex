@@ -1,0 +1,70 @@
+\section{Data}
+
+\subsection{Input data}
+\begin{tikzpicture}
+    \begin{class}[text width=30em]{Atoms}{0, 0}
+        \attribute{+ number : Integer}
+        \attribute{+ positions : Array(Float)}
+        \attribute{+ radii : Array(Float)}
+        \attribute{+ sorted\_positions : Array(Float)}
+        \attribute{+ sorted\_radii : Array(Float)}
+        \attribute{+ radii\_as\_indices: Array(Integer)}
+
+        \operation{+ Atoms(positions : Array(Float), radii : Array(Float))}
+        \operation{+ Atoms(h5group : HDF5Group)}
+        \operation{+ Atoms(molecule : Molecule, volume : Volume)}
+        \operation{+ tohdf(h5group : HDF5Group)}
+    \end{class}
+\end{tikzpicture}
+
+\subsection{Calculation results}
+\begin{tikzpicture}
+    \begin{abstractclass}[text width=30em]{CavitiesBase}{0, 0}
+        \attribute{+ timestamp : datetime}
+        \attribute{+ number : Integer}
+        \attribute{+ volumes : Array(Float)}
+        \attribute{+ surface\_areas : Array(Float)}
+        \attribute{+ triangles : list(Array(Float))}
+
+        \operation{+ CavitiesBase(timestamp : datetime, volumes : Array(Float), surface\_areas : Array(Float), triangles : list(Array(Float)))}
+        \operation{+ CavitiesBase(h5group : HDF5Group)}
+        \operation{+ tohdf(h5group : HDF5Group)}
+    \end{abstractclass}
+
+    \begin{class}[text width=30em]{Domains}{-1, -8}
+        \inherit{CavitiesBase}
+        
+        \attribute{+ centers : Array(Float)}
+
+        \operation{+ Domains(timestamp : datetime, volumes : Array(Float), surface\_areas : Array(Float), triangles : list(Array(Float)), centers : Array(Float))}
+        \operation{+ Domains(h5group : HDF5Group)}
+        \operation{+ tohdf(h5group : HDF5Group)}
+    \end{class}
+
+    \begin{class}[text width=30em]{Cavities}{1, -13}
+        \inherit{CavitiesBase}
+
+        \attribute{+ multicavities : list(Array(Integer))}
+
+        \operation{+ Cavities(timestamp : datetime, volumes : Array(Float), surface\_areas : Array(Float), triangles : list(Array(Float)), multicavities : list(Array(Integer)))}
+        \operation{+ Cavities(h5group : HDF5Group)}
+        \operation{+ tohdf(h5group : HDF5Group)}
+    \end{class}
+\end{tikzpicture}
+
+\begin{tikzpicture}
+    \begin{class}[text width=30em]{Results}{0, 0}
+        \attribute{+ filepath : String}
+        \attribute{+ frame : Integer}
+        \attribute{+ resolution : Integer}
+        \attribute{+ atoms : Atoms}
+        \attribute{+ domains : Domains}
+        \attribute{+ surface\_cavities : Cavities}
+        \attribute{+ center\_cavities : Cavities}
+
+        \operation{+ Results(filepath : String, frame : Integer, resolution : Integer, atoms : Atoms, domains : Domains, surface\_cavities : Cavities, center\_cavities : Cavities)}
+    \end{class}
+\end{tikzpicture}
+
+\subsection{Meta data}
+
