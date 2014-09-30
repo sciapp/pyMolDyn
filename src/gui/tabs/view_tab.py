@@ -6,7 +6,7 @@ from config.configuration import config
 
 class ViewTabDock(QtGui.QDockWidget):
     """
-        DockWidget to the 'view'-tab
+        DockWidget for the 'view'-tab
     """
 
     def __init__(self, parent):

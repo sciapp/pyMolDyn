@@ -66,7 +66,7 @@ class Visualization():
                 num_domain_vertices = len(domain_vertices) * 3
                 mesh = gr3.createmesh(num_domain_vertices, domain_vertices, domain_normals, [config.Colors.DOMAIN]*num_domain_vertices)
                 self.domain_meshes.append(mesh)
-                
+
             self.cavity_meshes = []
             for cavity_index in range(self.max_cavity_index):
                 cavity_vertices = self.cavity_vertices_list[cavity_index]
@@ -74,7 +74,7 @@ class Visualization():
                 num_cavity_vertices = len(cavity_vertices) * 3
                 mesh = gr3.createmesh(num_cavity_vertices, cavity_vertices, cavity_normals, [config.Colors.CAVITY]*num_cavity_vertices)
                 self.cavity_meshes.append(mesh)
-            
+
         if use_center_points:
             self.center_cavity_meshes = []
             for cavity_index in range(self.max_center_cavity_index):
@@ -86,12 +86,12 @@ class Visualization():
                 self.center_cavity_meshes.append(mesh)
 
         self.create_scene()
-        
+
         self.set_camera()
-        #gr3.export("test.html",800,800)
+        gr3.export("test.html",800,800)
 
     def create_scene(self, show_cavities=True, center_based_cavities=False):
-
+        print 'create scene'
         if center_based_cavities and not self.center_based_calculated:
             return
         gr3.setbackgroundcolor(config.Colors.BACKGROUND[0], config.Colors.BACKGROUND[1], config.Colors.BACKGROUND[2], 1.0)
