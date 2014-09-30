@@ -69,12 +69,12 @@ class Calculation(object):
             domain_calculation = DomainCalculation(discretization, atom_discretization)
             cavity_calculation = CavityCalculation(domain_calculation, use_surface_points = not center)
 
-            domains = Domains.fromcalculation(domain_calculation)
+            domains = Domains(domain_calculation)
             if center:
                 surface_cavities = None
-                center_cavities = Cavities.fromcalculation(cavity_calculation)
+                center_cavities = Cavities(cavity_calculation)
             else:
-                surface_cavities = Cavities.fromcalculation(cavity_calculation)
+                surface_cavities = Cavities(cavity_calculation)
                 center_cavities = None
             results = Results(inputfile.path, frame, resolution,
                               atoms, domains,

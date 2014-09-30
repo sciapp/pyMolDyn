@@ -11,6 +11,8 @@ import numpy as np
 import sys
 from datetime import datetime
 import dateutil.parser
+import h5py
+import pybel
 
 
 DEFAULT_ATOM_RADIUS = 2.65
@@ -27,8 +29,16 @@ def writedataset(h5group, name, data, overwrite=True):
 
 
 class TimestampList(object):
-    def __init__(self, num_frames):
-        self.timestamps = [None] * num_frames
+    def __init__(self, *args):
+        if isinstance(args[0], list):
+            arr = args[0]
+            self.timestamps = [None] * len(arr)
+            for i, s in enumerate(arr):
+                if len(s) > 0:
+                    self.timestamps[i] = dateutil.parser.parse(s)
+        else:
+            num_frames = args[0]
+            self.timestamps = [None] * num_frames
 
     @property
     def num_frames(self):
@@ -51,20 +61,23 @@ class TimestampList(object):
     def tostrlist(self):
         return ["" if x is None else str(x) for x in self.timestamps]
 
-    @classmethod
-    def fromstrlist(cls, arr):
-        tl = cls(len(arr))
-        for i, s in enumerate(arr):
-            if len(s) > 0:
-                tl[i] = dateutil.parser.parse(s)
-        return tl
-
 
 class CalculatedFrames(object):
-    def __init__(self, num_frames):
-        self.domains = TimestampList(num_frames)
-        self.surface_cavities = TimestampList(num_frames)
-        self.center_cavities = TimestampList(num_frames)
+    def __init__(self, *args):
+        if isinstance(args[0], h5py.Group):
+            h5group = args[0]
+            dom_ts = list(h5group["domains"])
+            sur_ts = list(h5group["surface_cavities"])
+            cen_ts = list(h5group["center_cavities"])
+            num_frames = len(dom_ts)
+            self.domains = TimestampList(dom_ts)
+            self.surface_cavities = TimestampList(sur_ts)
+            self.center_cavities = TimestampList(cen_ts)
+        else:
+            num_frames = args[0]
+            self.domains = TimestampList(num_frames)
+            self.surface_cavities = TimestampList(num_frames)
+            self.center_cavities = TimestampList(num_frames)
     
     @property
     def num_frames(self):
@@ -82,23 +95,20 @@ class CalculatedFrames(object):
             writedataset(h5group, "surface_cavities", self.surface_cavities.tostrlist())
             writedataset(h5group, "center_cavities", self.center_cavities.tostrlist())
 
-    @classmethod
-    def fromhdf(cls, h5group):
-        dom_ts = h5group["domains"]
-        sur_ts = h5group["surface_cavities"]
-        cen_ts = h5group["center_cavities"]
-        num_frames = len(dom_ts)
-        cf = cls(num_frames)
-        cf.domains = TimestampList.fromstrlist(dom_ts)
-        cf.surface_cavities = TimestampList.fromstrlist(sur_ts)
-        cf.center_cavities = TimestampList.fromstrlist(cen_ts)
-        return cf
-
 
 class CalculationInfo(object):
-    def __init__(self, num_frames):
-        self.num_frames = num_frames
+    def __init__(self, *args):
         self.resolutioninfo = dict()
+        if isinstance(args[0], h5py.Group):
+            h5group = args[0]
+            self.num_frames = h5group.attrs["num_frames"]
+            for name, subgroup in h5group.iteritems():
+                if not name.startswith("resolution"):
+                    continue
+                resolution = int(name[10:])
+                self.resolutioninfo[resolution] = CalculatedFrames(subgroup)
+        else:
+            self.num_frames = args[0]
 
     def __getitem__(self, resolution):
         if not resolution in self.resolutioninfo:
@@ -115,20 +125,29 @@ class CalculationInfo(object):
                 subgroup = h5group.require_group("resolution{}".format(resolution))
                 info.tohdf(subgroup)
 
-    @classmethod
-    def fromhdf(cls, h5group):
-        num_frames = h5group.attrs["num_frames"]
-        ci = cls(num_frames)
-        for name, subgroup in h5group.iteritems():
-            if not name.startswith("resolution"):
-                continue
-            resolution = int(name[10:])
-            ci.resolutioninfo[resolution] = CalculatedFrames.fromhdf(subgroup)
-        return ci
-
 
 class Atoms(object):
-    def __init__(self, positions, radii=None):
+    def __init__(self, *args):
+        if isinstance(args[0], h5py.Group):
+            h5group = args[0]
+            positions = h5group["positions"]
+            radii = h5group["radii"]
+        elif isinstance(args[0], pybel.Molecule):
+            molecule = args[0]
+            if len(args) > 1:
+                volume = args[1]
+                func = lambda a: volume.get_equivalent_point(a.coords)
+            else:
+                func = lambda atom: atom.coords
+            positions = map(func, molecule)
+            radii = None
+        else:
+            positions = args[0]
+            if len(args) > 1:
+                radii = args[1]
+            else:
+                radii = None
+
         self.positions = np.array(positions, dtype=np.float, copy=False)
         self.number = self.positions.shape[0]
         if not radii is None:
@@ -157,33 +176,29 @@ class Atoms(object):
         writedataset(h5group, "positions", self.positions)
         writedataset(h5group, "radii", self.radii)
 
-    @classmethod
-    def fromhdf(cls, h5group):
-        number = int(h5group.attrs["number"])
-        positions = h5group["positions"]
-        radii = h5group["radii"]
-        if len(radii) != number:
-            raise ValueError
-        return cls(positions, radii)
-
-    @classmethod
-    def frompybel(cls, molecule, volume=None):
-        if not volume is None:
-            func = lambda atom: volume.get_equivalent_point(atom.coords)
-        else:
-            func = lambda atom: atom.coords
-        atom_positions = map(func, molecule)
-        return cls(atom_positions)
-
 
 class CavitiesBase(object):
     #TODO: timestamp neccessary?
-    def __init__(self, timestamp, volumes, surface_areas, triangles):
+    def __init__(self, *args):
+        if isinstance(args[0], h5py.Group):
+            h5group = args[0]
+            timestamp = dateutil.parser.parse(h5group.attrs["timestamp"])
+            number = h5group.attrs["number"]
+            volumes = h5group["volumes"]
+            if len(volumes) != number:
+                raise ValueError
+            surface_areas = h5group["surface_areas"]
+            triangles = [None] * number
+            for i in range(number):
+                triangles[i] = h5group["triangles{}".format(i)]
+        else:
+            timestamp, volumes, surface_areas, triangles = args[:4]
+
         if not isinstance(timestamp, datetime):
             timestamp = dateutil.parser.parse(str(timestamp))
         self.timestamp = timestamp
-        self.number = len(volumes)
         self.volumes = np.array(volumes, dtype=np.float, copy=False)
+        self.number = len(volumes)
         self.surface_areas = np.array(surface_areas, dtype=np.float, copy=False)
         self.triangles = map(lambda x: np.array(x, dtype=np.float,
                              copy=False), triangles)
@@ -196,51 +211,57 @@ class CavitiesBase(object):
         for index, triangles in enumerate(self.triangles):
             writedataset(h5group, "triangles{}".format(index), np.array(triangles))
 
-    @classmethod
-    def fromhdf(cls, h5group):
-        timestamp = dateutil.parser.parse(h5group.attrs["timestamp"])
-        number = h5group.attrs["number"]
-        volumes = h5group["volumes"]
-        if len(volumes) != number:
-            raise ValueError
-        surface_areas = h5group["surface_areas"]
-        triangles = [None] * number
-        for i in range(number):
-            triangles[i] = h5group["triangles{}".format(i)]
-        return cls(timestamp, volumes, surface_areas, triangles)
-
 
 class Domains(CavitiesBase):
     #TODO: DomainCalculation compatibility
-    def __init__(self, timestamp, volumes, surface_areas, triangles, centers):
-        super(Domains, self).__init__(timestamp, volumes,
-                                       surface_areas, triangles)
+    def __init__(self, *args):
+        if isinstance(args[0], h5py.Group):
+            super(Domains, self).__init__(*args)
+            h5group = args[0]
+            centers = h5group["centers"]
+        #elif isinstance(args[0], DomainCalculation):
+        elif args[0].__class__.__name__ == "DomainCalculation":
+            calculation = args[0]
+            timestamp = datetime.now()
+            volumes = calculation.domain_volumes
+            surface_areas = calculation.domain_surface_areas
+            triangles = calculation.domain_triangles
+            centers = calculation.centers
+            super(Domains, self).__init__(timestamp, volumes,
+                                          surface_areas, triangles)
+        else:
+            super(Domains, self).__init__(*args)
+            centers = args[4]
+
         self.centers = np.array(centers, dtype=np.float, copy=False)
 
     def tohdf(self, h5group):
         super(Domains, self).tohdf(h5group)
         writedataset(h5group, "centers", self.centers)
 
-    @classmethod
-    def fromhdf(cls, h5group):
-        base = CavitiesBase.fromhdf(h5group)
-        centers = h5group["centers"]
-        return cls(base.timestamp, base.volumes, base.surface_areas, base.triangles, centers)
-
-    @classmethod
-    def fromcalculation(cls, calculation):
-        timestamp = datetime.now()
-        volumes = calculation.domain_volumes
-        surface_areas = calculation.domain_surface_areas
-        triangles = calculation.domain_triangles
-        centers = calculation.centers
-        return cls(timestamp, volumes, surface_areas, triangles, centers)
-
 
 class Cavities(CavitiesBase):
-    def __init__(self, timestamp, volumes, surface_areas, triangles, multicavities):
-        super(Cavities, self).__init__(timestamp, volumes,
-                                       surface_areas, triangles)
+    def __init__(self, *args):
+        if isinstance(args[0], h5py.Group):
+            super(Cavities, self).__init__(*args)
+            h5group = args[0]
+            multicavities = [None] * self.number
+            for i in range(self.number):
+                multicavities[i] = h5group["multicavities{}".format(i)]
+        #elif isinstance(args[0], CavityCalculation):
+        elif args[0].__class__.__name__ == "CavityCalculation":
+            calculation = args[0]
+            timestamp = datetime.now()
+            volumes = calculation.multicavity_volumes
+            surface_areas = calculation.cavity_surface_areas
+            triangles = calculation.cavity_triangles
+            multicavities = calculation.multicavities
+            super(Cavities, self).__init__(timestamp, volumes,
+                                          surface_areas, triangles)
+        else:
+            super(Cavities, self).__init__(*args)
+            multicavities = args[4]
+
         self.multicavities = [None] * self.number
         for index, cavities in enumerate(multicavities):
             # cavities might be a 0-dimensional ndarray of python objects
@@ -252,23 +273,6 @@ class Cavities(CavitiesBase):
         super(Cavities, self).tohdf(h5group)
         for index, cavities in enumerate(self.multicavities):
             writedataset(h5group, "multicavities{}".format(index), cavities)
-
-    @classmethod
-    def fromhdf(cls, h5group):
-        base = CavitiesBase.fromhdf(h5group)
-        multicavities = [None] * base.number
-        for i in range(base.number):
-            multicavities[i] = h5group["multicavities{}".format(i)]
-        return cls(base.timestamp, base.volumes, base.surface_areas, base.triangles, multicavities)
-
-    @classmethod
-    def fromcalculation(cls, calculation):
-        timestamp = datetime.now()
-        volumes = calculation.multicavity_volumes
-        surface_areas = calculation.cavity_surface_areas
-        triangles = calculation.cavity_triangles
-        multicavities = calculation.multicavities
-        return cls(timestamp, volumes, surface_areas, triangles, multicavities)
 
 
 class Results(object):

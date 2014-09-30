@@ -88,7 +88,7 @@ class XYZFile(InputFile):
                 raise IndexError("Frame not found")
         finally:
             f.close()
-        return Atoms.frompybel(molecule, self.volume)
+        return Atoms(molecule, self.volume)
 
 
 class ResultFile(InputFile):
@@ -148,7 +148,7 @@ class HDF5File(ResultFile):
         if os.path.isfile(self.path):
             self.readinfo()
             with h5py.File(self.path) as f:
-                atoms = Atoms.fromhdf(f["atoms/frame{}".format(frame)])
+                atoms = Atoms(f["atoms/frame{}".format(frame)])
         else:
             atoms = None
         return atoms
@@ -163,7 +163,7 @@ class HDF5File(ResultFile):
                     self.sourcefilepath = f.attrs["sourcefile"]
                 self._volumestr = f.attrs["volume"]
                 self._volume = get_volume_from_string(self._volumestr)
-                self._calculated = CalculationInfo.fromhdf(f["info"])
+                self._calculated = CalculationInfo(f["info"])
                 self.inforead = True
         if not self.inforead and os.path.isfile(self.sourcefilepath):
             fm = InputFileManager(os.path.dirname(self.sourcefilepath))
@@ -192,14 +192,14 @@ class HDF5File(ResultFile):
                 groupname = "results/frame{}/resolution{}".format(frame, resolution)
                 if groupname in f:
                     group = f[groupname]
-                    atoms = Atoms.fromhdf(f["atoms/frame{}".format(frame)])
-                    domains = Domains.fromhdf(group["domains"])
+                    atoms = Atoms(f["atoms/frame{}".format(frame)])
+                    domains = Domains(group["domains"])
                     if "surface_cavities" in group:
-                        surface_cavities = Cavities.fromhdf(group["surface_cavities"])
+                        surface_cavities = Cavities(group["surface_cavities"])
                     else:
                         surface_cavities = None
                     if "center_cavities" in group:
-                        center_cavities = Cavities.fromhdf(group["center_cavities"])
+                        center_cavities = Cavities(group["center_cavities"])
                     else:
                         center_cavities = None
                     results = Results(self.path, frame, resolution,
