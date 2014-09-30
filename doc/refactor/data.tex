@@ -2,7 +2,7 @@
 
 \subsection{Input data}
 \begin{tikzpicture}
-    \begin{class}[text width=30em]{Atoms}{0, 0}
+    \begin{class}[text width=\umlwidth]{Atoms}{0, 0}
         \attribute{+ number : Integer}
         \attribute{+ positions : Array(Float)}
         \attribute{+ radii : Array(Float)}
@@ -13,47 +13,48 @@
         \operation{+ Atoms(positions : Array(Float), radii : Array(Float))}
         \operation{+ Atoms(h5group : HDF5Group)}
         \operation{+ Atoms(molecule : Molecule, volume : Volume)}
-        \operation{+ tohdf(h5group : HDF5Group)}
+        \operation{+ tohdf(h5group : HDF5Group, overwrite : Boolean)}
     \end{class}
 \end{tikzpicture}
 
 \subsection{Calculation results}
 \begin{tikzpicture}
-    \begin{abstractclass}[text width=30em]{CavitiesBase}{0, 0}
-        \attribute{+ timestamp : datetime}
+    \begin{abstractclass}[text width=\umlwidth]{CavitiesBase}{0, 0}
+        \attribute{+ timestamp : Timestamp}
         \attribute{+ number : Integer}
         \attribute{+ volumes : Array(Float)}
         \attribute{+ surface\_areas : Array(Float)}
-        \attribute{+ triangles : list(Array(Float))}
+        \attribute{+ triangles : List(Array(Float))}
 
-        \operation{+ CavitiesBase(timestamp : datetime, volumes : Array(Float), surface\_areas : Array(Float), triangles : list(Array(Float)))}
+        \operation{+ CavitiesBase(timestamp : Timestamp, volumes : Array(Float), surface\_areas : Array(Float), triangles : List(Array(Float)))}
         \operation{+ CavitiesBase(h5group : HDF5Group)}
-        \operation{+ tohdf(h5group : HDF5Group)}
+        \operation{+ tohdf(h5group : HDF5Group, overwrite : Boolean)}
     \end{abstractclass}
 
-    \begin{class}[text width=30em]{Domains}{-1, -8}
+    \begin{class}[text width=\umlwidth]{Domains}{-1, -8}
         \inherit{CavitiesBase}
         
         \attribute{+ centers : Array(Float)}
 
-        \operation{+ Domains(timestamp : datetime, volumes : Array(Float), surface\_areas : Array(Float), triangles : list(Array(Float)), centers : Array(Float))}
+        \operation{+ Domains(timestamp : Timestamp, volumes : Array(Float), surface\_areas : Array(Float), triangles : List(Array(Float)), centers : Array(Float))}
         \operation{+ Domains(h5group : HDF5Group)}
-        \operation{+ tohdf(h5group : HDF5Group)}
+        \operation{+ tohdf(h5group : HDF5Group, overwrite : Boolean)}
     \end{class}
 
-    \begin{class}[text width=30em]{Cavities}{1, -13}
+    \begin{class}[text width=\umlwidth]{Cavities}{1, -13}
         \inherit{CavitiesBase}
 
-        \attribute{+ multicavities : list(Array(Integer))}
+        \attribute{+ multicavities : List(Array(Integer))}
 
-        \operation{+ Cavities(timestamp : datetime, volumes : Array(Float), surface\_areas : Array(Float), triangles : list(Array(Float)), multicavities : list(Array(Integer)))}
+        \operation{+ Cavities(timestamp : Timestamp, volumes : Array(Float), surface\_areas : Array(Float), triangles : List(Array(Float)), multicavities : List(Array(Integer)))}
         \operation{+ Cavities(h5group : HDF5Group)}
-        \operation{+ tohdf(h5group : HDF5Group)}
+        \operation{+ tohdf(h5group : HDF5Group, overwrite : Boolean)}
     \end{class}
 \end{tikzpicture}
 
+\noindent
 \begin{tikzpicture}
-    \begin{class}[text width=30em]{Results}{0, 0}
+    \begin{class}[text width=\umlwidth]{Results}{0, 0}
         \attribute{+ filepath : String}
         \attribute{+ frame : Integer}
         \attribute{+ resolution : Integer}
@@ -67,4 +68,31 @@
 \end{tikzpicture}
 
 \subsection{Meta data}
+\begin{tikzpicture}
+    \begin{class}[text width=\umlwidth]{CalculationInfo}{0, 0}
+        \attribute{+ num\_frames : Integer}
+        \attribute{+ resolutioninfo : Dictionary(Integer $\rightarrow$ CalculatedFrames)}
+
+        \operation{+ CalculationInfo(num\_frames : Integer)}
+        \operation{+ CalculationInfo(h5group : HDF5Group)}
+        \operation{+ \_\_contains\_\_(resolution : Integer) : Boolean}
+        \operation{+ \_\_getitem\_\_(resolution : Integer) : CalculatedFrames}
+        \operation{tohdf(h5group : HDF5Group, overwrite : Boolean)}
+    \end{class}
+\end{tikzpicture}
+
+\noindent
+\begin{tikzpicture}
+    \begin{class}[text width=\umlwidth]{CalculatedFrames}{0, 0}
+        \attribute{+ num\_frames : Integer}
+        \attribute{+ domains : List(Timestamp)}
+        \attribute{+ surface\_cavities : List(Timestamp)}
+        \attribute{+ center\_cavities : List(Timestamp)}
+
+        \operation{+ CalculatedFrames(num\_frames : Integer)}
+        \operation{+ CalculatedFrames(h5group : HDF5Group)}
+        \operation{hasdata() : Boolean}
+        \operation{+ tohdf(h5group : HDF5Group, overwrite : Boolean)}
+    \end{class}
+\end{tikzpicture}
 
