@@ -15,3 +15,6 @@ src/.idea
 *.hdf5
 *.cfg
 *.spec
+*.log
+*.pdf
+*.synctex.gz
