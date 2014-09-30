@@ -88,10 +88,9 @@ class Visualization():
         self.create_scene()
 
         self.set_camera()
-        gr3.export("test.html",800,800)
+        # gr3.export("test.html",800,800)
 
     def create_scene(self, show_cavities=True, center_based_cavities=False):
-        print 'create scene'
         if center_based_cavities and not self.center_based_calculated:
             return
         gr3.setbackgroundcolor(config.Colors.BACKGROUND[0], config.Colors.BACKGROUND[1], config.Colors.BACKGROUND[2], 1.0)

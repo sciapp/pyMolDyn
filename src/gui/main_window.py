@@ -4,7 +4,7 @@ from core import calculation
 from gui.tabs.file_tab import FileTabDock
 from gui.tabs.view_tab import ViewTabDock
 from gui.tabs.image_video_tab import ImageVideoTabDock
-from gui.tabs.image_video_tab import StatisticsTabDock
+from gui.tabs.statistics_tab import StatisticsTabDock
 from gui.gl_widget import GLWidget
 from PySide import QtCore, QtGui
 from gui.dialogs.settings_dialog import SettingsDialog
@@ -27,14 +27,14 @@ class MainWindow(QtGui.QMainWindow):
 
         self.setTabPosition(QtCore.Qt.RightDockWidgetArea, QtGui.QTabWidget.North)
 
-        for dock in (self.file_dock, self.view_dock, self.image_video_dock):
+        for dock in (self.file_dock, self.view_dock, self.image_video_dock, self.statistics_dock):
             self.docks.append(dock)
 
         self.setCentralWidget(self.center)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.file_dock, QtCore.Qt.Vertical)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.view_dock, QtCore.Qt.Vertical)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.image_video_dock, QtCore.Qt.Vertical)
-        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.statistics_doc, QtCore.Qt.Vertical)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.statistics_dock, QtCore.Qt.Vertical)
 
         for dock in self.docks[1:]:
             self.tabifyDockWidget(self.file_dock, dock)
