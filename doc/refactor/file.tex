@@ -32,4 +32,20 @@
 \noindent
 The Implementation of \texttt{Inputfile} is \texttt{XYZFile}, which reads a pybel xyz file. \texttt{HDF5File} implements \texttt{ResultFile} and handles a HDF5 file with input and result data, which can be used for caching.
 
+
 \subsection{Filesystem access}
+\begin{tikzpicture}
+    \begin{class}[text width=\umlwidth]{FileManager}{0, 0}
+        \attribute{+ directory : String}
+        \attribute{+ types : Dictionary(String $\rightarrow$ Class)}
+        
+        \operation{FileManager(directory : String)}
+        \operation{abspath(filename : String) : String}
+        \operation{filelist() : List(String)}
+        \operation{\_\_getitem\_\_(filename : String) : InputFile}
+        \operation{\_\_contains\_\_(filename : String) : Boolean}
+    \end{class}
+\end{tikzpicture}
+
+The \texttt{types} dictionary is used to associate filename extensions (e.\,g.\ xyz) with implementatios of \texttt{InputFile}.
+\texttt{\_\_getitem\_\_} looks up which class to use and instanciates it.
