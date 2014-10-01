@@ -1,5 +1,6 @@
 from PySide import QtGui
 from gui.tabs.statistics.tree_list import TreeList
+from gui.tabs.statistics.html_view import HTMLWindow, load_html
 
 class StatisticsTabDock(QtGui.QDockWidget):
     """
@@ -23,7 +24,10 @@ class StatisticsTab(QtGui.QWidget):
     def __init__(self, parent):
         QtGui.QWidget.__init__(self, parent)
         hbox = QtGui.QHBoxLayout()
-        list = TreeList()
-        hbox.addWidget(list)
+        tree_list = TreeList()
+        html = load_html()
+        html_view = HTMLWindow(html)
+        hbox.addWidget(tree_list)
+        hbox.addWidget(html_view)
         self.setLayout(hbox)
         self.show()
