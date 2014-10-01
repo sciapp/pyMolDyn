@@ -18,3 +18,8 @@ src/.idea
 *.log
 *.pdf
 *.synctex.gz
+*.aux
+*.fdb_latexmk
+*.fls
+*.out
+*.toc
