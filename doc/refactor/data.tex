@@ -12,10 +12,13 @@
 
         \operation{+ Atoms(positions : Array(Float), radii : Array(Float))}
         \operation{+ Atoms(h5group : HDF5Group)}
-        \operation{+ Atoms(molecule : Molecule, volume : Volume)}
+        \operation{+ Atoms(molecule : PybelMolecule, volume : Volume)}
         \operation{+ tohdf(h5group : HDF5Group, overwrite : Boolean)}
     \end{class}
 \end{tikzpicture}
+
+\todo{\texttt{Volume} class should be here.\\Maybe put a \texttt{Volume} object into \texttt{Atoms}.}
+
 
 \subsection{Calculation results}
 \begin{tikzpicture}
@@ -67,14 +70,26 @@
     \end{class}
 \end{tikzpicture}
 
+
 \subsection{Meta data}
 \begin{tikzpicture}
-    \begin{class}[text width=\umlwidth]{CalculationInfo}{0, 0}
+    \begin{class}[text width=\umlwidth]{FileInfo}{0, 0}
+        \attribute{+ path : String}
         \attribute{+ num\_frames : Integer}
-        \attribute{+ resolutioninfo : Dictionary(Integer $\rightarrow$ CalculatedFrames)}
+        \attribute{+ volumestr : String}
+        \attribute{+ volume : Volume}
 
-        \operation{+ CalculationInfo(num\_frames : Integer)}
-        \operation{+ CalculationInfo(h5group : HDF5Group)}
+        \operation{+ FileInfo(path : String, num\_frames : Integer, volumestr : String, volume : Volume)}
+    \end{class}
+
+    \begin{class}[text width=\umlwidth]{ResultInfo}{0, -5}
+        \inherit{FileInfo}
+
+        \attribute{+ sourcefilepath : String}
+        \attribute{+ calculatedframes : Dictionary(Integer $\rightarrow$ CalculatedFrames)}
+
+        \operation{+ ResultInfo(path : String, num\_frames : Integer, volumestr : String, volume : Volume, sourcefilepath : String)}
+        \operation{+ ResultInfo(h5group : HDF5Group)}
         \operation{+ \_\_contains\_\_(resolution : Integer) : Boolean}
         \operation{+ \_\_getitem\_\_(resolution : Integer) : CalculatedFrames}
         \operation{tohdf(h5group : HDF5Group, overwrite : Boolean)}

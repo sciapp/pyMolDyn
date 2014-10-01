@@ -17,9 +17,12 @@
 \newlength{\umlwidth}
 \setlength{\umlwidth}{12cm}
 
+\newcommand{\todo}[1]{\noindent\fbox{\parbox{\linewidth}{\textbf{TODO:}\\#1}}}
+
 \begin{document}
 
 \title{pyMolDyn}
+\author{Fabian Beule, David Knodt}
 \date{\today}
 \maketitle
 
@@ -28,7 +31,7 @@
 %\chapter{Introduction}
 
 \chapter{Class description}
-\include{data}
-\include{file}
+\input{data}
+\input{file}
 
 \end{document}

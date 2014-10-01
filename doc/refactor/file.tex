@@ -1,39 +1,35 @@
 \section{File handling}
 
 \subsection{Abstract file classes}
-Notes:
-\begin{itemize}
-    \item \texttt{readinfo} and \texttt{readatoms} are inconsistent with their return values
-    \item Maybe there should be a class that holds the file info
-\end{itemize}
-
-\noindent
 \begin{tikzpicture}
     \begin{abstractclass}[text width=\umlwidth]{InputFile}{0, 0}
-        \attribute{+ path : String}
-        \attribute{+ num\_frames : Integer}
-        \attribute{+ volumestr : String}
-        \attribute{+ volume : Volume}
+        \attribute{+ info : FileInfo}
         \attribute{+ inforead : Boolean}
 
         \operation{+ InputFile(path : String)}
         \operation{+ getatoms(frame : Integer)}
-        \operation[0]{+ readinfo()}
+        \operation[0]{+ readinfo() : FileInfo}
         \operation[0]{+ readatoms(frame : Integer) : Atoms}
     \end{abstractclass}
 
-    \begin{abstractclass}[text width=\umlwidth]{ResultFile}{0, -7}
+    \begin{abstractclass}[text width=\umlwidth]{ResultFile}{0, -6}
         \inherit{InputFile}
 
-        \attribute{+ sourcefilepath : String}
-        \attribute{+ calculated : CalculationInfo}
+        \attribute{+ info : ResultInfo}
 
         \operation{+ ResultFile(path : String, sourcefilepath : String)}
         \operation{+ getresults(frame : Integer, resolution : Integer)}
         \operation{+ addresults(results : Results)}
-        \operation[0]{writeinfo()}
-        \operation[0]{readresults(frame : Integer, resolution : Integer) : Results}
-        \operation[0]{writeresults(results : Results)}
+        \operation[0]{+ readinfo() : ResultInfo}
+        \operation[0]{+ writeinfo()}
+        \operation[0]{+ readresults(frame : Integer, resolution : Integer) : Results}
+        \operation[0]{+ writeresults(results : Results)}
     \end{abstractclass}
 \end{tikzpicture}
 
+\todo{Maybe \texttt{ResultFile.writeresults} should take an \texttt{overwrite} parameter.}
+
+\noindent
+The Implementation of \texttt{Inputfile} is \texttt{XYZFile}, which reads a pybel xyz file. \texttt{HDF5File} implements \texttt{ResultFile} and handles a HDF5 file with input and result data, which can be used for caching.
+
+\subsection{Filesystem access}
