@@ -20,6 +20,7 @@ class ColorSettingsPage(QtGui.QWidget):
 
         self.button_dict = {}
         vbox = QtGui.QVBoxLayout()
+        vbox.setSpacing(5)
         for attr_str, btn_str in self.colors.iteritems():
 
             pix = QtGui.QPixmap(50, 50)

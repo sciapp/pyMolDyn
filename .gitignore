@@ -22,4 +22,4 @@ src/.idea
 *.fls
 *.toc
 *.pdf
-
+*.synctex.gz
