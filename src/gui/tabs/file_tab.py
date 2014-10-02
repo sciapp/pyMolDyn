@@ -10,7 +10,7 @@ from config.configuration import config
 
 class FileTabDock(QtGui.QDockWidget):
     """
-        DockWidget to the 'file'-tab
+        DockWidget for the 'file'-tab
     """
     def __init__(self, parent):
         QtGui.QDockWidget.__init__(self, "file", parent)

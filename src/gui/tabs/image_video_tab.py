@@ -5,7 +5,7 @@ from PySide import QtGui
 
 class ImageVideoTabDock(QtGui.QDockWidget):
     """
-        DockWidget to the 'image/video'-tab
+        DockWidget for the 'image/video'-tab
     """
 
     def __init__(self, parent):
