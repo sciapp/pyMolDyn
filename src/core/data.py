@@ -55,6 +55,12 @@ class TimestampList(object):
             raise ValueError("datetime required")
         self.timestamps[index] = value
 
+    def __len__(self):
+        return len(self.timestamps)
+
+    def __iter__(self):
+        return iter(self.timestamps)
+
     def hasdata(self):
         return any(map(lambda x: not x is None, self.timestamps))
 
@@ -96,31 +102,44 @@ class CalculatedFrames(object):
             writedataset(h5group, "center_cavities", self.center_cavities.tostrlist())
 
 
-class CalculationInfo(object):
+class FileInfo(object):
+    def __init__(self, num_frames=None, volumestr=None):
+        self.num_frames = num_frames
+        self.volumestr = volumestr
+
+
+class ResultInfo(FileInfo):
     def __init__(self, *args):
-        self.resolutioninfo = dict()
-        if isinstance(args[0], h5py.Group):
+        super(ResultInfo, self).__init__()
+        self.sourcefilepath = None
+        self.calculatedframes = dict()
+        if len(args) > 0 and isinstance(args[0], h5py.Group):
             h5group = args[0]
             self.num_frames = h5group.attrs["num_frames"]
+            self.volumestr = h5group.attrs["volume"]
+            self.sourcefilepath = h5group.attrs.get("sourcefile", None)
             for name, subgroup in h5group.iteritems():
                 if not name.startswith("resolution"):
                     continue
                 resolution = int(name[10:])
-                self.resolutioninfo[resolution] = CalculatedFrames(subgroup)
-        else:
-            self.num_frames = args[0]
+                self.calculatedframes[resolution] = CalculatedFrames(subgroup)
 
     def __getitem__(self, resolution):
-        if not resolution in self.resolutioninfo:
-            self.resolutioninfo[resolution] = CalculatedFrames(self.num_frames)
-        return self.resolutioninfo[resolution]
+        if not resolution in self.calculatedframes:
+            self.calculatedframes[resolution] = CalculatedFrames(self.num_frames)
+        return self.calculatedframes[resolution]
 
     def __contains__(self, resolution):
-        return resolution in self.resolutioninfo
+        return resolution in self.calculatedframes
 
     def tohdf(self, h5group):
         h5group.attrs["num_frames"] = self.num_frames
-        for resolution, info in self.resolutioninfo.iteritems():
+        h5group.attrs["volume"] = self.volumestr
+        if not self.sourcefile is None:
+            h5group.attrs["sourcefile"] = self.sourcefile
+        elif "sourcefile" in h5group.attrs:
+            del h5group.attrs["sourcefile"]
+        for resolution, info in self.calculatedframes.iteritems():
             if info.hasdata():
                 subgroup = h5group.require_group("resolution{}".format(resolution))
                 info.tohdf(subgroup)

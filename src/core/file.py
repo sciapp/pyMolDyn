@@ -1,44 +1,37 @@
 # -*- coding: utf-8 -*-
 
+#TODO: info class for InputFile?
+
 __all__ = ["InputFileManager",
            "CalculationCache"]
+
+
 import os
 import pybel
 import h5py
 from datetime import datetime
 from hashlib import sha256
 from visualization.volumes import get_volume_from_string
-from data import Atoms, CalculationInfo, Domains, Cavities, Results
+import data
 
 
 class InputFile(object):
     def __init__(self, path):
         self.path = path
-        self._num_frames = None
-        self._volumestr = None
+        self._info = data.FileInfo()
         self._volume = None
         self.inforead = False
 
     @property
-    def filename(self):
-        return os.path.basename(self.path)
-    
-    @property
-    def volumestr(self):
+    def info(self):
         if not self.inforead:
             self.readinfo()
-        return self._volumestr
-
-    @property
-    def num_frames(self):
-        if not self.inforead:
-            self.readinfo()
-        return self._num_frames
+        return self._info
 
     @property
     def volume(self):
-        if not self.inforead:
-            self.readinfo()
+        if self._volume is None:
+            self._volume = get_volume_from_string(self.info.volumestr)
         return self._volume
 
     def getatoms(self, frame):
@@ -59,9 +52,9 @@ class XYZFile(InputFile):
         try:
             f = pybel.readfile("xyz", self.path.encode("ascii"))
             molecule = f.next()
-            self._volumestr = molecule.title
-            self._num_frames = sum(1 for _ in f) + 1
-            self._volume = get_volume_from_string(self._volumestr)
+            self._info.volumestr = molecule.title
+            self._info.num_frames = sum(1 for _ in f) + 1
+            self._volume = get_volume_from_string(self._info.volumestr)
             self.inforead = True
         except:
             raise ValueError("Cannot read file info")
@@ -73,36 +66,31 @@ class XYZFile(InputFile):
             f = pybel.readfile("xyz", self.path.encode("ascii"))
             i = 0
             molecule = f.next()
-            if not self._num_frames is None:
-                self._volumestr = molecule.title
-                self._volume = get_volume_from_string(self._volumestr)
+            if not self.inforead:
+                self._info.volumestr = molecule.title
+                self._volume = get_volume_from_string(self._info.volumestr)
             for m in f:
                 i += 1
                 if i == frame:
                     molecule = m
-                    if not self._num_frames is None:
+                    if self.inforead:
                         break
-            if self._num_frames is None:
-                self._num_frames = i + 1
+            if not self.inforead:
+                self._info.num_frames = i + 1
+                self.inforead = True
             if i < frame:
                 raise IndexError("Frame not found")
         finally:
             f.close()
-        return Atoms(molecule, self.volume)
+        return data.Atoms(molecule, self.volume)
 
 
 class ResultFile(InputFile):
     #TODO: specify when to overwrite
     def __init__(self, path, sourcefilepath=None):
         super(ResultFile, self).__init__(path)
-        self.sourcefilepath = sourcefilepath
-        self._calculated = None
-
-    @property
-    def calculated(self):
-        if not self.inforead:
-            self.readinfo()
-        return self._calculated
+        self._info = ResultInfo()
+        self._info.sourcefilepath = sourcefilepath
 
     def calculatedframes(self, resolution):
         if not self.inforead:
@@ -110,14 +98,14 @@ class ResultFile(InputFile):
         return self.calculated[resolution]
 
     def getresults(self, frame, resolution):
-        if not self.calculatedframes(resolution).domains[frame] is None:
+        if not self.info.calculatedframes[resolution].domains[frame] is None:
             return self.readresults(frame, resolution)
         else:
             return None
 
     def addresults(self, results):
         self.writeresults(results)
-        resinfo = self.calculated[results.resolution]
+        resinfo = self.info.calculatedframes[results.resolution]
         if results.domains:
             resinfo.domains[results.frame] \
                 = results.domains.timestamp
@@ -146,44 +134,36 @@ class HDF5File(ResultFile):
     def readatoms(self, frame):
         #TODO: error handling
         if os.path.isfile(self.path):
-            self.readinfo()
             with h5py.File(self.path) as f:
-                atoms = Atoms(f["atoms/frame{}".format(frame)])
+                atoms = data.Atoms(f["atoms/frame{}".format(frame)])
         else:
             atoms = None
         return atoms
 
-
     def readinfo(self):
         #TODO: error handling
         with h5py.File(self.path) as f:
-            if "num_frames" in f.attrs:
-                self._num_frames = f.attrs["num_frames"]
-                if self.sourcefilepath is None and "sourcefile" in f.attrs:
-                    self.sourcefilepath = f.attrs["sourcefile"]
-                self._volumestr = f.attrs["volume"]
-                self._volume = get_volume_from_string(self._volumestr)
-                self._calculated = CalculationInfo(f["info"])
+            if "info" in f:
+                info = data.ResultInfo(f["info"])
+                if info.sourcefile is None:
+                    info.sourcefile = self._info.sourcefile
+                self._volume = get_volume_from_string(self._info.volumestr)
                 self.inforead = True
-        if not self.inforead and os.path.isfile(self.sourcefilepath):
-            fm = InputFileManager(os.path.dirname(self.sourcefilepath))
-            sf = fm.getfile(os.path.basename(self.sourcefilepath))
-            sf.readinfo()
-            self._num_frames = sf.num_frames
-            self._volumestr = sf.volumestr
+        if not self.inforead and os.path.isfile(self._info.sourcefilepath):
+            fm = InputFileManager(os.path.dirname(self._info.sourcefilepath))
+            sf = fm.getfile(os.path.basename(self._info.sourcefilepath))
+            self._info.num_frames = sf.info.num_frames
+            self._info.volumestr = sf.info.volumestr
             self._volume = sf.volume
-            self._calculated = CalculationInfo(sf.num_frames)
+            self._info.calculatedframes = data.CalculatedFrames(sf.num_frames)
             self.inforead = True
 
 
     def writeinfo(self):
         #TODO: error handling
         with h5py.File(self.path) as f:
-            f.attrs["num_frames"] = self.num_frames
-            f.attrs["volume"] = self.volumestr
-            if not self.sourcefilepath is None:
-                f.attrs["sourcefile"] = self.sourcefilepath
-            self.calculated.tohdf(f.require_group("info"))
+            h5group = f.require_group("info")
+            self.info.tohdf(h5group)
 
     def readresults(self, frame, resolution):
         #TODO: error handling
@@ -192,17 +172,17 @@ class HDF5File(ResultFile):
                 groupname = "results/frame{}/resolution{}".format(frame, resolution)
                 if groupname in f:
                     group = f[groupname]
-                    atoms = Atoms(f["atoms/frame{}".format(frame)])
-                    domains = Domains(group["domains"])
+                    atoms = data.Atoms(f["atoms/frame{}".format(frame)])
+                    domains = data.Domains(group["domains"])
                     if "surface_cavities" in group:
-                        surface_cavities = Cavities(group["surface_cavities"])
+                        surface_cavities = data.Cavities(group["surface_cavities"])
                     else:
                         surface_cavities = None
                     if "center_cavities" in group:
-                        center_cavities = Cavities(group["center_cavities"])
+                        center_cavities = data.Cavities(group["center_cavities"])
                     else:
                         center_cavities = None
-                    results = Results(self.path, frame, resolution,
+                    results = data.Results(self.path, frame, resolution,
                                    atoms, domains, surface_cavities,
                                    center_cavities)
         else:

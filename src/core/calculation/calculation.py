@@ -18,7 +18,7 @@ class Calculation(object):
     def __init__(self):
         self.cache = CalculationCache("../results")
 
-    def calculatedframes(self, inputfile, frame, resolution, center=False):
+    def calculatedframes(self, inputfile, resolution, center=False):
         calc = None
         if isinstance(inputfile, ResultFile):
             calc = inputfile.calculated
@@ -42,7 +42,7 @@ class Calculation(object):
         return not self.timestamp(self, inputfile, frame,
                                   resolution, center) is None
 
-    def __contains__(self, tup):
+    def __contains__(self, *tup):
         return self.iscalculated(*tup)
 
     def calculate(self, inputfile, frame, resolution, center=False):
