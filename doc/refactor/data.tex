@@ -17,7 +17,69 @@
     \end{class}
 \end{tikzpicture}
 
-\todo{\texttt{Volume} class should be here.\\Maybe put a \texttt{Volume} object into \texttt{Atoms}.}
+\clearpage
+\noindent
+\begin{tikzpicture}
+    \begin{class}[text width=\umlwidth]{Volume}{0, 0}
+        \attribute{+ volume : Float}
+		\attribute{+ translation\_vectors : Array(Float)}
+		\attribute{+ side\_length : Float}
+		\attribute{+ edges : Array(Points)}
+
+		\operation{+ is\_inside( point : Array(Float))} : Boolean
+		\operation{+ get\_equivalent\_point( point Array(Float))} : Array(Float)
+    \end{class}
+
+    \begin{class}[text width=0.7\umlwidth]{HexagonalVolume}{-3, -5}\
+    		\inherit{Volume}
+        \attribute{+ a : Float}
+		\attribute{+ c : Array(Float)}
+
+		\operation{+ HexagonalVolume( a : Float, c : Float)}
+    \end{class}
+    
+    \begin{class}[text width=0.9\umlwidth]{TriclinicVolume}{1, -8}\
+    		\inherit{Volume}
+        \attribute{+ a : Float}
+        \attribute{+ b : Float}
+        \attribute{+ c : Float}
+        \attribute{+ alpha : Float}
+        \attribute{+ beta : Float}
+        \attribute{+ gamma : Float}
+        \attribute{+ M : Matrix(Float)}
+
+		\operation{+ TriclinicVolume( a : Float, b : Float, c : Float, alpha : Float, beta : Float, gamma : Float)}
+		\operation{+ TriclinicVolume( v1 : Array(Float), v2 : Array(Float), v3 : Array(Float)}
+    \end{class}
+        
+	\begin{class}[text width=0.6\umlwidth]{OrthorhombicVolume}{-5, -15}\
+    		\inherit{TriclinicVolume}
+		\operation{+ OrthorhombicVolume( a : Float, b : Float, c : Float)}
+    \end{class}    
+
+	\begin{class}[text width=0.6\umlwidth]{TetragonalVolume}{-4.5, -17.5}\
+    		\inherit{TriclinicVolume}
+		\operation{+ TetragonalVolume( a : Float, c : Float)}
+    \end{class}
+    
+    	\begin{class}[text width=0.6\umlwidth]{MonoclinicVolume}{-2.5, -19.5}\
+    		\inherit{TriclinicVolume}
+		\operation{+ MonoclinicVolume( a : Float, b : Float, c : Float, beta : Float)}
+    \end{class}
+
+    	\begin{class}[text width=0.6\umlwidth]{RhombohedralVolume}{3, -15}\
+    		\inherit{TriclinicVolume}
+		\operation{+ RhombohedralVolume( a : Float, alpha : Float)}
+    \end{class}
+
+    	\begin{class}[text width=0.5\umlwidth]{CubicVolume}{3, -17.5}\
+    		\inherit{TriclinicVolume}
+		\operation{+ CubicVolume( a : Float)}
+    \end{class}
+
+\end{tikzpicture}
+
+\todo{Maybe put a \texttt{Volume} object into \texttt{Atoms}.}
 
 
 \subsection{Calculation results}
