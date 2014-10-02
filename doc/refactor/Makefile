@@ -1,10 +1,14 @@
-BASENAME=master
+TARGETS=master.pdf checklist.pdf
 
 .PHONY: all clean
 
-all:
-	latexmk -pdf ${BASENAME}.tex
+all: ${TARGETS}
 
 clean:
-	rm -f ${BASENAME}.pdf *.aux *.log *.toc *.out *.fls *.fdb_latexmk
+	rm -f ${TARGETS} *.aux *.log *.toc *.out *.fls *.fdb_latexmk
 
+master.pdf: master.tex data.tex file.tex calculation.tex
+	latexmk -pdf $<
+
+checklist.pdf: checklist.tex
+	latexmk -pdf $<
