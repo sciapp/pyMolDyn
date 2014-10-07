@@ -135,8 +135,8 @@ class ResultInfo(FileInfo):
     def tohdf(self, h5group):
         h5group.attrs["num_frames"] = self.num_frames
         h5group.attrs["volume"] = self.volumestr
-        if not self.sourcefile is None:
-            h5group.attrs["sourcefile"] = self.sourcefile
+        if not self.sourcefilepath is None:
+            h5group.attrs["sourcefile"] = self.sourcefilepath
         elif "sourcefile" in h5group.attrs:
             del h5group.attrs["sourcefile"]
         for resolution, info in self.calculatedframes.iteritems():
