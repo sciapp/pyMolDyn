@@ -1,0 +1,61 @@
+\documentclass[final, oneside, a4paper, 11pt, pdftex, english]{scrreprt}
+
+\usepackage{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+\usepackage{tikz}
+\usepackage{pgf-umlcd}
+
+\usepackage[hidelinks]{hyperref}
+
+%\pagestyle{headings}
+%\graphicspath{images}
+%\raggedbottom
+
+\newlength{\umlwidth}
+\setlength{\umlwidth}{12cm}
+
+\newcommand{\todo}[1]{\noindent\framebox[\linewidth]{\parbox{\linewidth}{\textbf{TODO:}\\#1}}}
+
+\begin{document}
+\chapter*{pyMolDyn Refactoring Checklist}
+
+\begin{tabular}{|l|c|c|c|c|c|}
+    \hline
+    \textbf{Class or Module} & \textbf{P} & \textbf{Im} & \textbf{In} & \textbf{T} & \textbf{D}\\
+    \hline
+    Atoms & X & X & & & \\
+    \hline
+    Volume & & X & X & & \\
+    \hline
+    Results, Cavities, Domains & X & X & & &\\
+    \hline
+    Meta Data (File Info) Classes & & & & & \\
+    \hline
+    InputFile & & & & & \\
+    \hline
+    ResultFile & & & & & \\
+    \hline
+    FileManager & & & & & \\
+    \hline
+    Calculation, CalculationCache & & & & & \\
+    \hline
+    CavityCalculation, DomainCalculation & & X & X & & \\
+    \hline
+\end{tabular}
+\\[\baselineskip]
+\begin{tabular}{|l l|}
+    \hline
+    \textbf{P} & planned \\
+    \textbf{Im} & implemented \\
+    \textbf{In} & integrated \\
+    \textbf{T} & tested \\
+    \textbf{D} & documented \\
+    \hline
+\end{tabular}
+
+\todo{Something to distinguish old and refactored classes, e.\,g. revisions or dates.\\
+Add empty lines}
+\end{document}

@@ -3,7 +3,9 @@
 \subsection{Abstract file classes}
 \begin{tikzpicture}
     \begin{abstractclass}[text width=\umlwidth]{InputFile}{0, 0}
+        \attribute{+ path : String}
         \attribute{+ info : FileInfo}
+        \attribute{+ volume : Volume}
         \attribute{+ inforead : Boolean}
 
         \operation{+ InputFile(path : String)}

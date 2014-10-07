@@ -78,8 +78,6 @@
 
 \end{tikzpicture}
 
-\todo{Maybe put a \texttt{Volume} object into \texttt{Atoms}.}
-
 
 \subsection{Calculation results}
 \begin{tikzpicture}
@@ -135,21 +133,19 @@
 \subsection{Meta data}
 \begin{tikzpicture}
     \begin{class}[text width=\umlwidth]{FileInfo}{0, 0}
-        \attribute{+ path : String}
         \attribute{+ num\_frames : Integer}
         \attribute{+ volumestr : String}
-        \attribute{+ volume : Volume}
 
-        \operation{+ FileInfo(path : String, num\_frames : Integer, volumestr : String, volume : Volume)}
+        \operation{+ FileInfo()}
     \end{class}
 
-    \begin{class}[text width=\umlwidth]{ResultInfo}{0, -5}
+    \begin{class}[text width=\umlwidth]{ResultInfo}{0, -3}
         \inherit{FileInfo}
 
         \attribute{+ sourcefilepath : String}
         \attribute{+ calculatedframes : Dictionary(Integer $\rightarrow$ CalculatedFrames)}
 
-        \operation{+ ResultInfo(path : String, num\_frames : Integer, volumestr : String, volume : Volume, sourcefilepath : String)}
+        \operation{+ ResultInfo()}
         \operation{+ ResultInfo(h5group : HDF5Group)}
         \operation{+ \_\_contains\_\_(resolution : Integer) : Boolean}
         \operation{+ \_\_getitem\_\_(resolution : Integer) : CalculatedFrames}
