@@ -20,42 +20,43 @@
 \newcommand{\todo}[1]{\noindent\framebox[\linewidth]{\parbox{\linewidth}{\textbf{TODO:}\\#1}}}
 
 \begin{document}
-\chapter*{pyMolDyn Refactoring Checklist}
+\chapter*{pyMolDyn Refactoring Overview}
+\section*{Class Revisions}
 
 \begin{tabular}{|l|c|c|c|c|c|}
     \hline
-    \textbf{Class or Module} & \textbf{P} & \textbf{Im} & \textbf{In} & \textbf{T} & \textbf{D}\\
+    \textbf{Class Names} & \textbf{Planned} & \textbf{Implemented} & \textbf{Integrated} \\
     \hline
-    Atoms & X & X & & & \\
+    Atoms & 2014-10-07 & 2014-10-07 & \\
     \hline
-    Volume & & X & X & & \\
+    Volume & --- & old & old \\
     \hline
-    Results, Cavities, Domains & X & X & & &\\
+    Results, Cavities, Domains & 2014-10-07 & 2014-10-07 & \\
     \hline
-    Meta Data (File Info) Classes & & & & & \\
+    FileInfo, ResultFileInfo, etc. & 2014-10-07 & 2014-10-07 & \\
     \hline
-    InputFile & & & & & \\
+    InputFile & 2014-10-07 & 2014-10-07 & \\
     \hline
-    ResultFile & & & & & \\
+    ResultFile & 2014-10-07 & 2014-10-07 & \\
     \hline
-    FileManager & & & & & \\
+    FileManager & 2014-10-07 & 2014-10-07 & \\
     \hline
-    Calculation, CalculationCache & & & & & \\
+    Calculation, Cache & 2014-10-07 & 2014-10-07 & \\
     \hline
-    CavityCalculation, DomainCalculation & & X & X & & \\
+    Calculation Algorithm & --- & old & old \\
     \hline
-\end{tabular}
-\\[\baselineskip]
-\begin{tabular}{|l l|}
+    Control & --- & old & old \\
     \hline
-    \textbf{P} & planned \\
-    \textbf{Im} & implemented \\
-    \textbf{In} & integrated \\
-    \textbf{T} & tested \\
-    \textbf{D} & documented \\
+    Configuration & --- & old & old \\
+    \hline
+    & & & \\
+    \hline
+    & & & \\
+    \hline
+    & & & \\
+    \hline
+    & & & \\
     \hline
 \end{tabular}
 
-\todo{Something to distinguish old and refactored classes, e.\,g. revisions or dates.\\
-Add empty lines}
 \end{document}

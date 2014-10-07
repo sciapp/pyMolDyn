@@ -1,0 +1,27 @@
+\section{Program logic and state}
+\todo{Logger class, which calls callbacks for messages, debug messages, warnings and errors; maybe with debuglevel}
+
+\subsection{Control}
+\begin{tikzpicture}
+    \begin{class}[text width=\umlwidth]{Control}{0, 0}
+        \attribute{+ config : Configuration}
+        \attribute{+ calculation : Calculation}
+        \attribute{+ filemanager : FileManager}
+
+        \operation{+ Control()}
+    \end{class}
+\end{tikzpicture}
+
+
+\subsection{Config}
+\begin{tikzpicture}
+    \begin{class}[text width=\umlwidth]{Configuration}{0, 0}
+    \end{class}
+\end{tikzpicture}
+
+\vspace*{\baselineskip}
+\noindent
+\begin{tikzpicture}
+    \begin{class}[text width=\umlwidth]{ConfigFile}{0, 0}
+    \end{class}
+\end{tikzpicture}

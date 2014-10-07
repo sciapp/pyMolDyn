@@ -146,7 +146,7 @@ Alternatively create an \texttt{InputData} class which contains both.}
         \inherit{FileInfo}
 
         \attribute{+ sourcefilepath : String}
-        \attribute{+ calculatedframes : Dictionary(Integer $\rightarrow$ CalculatedFrames)}
+        \attribute{\# calculatedframes : Dictionary(Integer $\rightarrow$ CalculatedFrames)}
 
         \operation{+ ResultInfo()}
         \operation{+ ResultInfo(h5group : HDF5Group)}
@@ -156,6 +156,7 @@ Alternatively create an \texttt{InputData} class which contains both.}
     \end{class}
 \end{tikzpicture}
 
+\vspace*{\baselineskip}
 \noindent
 \begin{tikzpicture}
     \begin{class}[text width=\umlwidth]{CalculatedFrames}{0, 0}

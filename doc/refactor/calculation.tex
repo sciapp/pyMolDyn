@@ -3,14 +3,13 @@
 The interface to get calculation Results:\\
 \begin{tikzpicture}
     \begin{class}[text width=\umlwidth]{Calculation}{0, 0}
-        \attribute{+ cache : CalculationCache}
+        \attribute{\# cache : CalculationCache}
         
         \operation{+ Calculation()}
+        \operation{+ Calculation(cachedir : String)}
         \operation{+ calculatedframes(inputfile : InputFile, resolution : Integer, center : Boolean) : List(Timestamp)}
         \operation{+ timestamp(inputfile : InputFile, frame : Integer, resolution : Integer, center : Boolean) : Timestamp}
-        %\operation{+ iscalculated(inputfile : InputFile, frame : Integer, resolution : Integer, center : Boolean) : Boolean}
         \operation{+ \_\_contains\_\_(inputfile : InputFile, frame : Integer, resolution : Integer, center : Boolean) : Boolean}
-        %\operation{+ calculate(inputfile : InputFile, frame : Integer, resolution : Integer, center : Boolean) : Results}
         \operation{+ \_\_getitem\_\_(inputfile : InputFile, frame : Integer, resolution : Integer, center : Boolean) : Results}
     \end{class}
 \end{tikzpicture}
@@ -19,21 +18,18 @@ The interface to get calculation Results:\\
 The internal mechanism of caching and creating an index file:\\
 \begin{tikzpicture}
     \begin{class}[text width=\umlwidth]{CalculationCache}{0, 0}
-        \attribute{+ index : Dictionary(String $\rightarrow$ String)}
+        \attribute{\# index : Dictionary(String $\rightarrow$ String)}
         \attribute{+ indexfilepath : String}
         
         \operation{+ CalculationCache(directory : String)}
         \operation{+ \_\_contains\_\_(filepath : String)}
         \operation{+ \_\_getitem\_\_(filepath : String)}
-        \operation{+ \_\_setitem\_\_(filepath : String, results : Results)}
     \end{class}
 \end{tikzpicture}
-\\\todo{Should \texttt{CalculationCache} inherit from FileManager?\\
-At the moment, I think not.}
 
 
 \subsection{Algorithm}
-\todo{Check what data types the code really produces}\\
+\todo{This part has not been refactored yet.}
 \begin{tikzpicture}
     \begin{class}[text width=\umlwidth]{DomainCalculation}{0, 0}
         \attribute{+ discretization : Discretization}
@@ -49,6 +45,7 @@ At the moment, I think not.}
     \end{class}
 \end{tikzpicture}
 
+\vspace*{\baselineskip}
 \noindent
 \begin{tikzpicture}
     \begin{class}[text width=\umlwidth]{CavityCalculation}{0, 0}
@@ -67,7 +64,9 @@ At the moment, I think not.}
         \operation{+ CavityCalculation(domain\_calculation : DomainCalculation, use\_surface\_points : Boolean)}
     \end{class}
 \end{tikzpicture}
+\\\todo{Check what data types the code really produces}
 
+\vspace*{\baselineskip}
 \noindent
 \begin{tikzpicture}
     \begin{class}[text width=\umlwidth]{FakeDomainCalculation}{0, 0}
