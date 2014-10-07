@@ -1,5 +1,5 @@
 
-SUBDIRS = statistics
+SUBDIRS = 
 
 all:
 	for i in $(SUBDIRS); do make -C $$i all; done
