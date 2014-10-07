@@ -6,7 +6,7 @@
         \attribute{+ path : String}
         \attribute{+ info : FileInfo}
         \attribute{+ volume : Volume}
-        \attribute{+ inforead : Boolean}
+        \attribute{\# inforead : Boolean}
 
         \operation{+ InputFile(path : String)}
         \operation{+ getatoms(frame : Integer)}
@@ -32,7 +32,7 @@
 \todo{Maybe \texttt{ResultFile.writeresults} should take an \texttt{overwrite} parameter.}
 
 \noindent
-The Implementation of \texttt{Inputfile} is \texttt{XYZFile}, which reads a pybel xyz file. \texttt{HDF5File} implements \texttt{ResultFile} and handles a HDF5 file with input and result data, which can be used for caching.
+The implementation of \texttt{Inputfile} is \texttt{XYZFile}, which reads a pybel xyz file. \texttt{HDF5File} implements \texttt{ResultFile} and handles a HDF5 file with input and result data, which can be used for caching.
 
 
 \subsection{Filesystem access}
@@ -42,12 +42,11 @@ The Implementation of \texttt{Inputfile} is \texttt{XYZFile}, which reads a pybe
         \attribute{+ types : Dictionary(String $\rightarrow$ Class)}
         
         \operation{FileManager(directory : String)}
-        \operation{abspath(filename : String) : String}
         \operation{filelist() : List(String)}
         \operation{\_\_getitem\_\_(filename : String) : InputFile}
         \operation{\_\_contains\_\_(filename : String) : Boolean}
     \end{class}
 \end{tikzpicture}
 
-The \texttt{types} dictionary is used to associate filename extensions (e.\,g.\ xyz) with implementatios of \texttt{InputFile}.
+The \texttt{types} dictionary is used to associate filename extensions (e.\,g.\ xyz) with implementations of \texttt{InputFile}.
 \texttt{\_\_getitem\_\_} looks up which class to use and instanciates it.
