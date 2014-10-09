@@ -32,21 +32,22 @@
 \todo{Maybe \texttt{ResultFile.writeresults} should take an \texttt{overwrite} parameter.}
 
 \noindent
-The implementation of \texttt{Inputfile} is \texttt{XYZFile}, which reads a pybel xyz file. \texttt{HDF5File} implements \texttt{ResultFile} and handles a HDF5 file with input and result data, which can be used for caching.
+The implementation of \texttt{InputFile} is \texttt{XYZFile}, which reads a pybel xyz file. \texttt{HDF5File} implements \texttt{ResultFile} and handles a HDF5 file with input and result data, which can be used for caching.
 
 
 \subsection{Filesystem access}
 \begin{tikzpicture}
     \begin{class}[text width=\umlwidth]{FileManager}{0, 0}
-        \attribute{+ directory : String}
         \attribute{+ types : Dictionary(String $\rightarrow$ Class)}
         
-        \operation{FileManager(directory : String)}
-        \operation{filelist() : List(String)}
-        \operation{\_\_getitem\_\_(filename : String) : InputFile}
-        \operation{\_\_contains\_\_(filename : String) : Boolean}
+        \operation{FileManager()}
+        \operation{listdir() : List(String)}
+        \operation{\_\_getitem\_\_(filepath : String) : InputFile}
+        \operation{\_\_contains\_\_(filepath : String) : Boolean}
     \end{class}
 \end{tikzpicture}
 
 The \texttt{types} dictionary is used to associate filename extensions (e.\,g.\ xyz) with implementations of \texttt{InputFile}.
 \texttt{\_\_getitem\_\_} looks up which class to use and instanciates it.
+
+\todo{Either make the whole thing static or let the constructor take a \texttt{types} parameter and initialize a single instance}
