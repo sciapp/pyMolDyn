@@ -127,7 +127,7 @@ class FileTab(QtGui.QWidget):
     def calculate_frame(self, filename, frame_nr, volume, resolution, use_center_points):
         if calculation.calculated(filename, frame_nr, resolution, True):
             base_name = ''.join(os.path.basename(filename).split(".")[:-1])
-            exp_name = "{}{}.hdf5".format(config.Path.RESULT_DIR, base_name)
+            exp_name = "{}{}.hdf5".format(config.Path.result_dir, base_name)
             calculation.delete_center_cavity_information(exp_name, frame_nr, resolution)
 
         if use_center_points:

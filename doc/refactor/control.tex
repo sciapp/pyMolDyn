@@ -15,13 +15,80 @@
 
 \subsection{Config}
 \begin{tikzpicture}
-    \begin{class}[text width=\umlwidth]{Configuration}{0, 0}
+    \begin{class}[text width=0.7\umlwidth]{Configuration}{0, 0}
+    	\attribute{- file: ConfigFile}
+
+	\operation{+ save()}
+	\operation{+ read()}
     \end{class}
 \end{tikzpicture}
 
 \vspace*{\baselineskip}
 \noindent
 \begin{tikzpicture}
-    \begin{class}[text width=\umlwidth]{ConfigFile}{0, 0}
+    \begin{class}[text width=1.1\umlwidth]{ConfigFile}{0, 0}
+	\attribute{- config : Configuration}
+	\attribute{- file : ConfigObj}
+
+	\operation{+ generate\_configspec()}
+	\operation{+ save()}
+	\operation{+ read()}
+	\operation{- generate\_spec\_for\_section(section : ConfigObj, spec\_section : ConfigObj)}
+	\operation{- parse\_node\_to\_section(node : ConfigNode, section : ConfigObj)}
+	\operation{- parse\_section\_to\_node(section : ConfigObj, node : ConfigNode)}
     \end{class}
 \end{tikzpicture}
+
+\subsection{Configuration Attributes}
+\begin{tikzpicture}
+    \begin{class}[text width=0.7\umlwidth]{Configuration}{0, 0}
+	\attribute{+ Colors : Configuration.Colors}
+	\attribute{+ OpenGL : Configuration.OpenGL}
+	\attribute{+ Computation : Configuration.Computation}
+	\attribute{+ Path : Configuration.Path}
+	\attribute{+ recent\_files : Array(String)}
+	\attribute{+ window\_position : Array(Integer)}
+    \end{class}
+\end{tikzpicture}
+
+\vspace*{\baselineskip}
+\noindent
+\begin{tikzpicture}
+	\begin{class}[text width=0.7\umlwidth]{Configuration.Colors}{0, 0}
+	\attribute{+ cavity : Array(Float)}
+	\attribute{+ domain : Array(Float)}
+	\attribute{+ alt\_cavity : Array(Float)}
+	\attribute{+ background : Array(Float)}
+	\attribute{+ bounding\_box : Array(Float)}
+	\attribute{+ atoms : Array(Float)}
+    \end{class}
+\end{tikzpicture}
+
+\vspace*{\baselineskip}
+\noindent
+\begin{tikzpicture}    
+	\begin{class}[text width=0.7\umlwidth]{Configuration.OpenGL}{0, 0}
+	\attribute{+ camera\_position : Array(Float)}
+	\attribute{+ offset : Array(Float)}
+    \end{class}
+\end{tikzpicture}
+
+\vspace*{\baselineskip}
+\noindent
+\begin{tikzpicture}    
+	\begin{class}[text width=0.7\umlwidth]{Configuration.Computation}{0, 0}
+	\attribute{+ atom\_radius : Array(Float)}
+	\attribute{+ std\_resolution : Integer}
+    \end{class}
+\end{tikzpicture}
+
+\vspace*{\baselineskip}
+\noindent
+\begin{tikzpicture}    
+	\begin{class}[text width=0.7\umlwidth]{Configuration.Path}{0, 0}
+	\attribute{+ result\_dir : String}
+	\attribute{+ ffmpeg : String}
+    \end{class}
+\end{tikzpicture}
+
+

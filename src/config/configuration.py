@@ -29,39 +29,41 @@ class Configuration(ConfigNode):
     class Colors(ConfigNode):
 
         def __init__(self):
-            self.CAVITY         = [0.2, 0.4, 1.]
-            self.DOMAIN         = [0., 1., 0.5]
-            self.ALT_CAVITY     = [0.9, 0.4, 0.2]
-            self.BACKGROUND     = [0.0, 0.0, 0.0]
-            self.BOUNDING_BOX   = [1.0, 1.0, 1.0]
-            self.ATOMS          = [1.0, 1.0, 1.0]
+            self.cavity         = [0.2, 0.4, 1.]
+            self.domain         = [0., 1., 0.5]
+            self.alt_cavity     = [0.9, 0.4, 0.2]
+            self.background     = [0.0, 0.0, 0.0]
+            self.bounding_box   = [1.0, 1.0, 1.0]
+            self.atoms          = [1.0, 1.0, 1.0]
 
     class OpenGL(ConfigNode):
 
         def __init__(self):
-           # CAMERA_POSITION =
-           # OFFSET          = (0.0, 0.0, 0.0)
+           # camera_position =
+           # offset          = (0.0, 0.0, 0.0)
+            self.gl_window_size  = [800, 800]
             pass
 
     class Computation(ConfigNode):
         def __init__(self):
-            self.ATOM_RADIUS     = 2.65
+            self.atom_radius     = 2.65
+            self.std_resolution  = 64
 
     class Path(ConfigNode):
 
         def __init__(self):
-            self.RESULT_DIR = '../results/'
-            self.FFMPEG     = '/usr/local/bin/ffmpeg'
+            self.result_dir = '../results/'
+            self.ffmpeg     = '/usr/local/bin/ffmpeg'
 
     def __init__(self):
         # standard configuration
-        self.GL_WINDOW_SIZE  = [800, 800]
-        self.WINDOW_POSITION = [-1, -1]
-        self.STD_RESOLUTION  = 64
         self.Colors          = Configuration.Colors()
         self.OpenGL          = Configuration.OpenGL()
         self.Computation     = Configuration.Computation()
         self.Path            = Configuration.Path()
+
+        self.window_position = [-1, -1]
+        self.recent_files    = ['']
 
         self._file = ConfigFile(self)
 
@@ -70,7 +72,7 @@ class Configuration(ConfigNode):
         write configuration to file
         """
 
-        self._file.obj2file()
+        self._file.save()
 
     def read(self):
         """
@@ -108,26 +110,28 @@ class ConfigFile:
             spec_section[sect] = {}
             self.generate_spec_for_section(section[sect], spec_section[sect])
 
-    def obj2file(self):
+    def save(self):
         """
         recursively reads the object and saves it to the ConfigFile object and finally writes it into the file
         """
         self.file = configobj.ConfigObj(CONFIG_FILE)
-        self.parse_node(self.config, self.file)
+        self.parse_node_to_section(self.config, self.file)
+
+        self.file.write()
         self.generate_configspec()
         self.file.write()
 
-    def parse_node(self, cls, config_file):
+    def parse_node_to_section(self, node, section):
         """
-        parses a class subtree
+        parses a ConfigNode to file object
         """
-        for attr_str in dir(cls):
-            attr = getattr(cls, attr_str)
+        for attr_str in dir(node):
+            attr = getattr(node, attr_str)
             if isinstance(attr, ConfigNode):
-                config_file[attr.__class__.__name__] = {}
-                self.parse_node(attr, config_file[attr.__class__.__name__])
+                section[attr.__class__.__name__] = {}
+                self.parse_node_to_section(attr, section[attr.__class__.__name__])
             elif not inspect.ismethod(attr) and not attr_str.startswith('_'):
-                config_file[attr_str] = attr
+                section[attr_str] = attr
             else:
                 pass
                 #print attr_str, 'NOT PROCESSED'
@@ -137,21 +141,21 @@ class ConfigFile:
         read a configuration from file
         """
         if not os.path.isfile(CONFIG_SPEC_FILE) or not os.path.isfile(CONFIG_FILE):
-            self.obj2file()
+            self.save()
         else:
             validator = validate.Validator()
             self.file = configobj.ConfigObj(CONFIG_FILE, configspec=CONFIG_SPEC_FILE)
             self.file.validate(validator)
-            self.parse_section(self.file, self.config)
+            self.parse_section_to_node(self.file, self.config)
 
-    def parse_section(self, section, config_obj):
+    def parse_section_to_node(self, section, node):
         """
-        parses a config section
+        parses a config section to config object
         """
         for scalar in section.scalars:
-            setattr(config_obj, scalar, section[scalar])
+            setattr(node, scalar, section[scalar])
         for sec in section.sections:
-            self.parse_section(section[sec], getattr(config_obj, sec))
+            self.parse_section_to_node(section[sec], getattr(node, sec))
 
 config = Configuration()
 config.read()

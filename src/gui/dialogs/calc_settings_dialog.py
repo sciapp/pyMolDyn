@@ -22,7 +22,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
         vbox            = QtGui.QVBoxLayout() 
         button_hbox     = QtGui.QHBoxLayout() 
         res_hbox        = QtGui.QHBoxLayout()
-        self.resolution = config.STD_RESOLUTION
+        self.resolution = config.Computation.std_resolution
 
         self.filenames  = filenames
         self.basenames  = [os.path.basename(path) for path in filenames]
@@ -151,7 +151,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
                     if not all([calculation.calculated(filename, frame, resolution, True) for frame in frames]):
                         return 'X'
                 base_name = ''.join(os.path.basename(filename).split(".")[:-1])
-                exp_name = "{}{}.hdf5".format(config.Path.RESULT_DIR, base_name)
+                exp_name = "{}{}.hdf5".format(config.Path.result_dir, base_name)
                 with h5py.File(exp_name, "r") as file:
                     for calc in file['frame{}'.format(frames[0])].values():
                         if calc.attrs['resolution'] == resolution:
