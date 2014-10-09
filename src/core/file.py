@@ -13,7 +13,7 @@ import os
 import pybel
 import h5py
 from datetime import datetime
-from visualization.volumes import get_volume_from_string
+from core.volumes import get_volume_from_string
 import data
 
 
@@ -151,7 +151,7 @@ class HDF5File(ResultFile):
                 and not self._info.sourcefilepath is None \
                 and os.path.isfile(self._info.sourcefilepath):
             fm = FileManager(os.path.dirname(self._info.sourcefilepath))
-            sf = fm.getfile(os.path.basename(self._info.sourcefilepath))
+            sf = fm[os.path.basename(self._info.sourcefilepath)]
             self._info.num_frames = sf.info.num_frames
             self._info.volumestr = sf.info.volumestr
             self._volume = sf.volume

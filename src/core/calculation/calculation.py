@@ -11,7 +11,7 @@ import core.file
 from datetime import datetime
 from algorithm import CavityCalculation, DomainCalculation
 from discretization import DiscretizationCache, AtomDiscretization
-import message
+import util.message as message
 from hashlib import sha256
 
 
@@ -57,7 +57,7 @@ class Calculation(object):
             center = args[3]
         else:
             center=False
-        if isinstance(inputfile, ResultFile):
+        if isinstance(inputfile, core.file.ResultFile):
             resultfile = inputfile
         else:
             resultfile = self.cache[inputfile.path]
