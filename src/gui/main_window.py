@@ -82,8 +82,7 @@ class MainWindow(QtGui.QMainWindow):
                 self.showNormal()
 
     def set_output_callbacks(self, progress_func, print_func, finish_func):
-        #message.set_output_callbacks(progress_func, print_func, finish_func)
-        pass
+        message.set_output_callbacks(progress_func, print_func, finish_func)
 
     def show_dataset(self, volume, filename, frame_nr, resolution, use_center_points):
         self.shown_dataset = [volume, filename, frame_nr, resolution, use_center_points]

@@ -163,6 +163,13 @@ def count_frames(filename):
     return f.info.num_frames
 
 
+def calculated_frames(filename, resolution):
+    trap("DEPRECATED")
+    f = core.file.XYZFile(filename)
+    timestamps = calculation.calculatedframes(f, resolution, False)
+    return [i + 1 for i, ts in enumerate(timestamps) if not ts is None]
+    
+
 def calculate_cavities(filename, frame_nr, volume, resolution, use_center_points=False):
     trap("DEPRECATED")
     f = core.file.XYZFile(filename)
