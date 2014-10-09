@@ -10,12 +10,12 @@ class ColorSettingsPage(QtGui.QWidget):
 
         self._config = cfg
         self.colors = {
-            'BACKGROUND': 'Background',
-            'BOUNDING_BOX': 'Bounding Box',
-            'CAVITY': 'Cavity',
-            'DOMAIN': 'Domain',
-            'ALT_CAVITY': 'Alt. Cavity',
-            'ATOMS': 'Atoms'
+            'background': 'Background',
+            'bounding_box': 'Bounding Box',
+            'cavity': 'Cavity',
+            'domain': 'Domain',
+            'alt_cavity': 'Alt. Cavity',
+            'atoms': 'Atoms'
         }
 
         self.button_dict = {}
@@ -58,7 +58,7 @@ class ComputationSettingsPage(QtGui.QWidget):
         QtGui.QWidget.__init__(self, parent)
         self._config = cfg
         self.values = {
-            'ATOM_RADIUS': 'atom radius'
+            'atom_radius': 'atom radius'
         }
 
         self.lineedit_dict = {}
@@ -98,8 +98,8 @@ class PathSettingsPage(QtGui.QWidget):
 
         self._config = cfg
         self.path = {
-            'RESULT_DIR': 'Result directory',
-            'FFMPEG': 'ffmpeg path'
+            'result_dir': 'Result directory',
+            'ffmpeg': 'ffmpeg path'
         }
 
         self.lineedit_dict = {}

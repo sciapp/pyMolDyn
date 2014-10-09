@@ -2,9 +2,13 @@
 
 from math import sin, cos
 import gr3
-from core.calculation import *
+from core.calculation import calculated, CalculationResults
 from config.configuration import config
 import pybel
+import numpy as np
+import os
+import sys
+
 
 class Visualization():
 
@@ -39,7 +43,7 @@ class Visualization():
         self.center_based_calculated = calculated(filename, frame_nr, resolution, True)
 
         if self.calculated:
-            res_name = '{}{}.hdf5'.format(config.Path.RESULT_DIR, ''.join(os.path.basename(filename).split(".")[:-1]))
+            res_name = '{}{}.hdf5'.format(config.Path.result_dir, ''.join(os.path.basename(filename).split(".")[:-1]))
             cr = CalculationResults(res_name, frame_nr, resolution)
             self.max_domain_index = cr.number_of_domains
             self.domain_vertices_list = [t[0] for t in cr.domain_triangles]
@@ -64,7 +68,7 @@ class Visualization():
                 domain_vertices = self.domain_vertices_list[domain_index]
                 domain_normals = self.domain_normals_list[domain_index]
                 num_domain_vertices = len(domain_vertices) * 3
-                mesh = gr3.createmesh(num_domain_vertices, domain_vertices, domain_normals, [config.Colors.DOMAIN]*num_domain_vertices)
+                mesh = gr3.createmesh(num_domain_vertices, domain_vertices, domain_normals, [config.Colors.domain]*num_domain_vertices)
                 self.domain_meshes.append(mesh)
 
             self.cavity_meshes = []
@@ -72,7 +76,7 @@ class Visualization():
                 cavity_vertices = self.cavity_vertices_list[cavity_index]
                 cavity_normals = self.cavity_normals_list[cavity_index]
                 num_cavity_vertices = len(cavity_vertices) * 3
-                mesh = gr3.createmesh(num_cavity_vertices, cavity_vertices, cavity_normals, [config.Colors.CAVITY]*num_cavity_vertices)
+                mesh = gr3.createmesh(num_cavity_vertices, cavity_vertices, cavity_normals, [config.Colors.cavity]*num_cavity_vertices)
                 self.cavity_meshes.append(mesh)
 
         if use_center_points:
@@ -82,7 +86,7 @@ class Visualization():
                 center_cavity_vertices = self.center_cavity_vertices_list[cavity_index]
                 center_cavity_normals = self.center_cavity_normals_list[cavity_index]
                 num_center_cavity_vertices = len(center_cavity_vertices) * 3
-                mesh = gr3.createmesh(num_center_cavity_vertices, center_cavity_vertices, center_cavity_normals, [config.Colors.ALT_CAVITY]*num_center_cavity_vertices)
+                mesh = gr3.createmesh(num_center_cavity_vertices, center_cavity_vertices, center_cavity_normals, [config.Colors.alt_cavity]*num_center_cavity_vertices)
                 self.center_cavity_meshes.append(mesh)
 
         self.create_scene()
@@ -93,19 +97,19 @@ class Visualization():
     def create_scene(self, show_cavities=True, center_based_cavities=False):
         if center_based_cavities and not self.center_based_calculated:
             return
-        gr3.setbackgroundcolor(config.Colors.BACKGROUND[0], config.Colors.BACKGROUND[1], config.Colors.BACKGROUND[2], 1.0)
+        gr3.setbackgroundcolor(config.Colors.background[0], config.Colors.background[1], config.Colors.background[2], 1.0)
         gr3.clear()
         if self.calculated:
             if not show_cavities:
                 for domain_index in range(self.max_domain_index):
-                    gr3.drawmesh(self.domain_meshes[domain_index], 1, (0,0,0), (0,0,1), (0,1,0), config.Colors.DOMAIN, (1,1,1))
+                    gr3.drawmesh(self.domain_meshes[domain_index], 1, (0,0,0), (0,0,1), (0,1,0), config.Colors.domain, (1,1,1))
             else:
                 if center_based_cavities and self.center_based_calculated:
                     for cavity_index in range(self.max_center_cavity_index):
-                        gr3.drawmesh(self.center_cavity_meshes[cavity_index], 1, (0,0,0), (0,0,1), (0,1,0), config.Colors.ALT_CAVITY, (1,1,1))
+                        gr3.drawmesh(self.center_cavity_meshes[cavity_index], 1, (0,0,0), (0,0,1), (0,1,0), config.Colors.alt_cavity, (1,1,1))
                 else:
                     for cavity_index in range(self.max_cavity_index):
-                        gr3.drawmesh(self.cavity_meshes[cavity_index], 1, (0,0,0), (0,0,1), (0,1,0), config.Colors.CAVITY, (1,1,1))
+                        gr3.drawmesh(self.cavity_meshes[cavity_index], 1, (0,0,0), (0,0,1), (0,1,0), config.Colors.cavity, (1,1,1))
 
         edges = self.volume.edges
         num_edges = len(edges)
@@ -113,11 +117,11 @@ class Visualization():
         edge_directions = [[edge[1][i]-edge[0][i] for i in range(3)] for edge in edges]
         edge_lengths = [sum([c*c for c in edge])**0.5 for edge in edge_directions]
         edge_radius = min(edge_lengths)/200
-        gr3.drawcylindermesh(num_edges, edge_positions, edge_directions, [config.Colors.BOUNDING_BOX]*num_edges, [edge_radius]*num_edges, edge_lengths)
+        gr3.drawcylindermesh(num_edges, edge_positions, edge_directions, [config.Colors.bounding_box]*num_edges, [edge_radius]*num_edges, edge_lengths)
         corners = list(set([tuple(edge[0]) for edge in edges] + [tuple(edge[1]) for edge in edges]))
         num_corners = len(corners)
         gr3.drawspheremesh(num_corners, corners, [(1,1,1)]*num_edges, [edge_radius]*num_edges)
-        gr3.drawspheremesh(len(self.atom_positions), self.atom_positions, [config.Colors.ATOMS]*len(self.atom_positions), [edge_radius*4]*len(self.atom_positions))
+        gr3.drawspheremesh(len(self.atom_positions), self.atom_positions, [config.Colors.atoms]*len(self.atom_positions), [edge_radius*4]*len(self.atom_positions))
 
     def zoom(self, delta):
         """

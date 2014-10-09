@@ -3,8 +3,6 @@ from PySide import QtCore, QtGui, QtOpenGL
 from visualization import visualization
 from config.configuration import config
 
-display_size = config.GL_WINDOW_SIZE
-
 
 class UpdateGLEvent(QtCore.QEvent):
 
@@ -28,10 +26,10 @@ class GLWidget(QtOpenGL.QGLWidget):
         pass
 
     def minimumSizeHint(self):
-        return QtCore.QSize(config.GL_WINDOW_SIZE[0], config.GL_WINDOW_SIZE[1])
+        return QtCore.QSize(config.OpenGL.gl_window_size[0], config.OpenGL.gl_window_size[1])
 
     def sizeHint(self):
-        return QtCore.QSize(config.GL_WINDOW_SIZE[0], config.GL_WINDOW_SIZE[1])
+        return QtCore.QSize(config.OpenGL.gl_window_size[0], config.OpenGL.gl_window_size[1])
 
     def show_dataset(self, volume, filename, frame_nr, resolution, use_center_points):
         """
@@ -109,6 +107,6 @@ class GLWidget(QtOpenGL.QGLWidget):
             self.vis.paint(self.geometry().width(), self.geometry().height())
         else:
             import gr3
-            gr3.setbackgroundcolor(config.Colors.BACKGROUND[0], config.Colors.BACKGROUND[1], config.Colors.BACKGROUND[2], 1.0)
-            gr3.drawimage(0, config.GL_WINDOW_SIZE[0], 0, config.GL_WINDOW_SIZE[1], config.GL_WINDOW_SIZE[0], config.GL_WINDOW_SIZE[1], gr3.GR3_Drawable.GR3_DRAWABLE_OPENGL)
+            gr3.setbackgroundcolor(config.Colors.background[0], config.Colors.background[1], config.Colors.background[2], 1.0)
+            gr3.drawimage(0, config.OpenGL.gl_window_size[0], 0, config.OpenGL.gl_window_size[1], config.OpenGL.gl_window_size[0], config.OpenGL.gl_window_size[1], gr3.GR3_Drawable.GR3_DRAWABLE_OPENGL)
 

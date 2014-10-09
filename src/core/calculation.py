@@ -853,7 +853,7 @@ def calculated_frames(filename, resolution):
     returns the calculated frames for the file filename and the given resolution
     """
     base_name = ''.join(os.path.basename(filename).split(".")[:-1])
-    exp_name = config.Path.RESULT_DIR + "{}.hdf5".format(base_name)
+    exp_name = config.Path.result_dir + "{}.hdf5".format(base_name)
     calc_frames = []
 
     if os.path.isfile(exp_name):
@@ -870,7 +870,7 @@ def calculate_cavities(filename, frame_nr, volume, resolution, use_center_points
     calculates the cavities for the given file
     """
     base_name = ''.join(os.path.basename(filename).split(".")[:-1])
-    exp_name = config.Path.RESULT_DIR + "{}.hdf5".format(base_name)
+    exp_name = config.Path.result_dir + "{}.hdf5".format(base_name)
     #tmp_exp = "{}.tmp".format(exp_name)
     if not use_center_points:
         domain_calculation = calculate_domains(filename, frame_nr, volume, resolution)
@@ -916,7 +916,7 @@ def atom_volume_discretization(atoms, volume, resolution):
     print_message(num_atoms, "atoms")
     for atom_index in range(num_atoms):
         atom_positions[atom_index] = volume.get_equivalent_point(atom_positions[atom_index])
-    atoms = Atoms(atom_positions, [config.Computation.ATOM_RADIUS] * num_atoms)
+    atoms = Atoms(atom_positions, [config.Computation.atom_radius] * num_atoms)
     print_message("Volume discretization...")
     discretization_cache = DiscretizationCache('cache.hdf5')
     discretization = discretization_cache.get_discretization(volume, resolution)
