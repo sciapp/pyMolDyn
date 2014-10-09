@@ -8,6 +8,7 @@ from gui.tabs.statistics_tab import StatisticsTabDock
 from gui.gl_widget import GLWidget
 from PySide import QtCore, QtGui
 from gui.dialogs.settings_dialog import SettingsDialog
+from util import message
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -81,7 +82,8 @@ class MainWindow(QtGui.QMainWindow):
                 self.showNormal()
 
     def set_output_callbacks(self, progress_func, print_func, finish_func):
-        calculation.set_output_callbacks(progress_func, print_func, finish_func)
+        #message.set_output_callbacks(progress_func, print_func, finish_func)
+        pass
 
     def show_dataset(self, volume, filename, frame_nr, resolution, use_center_points):
         self.shown_dataset = [volume, filename, frame_nr, resolution, use_center_points]

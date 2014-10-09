@@ -14,7 +14,11 @@ stream = sys.stdout
 
 def trap(*args):
     st = inspect.stack()
-    print >>stream, "TRAP:",
+    if len(args) > 0:
+        name = args[0]
+        args = args[1:]
+    else: name = "TRAP"
+    print >>stream, "{}:".format(name),
     for a in args:
         print >>stream, a,
     print >>stream, \

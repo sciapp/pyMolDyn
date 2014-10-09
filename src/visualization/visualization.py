@@ -2,9 +2,12 @@
 
 from math import sin, cos
 import gr3
-from core.calculation import *
+import core.calculation as calculation
 from config.configuration import config
 import pybel
+import os
+import sys
+import numpy as np
 
 class Visualization():
 
@@ -35,12 +38,12 @@ class Visualization():
         for atom_index in range(self.num_atoms):
             self.atom_positions[atom_index] = self.volume.get_equivalent_point(self.atom_positions[atom_index])
 
-        self.calculated = calculated(filename, frame_nr, resolution, False)
-        self.center_based_calculated = calculated(filename, frame_nr, resolution, True)
+        self.calculated = calculation.calculated(filename, frame_nr, resolution, False)
+        self.center_based_calculated = self.calculated and calculation.calculated(filename, frame_nr, resolution, True)
 
         if self.calculated:
             res_name = '{}{}.hdf5'.format(config.Path.RESULT_DIR, ''.join(os.path.basename(filename).split(".")[:-1]))
-            cr = CalculationResults(res_name, frame_nr, resolution)
+            cr = calculation.calculate_cavities(filename, frame_nr, volume, resolution, use_center_points)
             self.max_domain_index = cr.number_of_domains
             self.domain_vertices_list = [t[0] for t in cr.domain_triangles]
             self.domain_normals_list = [t[1] for t in cr.domain_triangles]

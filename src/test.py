@@ -2,7 +2,7 @@
 
 import os
 from core.file import FileManager
-from core.calculation.calculation import Calculation
+from core.calculation import Calculation
 import util.message as message
 
 

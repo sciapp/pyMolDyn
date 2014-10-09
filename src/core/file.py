@@ -81,7 +81,7 @@ class XYZFile(InputFile):
                 self._info.num_frames = i + 1
                 self.inforead = True
             if i < frame:
-                raise IndexError("Frame not found")
+                raise IndexError("Frame {} not found".format(frame))
         finally:
             f.close()
         return data.Atoms(molecule, self.volume)
