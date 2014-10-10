@@ -8,6 +8,7 @@ import pybel
 import numpy as np
 import os
 import sys
+from gui.util.gl_util import create_perspective_projection_matrix, create_look_at_matrix, create_rotation_matrix_homogenous, create_translation_matrix_homogenous
 
 
 class Visualization():
@@ -17,13 +18,15 @@ class Visualization():
         self.cavity_meshes = []
         self.center_cavity_meshes = []
 
-        self.mat = np.array(([1, 0, 0],
-                            [0, 1, 0],
-                            [0, 0, 1]))
+        self.mat = np.eye(4)
         self.d = max(volume.side_lengths) * 2
         self.pos = np.array((0, 0, self.d))
         self.up = np.array((0, 1, 0))
         self.right = np.array((1, 0, 0))
+
+        self.near = 0.1
+        self.far = 3 * self.d
+        self.fov = 45.0
         
         self.volume = volume
         generator = pybel.readfile("xyz", filename)
@@ -91,7 +94,7 @@ class Visualization():
 
         self.create_scene()
 
-        self.set_camera()
+        self.set_camera(100, 100)
         # gr3.export("test.html",800,800)
 
     def create_scene(self, show_cavities=True, center_based_cavities=False):
@@ -132,16 +135,6 @@ class Visualization():
         if self.d + zoom_v * delta > 0 and zoom_cap:
             self.d += zoom_v * delta
 
-    def get_rotation_matrix(self, n, alpha):
-        """
-            Returns the rotation matrix to a rotation axis n and an angle alpha
-        """
-        a = alpha
-        rot_mat = np.array(([n[0]**2*(1-cos(a)) + cos(a),           n[0]*n[1]*(1-cos(a)) - n[2]*sin(a),     n[0]*n[2]*(1-cos(a)) + n[1]*sin(a)],
-                            [n[0]*n[1]*(1-cos(a)) + n[2]*sin(a),    n[1]**2*(1-cos(a)) + cos(a),            n[1]*n[2]*(1-cos(a)) - n[0]*sin(a)],
-                            [n[2]*n[0]*(1-cos(a)) - n[1]*sin(a),    n[2]*n[1]*(1-cos(a)) + n[0]*sin(a),     n[2]**2*(1-cos(a)) + cos(a)]))
-        return rot_mat
-
     def rotate_mouse(self, dx, dy):
         """
             calculates rotation to a given dx and dy on the screen
@@ -154,23 +147,27 @@ class Visualization():
         rot_axis /= np.linalg.norm(rot_axis)
 
         # rotation matrix with min rotation angle
-        m = self.get_rotation_matrix(rot_axis, max(self.d,20)*rot_v*(dx**2+dy**2)**0.5)
+        m = create_rotation_matrix_homogenous(max(self.d,20)*rot_v*(dx**2+dy**2)**0.5, rot_axis[0], rot_axis[1], rot_axis[2])
         self.mat = m.dot(self.mat)
 
-    def set_camera(self):
+    def set_camera(self, width, height):
         """
-            updates the shown scene after perspektive has changed
+            updates the shown scene after perspective has changed
         """
-        self.rightt = self.mat[:, 0]
-        self.upt = self.mat[:, 1]
-        self.pt = self.mat[:, 2] * self.d
+        self.rightt = self.mat[:3, 0]
+        self.upt = self.mat[:3, 1]
+        self.pt = self.mat[:3, 2] * self.d
+        self.t = self.mat[:3, 3]
 
-        gr3.cameralookat(self.pt[0], self.pt[1], self.pt[2], 0, 0, 0, self.upt[0], self.upt[1], self.upt[2])
+        self.proj_mat = create_perspective_projection_matrix(np.radians(self.fov), 1. * width / height, self.near, self.far)
+        gr3.setcameraprojectionparameters(self.fov, self.near, self.far)
+        self.lookat_mat = create_look_at_matrix(self.pt+self.t, self.t, self.upt)
+        gr3.cameralookat(self.pt[0]+self.t[2], self.pt[1]+self.t[1], self.pt[2]+self.t[2], self.t[0], self.t[1], self.t[2], self.upt[0], self.upt[1], self.upt[2])
 
     def paint(self, width, height):
         """
             refreshes the OpenGL scene
         """
-        self.set_camera()
+        self.set_camera(width, height)
         gr3.drawimage(0, width, 0, height, width, height, gr3.GR3_Drawable.GR3_DRAWABLE_OPENGL)
 

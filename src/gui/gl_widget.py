@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
+import numpy as np
+import numpy.linalg as la
 from PySide import QtCore, QtGui, QtOpenGL
 from visualization import visualization
 from config.configuration import config
+from OpenGL.GL import glReadPixels, GL_FLOAT, GL_DEPTH_COMPONENT
+from gui.util.gl_util import create_perspective_projection_matrix, create_look_at_matrix
 
 
 class UpdateGLEvent(QtCore.QEvent):
@@ -48,6 +52,9 @@ class GLWidget(QtOpenGL.QGLWidget):
                 self.x = e.x()
                 self.y = e.y()
                 self.updateGL()
+            if e.buttons() & QtCore.Qt.RightButton:
+                self.vis.t += [0,0.1,0]
+                self.updateGL()
 
     def wheelEvent(self, e):
         if self.dataset_loaded:
@@ -69,6 +76,25 @@ class GLWidget(QtOpenGL.QGLWidget):
             if e.buttons() and QtCore.Qt.LeftButton:
                 self.x = e.x()
                 self.y = e.y()
+
+    def mouseDoubleClickEvent(self, e):
+        if self.dataset_loaded:
+            if e.buttons() and QtCore.Qt.LeftButton:
+                x = e.x()
+                y = self.height() - e.y()
+                z = glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT)
+                x /= 1.0*self.width()
+                y /= 1.0*self.height()
+                x = x * 2 - 1
+                y = y * 2 - 1
+                z = z[0][0]
+                z = 2 * z - 1
+                z = self.vis.proj_mat[2, 3] / (-z - self.vis.proj_mat[2, 2])
+                x = -x*z/self.vis.proj_mat[0, 0]
+                y = -y*z/self.vis.proj_mat[1, 1]
+                x, y, z, w  = np.dot(la.inv(self.vis.lookat_mat), np.array((x, y, z, 1)))
+                print(x, y, z, w)
+
 
     def customEvent(self, e):
         if self.update_needed:
