@@ -152,10 +152,13 @@ class CalculationSettingsDialog(QtGui.QDialog):
                         return 'X'
                 base_name = ''.join(os.path.basename(filename).split(".")[:-1])
                 exp_name = "{}{}.hdf5".format(config.Path.RESULT_DIR, base_name)
-                with h5py.File(exp_name, "r") as file:
-                    for calc in file['frame{}'.format(frames[0])].values():
-                        if calc.attrs['resolution'] == resolution:
-                            return calc.attrs['timestamp']
+                try:
+                    with h5py.File(exp_name, "r") as file:
+                        for calc in file['frame{}'.format(frames[0])].values():
+                            if calc.attrs['resolution'] == resolution:
+                                return calc.attrs['timestamp']
+                except:
+                    pass
         return 'X'
 
     def ok(self):

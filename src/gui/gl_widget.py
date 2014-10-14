@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from PySide import QtCore, QtGui, QtOpenGL
-from visualization import visualization
+import visualization
 from config.configuration import config
 
 display_size = config.GL_WINDOW_SIZE
