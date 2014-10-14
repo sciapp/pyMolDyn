@@ -2,6 +2,15 @@
 
 \begin{tikzpicture}
     \begin{class}[text width=\umlwidth]{Visualization}{0, 0}
+        \attribute{+ volume : Volume}
+        \attribute{+ atoms : Atoms}
+        \attribute{+ results : Results}
 
+        \operation{+ Visualization()}
+        \operation{+ create\_scene(show\_domains : Boolean, show\_surface\_cavities : Boolean, show\_center\_cavities : Boolean)}
+        \operation{+ zoom(delta : Float)}
+        \operation{+ rotate\_mouse(dx : Float, dy : Float)}
+        \operation{+ paint(width : Integer, height : Integer)}
     \end{class}
 \end{tikzpicture}
+\\\todo{Use \texttt{CalculationSettings} or \texttt{VisualizationSettings} as Parameter for \texttt{create\_scene}, replace \texttt{create\_scene} with setter for \texttt{settings}}

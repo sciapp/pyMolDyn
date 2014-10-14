@@ -40,10 +40,10 @@ The implementation of \texttt{InputFile} is \texttt{XYZFile}, which reads a pybe
     \begin{class}[text width=\umlwidth]{FileManager}{0, 0}
         \attribute{+ types : Dictionary(String $\rightarrow$ Class)}
         
-        \operation{FileManager()}
-        \operation{listdir() : List(String)}
-        \operation{\_\_getitem\_\_(filepath : String) : InputFile}
-        \operation{\_\_contains\_\_(filepath : String) : Boolean}
+        \operation{+ FileManager()}
+        \operation{+ listdir() : List(String)}
+        \operation{+ \_\_getitem\_\_(filepath : String) : InputFile}
+        \operation{+ \_\_contains\_\_(filepath : String) : Boolean}
     \end{class}
 \end{tikzpicture}
 
