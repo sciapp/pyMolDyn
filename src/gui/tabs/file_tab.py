@@ -6,6 +6,7 @@ from core import calculation, volumes
 from gui.dialogs.calc_settings_dialog import CalculationSettingsDialog
 from gui.dialogs.progress_dialog import ProgressDialog
 from config.configuration import config
+from util.message import print_message, progress, finish
 
 
 class FileTabDock(QtGui.QDockWidget):
@@ -125,8 +126,11 @@ class FileTab(QtGui.QWidget):
                     self.calculate_frame(fn, frame, volume, resolution, use_center_points)
             self.main_window.show_dataset(volume, fn, frames[-1], resolution, use_center_points)
             #print 'calculation finished'
+            print_message("calculation finished")
+            finish()
 
     def calculate_frame(self, filename, frame_nr, volume, resolution, use_center_points):
+        print_message("calculating frame {}".format(frame_nr))
         if calculation.calculated(filename, frame_nr, resolution, True):
             base_name = ''.join(os.path.basename(filename).split(".")[:-1])
             exp_name = "{}{}.hdf5".format(config.Path.result_dir, base_name)
@@ -142,6 +146,7 @@ class FileTab(QtGui.QWidget):
         thread = CalculationThread(self, filename, frame_nr, volume, resolution, use_center_points)
         thread.start()
         self.progress_dialog.exec_()
+        thread.wait()
 
 
 class DragList(QtGui.QListWidget):

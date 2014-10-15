@@ -41,7 +41,7 @@ class Visualization(object):
         if not show_surface_cavities and not show_center_cavities:
             show_domains = True
 
-        c = config.Colors.BACKGROUND
+        c = config.Colors.background
         gr3.setbackgroundcolor(c[0], c[1], c[2], 1.0)
         gr3.clear()
 
@@ -51,28 +51,28 @@ class Visualization(object):
         edge_directions = [[edge[1][i]-edge[0][i] for i in range(3)] for edge in edges]
         edge_lengths = [sum([c*c for c in edge])**0.5 for edge in edge_directions]
         edge_radius = min(edge_lengths)/200
-        gr3.drawcylindermesh(num_edges, edge_positions, edge_directions, [config.Colors.BOUNDING_BOX]*num_edges, [edge_radius]*num_edges, edge_lengths)
+        gr3.drawcylindermesh(num_edges, edge_positions, edge_directions, [config.Colors.bounding_box]*num_edges, [edge_radius]*num_edges, edge_lengths)
         corners = list(set([tuple(edge[0]) for edge in edges] + [tuple(edge[1]) for edge in edges]))
         num_corners = len(corners)
         gr3.drawspheremesh(num_corners, corners, [(1,1,1)]*num_edges, [edge_radius]*num_edges)
         if not self.atoms is None:
             gr3.drawspheremesh(self.atoms.number,
                     self.atoms.positions,
-                    [config.Colors.ATOMS] * self.atoms.number,
+                    [config.Colors.atoms] * self.atoms.number,
                     [edge_radius * 4] * self.atoms.number)
 
         if self.results is None:
             return
         if show_domains and not self.results.domains is None:
-            self.draw_cavities(self.results.domains, config.Colors.DOMAIN)
+            self.draw_cavities(self.results.domains, config.Colors.domain)
         if show_surface_cavities \
                 and not self.results.surface_cavities is None:
             self.draw_cavities(self.results.surface_cavities, \
-                    config.Colors.CAVITY)
+                    config.Colors.cavity)
         if show_center_cavities \
                 and not self.results.center_cavities is None:
             self.draw_cavities(self.results.center_cavities, \
-                    config.Colors.ALT_CAVITY)
+                    config.Colors.alt_cavity)
 
     def draw_cavities(self, cavities, color):
         for triangles in cavities.triangles:
