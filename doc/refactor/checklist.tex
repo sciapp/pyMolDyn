@@ -1,0 +1,64 @@
+\documentclass[final, oneside, a4paper, 11pt, pdftex, english]{scrreprt}
+
+\usepackage{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+\usepackage{tikz}
+\usepackage{pgf-umlcd}
+
+\usepackage[hidelinks]{hyperref}
+
+%\pagestyle{headings}
+%\graphicspath{images}
+%\raggedbottom
+
+\newlength{\umlwidth}
+\setlength{\umlwidth}{12cm}
+
+\newcommand{\todo}[1]{\noindent\framebox[\linewidth]{\parbox{\linewidth}{\textbf{TODO:}\\#1}}}
+
+\begin{document}
+\chapter*{pyMolDyn Refactoring Overview}
+\section*{Class Revisions}
+
+\begin{tabular}{|l|c|c|c|c|c|}
+    \hline
+    \textbf{Class Names} & \textbf{Planned} & \textbf{Implemented} & \textbf{Integrated} \\
+    \hline
+    Atoms & 2014-10-07 & 2014-10-07 & \\
+    \hline
+    Volume & --- & old & old \\
+    \hline
+    Results, Cavities, Domains & 2014-10-07 & 2014-10-07 & \\
+    \hline
+    FileInfo, ResultFileInfo, etc. & 2014-10-07 & 2014-10-07 & \\
+    \hline
+    InputFile & 2014-10-07 & 2014-10-07 & \\
+    \hline
+    ResultFile & 2014-10-07 & 2014-10-07 & \\
+    \hline
+    FileManager & 2014-10-09 & 2014-10-07 & \\
+    \hline
+    Calculation, Cache & 2014-10-07 & 2014-10-07 & \\
+    \hline
+    Calculation Algorithm & --- & old & old \\
+    \hline
+    Control & --- & old & old \\
+    \hline
+    Configuration & --- & old & old \\
+    \hline
+    CalculationSettings & & & \\
+    \hline
+    & & & \\
+    \hline
+    & & & \\
+    \hline
+    & & & \\
+    \hline
+    & & & \\
+    \hline
+\end{tabular}
+
+\end{document}

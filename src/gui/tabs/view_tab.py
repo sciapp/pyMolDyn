@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from PySide import QtGui
-from config.configuration import config
 
 
 class ViewTabDock(QtGui.QDockWidget):
@@ -14,7 +13,7 @@ class ViewTabDock(QtGui.QDockWidget):
         self.setWidget(QtGui.QWidget())
 
         self.layout     = QtGui.QHBoxLayout()
-        self.view_tab   = ViewTab(self.widget(), config)
+        self.view_tab   = ViewTab(self.widget())
 
         self.layout.addWidget(self.view_tab)
         self.widget().setLayout(self.layout)
@@ -27,7 +26,7 @@ class ViewTab(QtGui.QWidget):
         tab 'view' in the main widget
     """
 
-    def __init__(self, parent, config):
+    def __init__(self, parent):
         QtGui.QWidget.__init__(self, parent)
         self.init_gui()
 

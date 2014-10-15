@@ -254,6 +254,8 @@ class TetragonalVolume(TriclinicVolume):
     '''
     def __init__(self, *args):
         if len(args) == 2:
+            a = args[0]
+            c = args[1]
             b = a
             alpha = pi/2
             beta = pi/2

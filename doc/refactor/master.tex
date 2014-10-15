@@ -7,19 +7,27 @@
 
 \usepackage{tikz}
 \usepackage{pgf-umlcd}
+\usepackage{pgf-umlsd}
 
 \usepackage[hidelinks]{hyperref}
 
 %\pagestyle{headings}
 %\graphicspath{images}
-%\raggedbottom
+\raggedbottom
+
+\clubpenalty = 10000
+\widowpenalty = 10000
+\displaywidowpenalty = 10000
 
 \newlength{\umlwidth}
 \setlength{\umlwidth}{12cm}
 
+\newcommand{\todo}[1]{\noindent\framebox[\linewidth]{\parbox{\linewidth}{\textbf{TODO:}\\#1}}}
+
 \begin{document}
 
 \title{pyMolDyn}
+\author{Fabian Beule, David Knodt}
 \date{\today}
 \maketitle
 
@@ -28,7 +36,10 @@
 %\chapter{Introduction}
 
 \chapter{Class description}
-\include{data}
-\include{file}
+\input{data}
+\input{file}
+\input{calculation}
+\input{control}
+\input{visualization}
 
 \end{document}
