@@ -17,7 +17,7 @@ class UpdateGLEvent(QtCore.QEvent):
 
 class GLWidget(QtOpenGL.QGLWidget):
     """
-        OpenGL widget to show the 3d-scene
+        OpenGL widget to show the 3D-scene
     """
 
     def __init__(self, parent=None):
@@ -45,16 +45,16 @@ class GLWidget(QtOpenGL.QGLWidget):
 
     def mouseMoveEvent(self, e):
         if self.dataset_loaded:
+            dx = e.x() - self.x
+            dy = e.y() - self.y
             if e.buttons() & QtCore.Qt.LeftButton:
-                dx = e.x() - self.x
-                dy = e.y() - self.y
-                self.vis.rotate_mouse(dx, dy)
-                self.x = e.x()
-                self.y = e.y()
-                self.updateGL()
-            if e.buttons() & QtCore.Qt.RightButton:
-                self.vis.t += [0,0.1,0]
-                self.updateGL()
+                if e.modifiers() == QtCore.Qt.AltModifier:
+                    self.vis.translate_mouse(dx, dy)
+                else:
+                    self.vis.rotate_mouse(dx, dy)
+            self.x = e.x()
+            self.y = e.y()
+            self.updateGL()
 
     def wheelEvent(self, e):
         if self.dataset_loaded:
@@ -100,6 +100,12 @@ class GLWidget(QtOpenGL.QGLWidget):
         if self.update_needed:
             self.updateGL()
             self.update_needed = False
+
+#     def create_scene(self, show_box, show_atoms, show_domains, show_cavities=True, center_based_cavities=False):
+    def create_scene(self, show_cavities=True, center_based_cavities=False):
+        if self.dataset_loaded:
+            self.vis.create_scene(show_cavities, center_based_cavities)
+            self.updateGL()
 
     def keyPressEvent(self, e):
         """

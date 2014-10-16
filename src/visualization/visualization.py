@@ -135,15 +135,23 @@ class Visualization():
         if self.d + zoom_v * delta > 0 and zoom_cap:
             self.d += zoom_v * delta
 
+    def translate_mouse(self, dx, dy):
+        trans_v = 1./1000
+        diff_vec = (dx * self.mat[:3, 0] + (-1 * dy) * self.mat[:3,1])
+        self.mat[:3, 3] += -1 * max(self.d,20) * trans_v * diff_vec
+
     def rotate_mouse(self, dx, dy):
         """
             calculates rotation to a given dx and dy on the screen
         """
+        rightt = self.mat[:3, 0]
+        upt = self.mat[:3, 1]
+        pt = self.mat[:3, 2] * self.d
         rot_v = 1./13000
-        diff_vec = (dx*self.rightt + (-1*dy)*self.upt)
+        diff_vec = (dx*rightt + (-1*dy)*upt)
         if all(diff_vec == np.zeros(3)):
             return
-        rot_axis = np.cross(diff_vec, self.pt)
+        rot_axis = np.cross(diff_vec, pt)
         rot_axis /= np.linalg.norm(rot_axis)
 
         # rotation matrix with min rotation angle
@@ -154,15 +162,15 @@ class Visualization():
         """
             updates the shown scene after perspective has changed
         """
-        self.rightt = self.mat[:3, 0]
-        self.upt = self.mat[:3, 1]
-        self.pt = self.mat[:3, 2] * self.d
-        self.t = self.mat[:3, 3]
+        rightt = self.mat[:3, 0]
+        upt = self.mat[:3, 1]
+        pt = self.mat[:3, 2] * self.d
+        t = self.mat[:3, 3]
 
         self.proj_mat = create_perspective_projection_matrix(np.radians(self.fov), 1. * width / height, self.near, self.far)
         gr3.setcameraprojectionparameters(self.fov, self.near, self.far)
-        self.lookat_mat = create_look_at_matrix(self.pt+self.t, self.t, self.upt)
-        gr3.cameralookat(self.pt[0]+self.t[2], self.pt[1]+self.t[1], self.pt[2]+self.t[2], self.t[0], self.t[1], self.t[2], self.upt[0], self.upt[1], self.upt[2])
+        self.lookat_mat = create_look_at_matrix(pt + t, t, upt)
+        gr3.cameralookat(pt[0] + t[0], pt[1] + t[1], pt[2] + t[2], t[0], t[1], t[2], upt[0], upt[1], upt[2])
 
     def paint(self, width, height):
         """
