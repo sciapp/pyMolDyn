@@ -22,6 +22,6 @@ if __name__ == '__main__':
     filename = '../xyz/structure_c.xyz'
 #    filename = '../xyz/hexagonal.xyz'
     volume = volumes.get_volume_from_file(filename)
-    window.show_dataset(volume, filename, 1, 32, True)
+    window.show_dataset(volume, filename, 1, 32)
 
     sys.exit(app.exec_())

@@ -35,11 +35,11 @@ class GLWidget(QtOpenGL.QGLWidget):
     def sizeHint(self):
         return QtCore.QSize(config.OpenGL.gl_window_size[0], config.OpenGL.gl_window_size[1])
 
-    def show_dataset(self, volume, filename, frame_nr, resolution, use_center_points):
+    def show_dataset(self, volume, filename, frame_nr, resolution):
         """
             shows calculation {calculation_nr} of frame {frame_nr} in file {filename}
         """
-        self.vis = visualization.Visualization(volume, filename, frame_nr, resolution, use_center_points)
+        self.vis = visualization.Visualization(volume, filename, frame_nr, resolution)
         self.dataset_loaded = True
         self.updateGL()
 
@@ -102,9 +102,9 @@ class GLWidget(QtOpenGL.QGLWidget):
             self.update_needed = False
 
 #     def create_scene(self, show_box, show_atoms, show_domains, show_cavities=True, center_based_cavities=False):
-    def create_scene(self, show_cavities=True, center_based_cavities=False):
+    def create_scene(self):
         if self.dataset_loaded:
-            self.vis.create_scene(show_cavities, center_based_cavities)
+            self.vis.create_scene()
             self.updateGL()
 
     def keyPressEvent(self, e):
@@ -122,11 +122,20 @@ class GLWidget(QtOpenGL.QGLWidget):
             elif e.key() == QtCore.Qt.Key_Down:
                 self.vis.rotate_mouse(0, rot_v_key)
             elif e.key() == QtCore.Qt.Key_D:            # Domains
-                self.vis.create_scene(False)
+                self.vis.settings.show_domains = True
+                self.vis.settings.show_cavities = False
+                self.vis.settings.show_alt_cavities = False
+                self.vis.create_scene()
             elif e.key() == QtCore.Qt.Key_C:            # Cavities
-                self.vis.create_scene(True)
+                self.vis.settings.show_domains = False
+                self.vis.settings.show_cavities = True
+                self.vis.settings.show_alt_cavities = False
+                self.vis.create_scene()
             elif e.key() == QtCore.Qt.Key_F:            # center based cavities
-                self.vis.create_scene(True, True)
+                self.vis.settings.show_domains = False
+                self.vis.settings.show_cavities = False
+                self.vis.settings.show_alt_cavities = True
+                self.vis.create_scene()
             else:
                 e.ignore()
             self.updateGL()

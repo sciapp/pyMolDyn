@@ -29,6 +29,7 @@ class ViewTab(QtGui.QWidget):
     def __init__(self, parent, main_window):
         QtGui.QWidget.__init__(self, parent)
         self.gl_widget = main_window.center.gl_widget
+        #self.vis_settings = self.gl_widget.vis.settings
         self.init_gui()
 
     def init_gui(self):
@@ -41,6 +42,19 @@ class ViewTab(QtGui.QWidget):
         self.domain_check = QtGui.QCheckBox('show domains', self)
         self.cavity_check = QtGui.QCheckBox('show cavities', self)
         self.alt_cav_check = QtGui.QCheckBox('show alt. cavities', self)
+
+        #TODO synch with dataset
+        # self.box_check.setCheckState(self.vis_settings.show_bounding_box)
+        # self.atom_check.setCheckState(self.vis_settings.show_atoms)
+        # self.domain_check.setCheckState(self.vis_settings.show_domains)
+        # self.cavity_check.setCheckState(self.vis_settings.show_cavities)
+        # self.alt_cav_check.setCheckState(self.vis_settings.show_alt_cavities)
+
+        self.box_check.setCheckState(QtCore.Qt.CheckState.Checked if True else QtCore.Qt.CheckState.Unchecked)
+        self.atom_check.setCheckState(QtCore.Qt.CheckState.Checked)
+        self.domain_check.setCheckState(QtCore.Qt.CheckState.Unchecked)
+        self.cavity_check.setCheckState(QtCore.Qt.CheckState.Checked)
+        self.alt_cav_check.setCheckState(QtCore.Qt.CheckState.Unchecked)
 
         self.box_check.stateChanged.connect(self.on_checkbox)
         self.atom_check.stateChanged.connect(self.on_checkbox)
@@ -61,10 +75,11 @@ class ViewTab(QtGui.QWidget):
         self.show()
 
     def on_checkbox(self):
-        box = self.box_check.checkState() == QtCore.Qt.CheckState.Checked
-        atom = self.atom_check.checkState() == QtCore.Qt.CheckState.Checked
-        domain = self.domain_check.checkState() == QtCore.Qt.CheckState.Checked
-        cavity = self.cavity_check.checkState() == QtCore.Qt.CheckState.Checked
-        alt_cavity = self.alt_cav_check.checkState() == QtCore.Qt.CheckState.Checked
-        self.gl_widget.create_scene(cavity, alt_cavity)
-        # self.gl_widget.create_scene(box, atom, domain, cavity, alt_cavity)
+        settings = self.gl_widget.vis.settings
+        settings.show_bounding_box = self.box_check.checkState() == QtCore.Qt.CheckState.Checked
+        settings.show_atoms = self.atom_check.checkState() == QtCore.Qt.CheckState.Checked
+        settings.show_domains = self.domain_check.checkState() == QtCore.Qt.CheckState.Checked
+        settings.show_cavities = self.cavity_check.checkState() == QtCore.Qt.CheckState.Checked
+        settings.show_alt_cavities = self.alt_cav_check.checkState() == QtCore.Qt.CheckState.Checked
+
+        self.gl_widget.create_scene()
