@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-#TODO: overwrite parameter for tohdf methods
+#TODO: Conversions in __init__(h5group) methods (Integer, Unicode)
 
 
 __all__ = ["Results, Cavities, Atoms, CalculatedFrames"]
@@ -13,6 +13,7 @@ from datetime import datetime
 import dateutil.parser
 import h5py
 import pybel
+import volumes
 
 
 DEFAULT_ATOM_RADIUS = 2.65
@@ -94,18 +95,25 @@ class CalculatedFrames(object):
                self.surface_cavities.hasdata() or \
                self.center_cavities.hasdata()
 
-    def tohdf(self, h5group):
+    def tohdf(self, h5group, overwrite=True):
         #TODO: to delete or not to delete?
         if self.hasdata():
-            writedataset(h5group, "domains", self.domains.tostrlist())
-            writedataset(h5group, "surface_cavities", self.surface_cavities.tostrlist())
-            writedataset(h5group, "center_cavities", self.center_cavities.tostrlist())
+            writedataset(h5group, "domains", self.domains.tostrlist(), overwrite)
+            writedataset(h5group, "surface_cavities", self.surface_cavities.tostrlist(), overwrite)
+            writedataset(h5group, "center_cavities", self.center_cavities.tostrlist(), overwrite)
 
 
 class FileInfo(object):
     def __init__(self, num_frames=None, volumestr=None):
         self.num_frames = num_frames
         self.volumestr = volumestr
+        self._volume = None
+
+    @property
+    def volume(self):
+        if self._volume is None and not self.volumestr is None:
+            self._volume = volumes.get_volume_from_string(self.volumestr)
+        return self._volume
 
 
 class ResultInfo(FileInfo):
@@ -132,7 +140,7 @@ class ResultInfo(FileInfo):
     def __contains__(self, resolution):
         return resolution in self.calculatedframes
 
-    def tohdf(self, h5group):
+    def tohdf(self, h5group, overwrite=True):
         h5group.attrs["num_frames"] = self.num_frames
         h5group.attrs["volume"] = self.volumestr
         if not self.sourcefilepath is None:
@@ -142,7 +150,7 @@ class ResultInfo(FileInfo):
         for resolution, info in self.calculatedframes.iteritems():
             if info.hasdata():
                 subgroup = h5group.require_group("resolution{}".format(resolution))
-                info.tohdf(subgroup)
+                info.tohdf(subgroup, overwrite)
 
 
 class Atoms(object):
@@ -151,21 +159,28 @@ class Atoms(object):
             h5group = args[0]
             positions = h5group["positions"]
             radii = h5group["radii"]
+            if "volume" in h5group.attrs:
+                volume = h5group.attrs["volume"]
+            else:
+                volume = h5group.parent.attrs["volume"]
+            self.volume = volumes.get_volume_from_string(str(volume))
         elif isinstance(args[0], pybel.Molecule):
             molecule = args[0]
             if len(args) > 1:
-                volume = args[1]
-                func = lambda a: volume.get_equivalent_point(a.coords)
+                self.volume = args[1]
+                if isinstance(self.volume, str):
+                    self.volume = volumes.get_volume_from_string(self.volume)
+                func = lambda a: self.volume.get_equivalent_point(a.coords)
             else:
                 func = lambda atom: atom.coords
             positions = map(func, molecule)
             radii = None
         else:
             positions = args[0]
-            if len(args) > 1:
-                radii = args[1]
-            else:
-                radii = None
+            radii = args[1]
+            self.volume = args[2]
+            if isinstance(self.volume, str):
+                self.volume = volumes.get_volume_from_string(self.volume)
 
         self.positions = np.array(positions, dtype=np.float, copy=False)
         self.number = self.positions.shape[0]
@@ -190,10 +205,10 @@ class Atoms(object):
         self.sorted_radii = -unique_radii
         self.radii_as_indices = np.sort(indices)
 
-    def tohdf(self, h5group):
-        h5group.attrs["number"] = self.number
-        writedataset(h5group, "positions", self.positions)
-        writedataset(h5group, "radii", self.radii)
+    def tohdf(self, h5group, overwrite=True):
+        h5group.parent.attrs["volume"] = str(self.volume)
+        writedataset(h5group, "positions", self.positions, overwrite)
+        writedataset(h5group, "radii", self.radii, overwrite)
 
 
 class CavitiesBase(object):
@@ -222,13 +237,13 @@ class CavitiesBase(object):
         self.triangles = map(lambda x: np.array(x, dtype=np.float,
                              copy=False), triangles)
 
-    def tohdf(self, h5group):
+    def tohdf(self, h5group, overwrite=True):
         h5group.attrs["timestamp"] = str(self.timestamp)
         h5group.attrs["number"] = self.number
-        writedataset(h5group, "volumes", self.volumes)
-        writedataset(h5group, "surface_areas", self.surface_areas)
+        writedataset(h5group, "volumes", self.volumes, overwrite)
+        writedataset(h5group, "surface_areas", self.surface_areas, overwrite)
         for index, triangles in enumerate(self.triangles):
-            writedataset(h5group, "triangles{}".format(index), np.array(triangles))
+            writedataset(h5group, "triangles{}".format(index), np.array(triangles), overwrite)
 
 
 class Domains(CavitiesBase):
@@ -254,9 +269,9 @@ class Domains(CavitiesBase):
 
         self.centers = np.array(centers, dtype=np.float, copy=False)
 
-    def tohdf(self, h5group):
-        super(Domains, self).tohdf(h5group)
-        writedataset(h5group, "centers", self.centers)
+    def tohdf(self, h5group, overwrite=True):
+        super(Domains, self).tohdf(h5group, overwrite)
+        writedataset(h5group, "centers", self.centers, overwrite)
 
 
 class Cavities(CavitiesBase):
@@ -288,10 +303,10 @@ class Cavities(CavitiesBase):
                 cavities = cavities.tolist()
             self.multicavities[index] = np.array(list(cavities), dtype=np.int)
 
-    def tohdf(self, h5group):
-        super(Cavities, self).tohdf(h5group)
+    def tohdf(self, h5group, overwrite=True):
+        super(Cavities, self).tohdf(h5group, overwrite)
         for index, cavities in enumerate(self.multicavities):
-            writedataset(h5group, "multicavities{}".format(index), cavities)
+            writedataset(h5group, "multicavities{}".format(index), cavities, overwrite)
 
 
 class Results(object):

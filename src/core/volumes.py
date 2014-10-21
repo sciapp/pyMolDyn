@@ -105,6 +105,9 @@ class HexagonalVolume(object):
     def __repr__(self):
         return "HEXAGONAL a=%f c=%f" % (self.a, self.c)
 
+    def __str__(self):
+        return "HEX %f %f" % (self.a, self.c)
+
 class TriclinicVolume(object):
     '''
     A triclinic volume centered at the origin with the angles ``alpha``, 
@@ -203,6 +206,9 @@ class TriclinicVolume(object):
     def __repr__(self):
         return "TRICLINIC a=%f b=%f c=%f alpha=%f beta=%f gamma=%f" % (self.a, self.b, self.c, self.alpha, self.beta, self.gamma)
 
+    def __str__(self):
+        return "TRI %f %f %f %f %f %f" % (self.a, self.b, self.c, self.alpha, self.beta, self.gamma)
+
 class MonoclinicVolume(TriclinicVolume):
     '''
     A monoclinic volume, a special case of a triclinic volume with and ``alpha=gamma=pi/2``
@@ -225,7 +231,10 @@ class MonoclinicVolume(TriclinicVolume):
 
     def __repr__(self):
         return "MONOCLINIC a=%f b=%f c=%f beta=%f" % (self.a, self.b, self.c, self.beta)
-        
+
+    def __str__(self):
+        return "MON %f %f %f %f" % (self.a, self.b, self.c, self.beta)
+
 class OrthorhombicVolume(TriclinicVolume):
     '''
     An orthorhombic volume, a special case of a triclinic volume with ``alpha=beta=gamma=pi/2``
@@ -247,7 +256,10 @@ class OrthorhombicVolume(TriclinicVolume):
 
     def __repr__(self):
         return "ORTHORHOMBIC a=%f b=%f c=%f" % (self.a, self.b, self.c)
-        
+
+    def __str__(self):
+        return "ORT %f %f %f" % (self.a, self.b, self.c)
+
 class TetragonalVolume(TriclinicVolume):
     '''
     A tetragonal volume, a special case of a triclinic volume with ``a=b`` and ``alpha=beta=gamma=pi/2``
@@ -270,6 +282,9 @@ class TetragonalVolume(TriclinicVolume):
     def __repr__(self):
         return "TETRAGONAL a=%f c=%f" % (self.a, self.c)
 
+    def __str__(self):
+        return "TET %f %f" % (self.a, self.c)
+
 class RhombohedralVolume(TriclinicVolume):
     '''
     A rhombohedral volume, a special case of a triclinic volume with ``a=b=c`` and ``alpha=beta=gamma``.
@@ -291,7 +306,10 @@ class RhombohedralVolume(TriclinicVolume):
 
     def __repr__(self):
         return "RHOMBOHEDRAL a=%f alpha=%f" % (self.a, self.alpha)
-        
+
+    def __str__(self):
+        return "RHO %f %f" % (self.a, self.alpha)
+
 class CubicVolume(TriclinicVolume):
     '''
     A cubic volume, a special case of a triclinic volume with ``a=b=c`` and ``alpha=beta=gamma=pi/2``
@@ -313,6 +331,9 @@ class CubicVolume(TriclinicVolume):
         
     def __repr__(self):
         return "CUBIC a=%f" % self.a
+
+    def __str__(self):
+        return "CUB %f" % self.a
 
 volumes = {
     'HEX' : (HexagonalVolume, 'ff'),

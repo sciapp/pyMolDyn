@@ -13,7 +13,6 @@ import os
 import pybel
 import h5py
 from datetime import datetime
-from core.volumes import get_volume_from_string
 import data
 
 
@@ -21,7 +20,6 @@ class InputFile(object):
     def __init__(self, path):
         self.path = path
         self._info = data.FileInfo()
-        self._volume = None
         self.inforead = False
 
     @property
@@ -29,12 +27,6 @@ class InputFile(object):
         if not self.inforead:
             self.readinfo()
         return self._info
-
-    @property
-    def volume(self):
-        if self._volume is None:
-            self._volume = get_volume_from_string(self.info.volumestr)
-        return self._volume
 
     def getatoms(self, frame):
         return self.readatoms(frame)
@@ -56,7 +48,6 @@ class XYZFile(InputFile):
             molecule = f.next()
             self._info.volumestr = molecule.title
             self._info.num_frames = sum(1 for _ in f) + 1
-            self._volume = get_volume_from_string(self._info.volumestr)
             self.inforead = True
         except:
             raise ValueError("Cannot read file info")
@@ -70,7 +61,6 @@ class XYZFile(InputFile):
             molecule = f.next()
             if not self.inforead:
                 self._info.volumestr = molecule.title
-                self._volume = get_volume_from_string(self._info.volumestr)
             for m in f:
                 i += 1
                 if i == frame:
@@ -84,7 +74,7 @@ class XYZFile(InputFile):
                 raise IndexError("Frame {} not found".format(frame))
         finally:
             f.close()
-        return data.Atoms(molecule, self.volume)
+        return data.Atoms(molecule, self.info.volume)
 
 
 class ResultFile(InputFile):
@@ -145,16 +135,14 @@ class HDF5File(ResultFile):
                 if not self._info.sourcefilepath is None:
                     info.sourcefilepath = self._info.sourcefilepath
                 self._info = info
-                self._volume = get_volume_from_string(self._info.volumestr)
                 self.inforead = True
         if not self.inforead \
                 and not self._info.sourcefilepath is None \
                 and os.path.isfile(self._info.sourcefilepath):
-            fm = FileManager(os.path.dirname(self._info.sourcefilepath))
-            sf = fm[os.path.basename(self._info.sourcefilepath)]
+            fm = FileManager()
+            sf = fm[self._info.sourcefilepath]
             self._info.num_frames = sf.info.num_frames
             self._info.volumestr = sf.info.volumestr
-            self._volume = sf.volume
             self.inforead = True
 
 
@@ -194,7 +182,7 @@ class HDF5File(ResultFile):
         with h5py.File(self.path) as f:
             #TODO: only write when neccessary? overwrite parameter
             group = f.require_group("atoms/frame{}".format(results.frame))
-            results.atoms.tohdf(group)
+            results.atoms.tohdf(group, overwrite=False)
             group = f.require_group("results/frame{}/resolution{}".format(
                                     results.frame, results.resolution))
             subgroup = group.require_group("domains")
@@ -209,39 +197,27 @@ class HDF5File(ResultFile):
 
 class FileManager(object):
     #TODO: detectfiletype method that can be overridden
-    def __init__(self, directory="."):
-        self._directory = os.path.abspath(directory)
+    def __init__(self):
         self.types = {"xyz": XYZFile,
                       "hdf5": HDF5File}
 
-    @property
-    def directory(self):
-        return self._directory
-
-    @directory.setter
-    def directory(self, value):
-        if not os.path.isdir(value):
-            raise ValueError("Invalid directory")
-        self._directory = os.path.abspath(value)
-
-    def abspath(self, filename):
-        return os.path.abspath(os.path.join(self.directory, filename))
-
-    def filelist(self):
+    def filelist(self, directory):
         #TODO: unfiltered list?
-        return [f for f in os.listdir(self.directory)
-                if os.path.isfile(self.abspath(f))
+        return [f for f in os.listdir(directory)
+                if os.path.isfile(os.path.join(directory, f))
                    and f.split(".")[-1] in self.types]
 
-    def __getitem__(self, filename):
-        e = filename.split(".")[-1]
+    def __getitem__(self, filepath):
+        e = filepath.split(".")[-1]
         if not e in self.types:
             raise ValueError("Unknown file format")
         FileClass = self.types[e]
-        return FileClass(self.abspath(filename))
+        return FileClass(os.path.abspath(filepath))
 
-    def __contains__(self, filename):
-        return filename in self.filelist()
+    def __contains__(self, filepath):
+        name = os.path.basename(filepath)
+        directory = os.path.dirname(filepath)
+        return name in self.filelist(directory)
 
 
 

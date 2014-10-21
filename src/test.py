@@ -8,8 +8,8 @@ import util.message as message
 
 class PymoldynTest(object):
     def __init__(self):
-        path = os.path.abspath("../xyz")
-        self.filemanager = FileManager(path)
+        self.path = os.path.abspath("../xyz")
+        self.filemanager = FileManager()
 
 
 if __name__ == "__main__":
@@ -31,6 +31,6 @@ if __name__ == "__main__":
     message.set_output_callbacks(progress, print_message, finish)
 
     p = PymoldynTest()
-    f = p.filemanager["GST_111_128_bulk.xyz"]
+    f = p.filemanager[os.path.join(p.path, "GST_111_128_bulk.xyz")]
     c = Calculation()
     r = c[f, 0, 96, False]

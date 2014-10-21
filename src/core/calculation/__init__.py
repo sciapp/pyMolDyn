@@ -71,7 +71,7 @@ class Calculation(object):
                         or (not center and results.surface_cavities)):
             message.print_message("Reusing results")
         else:
-            volume = inputfile.volume
+            volume = inputfile.info.volume
             atoms = inputfile.getatoms(frame)
 
             discretization_cache = DiscretizationCache('cache.hdf5')
