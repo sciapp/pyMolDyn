@@ -27,19 +27,19 @@
     \hline
     \textbf{Class Names} & \textbf{Planned} & \textbf{Implemented} & \textbf{Integrated} \\
     \hline
-    Atoms & 2014-10-07 & 2014-10-07 & \\
+    Atoms & 2014-10-21 & 2014-10-07 & \\
     \hline
     Volume & --- & old & old \\
     \hline
     Results, Cavities, Domains & 2014-10-07 & 2014-10-07 & \\
     \hline
-    FileInfo, ResultFileInfo, etc. & 2014-10-07 & 2014-10-07 & \\
+    FileInfo, ResultFileInfo, etc. & 2014-10-21 & 2014-10-07 & \\
     \hline
-    InputFile & 2014-10-07 & 2014-10-07 & \\
+    InputFile & 2014-10-21 & 2014-10-07 & \\
     \hline
-    ResultFile & 2014-10-07 & 2014-10-07 & \\
+    ResultFile & 2014-10-21 & 2014-10-07 & \\
     \hline
-    FileManager & 2014-10-09 & 2014-10-07 & \\
+    FileManager & 2014-10-21 & 2014-10-07 & \\
     \hline
     Calculation, Cache & 2014-10-07 & 2014-10-07 & \\
     \hline
@@ -51,14 +51,28 @@
     \hline
     CalculationSettings & & & \\
     \hline
-    & & & \\
-    \hline
-    & & & \\
-    \hline
-    & & & \\
+    File Format & 2014-10-21 & 2014-10-07 & \\
     \hline
     & & & \\
     \hline
 \end{tabular}
+
+
+\section*{TODO}
+\subsection*{Software design}
+\begin{itemize}
+    \item \texttt{FileManager} without directory $:=$ Factory?
+    \item Where does \texttt{num\_frames} for \texttt{TimestampList} come from? Answer: from \texttt{f["info"].attrs["num\_frames"]}
+    \item Check if the \texttt{volume} and \texttt{volumestr} attributes in \texttt{FileInfo} are neccesary
+    \item Analyze and improve module dependencies
+\end{itemize}
+
+
+\subsection*{Documentation}
+\begin{itemize}
+    \item Sequence diagrams or similar
+    \item Module tree (with classes)
+    \item Uses/used-by relations
+\end{itemize}
 
 \end{document}

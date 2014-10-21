@@ -2,6 +2,24 @@
 
 \subsection{Input data}
 \begin{tikzpicture}
+    \begin{class}[text width=\umlwidth]{Atoms}{0, 0}
+        \attribute{+ volume : Volume}
+        \attribute{+ number : Integer}
+        \attribute{+ positions : Array(Float)}
+        \attribute{+ radii : Array(Float)}
+        \attribute{+ sorted\_positions : Array(Float)}
+        \attribute{+ sorted\_radii : Array(Float)}
+        \attribute{+ radii\_as\_indices: Array(Integer)}
+
+        \operation{+ Atoms(positions : Array(Float), radii : Array(Float), volume : Volume)}
+        \operation{+ Atoms(h5group : HDF5Group)}
+        \operation{+ Atoms(molecule : PybelMolecule, volume : Volume)}
+        \operation{+ tohdf(h5group : HDF5Group, overwrite : Boolean)}
+    \end{class}
+\end{tikzpicture}
+
+\noindent
+\begin{tikzpicture}
     \begin{class}[text width=\umlwidth]{Volume}{0, 0}
         \attribute{+ volume : Float}
 		\attribute{+ translation\_vectors : Array(Float)}
@@ -65,26 +83,10 @@
 
 		\operation{+ CubicVolume(a : Float)}
     \end{class}
-
 \end{tikzpicture}
 
-\noindent
-\begin{tikzpicture}
-    \begin{class}[text width=\umlwidth]{Atoms}{0, 0}
-        \attribute{+ number : Integer}
-        \attribute{+ positions : Array(Float)}
-        \attribute{+ radii : Array(Float)}
-        \attribute{+ sorted\_positions : Array(Float)}
-        \attribute{+ sorted\_radii : Array(Float)}
-        \attribute{+ radii\_as\_indices: Array(Integer)}
-
-        \operation{+ Atoms(positions : Array(Float), radii : Array(Float))}
-        \operation{+ Atoms(h5group : HDF5Group)}
-        \operation{+ Atoms(molecule : PybelMolecule, volume : Volume)}
-        \operation{+ tohdf(h5group : HDF5Group, overwrite : Boolean)}
-    \end{class}
-\end{tikzpicture}
-\\\todo{\texttt{Atoms} does not make much sense without \texttt{Volume}. Put \texttt{Volume} into \texttt{Atoms}, or put both in an \texttt{InputData} class.}
+\noindent\todo{Add static method to \texttt{Volume}, which creates a subclass from a string;\\
+add \texttt{\_\_str\_\_} method, which creates a descriptive string}
 
 
 \subsection{Calculation results}
@@ -143,6 +145,7 @@
     \begin{class}[text width=\umlwidth]{FileInfo}{0, 0}
         \attribute{+ num\_frames : Integer}
         \attribute{+ volumestr : String}
+        \attribute{+ volume : Volume}
 
         \operation{+ FileInfo()}
     \end{class}
@@ -157,7 +160,7 @@
         \operation{+ ResultInfo(h5group : HDF5Group)}
         \operation{+ \_\_contains\_\_(resolution : Integer) : Boolean}
         \operation{+ \_\_getitem\_\_(resolution : Integer) : CalculatedFrames}
-        \operation{tohdf(h5group : HDF5Group, overwrite : Boolean)}
+        \operation{+ tohdf(h5group : HDF5Group, overwrite : Boolean)}
     \end{class}
 \end{tikzpicture}
 

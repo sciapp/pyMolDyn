@@ -5,7 +5,6 @@
     \begin{abstractclass}[text width=\umlwidth]{InputFile}{0, 0}
         \attribute{+ path : String}
         \attribute{+ info : FileInfo}
-        \attribute{+ volume : Volume}
         \attribute{\# inforead : Boolean}
 
         \operation{+ InputFile(path : String)}
@@ -50,4 +49,5 @@ The implementation of \texttt{InputFile} is \texttt{XYZFile}, which reads a pybe
 The \texttt{types} dictionary is used to associate filename extensions (e.\,g.\ xyz) with implementations of \texttt{InputFile}.
 \texttt{\_\_getitem\_\_} looks up which class to use and instanciates it.
 
-\todo{Either make the whole thing static or let the constructor take a \texttt{types} parameter and initialize a single instance}
+\todo{Either make the whole thing static or let the constructor take a \texttt{types} parameter and initialize a single instance.\\
+Current solution: instanciate it whenever needed.}
