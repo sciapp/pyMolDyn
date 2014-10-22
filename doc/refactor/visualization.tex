@@ -5,6 +5,7 @@
         \attribute{+ volume : Volume}
         \attribute{+ atoms : Atoms}
         \attribute{+ results : Results}
+        \attribute{+ settings : VisualizationSettings}
 
         \operation{+ Visualization()}
         \operation{+ create\_scene(show\_domains : Boolean, show\_surface\_cavities : Boolean, show\_center\_cavities : Boolean)}
@@ -13,4 +14,16 @@
         \operation{+ paint(width : Integer, height : Integer)}
     \end{class}
 \end{tikzpicture}
-\\\todo{Use \texttt{CalculationSettings} or \texttt{VisualizationSettings} as Parameter for \texttt{create\_scene}, replace \texttt{create\_scene} with setter for \texttt{settings}}
+
+\noindent
+\begin{tikzpicture}
+    \begin{class}[text width=\umlwidth]{VisualizationSettings}{0, 0}
+        \attribute{+ show\_domains : Boolean}
+        \attribute{+ show\_cavities : Boolean}
+        \attribute{+ show\_alt\_cavities : Boolean}
+        \attribute{+ show\_atoms : Boolean}
+        \attribute{+ show\_bounding\_box : Boolean}
+
+        \operation{+ VisualizationSettings()}
+    \end{class}
+\end{tikzpicture}
