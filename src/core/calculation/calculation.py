@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # TODO: where to create the calculation object?
+# TODO: what if i want a results object without calculated results, e.g. for the visualization?
 
 
 __all__ = ["Calculation",

@@ -7,19 +7,31 @@ import core.calculation as calculation
 import numpy as np
 import os
 from ctypes import c_int
+from util.gl_util import create_perspective_projection_matrix, create_look_at_matrix, create_rotation_matrix_homogenous, create_translation_matrix_homogenous
 
 class Visualization(object):
-    def __init__(self, volume, filename, frame_nr, resolution, use_center_points):
+    def __init__(self, volume, filename, frame_nr, resolution, use_center_points=False):
         #TODO: here is the transition from old to new
+        #TODO: remove use_center_points
         self.volume = volume
+        #TODO: only if exists
         self.results = calculation.calculate_cavities(filename, frame_nr, volume, resolution, use_center_points)
 
-        #TODO: can it work, when volume is not given initially?
-        self.distance = max(self.volume.side_lengths) * 2
-        self.mat = np.matrix(np.identity(4))
-        #self.mat[2, 3] = 1 # +1 ?
+        self.mat = np.eye(4)
+        self.d = max(volume.side_lengths) * 2
+        self.pos = np.array((0, 0, self.d))
+        self.up = np.array((0, 1, 0))
+        self.right = np.array((1, 0, 0))
 
-        self.create_scene(False, False) #TODO: neccessary?
+        self.near = 0.1
+        self.far = 3 * self.d
+        self.fov = 45.0
+
+        self.settings = VisualizationSettings()
+
+        self.create_scene()
+        self.set_camera(100, 100)
+
 
     @property
     def atoms(self):
@@ -29,10 +41,10 @@ class Visualization(object):
         else:
             return None
 
-    def create_scene(self, \
-            show_cavities=True, \
-            show_center_cavities=False):
-        show_surface_cavities = show_cavities
+    def create_scene(self):
+        show_domains = self.settings.show_domains
+        show_surface_cavities = self.settings.show_cavities
+        show_center_cavities = self.settings.show_alt_cavities
         if show_surface_cavities:
             show_domains = False
         if show_center_cavities:
@@ -51,10 +63,12 @@ class Visualization(object):
         edge_directions = [[edge[1][i]-edge[0][i] for i in range(3)] for edge in edges]
         edge_lengths = [sum([c*c for c in edge])**0.5 for edge in edge_directions]
         edge_radius = min(edge_lengths)/200
-        gr3.drawcylindermesh(num_edges, edge_positions, edge_directions, [config.Colors.bounding_box]*num_edges, [edge_radius]*num_edges, edge_lengths)
-        corners = list(set([tuple(edge[0]) for edge in edges] + [tuple(edge[1]) for edge in edges]))
-        num_corners = len(corners)
-        gr3.drawspheremesh(num_corners, corners, [(1,1,1)]*num_edges, [edge_radius]*num_edges)
+        if self.settings.show_bounding_box:
+            gr3.drawcylindermesh(num_edges, edge_positions, edge_directions, [config.Colors.bounding_box]*num_edges, [edge_radius]*num_edges, edge_lengths)
+            corners = list(set([tuple(edge[0]) for edge in edges] + [tuple(edge[1]) for edge in edges]))
+            num_corners = len(corners)
+            gr3.drawspheremesh(num_corners, corners, [(1,1,1)]*num_edges, [edge_radius]*num_edges)
+
         if not self.atoms is None:
             gr3.drawspheremesh(self.atoms.number,
                     self.atoms.positions,
@@ -86,51 +100,58 @@ class Visualization(object):
 
     def zoom(self, delta):
         zoom_v = 1./20
-        zoom_cap = self.distance + zoom_v*delta < max(self.volume.side_lengths) * 4
-        if self.distance + zoom_v * delta > 0 and zoom_cap:
-            self.distance += zoom_v * delta
+        zoom_cap = self.d + zoom_v*delta < max(self.volume.side_lengths)*4
+        if self.d + zoom_v * delta > 0 and zoom_cap:
+            self.d += zoom_v * delta
+
+    def translate_mouse(self, dx, dy):
+        trans_v = 1./1000
+        diff_vec = (dx * self.mat[:3, 0] + (-1 * dy) * self.mat[:3,1])
+        self.mat[:3, 3] += -1 * max(self.d,20) * trans_v * diff_vec
 
     def rotate_mouse(self, dx, dy):
-        dy = -dy # screen to world coordinates
-        norm = sqrt(dx**2 + dy**2)
-        if norm > 1e-7:
-            # rotation axis orthogonal to movement
-            v = np.matrix((dy, -dx, 0.0, 0.0), dtype=np.float).T
-            # transform to model coordinates
-            v = np.dot(self.mat, v)
-            nv = sqrt(v[0]**2 + v[1]**2 + v[2]**2)
-            # rotate
-            rm = self.rotmatrix(norm * pi / 1000, v / nv)
-            self.mat = np.dot(rm, self.mat)
+        """
+            calculates rotation to a given dx and dy on the screen
+        """
+        rightt = self.mat[:3, 0]
+        upt = self.mat[:3, 1]
+        pt = self.mat[:3, 2] * self.d
+        rot_v = 1./13000
+        diff_vec = (dx*rightt + (-1*dy)*upt)
+        if all(diff_vec == np.zeros(3)):
+            return
+        rot_axis = np.cross(diff_vec, pt)
+        rot_axis /= np.linalg.norm(rot_axis)
+        # rotation matrix with min rotation angle
+        m = create_rotation_matrix_homogenous(max(self.d,20)*rot_v*(dx**2+dy**2)**0.5, rot_axis[0], rot_axis[1], rot_axis[2])
+        self.mat = m.dot(self.mat)
 
-    def rotmatrix(self, angle, v):
-        v = np.array(v).ravel()
-        c = cos(angle)
-        ic = 1.0 - c
-        s = sin(angle)
-        return np.matrix((
-            (v[0] * v[0] * ic + c, \
-             v[0] * v[1] * ic - v[2] * s, \
-             v[0] * v[2] * ic + v[1] * s, \
-             0.0),
-            (v[1] * v[0] * ic + v[2] * s, \
-             v[1] * v[1] * ic + c, \
-             v[1] * v[2] * ic - v[0] * s, \
-             0.0),
-            (v[2] * v[0] * ic - v[1] * s, \
-             v[2] * v[1] * ic + v[0] * s, \
-             v[2] * v[2] * ic + c, \
-             0.0),
-            (0.0, \
-             0.0, \
-             0.0, \
-             1.0)
-        ))
+    def set_camera(self, width, height):
+        """
+            updates the shown scene after perspective has changed
+        """
+        rightt = self.mat[:3, 0]
+        upt = self.mat[:3, 1]
+        pt = self.mat[:3, 2] * self.d
+        t = self.mat[:3, 3]
+
+        self.proj_mat = create_perspective_projection_matrix(np.radians(self.fov), 1. * width / height, self.near, self.far)
+        gr3.setcameraprojectionparameters(self.fov, self.near, self.far)
+        self.lookat_mat = create_look_at_matrix(pt + t, t, upt)
+        gr3.cameralookat(pt[0] + t[0], pt[1] + t[1], pt[2] + t[2], t[0], t[1], t[2], upt[0], upt[1], upt[2])
 
     def paint(self, width, height):
-        up = np.array(self.mat[:, 1]).ravel()
-        p = np.array(self.mat[:, 2]).ravel() * self.distance
-
-        gr3.cameralookat(p[0], p[1], p[2], 0, 0, 0, up[0], up[1], up[2])
+        """
+            refreshes the OpenGL scene
+        """
+        self.set_camera(width, height)
         gr3.drawimage(0, width, 0, height, width, height, gr3.GR3_Drawable.GR3_DRAWABLE_OPENGL)
 
+
+class VisualizationSettings(object):
+    def __init__(self, cavities=True, domains=False, alt_cavities=False, atoms=True, bounding_box=True):
+        self.show_cavities = cavities
+        self.show_domains = domains
+        self.show_alt_cavities = alt_cavities
+        self.show_atoms = atoms
+        self.show_bounding_box = bounding_box

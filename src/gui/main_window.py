@@ -84,10 +84,10 @@ class MainWindow(QtGui.QMainWindow):
     def set_output_callbacks(self, progress_func, print_func, finish_func):
         message.set_output_callbacks(progress_func, print_func, finish_func)
 
-    def show_dataset(self, volume, filename, frame_nr, resolution, use_center_points):
-        self.shown_dataset = [volume, filename, frame_nr, resolution, use_center_points]
+    def show_dataset(self, volume, filename, frame_nr, resolution):
+        self.shown_dataset = [volume, filename, frame_nr, resolution]
         self.statusBar().showMessage(filename)
-        self.center.show_dataset(volume, filename, frame_nr, resolution, use_center_points)
+        self.center.show_dataset(volume, filename, frame_nr, resolution)
 
 #    def closeEvent(self, event):
 #        reply = QtGui.QMessageBox.question(self, 'Message',
@@ -115,5 +115,5 @@ class CentralWidget(QtGui.QWidget):
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setLayout(main_layout)
 
-    def show_dataset(self, volume, filename, frame_nr, resolution, use_center_points):
-        self.gl_widget.show_dataset(volume, filename, frame_nr, resolution, use_center_points)
+    def show_dataset(self, volume, filename, frame_nr, resolution):
+        self.gl_widget.show_dataset(volume, filename, frame_nr, resolution)

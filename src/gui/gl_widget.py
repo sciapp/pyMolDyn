@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
+import numpy as np
+import numpy.linalg as la
 from PySide import QtCore, QtGui, QtOpenGL
 import visualization
 from config.configuration import config
+from OpenGL.GL import glReadPixels, GL_FLOAT, GL_DEPTH_COMPONENT
+from util.gl_util import create_perspective_projection_matrix, create_look_at_matrix
 
 
 class UpdateGLEvent(QtCore.QEvent):
@@ -13,7 +17,7 @@ class UpdateGLEvent(QtCore.QEvent):
 
 class GLWidget(QtOpenGL.QGLWidget):
     """
-        OpenGL widget to show the 3d-scene
+        OpenGL widget to show the 3D-scene
     """
 
     def __init__(self, parent=None):
@@ -31,23 +35,26 @@ class GLWidget(QtOpenGL.QGLWidget):
     def sizeHint(self):
         return QtCore.QSize(config.OpenGL.gl_window_size[0], config.OpenGL.gl_window_size[1])
 
-    def show_dataset(self, volume, filename, frame_nr, resolution, use_center_points):
+    def show_dataset(self, volume, filename, frame_nr, resolution):
         """
             shows calculation {calculation_nr} of frame {frame_nr} in file {filename}
         """
-        self.vis = visualization.Visualization(volume, filename, frame_nr, resolution, use_center_points)
+        self.vis = visualization.Visualization(volume, filename, frame_nr, resolution)
         self.dataset_loaded = True
         self.updateGL()
 
     def mouseMoveEvent(self, e):
         if self.dataset_loaded:
+            dx = e.x() - self.x
+            dy = e.y() - self.y
             if e.buttons() & QtCore.Qt.LeftButton:
-                dx = e.x() - self.x
-                dy = e.y() - self.y
-                self.vis.rotate_mouse(dx, dy)
-                self.x = e.x()
-                self.y = e.y()
-                self.updateGL()
+                if e.modifiers() == QtCore.Qt.AltModifier:
+                    self.vis.translate_mouse(dx, dy)
+                else:
+                    self.vis.rotate_mouse(dx, dy)
+            self.x = e.x()
+            self.y = e.y()
+            self.updateGL()
 
     def wheelEvent(self, e):
         if self.dataset_loaded:
@@ -70,10 +77,35 @@ class GLWidget(QtOpenGL.QGLWidget):
                 self.x = e.x()
                 self.y = e.y()
 
+    def mouseDoubleClickEvent(self, e):
+        if self.dataset_loaded:
+            if e.buttons() and QtCore.Qt.LeftButton:
+                x = e.x()
+                y = self.height() - e.y()
+                z = glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT)
+                x /= 1.0*self.width()
+                y /= 1.0*self.height()
+                x = x * 2 - 1
+                y = y * 2 - 1
+                z = z[0][0]
+                z = 2 * z - 1
+                z = self.vis.proj_mat[2, 3] / (-z - self.vis.proj_mat[2, 2])
+                x = -x*z/self.vis.proj_mat[0, 0]
+                y = -y*z/self.vis.proj_mat[1, 1]
+                x, y, z, w  = np.dot(la.inv(self.vis.lookat_mat), np.array((x, y, z, 1)))
+                print(x, y, z, w)
+
+
     def customEvent(self, e):
         if self.update_needed:
             self.updateGL()
             self.update_needed = False
+
+#     def create_scene(self, show_box, show_atoms, show_domains, show_cavities=True, center_based_cavities=False):
+    def create_scene(self):
+        if self.dataset_loaded:
+            self.vis.create_scene()
+            self.updateGL()
 
     def keyPressEvent(self, e):
         """
@@ -90,11 +122,20 @@ class GLWidget(QtOpenGL.QGLWidget):
             elif e.key() == QtCore.Qt.Key_Down:
                 self.vis.rotate_mouse(0, rot_v_key)
             elif e.key() == QtCore.Qt.Key_D:            # Domains
-                self.vis.create_scene(False)
+                self.vis.settings.show_domains = True
+                self.vis.settings.show_cavities = False
+                self.vis.settings.show_alt_cavities = False
+                self.vis.create_scene()
             elif e.key() == QtCore.Qt.Key_C:            # Cavities
-                self.vis.create_scene(True)
+                self.vis.settings.show_domains = False
+                self.vis.settings.show_cavities = True
+                self.vis.settings.show_alt_cavities = False
+                self.vis.create_scene()
             elif e.key() == QtCore.Qt.Key_F:            # center based cavities
-                self.vis.create_scene(True, True)
+                self.vis.settings.show_domains = False
+                self.vis.settings.show_cavities = False
+                self.vis.settings.show_alt_cavities = True
+                self.vis.create_scene()
             else:
                 e.ignore()
             self.updateGL()
