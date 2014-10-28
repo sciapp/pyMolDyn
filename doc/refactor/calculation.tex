@@ -9,10 +9,14 @@ The interface to get calculation Results:\\
         \operation{+ Calculation(cachedir : String)}
         \operation{+ calculatedframes(inputfile : InputFile, resolution : Integer, center : Boolean) : List(Timestamp)}
         \operation{+ timestamp(inputfile : InputFile, frame : Integer, resolution : Integer, center : Boolean) : Timestamp}
-        \operation{+ \_\_contains\_\_(inputfile : InputFile, frame : Integer, resolution : Integer, center : Boolean) : Boolean}
-        \operation{+ \_\_getitem\_\_(inputfile : InputFile, frame : Integer, resolution : Integer, center : Boolean) : Results}
+        \operation{+ iscalculated(inputfile : InputFile, frame : Integer, resolution : Integer, center : Boolean) : Boolean}
+        \operation{+ getresults(inputfile : InputFile, frame : Integer, resolution : Integer) : Results}
+        \operation{+ calculate(inputfile : InputFile, frame : Integer, resolution : Integer, center : Boolean) : Results}
     \end{class}
 \end{tikzpicture}
+\\
+If results are cached, \texttt{getresults} returns them; if not, it returns a \texttt{Results} object with only \texttt{Atoms}.
+\texttt{calculate} either loads results from cache or calculates them.
 
 \noindent
 The internal mechanism of caching and creating an index file:\\
@@ -22,8 +26,8 @@ The internal mechanism of caching and creating an index file:\\
         \attribute{+ indexfilepath : String}
         
         \operation{+ CalculationCache(directory : String)}
-        \operation{+ \_\_contains\_\_(filepath : String)}
-        \operation{+ \_\_getitem\_\_(filepath : String)}
+        \operation{+ \_\_contains\_\_(filepath : String) : Boolean}
+        \operation{+ \_\_getitem\_\_(filepath : String) : ResultFile}
     \end{class}
 \end{tikzpicture}
 \\\todo{Alternatives to \texttt{\_\_getitem\_\_} and \texttt{\_\_contains\_\_}}
@@ -74,7 +78,7 @@ The internal mechanism of caching and creating an index file:\\
         \attribute{+ atom\_discretization : AtomDiscretization}
         \attribute{+ centers : Array(Float)}
 
-        \operation{+ FakeDomainCalculation(discretization : Discretization, atom\_discretization : AtomDiscretization, results  :CalculationResults)}
+        \operation{+ FakeDomainCalculation(discretization : Discretization, atom\_discretization : AtomDiscretization, results : CalculationResults)}
     \end{class}
 \end{tikzpicture}
 \\\todo{\texttt{FakeDomainCalculation} uses the deprecated \texttt{CalculationResults}}

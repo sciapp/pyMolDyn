@@ -26,6 +26,7 @@
 		\attribute{+ side\_length : Float}
 		\attribute{+ edges : Array(Points)}
 
+        \operation{+ $<<$static$>>$ fromstring(s : String) : Volume}
 		\operation{+ is\_inside(point : Array(Float))} : Boolean
 		\operation{+ get\_equivalent\_point(point : Array(Float))} : Array(Float)
         \operation{+ \_\_str\_\_() : String}
@@ -85,8 +86,6 @@
 		\operation{+ CubicVolume(a : Float)}
     \end{class}
 \end{tikzpicture}
-
-\noindent\todo{Add static method to \texttt{Volume}, which creates a subclass from a string}
 
 
 \subsection{Calculation results}

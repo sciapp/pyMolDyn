@@ -28,7 +28,7 @@
     \end{abstractclass}
 \end{tikzpicture}
 
-\todo{Maybe \texttt{ResultFile.writeresults} should take an \texttt{overwrite} parameter.}
+\todo{\texttt{ResultFile.writeresults} should take an \texttt{overwrite} parameter.}
 
 \noindent
 The implementation of \texttt{InputFile} is \texttt{XYZFile}, which reads a pybel xyz file. \texttt{HDF5File} implements \texttt{ResultFile} and handles a HDF5 file with input and result data, which can be used for caching.
@@ -48,6 +48,9 @@ The implementation of \texttt{InputFile} is \texttt{XYZFile}, which reads a pybe
 
 The \texttt{types} dictionary is used to associate filename extensions (e.\,g.\ xyz) with implementations of \texttt{InputFile}.
 \texttt{\_\_getitem\_\_} looks up which class to use and instanciates it.
+
+\todo{Overrideable \texttt{detectfiletype} method (flexibility),\\
+unfiltered file list}
 
 \todo{Either make the whole thing static or let the constructor take a \texttt{types} parameter and initialize a single instance.\\
 Current solution: instanciate it whenever needed.}
