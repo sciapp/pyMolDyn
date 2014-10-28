@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 
 
-#TODO: Conversions in __init__(h5group) methods (Integer, Unicode)
-
-
-__all__ = ["Results, Cavities, Atoms, CalculatedFrames"]
+__all__ = ["Atoms",
+           "Domains",
+           "Cavities",
+           "Results",
+           "FileInfo",
+           "ResultInfo",
+           "CalculatedFrames"]
 
 
 import numpy as np
@@ -14,9 +17,8 @@ import dateutil.parser
 import h5py
 import pybel
 import volumes
-
-
-DEFAULT_ATOM_RADIUS = 2.65
+import calculation.algorithm as algorithm
+from config.configuration import config
 
 
 def writedataset(h5group, name, data, overwrite=True):
@@ -96,7 +98,6 @@ class CalculatedFrames(object):
                self.center_cavities.hasdata()
 
     def tohdf(self, h5group, overwrite=True):
-        #TODO: to delete or not to delete?
         if self.hasdata():
             writedataset(h5group, "domains", self.domains.tostrlist(), overwrite)
             writedataset(h5group, "surface_cavities", self.surface_cavities.tostrlist(), overwrite)
@@ -123,9 +124,12 @@ class ResultInfo(FileInfo):
         self.calculatedframes = dict()
         if len(args) > 0 and isinstance(args[0], h5py.Group):
             h5group = args[0]
-            self.num_frames = h5group.attrs["num_frames"]
-            self.volumestr = h5group.attrs["volume"]
-            self.sourcefilepath = h5group.attrs.get("sourcefile", None)
+            self.num_frames = int(h5group.attrs["num_frames"])
+            self.volumestr = str(h5group.attrs["volume"])
+            if "sourcefile" in h5group.attrs:
+                self.sourcefilepath = str(h5group.attrs["sourcefile"])
+            else:
+                self.sourcefilepath = None
             for name, subgroup in h5group.iteritems():
                 if not name.startswith("resolution"):
                     continue
@@ -154,6 +158,15 @@ class ResultInfo(FileInfo):
 
 
 class Atoms(object):
+    '''
+    Instances of this class represent a list of atoms and their properties:
+    - position
+    - cavity cutoff radius
+    
+    To allow iteration in the order of their radii (from largest to smallest),
+    the attributes self.sorted_radii and self.sorted_positions can be used.
+    '''
+
     def __init__(self, *args):
         if isinstance(args[0], h5py.Group):
             h5group = args[0]
@@ -188,7 +201,7 @@ class Atoms(object):
             self.radii = np.array(radii, dtype=np.float, copy=False)
         else:
             self.radii = np.ones((self.number), dtype=np.float) \
-                         * DEFAULT_ATOM_RADIUS
+                         * config.Computation.atom_radius
 
         # old code: 
         #self.sorted_radii = sorted(list(set(self.radii)), reverse=True)
@@ -212,15 +225,12 @@ class Atoms(object):
 
 
 class CavitiesBase(object):
-    #TODO: timestamp neccessary?
     def __init__(self, *args):
         if isinstance(args[0], h5py.Group):
             h5group = args[0]
             timestamp = dateutil.parser.parse(h5group.attrs["timestamp"])
-            number = h5group.attrs["number"]
+            number = int(h5group.attrs["number"])
             volumes = h5group["volumes"]
-            if len(volumes) != number:
-                raise ValueError
             surface_areas = h5group["surface_areas"]
             triangles = [None] * number
             for i in range(number):
@@ -247,14 +257,12 @@ class CavitiesBase(object):
 
 
 class Domains(CavitiesBase):
-    #TODO: DomainCalculation compatibility
     def __init__(self, *args):
         if isinstance(args[0], h5py.Group):
             super(Domains, self).__init__(*args)
             h5group = args[0]
             centers = h5group["centers"]
-        #elif isinstance(args[0], DomainCalculation):
-        elif args[0].__class__.__name__ == "DomainCalculation":
+        elif isinstance(args[0], algorithm.DomainCalculation):
             calculation = args[0]
             timestamp = datetime.now()
             volumes = calculation.domain_volumes
@@ -282,8 +290,7 @@ class Cavities(CavitiesBase):
             multicavities = [None] * self.number
             for i in range(self.number):
                 multicavities[i] = h5group["multicavities{}".format(i)]
-        #elif isinstance(args[0], CavityCalculation):
-        elif args[0].__class__.__name__ == "CavityCalculation":
+        elif isinstance(args[0], algorithm.CavityCalculation):
             calculation = args[0]
             timestamp = datetime.now()
             volumes = calculation.multicavity_volumes

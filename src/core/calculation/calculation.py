@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-# TODO: where to create the calculation object?
-# TODO: what if i want a results object without calculated results, e.g. for the visualization?
 
 
 __all__ = ["Calculation",
@@ -8,8 +6,8 @@ __all__ = ["Calculation",
            "calculated",
            "count_frames",
            "calculated_frames",
-           "calculate_cavities"
-          ]
+           "calculate_cavities",
+           "getresults"]
 
 
 import os
@@ -21,13 +19,13 @@ from discretization import DiscretizationCache, AtomDiscretization
 import util.message as message
 from hashlib import sha256
 from util.trap import trap
+from config.configuration import config
 
 
 class Calculation(object):
     def __init__(self, cachedir=None):
         if cachedir is None:
-            #TODO: read cachedir from config
-            cachedir = "../results"
+            cachedir = config.Path.result_dir
         self.cache = CalculationCache(cachedir)
 
     def calculatedframes(self, inputfile, resolution, center=False):
@@ -70,7 +68,6 @@ class Calculation(object):
         else:
             resultfile = self.cache[inputfile.path]
         results = resultfile.getresults(frame, resolution)
-        #TODO: writing happens implicit
 
         if not results is None \
                 and not results.domains is None \
@@ -116,14 +113,13 @@ class CalculationCache(object):
         return os.path.isfile(cachefilepath)
 
     def __getitem__(self, filepath):
-        #TODO: create file if it not exists?
         sourcefilepath = os.path.abspath(filepath)
         cachefilepath = self.abspath(self.cachefile(sourcefilepath))
         if not sourcefilepath in self.index:
             self.index[sourcefilepath] = cachefilepath
             self.writeindex()
         cachefile = core.file.HDF5File(cachefilepath, sourcefilepath)
-        #TODO: if not sourcefilepath == cachefile.info.sourcefilepath:
+        #TODO: what if not sourcefilepath == cachefile.info.sourcefilepath
         return cachefile
 
     def abspath(self, filename):
@@ -138,12 +134,14 @@ class CalculationCache(object):
             if not filename.split(".")[-1] == "hdf5":
                 continue
             cachepath = self.abspath(filename)
-            #TODO: error handling
-            cachefile = core.file.HDF5File(cachepath)
-            filepath = cachefile.info.sourcefilepath
-            if not filepath is None \
-                    and filename == self.cachefile(filepath):
-                self.index[filepath] = filename
+            try:
+                cachefile = core.file.HDF5File(cachepath)
+                filepath = cachefile.info.sourcefilepath
+                if not filepath is None \
+                        and filename == self.cachefile(filepath):
+                    self.index[filepath] = filename
+            except (IOError, AttributeError):
+                pass
 
     def writeindex(self):
         with open(self.indexfilepath, "w") as f:
@@ -177,6 +175,18 @@ def calculated_frames(filename, resolution):
     return [i + 1 for i, ts in enumerate(timestamps) if not ts is None]
 
 
+def getresults(filename, frame_nr, volume, resolution):
+    trap("DEPRECATED")
+    results = None
+    if filename in calculation.cache:
+        cachefile = calculation.cache[filename]
+        results = cachefile.getresults(frame_nr - 1, resolution)
+    if results is None:
+        f = core.file.XYZFile(filename)
+        results = data.Results(f.path, frame_nr - 1, resolution, f.getatoms(frame_nr - 1), None, None, None)
+    return results
+
+
 def calculate_cavities(filename, frame_nr, volume, resolution, use_center_points=False):
     trap("DEPRECATED")
     f = core.file.XYZFile(filename)
@@ -186,58 +196,3 @@ def calculate_cavities(filename, frame_nr, volume, resolution, use_center_points
     message.finish()
     return results
 
-
-#def atom_volume_discretization(atoms, volume, resolution):
-#    """
-#    calculates the discretization of the volume and the atoms from the given resolution
-#    """
-#    num_atoms = len(atoms)
-#    atom_positions = [atom.coords for atom in atoms]
-#
-#    print_message(num_atoms, "atoms")
-#    for atom_index in range(num_atoms):
-#        atom_positions[atom_index] = volume.get_equivalent_point(atom_positions[atom_index])
-#    atoms = Atoms(atom_positions, [config.Computation.ATOM_RADIUS] * num_atoms)
-#    print_message("Volume discretization...")
-#    discretization_cache = DiscretizationCache('cache.hdf5')
-#    discretization = discretization_cache.get_discretization(volume, resolution)
-#    print_message("Atom discretization...")
-#    atom_discretization = AtomDiscretization(atoms, discretization)
-#
-#    return atom_discretization, discretization
-#
-#
-#def calculate_domains(filename, frame_nr, volume, resolution):
-#    import pybel
-#
-#    n = 0
-#    generator = pybel.readfile("xyz", filename)
-#    molecule = None
-#    try:
-#        for i in range(frame_nr):
-#            molecule = generator.next()
-#    except StopIteration:
-#        if frame_nr > n:
-#            print_message('Error: This frame does not exist.')
-#            sys.exit(0)
-#    (atom_discretization, discretization) = atom_volume_discretization(molecule.atoms, volume, resolution)
-#
-#    print_message("Cavity domain calculation...")
-#    domain_calculation = DomainCalculation(discretization, atom_discretization)
-#
-#    return domain_calculation
-#
-#
-#if __name__ == "__main__":
-#    import pybel
-#
-#    # volume = volumes.HexagonalVolume(17.68943, 22.61158)
-#    #    xyz/structure_c.xyz
-#    box_size = 27.079855
-#    volume = volumes.CubicVolume(box_size)
-#    #for i in range(1, count_frames("xyz/structure_c.xyz")+1):
-#    calculate_cavities("../xyz/structure_c.xyz", 1, volume, 64)
-#    calculate_cavities("../xyz/structure_c.xyz", 1, volume, 64, False)
-#
-## calculate_cavities("xyz/hexagonal.xyz", 1, volume, 64)
-##    calculate_cavities("xyz/hexagonal.xyz", 1, volume, 64, False)

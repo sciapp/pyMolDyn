@@ -11,11 +11,11 @@ import numpy as np
 import h5py
 from util.message import print_message, progress, finish
 from util.trap import trap
+import algorithm
 
 
-#TODO: same as in algorithm.py
-dimension = 3
-dimensions = range(dimension)
+dimension = algorithm.dimension
+dimensions = algorithm.dimensions
 
 
 class DiscretizationCache(object):
@@ -221,31 +221,6 @@ class Discretization(object):
 
     def __repr__(self):
         discretization_repr = repr(self.volume) + " d_max=%d" % self.d_max
-
-
-#TODO: use Atoms class from data.py. is this used anyway?
-class Atoms:
-    '''
-    Instances of this class represent a list of atoms and their properties:
-    - position
-    - cavity cutoff radius
-    
-    To allow iteration in the order of their radii (from largest to smallest),
-    the attributes self.sorted_radii and self.sorted_positions can be used.
-    '''
-
-    def __init__(self, atom_positions, atom_radii):
-        trap()
-        self.positions = atom_positions
-        self.radii = atom_radii
-        self.sorted_radii = sorted(list(set(self.radii)), reverse=True)
-        self.radii_as_indices = []
-        self.sorted_positions = []
-        for index, radius in enumerate(self.sorted_radii):
-            for atom_index, atom_radius in enumerate(self.radii):
-                if radius == atom_radius:
-                    self.radii_as_indices.append(index)
-                    self.sorted_positions.append(self.positions[atom_index])
 
 
 class AtomDiscretization:

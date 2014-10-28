@@ -76,7 +76,6 @@ import os
 from computation.split_and_merge.pipeline import start_split_and_merge_pipeline
 import util.colored_exceptions
 import time
-from discretization import DiscretizationCache, AtomDiscretization
 from util.message import print_message, progress, finish
 
 

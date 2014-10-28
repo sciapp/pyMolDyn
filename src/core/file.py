@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-#TODO: info class for InputFile?
 
 __all__ = ["FileManager",
            "InputFile",
@@ -78,7 +77,6 @@ class XYZFile(InputFile):
 
 
 class ResultFile(InputFile):
-    #TODO: specify when to overwrite
     def __init__(self, path, sourcefilepath=None):
         super(ResultFile, self).__init__(path)
         self._info = data.ResultInfo()
@@ -180,7 +178,7 @@ class HDF5File(ResultFile):
         #TODO: error handling
         #TODO: results valid? 
         with h5py.File(self.path) as f:
-            #TODO: only write when neccessary? overwrite parameter
+            #TODO: only write when neccessary
             group = f.require_group("atoms/frame{}".format(results.frame))
             results.atoms.tohdf(group, overwrite=False)
             group = f.require_group("results/frame{}/resolution{}".format(
@@ -196,13 +194,11 @@ class HDF5File(ResultFile):
 
 
 class FileManager(object):
-    #TODO: detectfiletype method that can be overridden
     def __init__(self):
         self.types = {"xyz": XYZFile,
                       "hdf5": HDF5File}
 
     def filelist(self, directory):
-        #TODO: unfiltered list?
         return [f for f in os.listdir(directory)
                 if os.path.isfile(os.path.join(directory, f))
                    and f.split(".")[-1] in self.types]

@@ -10,12 +10,10 @@ from ctypes import c_int
 from util.gl_util import create_perspective_projection_matrix, create_look_at_matrix, create_rotation_matrix_homogenous, create_translation_matrix_homogenous
 
 class Visualization(object):
-    def __init__(self, volume, filename, frame_nr, resolution, use_center_points=False):
+    def __init__(self, volume, filename, frame_nr, resolution):
         #TODO: here is the transition from old to new
-        #TODO: remove use_center_points
         self.volume = volume
-        #TODO: only if exists
-        self.results = calculation.calculate_cavities(filename, frame_nr, volume, resolution, use_center_points)
+        self.results = calculation.getresults(filename, frame_nr, volume, resolution)
 
         self.mat = np.eye(4)
         self.d = max(volume.side_lengths) * 2
@@ -35,7 +33,6 @@ class Visualization(object):
 
     @property
     def atoms(self):
-        #TODO: remove, when atoms is removed from results
         if not self.results is None:
             return self.results.atoms
         else:
