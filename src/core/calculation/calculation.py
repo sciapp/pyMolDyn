@@ -3,6 +3,7 @@
 
 __all__ = ["Calculation",
            "CalculationCache",
+           "CalculationSettings",
            "calculated",
            "count_frames",
            "calculated_frames",
@@ -20,6 +21,25 @@ import util.message as message
 from hashlib import sha256
 from util.trap import trap
 from config.configuration import config
+
+
+class CalculationSettings(object):
+
+    def __init__(self,
+            filenames,
+            frames=[-1],
+            resolution=config.Computation.std_resolution,
+            domains=False,
+            surface_cavities=False,
+            center_cavities=False):
+        self.filenames = list(filenames)
+        self.frames = frames
+        self.resolution = resolution
+        self.domains = domains
+        self.surface_cavities = surface_cavities
+        self.center_cavities = center_cavities
+        self.bonds = False
+        self.dihedral_angles = False
 
 
 class Calculation(object):
