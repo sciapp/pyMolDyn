@@ -29,16 +29,12 @@ class CalculationThread(QtCore.QThread):
     """
         Thread to calculate the cavities
     """
-    def __init__(self, parent, fn, frame, volume, resolution, use_center_points):
+    def __init__(self, parent, settings):
         QtCore.QThread.__init__(self, parent)
-        self.filename = fn
-        self.frame = frame
-        self.volume = volume
-        self.resolution = resolution
-        self.use_center_points = use_center_points
+        self.settings = settings
 
     def run(self):
-        calculation.calculate_cavities(self.filename, self.frame, self.volume, self.resolution, self.use_center_points)
+        calculation.calculate(self.settings)
 
 
 class FileTab(QtGui.QWidget):
@@ -77,8 +73,9 @@ class FileTab(QtGui.QWidget):
         self.file_list.itemDoubleClicked.connect(self.calculate)
         self.file_list.itemSelectionChanged.connect(self.selection_changed)
         self.vbox.addWidget(self.file_list)
-
-        self.file_list.add_file('../xyz/structure_c.xyz')
+        # load recent files
+        for path in config.recent_files:
+            self.file_list.add_file(path)
 
         self.setLayout(self.vbox)
 
@@ -103,43 +100,42 @@ class FileTab(QtGui.QWidget):
             QtGui.QMessageBox.information(self, 'Information', "Choose a dataset", QtGui.QMessageBox.Ok)
             return
         dia = CalculationSettingsDialog(self, filenames)
-        resolution, frames, use_center_points, ok = dia.calculation_settings()
+        settings, ok = dia.calculation_settings()
 
         if ok:
-            for fn in filenames:
-                # TODO optimize
-                volume = volumes.get_volume_from_file(fn)
-                frames = range(1, calculation.count_frames(fn) + 1) if frames[0] == -1 else frames
-                for frame in frames:
-                    if calculation.calculated(fn, frame, resolution, use_center_points):
-                        #show Yes No Dialog
-                        reply = QtGui.QMessageBox.warning(self,
-                                                        'Warning',
-                                                        "Are you sure that the existing results should be overwritten?",
-                                                        QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-                                                        QtGui.QMessageBox.No)
-                        if reply == QtGui.QMessageBox.No:
-                            continue
-                    self.calculate_frame(fn, frame, volume, resolution, use_center_points)
-            self.main_window.show_dataset(volume, fn, frames[-1], resolution, use_center_points)
-            #print 'calculation finished'
-
-    def calculate_frame(self, filename, frame_nr, volume, resolution, use_center_points):
-        if calculation.calculated(filename, frame_nr, resolution, True):
-            base_name = ''.join(os.path.basename(filename).split(".")[:-1])
-            exp_name = "{}{}.hdf5".format(config.Path.result_dir, base_name)
-            calculation.delete_center_cavity_information(exp_name, frame_nr, resolution)
-
-        if use_center_points:
-            if not calculation.calculated(filename, frame_nr, resolution, False):
-                thread = CalculationThread(self, filename, frame_nr, volume, resolution, False)
+            calculated = [calculation.calculated(fn, frame, settings.resolution, False) for frame in settings.frames for fn in settings.filenames]
+            if any(calculated):
+                #show Yes No Dialog
+                reply = QtGui.QMessageBox.warning(self,
+                                                'Warning',
+                                                "Are you sure that the existing results should be overwritten?",
+                                                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
+                                                QtGui.QMessageBox.No)
+                if reply == QtGui.QMessageBox.No:
+                    return
+                thread = CalculationThread(self, settings)
                 thread.start()
                 self.progress_dialog.exec_()
                 thread.wait()
 
-        thread = CalculationThread(self, filename, frame_nr, volume, resolution, use_center_points)
-        thread.start()
-        self.progress_dialog.exec_()
+            self.main_window.show_dataset(fn, settings.frames[-1], settings.resolution)
+    #
+    # def calculate_frames(self, filename, frame_nr, resolution, use_center_points):
+    #     if calculation.calculated(filename, frame_nr, resolution, True):
+    #         base_name = ''.join(os.path.basename(filename).split(".")[:-1])
+    #         exp_name = "{}{}.hdf5".format(config.Path.result_dir, base_name)
+    #         calculation.delete_center_cavity_information(exp_name, frame_nr, resolution)
+    #
+    #     if use_center_points:
+    #         if not calculation.calculated(filename, frame_nr, resolution, False):
+    #             thread = CalculationThread(self, filename, frame_nr, resolution, False)
+    #             thread.start()
+    #             self.progress_dialog.exec_()
+    #             thread.wait()
+    #
+    #     thread = CalculationThread(self, filename, frame_nr, resolution, use_center_points)
+    #     thread.start()
+    #     self.progress_dialog.exec_()
 
 
 class DragList(QtGui.QListWidget):
@@ -158,6 +154,9 @@ class DragList(QtGui.QListWidget):
         if bname not in self.datalist and path.endswith('.xyz'):
             self.datalist[bname] = path
             self.addItem(bname)
+            if path not in config.recent_files:
+                print path
+                config.add_recent_file(path)
 
     def dragEnterEvent(self, e):
         if e.mimeData().hasUrls():

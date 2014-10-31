@@ -333,7 +333,8 @@ convert_functions = {
 def get_volume_from_file(filename):
     with open(filename,'r') as f:
         f.readline()
-        s = f.readline().split(' ')
+        # f = f.strip()
+        s = f.readline().split()
         t = s[0].upper() # volume type
         cl = volumes[t][0] # volume class
         if len(s) == 10: # cell vectors given
@@ -347,4 +348,6 @@ if __name__ == '__main__':
     fn = '../xyz/structure_c.xyz'
     print get_volume_from_file(fn)
     fn = '../xyz/hexagonal.xyz'
+    print get_volume_from_file(fn)
+    fn =  '../xyz/GST_111_168_Te_surf.xyz'
     print get_volume_from_file(fn)

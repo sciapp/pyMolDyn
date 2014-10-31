@@ -71,6 +71,7 @@ import numpy.linalg as la
 import h5py
 from gr3 import triangulate
 from config.configuration import config
+from core.volumes import get_volume_from_file
 
 import os
 from computation.split_and_merge.pipeline import start_split_and_merge_pipeline
@@ -825,6 +826,19 @@ class FakeDomainCalculation(object):
         self.atom_discretization = atom_discretization
 
 
+class CalculationSettings(object):
+    
+    def __init__(self, filenames, resolution, frames=[-1], surface_cavities=True, center_cavities=False, domains=True):
+        self.filenames = filenames
+        self.resolution = resolution
+        self.frames = frames
+        self.surface_cavities = surface_cavities
+        self.center_cavities = center_cavities
+        self.bonds = False
+        self.dihedral_angles = False
+        self.domains = domains
+
+
 def delete_center_cavity_information(filename, frame_nr, resolution):
     with h5py.File(filename, "a") as f:
         for calc in f['frame{}'.format(frame_nr)].values():
@@ -865,42 +879,44 @@ def calculated_frames(filename, resolution):
     return calc_frames
 
 
-def calculate_cavities(filename, frame_nr, volume, resolution, use_center_points=False):
+def calculate_cavities(settings):
     """
     calculates the cavities for the given file
     """
-    base_name = ''.join(os.path.basename(filename).split(".")[:-1])
+    volume = get_volume_from_file(settings.filename)
+    base_name = ''.join(os.path.basename(settings.filename).split(".")[:-1])
     exp_name = config.Path.result_dir + "{}.hdf5".format(base_name)
     #tmp_exp = "{}.tmp".format(exp_name)
-    if not use_center_points:
-        domain_calculation = calculate_domains(filename, frame_nr, volume, resolution)
-        print_message("Cavity calculation...")
-        cavity_calculation = CavityCalculation(domain_calculation)
-        results = CalculationResults(cavity_calculation, frame_nr, resolution)
-        results.export(exp_name, frame_nr, use_center_points=False)
+    for frame in settings.frames:
+        if not settings.center_cavities:
+            domain_calculation = calculate_domains(settings.filename, frame, volume, settings.resolution)
+            print_message("Cavity calculation...")
+            cavity_calculation = CavityCalculation(domain_calculation)
+            results = CalculationResults(cavity_calculation, frame, settings.resolution)
+            results.export(exp_name, frame, use_center_points=False)
     # results.export(tmp_exp, frame_nr, False)
     #        if os.path.isfile(exp_name):
     #            os.remove(exp_name)
     #        os.rename(tmp_exp, exp_name)
-    else:
-        import pybel
+        else:
+            import pybel
 
-        generator = pybel.readfile("xyz", filename.encode("ascii"))
-        try:
-            for i in range(frame_nr):
-                molecule = generator.next()
-        except StopIteration:
-            if frame_nr > count_frames(filename):
-                print_message('Error: This frame does not exist.')
-                sys.exit(0)
-        (atom_discretization, discretization) = atom_volume_discretization(molecule.atoms, volume, resolution)
+            generator = pybel.readfile("xyz", settings.filename.encode("ascii"))
+            try:
+                for i in range(frame):
+                    molecule = generator.next()
+            except StopIteration:
+                if frame > count_frames(settings.filename):
+                    print 'Error: This frame does not exist.'
+                    sys.exit(0)
+            (atom_discretization, discretization) = atom_volume_discretization(molecule.atoms, volume, settings.resolution)
 
-        imported_results = CalculationResults(exp_name, frame_nr, resolution)
-        domain_calculation = FakeDomainCalculation(discretization, atom_discretization, imported_results)
-        print_message("Cavity calculation...")
-        cavity_calculation = CavityCalculation(domain_calculation, False)
-        imported_results.add_center_cavity_information(cavity_calculation)
-        imported_results.export(exp_name, frame_nr, True)
+            imported_results = CalculationResults(exp_name, frame, settings.resolution)
+            domain_calculation = FakeDomainCalculation(discretization, atom_discretization, imported_results)
+            print_message("Cavity calculation...")
+            cavity_calculation = CavityCalculation(domain_calculation, False)
+            imported_results.add_center_cavity_information(cavity_calculation)
+            imported_results.export(exp_name, frame, True)
     progress(100)
     print_message('calculation finished')
     finish()
@@ -941,6 +957,7 @@ def count_frames(filename):
 
 
 def calculate_domains(filename, frame_nr, volume, resolution):
+# def calculate_domains(settings):
     import pybel
 
     n = 0
@@ -960,6 +977,39 @@ def calculate_domains(filename, frame_nr, volume, resolution):
 
     return domain_calculation
 
+
+def calculate(settings):
+    for filename in settings.filenames:
+    # TODO optimize
+        volume = volumes.get_volume_from_file(filename)
+        frames = range(1, count_frames(filename) + 1) if frames[0] == -1 else frames
+        if calculated(filename, frame_nr, resolution, True):
+            base_name = ''.join(os.path.basename(filename).split(".")[:-1])
+            exp_name = "{}{}.hdf5".format(config.Path.result_dir, base_name)
+            delete_center_cavity_information(exp_name, frame_nr, resolution)
+
+        if use_center_points:
+            calculate_cavities(settings)
+
+
+def timestamp(filename, resolution, center_based, frames=[-1]):
+    import h5py
+
+    if os.path.isfile(filename):
+        if frames[0] == -1:
+            frames = range(1, count_frames(filename)+1)
+
+        if all([calculated(filename, frame, resolution, False) for frame in frames]):
+            if center_based:
+                if not all([calculated(filename, frame, resolution, True) for frame in frames]):
+                    return 'X'
+            base_name = ''.join(os.path.basename(filename).split(".")[:-1])
+            exp_name = "{}{}.hdf5".format(config.Path.result_dir, base_name)
+            with h5py.File(exp_name, "r") as file:
+                for calc in file['frame{}'.format(frames[0])].values():
+                    if calc.attrs['resolution'] == resolution:
+                        return calc.attrs['timestamp']
+    return 'X'
 
 def set_output_callbacks(progress_func, print_func, finished_func):
     global progress, print_message, finish
