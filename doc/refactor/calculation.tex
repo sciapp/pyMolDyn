@@ -19,6 +19,18 @@ If results are cached, \texttt{getresults} returns them; if not, it returns a \t
 \texttt{calculate} either loads results from cache or calculates them.
 
 \noindent
+\begin{tikzpicture}
+    \begin{class}[text width=\umlwidth]{CalculationSettings}{0, 0}
+        \attribute{+ filenames : List(String)}
+        \attribute{+ frames : List(Integer)}
+        \attribute{+ resolution : Integer}
+        \attribute{+ domains : Boolean}
+        \attribute{+ surface\_cavities : Boolean}
+        \attribute{+ center\_cavities : Boolean}
+    \end{class}
+\end{tikzpicture}
+
+\noindent
 The internal mechanism of caching and creating an index file:\\
 \begin{tikzpicture}
     \begin{class}[text width=\umlwidth]{CalculationCache}{0, 0}
@@ -30,7 +42,6 @@ The internal mechanism of caching and creating an index file:\\
         \operation{+ \_\_getitem\_\_(filepath : String) : ResultFile}
     \end{class}
 \end{tikzpicture}
-\\\todo{Alternatives to \texttt{\_\_getitem\_\_} and \texttt{\_\_contains\_\_}}
 
 \subsection{Algorithm}
 \todo{This part has not been refactored yet.}
@@ -49,7 +60,6 @@ The internal mechanism of caching and creating an index file:\\
     \end{class}
 \end{tikzpicture}
 
-\vspace*{\baselineskip}
 \noindent
 \begin{tikzpicture}
     \begin{class}[text width=\umlwidth]{CavityCalculation}{0, 0}
@@ -70,7 +80,6 @@ The internal mechanism of caching and creating an index file:\\
 \end{tikzpicture}
 \\\todo{Check what data types the code really produces}
 
-\vspace*{\baselineskip}
 \noindent
 \begin{tikzpicture}
     \begin{class}[text width=\umlwidth]{FakeDomainCalculation}{0, 0}
