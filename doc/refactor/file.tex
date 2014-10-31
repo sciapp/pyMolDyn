@@ -36,13 +36,12 @@ The implementation of \texttt{InputFile} is \texttt{XYZFile}, which reads a pybe
 
 \subsection{Filesystem access}
 \begin{tikzpicture}
-    \begin{class}[text width=\umlwidth]{FileManager}{0, 0}
-        \attribute{+ types : Dictionary(String $\rightarrow$ Class)}
+    \begin{class}[text width=\umlwidth]{File}{0, 0}
+        \attribute{+ $<<$static$>>$ types : Dictionary(String $\rightarrow$ Class)}
         
-        \operation{+ FileManager()}
-        \operation{+ listdir() : List(String)}
-        \operation{+ \_\_getitem\_\_(filepath : String) : InputFile}
-        \operation{+ \_\_contains\_\_(filepath : String) : Boolean}
+        \operation{+ $<<$static$>>$ listdir() : List(String)}
+        \operation{+ $<<$static$>>$ open(filepath : String) : InputFile}
+        \operation{+ $<<$static$>>$ exists(filepath : String) : Boolean}
     \end{class}
 \end{tikzpicture}
 
@@ -52,5 +51,3 @@ The \texttt{types} dictionary is used to associate filename extensions (e.\,g.\ 
 \todo{Overrideable \texttt{detectfiletype} method (flexibility),\\
 unfiltered file list}
 
-\todo{Either make the whole thing static or let the constructor take a \texttt{types} parameter and initialize a single instance.\\
-Current solution: instanciate it whenever needed.}
