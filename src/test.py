@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 
 import os
-from core.file import FileManager
-from core.calculation import Calculation
+import core.calculation
+import core.file
 import util.message as message
 
 
 class PymoldynTest(object):
     def __init__(self):
         self.path = os.path.abspath("../xyz")
-        self.filemanager = FileManager()
+        self.calculation = core.calculation.Calculation()
 
 
 if __name__ == "__main__":
@@ -31,6 +31,5 @@ if __name__ == "__main__":
     message.set_output_callbacks(progress, print_message, finish)
 
     p = PymoldynTest()
-    f = p.filemanager[os.path.join(p.path, "GST_111_128_bulk.xyz")]
-    c = Calculation()
-    r = c[f, 0, 96, False]
+    f = core.file.File.open(os.path.join(p.path, "GST_111_128_bulk.xyz"))
+    r = p.calculation.calculate(f, 0, 96, False)

@@ -113,7 +113,7 @@ class FileInfo(object):
     @property
     def volume(self):
         if self._volume is None and not self.volumestr is None:
-            self._volume = volumes.get_volume_from_string(self.volumestr)
+            self._volume = volumes.Volume.fromstring(self.volumestr)
         return self._volume
 
 
@@ -176,13 +176,13 @@ class Atoms(object):
                 volume = h5group.attrs["volume"]
             else:
                 volume = h5group.parent.attrs["volume"]
-            self.volume = volumes.get_volume_from_string(str(volume))
+            self.volume = volumes.Volume.fromstring(str(volume))
         elif isinstance(args[0], pybel.Molecule):
             molecule = args[0]
             if len(args) > 1:
                 self.volume = args[1]
                 if isinstance(self.volume, str):
-                    self.volume = volumes.get_volume_from_string(self.volume)
+                    self.volume = volumes.Volume.fromstring(self.volume)
                 func = lambda a: self.volume.get_equivalent_point(a.coords)
             else:
                 func = lambda atom: atom.coords
@@ -193,7 +193,7 @@ class Atoms(object):
             radii = args[1]
             self.volume = args[2]
             if isinstance(self.volume, str):
-                self.volume = volumes.get_volume_from_string(self.volume)
+                self.volume = volumes.Volume.fromstring(self.volume)
 
         self.positions = np.array(positions, dtype=np.float, copy=False)
         self.number = self.positions.shape[0]

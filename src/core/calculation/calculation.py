@@ -48,7 +48,7 @@ class Calculation(object):
         calc = self.calculatedframes(inputfile, resolution, center)
         return calc[frame]
 
-    def __contains__(self, args):
+    def iscalculated(self, *args):
         inputfile, frame, resolution = args[:3]
         if len(args) > 3:
             center = args[3]
@@ -57,7 +57,19 @@ class Calculation(object):
         return not self.timestamp(inputfile, frame,
                                   resolution, center) is None
 
-    def __getitem__(self, args):
+    def getresults(self, *args):
+        inputfile, frame, resolution = args[:3]
+        if len(args) > 3:
+            center = args[3]
+        else:
+            center=False
+        if isinstance(inputfile, core.file.ResultFile):
+            resultfile = inputfile
+        else:
+            resultfile = self.cache[inputfile.path]
+        results = resultfile.getresults(frame, resolution)
+
+    def calculate(self, *args):
         inputfile, frame, resolution = args[:3]
         if len(args) > 3:
             center = args[3]
@@ -159,7 +171,7 @@ calculation = Calculation()
 def calculated(filename, frame_nr, resolution, use_center_points):
     trap("DEPRECATED")
     f = core.file.XYZFile(filename)
-    return (f, frame_nr - 1, resolution, use_center_points) in calculation
+    return calculation.iscalculated(f, frame_nr - 1, resolution, use_center_points)
 
 
 def count_frames(filename):
@@ -191,7 +203,7 @@ def calculate_cavities(filename, frame_nr, volume, resolution, use_center_points
     trap("DEPRECATED")
     f = core.file.XYZFile(filename)
     message.print_message("Cavity calculation...")
-    results = calculation[f, frame_nr - 1, resolution, use_center_points]
+    results = calculation.calculate(f, frame_nr - 1, resolution, use_center_points)
     message.print_message('calculation finished')
     message.finish()
     return results

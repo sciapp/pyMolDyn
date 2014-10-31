@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-__all__ = ["FileManager",
+__all__ = ["File",
            "InputFile",
            "ResultFile",
            "XYZFile",
@@ -137,12 +137,10 @@ class HDF5File(ResultFile):
         if not self.inforead \
                 and not self._info.sourcefilepath is None \
                 and os.path.isfile(self._info.sourcefilepath):
-            fm = FileManager()
-            sf = fm[self._info.sourcefilepath]
+            sf = File.open(self._info.sourcefilepath)
             self._info.num_frames = sf.info.num_frames
             self._info.volumestr = sf.info.volumestr
             self.inforead = True
-
 
     def writeinfo(self):
         #TODO: error handling
@@ -193,27 +191,29 @@ class HDF5File(ResultFile):
                 results.center_cavities.tohdf(subgroup)
 
 
-class FileManager(object):
-    def __init__(self):
-        self.types = {"xyz": XYZFile,
-                      "hdf5": HDF5File}
+class File(object):
+    types = {"xyz": XYZFile,
+             "hdf5": HDF5File}
 
-    def filelist(self, directory):
+    @classmethod
+    def listdir(cls, directory):
         return [f for f in os.listdir(directory)
                 if os.path.isfile(os.path.join(directory, f))
-                   and f.split(".")[-1] in self.types]
+                   and f.split(".")[-1] in cls.types]
 
-    def __getitem__(self, filepath):
+    @classmethod
+    def open(cls, filepath):
         e = filepath.split(".")[-1]
-        if not e in self.types:
+        if not e in cls.types:
             raise ValueError("Unknown file format")
-        FileClass = self.types[e]
+        FileClass = cls.types[e]
         return FileClass(os.path.abspath(filepath))
 
-    def __contains__(self, filepath):
+    @classmethod
+    def exists(cls, filepath):
         name = os.path.basename(filepath)
         directory = os.path.dirname(filepath)
-        return name in self.filelist(directory)
+        return name in cls.filelist(directory)
 
 
 

@@ -16,12 +16,15 @@ http://en.wikipedia.org/wiki/Bravais_lattice
 Author: Florian Rhiem <f.rhiem@fz-juelich.de>
 '''
 
+
 from math import ceil, sin, cos, pi
 cot = lambda alpha: cos(alpha) / sin(alpha)
 import itertools
 import numpy as np
 import numpy.linalg as la
 from math import acos
+from util.trap import trap
+
 
 class HexagonalVolume(object):
     '''
@@ -107,6 +110,7 @@ class HexagonalVolume(object):
 
     def __str__(self):
         return "HEX %f %f" % (self.a, self.c)
+
 
 class TriclinicVolume(object):
     '''
@@ -209,6 +213,7 @@ class TriclinicVolume(object):
     def __str__(self):
         return "TRI %f %f %f %f %f %f" % (self.a, self.b, self.c, self.alpha, self.beta, self.gamma)
 
+
 class MonoclinicVolume(TriclinicVolume):
     '''
     A monoclinic volume, a special case of a triclinic volume with and ``alpha=gamma=pi/2``
@@ -235,6 +240,7 @@ class MonoclinicVolume(TriclinicVolume):
     def __str__(self):
         return "MON %f %f %f %f" % (self.a, self.b, self.c, self.beta)
 
+
 class OrthorhombicVolume(TriclinicVolume):
     '''
     An orthorhombic volume, a special case of a triclinic volume with ``alpha=beta=gamma=pi/2``
@@ -259,6 +265,7 @@ class OrthorhombicVolume(TriclinicVolume):
 
     def __str__(self):
         return "ORT %f %f %f" % (self.a, self.b, self.c)
+
 
 class TetragonalVolume(TriclinicVolume):
     '''
@@ -285,6 +292,7 @@ class TetragonalVolume(TriclinicVolume):
     def __str__(self):
         return "TET %f %f" % (self.a, self.c)
 
+
 class RhombohedralVolume(TriclinicVolume):
     '''
     A rhombohedral volume, a special case of a triclinic volume with ``a=b=c`` and ``alpha=beta=gamma``.
@@ -309,6 +317,7 @@ class RhombohedralVolume(TriclinicVolume):
 
     def __str__(self):
         return "RHO %f %f" % (self.a, self.alpha)
+
 
 class CubicVolume(TriclinicVolume):
     '''
@@ -335,41 +344,46 @@ class CubicVolume(TriclinicVolume):
     def __str__(self):
         return "CUB %f" % self.a
 
-volumes = {
-    'HEX' : (HexagonalVolume, 'ff'),
-    'MON' : (MonoclinicVolume, 'ffff'),
-    'TRI' : (TriclinicVolume, 'ffffff'),
-    'ORT' : (OrthorhombicVolume, 'fff'),
-    'TET' : (TetragonalVolume, 'ff'),
-    'RHO' : (RhombohedralVolume,'ff'),
-    'CUB' : (CubicVolume, 'f')
-}
 
-convert_functions = {
-    'f' : float,
-    'i' : int,
-    's' : str
-}
+class Volume(object):
+    '''
+    Can create Subclasses from descriptive String
+    '''
 
-def get_volume_from_string(s):
-    s = s.split(' ')
-    t = s[0].upper() # volume type
-    cl = volumes[t][0] # volume class
-    if len(s) == 10: # cell vectors given
-        param = [float(f) for f in s[1:]]
-    else:
-        param_list = s[1:]
-        param = [convert_functions[p](param_list[i]) for i,p in enumerate(volumes[t][1])] # parsing parameter
-    return cl(*param)
+    volumes = {
+        'HEX' : (HexagonalVolume, 'ff'),
+        'MON' : (MonoclinicVolume, 'ffff'),
+        'TRI' : (TriclinicVolume, 'ffffff'),
+        'ORT' : (OrthorhombicVolume, 'fff'),
+        'TET' : (TetragonalVolume, 'ff'),
+        'RHO' : (RhombohedralVolume,'ff'),
+        'CUB' : (CubicVolume, 'f')
+    }
+
+    convert_functions = {
+        'f' : float,
+        'i' : int,
+        's' : str
+    }
+
+    @classmethod
+    def fromstring(cls, s):
+        s = s.split(' ')
+        t = s[0].upper() # volume type
+        cl = cls.volumes[t][0] # volume class
+        if len(s) == 10: # cell vectors given
+            param = [float(f) for f in s[1:]]
+        else:
+            param_list = s[1:]
+            param = [cls.convert_functions[p](param_list[i]) for i,p in enumerate(cls.volumes[t][1])] # parsing parameter
+        return cl(*param)
+
 
 def get_volume_from_file(filename):
+    trap("DEPRECATED")
     with open(filename,'r') as f:
         f.readline()
         s = f.readline()
-    return get_volume_from_string(s)
+    return Volume.fromstring(s)
 
-if __name__ == '__main__':
-    fn = '../xyz/structure_c.xyz'
-    print get_volume_from_file(fn)
-    fn = '../xyz/hexagonal.xyz'
-    print get_volume_from_file(fn)
+
