@@ -124,7 +124,7 @@ class FileTab(QtGui.QWidget):
                         if reply == QtGui.QMessageBox.No:
                             continue
                     self.calculate_frame(fn, frame, volume, resolution, use_center_points)
-            self.main_window.show_dataset(volume, fn, frames[-1], resolution)
+            self.main_window.show_dataset(calculation.getresults(fn, frames[-1], volume, resolution))
             #print 'calculation finished'
             print_message("calculation finished")
             finish()

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+
+import os
 from core import calculation
 from gui.tabs.file_tab import FileTabDock
 from gui.tabs.view_tab import ViewTabDock
@@ -24,7 +26,7 @@ class MainWindow(QtGui.QMainWindow):
 
         self.docks = []
 
-        self.shown_dataset      = []
+        self.shown_dataset      = None
 
         self.setTabPosition(QtCore.Qt.RightDockWidgetArea, QtGui.QTabWidget.North)
 
@@ -68,7 +70,7 @@ class MainWindow(QtGui.QMainWindow):
 
     def show_settings(self):
         SettingsDialog()
-        self.show_dataset(*self.shown_dataset)
+        self.show_dataset(self.shown_dataset)
 
     def keyPressEvent(self, e):
         if e.key() == QtCore.Qt.Key_M:
@@ -84,10 +86,10 @@ class MainWindow(QtGui.QMainWindow):
     def set_output_callbacks(self, progress_func, print_func, finish_func):
         message.set_output_callbacks(progress_func, print_func, finish_func)
 
-    def show_dataset(self, volume, filename, frame_nr, resolution):
-        self.shown_dataset = [volume, filename, frame_nr, resolution]
-        self.statusBar().showMessage(filename)
-        self.center.show_dataset(volume, filename, frame_nr, resolution)
+    def show_dataset(self, results):
+        self.shown_dataset = results
+        self.statusBar().showMessage(os.path.basename(results.filepath))
+        self.center.show_dataset(results)
 
 #    def closeEvent(self, event):
 #        reply = QtGui.QMessageBox.question(self, 'Message',
@@ -115,5 +117,5 @@ class CentralWidget(QtGui.QWidget):
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setLayout(main_layout)
 
-    def show_dataset(self, volume, filename, frame_nr, resolution):
-        self.gl_widget.show_dataset(volume, filename, frame_nr, resolution)
+    def show_dataset(self, results):
+        self.gl_widget.show_dataset(results)

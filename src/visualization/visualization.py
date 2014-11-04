@@ -10,13 +10,10 @@ from ctypes import c_int
 from util.gl_util import create_perspective_projection_matrix, create_look_at_matrix, create_rotation_matrix_homogenous, create_translation_matrix_homogenous
 
 class Visualization(object):
-    def __init__(self, volume, filename, frame_nr, resolution):
-        #TODO: here is the transition from old to new
-        self.volume = volume
-        self.results = calculation.getresults(filename, frame_nr, volume, resolution)
-
+    def __init__(self):
+        self.max_side_lengths = 1.0
         self.mat = np.eye(4)
-        self.d = max(volume.side_lengths) * 2
+        self.d = self.max_side_lengths * 2
         self.pos = np.array((0, 0, self.d))
         self.up = np.array((0, 1, 0))
         self.right = np.array((1, 0, 0))
@@ -27,16 +24,14 @@ class Visualization(object):
 
         self.settings = VisualizationSettings()
 
+    def setresults(self, results):
+        self.results = results
+        max_side_lengths = max(results.atoms.volume.side_lengths)
+        self.d = self.d / self.max_side_lengths * max_side_lengths 
+        self.max_side_lengths = max_side_lengths
+        self.far = 3 * self.d
         self.create_scene()
         self.set_camera(100, 100)
-
-
-    @property
-    def atoms(self):
-        if not self.results is None:
-            return self.results.atoms
-        else:
-            return None
 
     def create_scene(self):
         show_domains = self.settings.show_domains
@@ -54,7 +49,10 @@ class Visualization(object):
         gr3.setbackgroundcolor(c[0], c[1], c[2], 1.0)
         gr3.clear()
 
-        edges = self.volume.edges
+        if self.results is None:
+            return
+
+        edges = self.results.atoms.volume.edges
         num_edges = len(edges)
         edge_positions = [edge[0] for edge in edges]
         edge_directions = [[edge[1][i]-edge[0][i] for i in range(3)] for edge in edges]
@@ -66,11 +64,11 @@ class Visualization(object):
             num_corners = len(corners)
             gr3.drawspheremesh(num_corners, corners, [(1,1,1)]*num_edges, [edge_radius]*num_edges)
 
-        if not self.atoms is None:
-            gr3.drawspheremesh(self.atoms.number,
-                    self.atoms.positions,
-                    [config.Colors.atoms] * self.atoms.number,
-                    [edge_radius * 4] * self.atoms.number)
+        if self.settings.show_atoms and not self.results.atoms is None:
+            gr3.drawspheremesh(self.results.atoms.number,
+                    self.results.atoms.positions,
+                    [config.Colors.atoms] * self.results.atoms.number,
+                    [edge_radius * 4] * self.results.atoms.number)
 
         if self.results is None:
             return
@@ -97,7 +95,7 @@ class Visualization(object):
 
     def zoom(self, delta):
         zoom_v = 1./20
-        zoom_cap = self.d + zoom_v*delta < max(self.volume.side_lengths)*4
+        zoom_cap = self.d + zoom_v*delta < (self.max_side_lengths)*4
         if self.d + zoom_v * delta > 0 and zoom_cap:
             self.d += zoom_v * delta
 

@@ -5,6 +5,8 @@ from gui import main_window
 from core import volumes, control
 from PySide import QtGui
 import sys
+import os
+import core.calculation
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
@@ -22,6 +24,7 @@ if __name__ == '__main__':
     filename = '../xyz/structure_c.xyz'
 #    filename = '../xyz/hexagonal.xyz'
     volume = volumes.get_volume_from_file(filename)
-    window.show_dataset(volume, filename, 1, 32)
+    results = core.calculation.getresults(filename, 1, None, 32)
+    window.show_dataset(results)
 
     sys.exit(app.exec_())

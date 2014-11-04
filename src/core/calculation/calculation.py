@@ -81,10 +81,11 @@ class Calculation(object):
         inputfile = File.open(filepath)
         # TODO: error handling
         if isinstance(inputfile, core.file.ResultFile):
-            resultfile = inputfile
+            results = inputfile.getresults(frame, resolution)
+        elif filepath in self.cache: 
+            results = self.cache[filepath].getresults(frame, resolution)
         else:
-            resultfile = self.cache[filepath]
-        results = resultfile.getresults(frame, resolution)
+            results = data.Results(filepath, frame, resolution, inputfile.getatoms(frame), None, None, None)
         return results
 
     def calculateframe(self, filepath, frame, resolution, surface=False, center=False, atoms=None):

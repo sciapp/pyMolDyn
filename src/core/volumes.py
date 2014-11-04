@@ -26,6 +26,9 @@ from math import acos
 from util.trap import trap
 
 
+# TODO: check __str__ routines, make them use vectors
+
+
 class HexagonalVolume(object):
     '''
     A hexagonal volume centered in the origin with a side length of ``a`` (for
@@ -211,7 +214,7 @@ class TriclinicVolume(object):
         return "TRICLINIC a=%f b=%f c=%f alpha=%f beta=%f gamma=%f" % (self.a, self.b, self.c, self.alpha, self.beta, self.gamma)
 
     def __str__(self):
-        return "TRI %f %f %f %f %f %f" % (self.a, self.b, self.c, self.alpha, self.beta, self.gamma)
+        return "TRI " + " ".join([str(x) for v in self.translation_vectors for x in v])
 
 
 class MonoclinicVolume(TriclinicVolume):

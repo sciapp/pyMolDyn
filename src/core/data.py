@@ -317,6 +317,7 @@ class Cavities(CavitiesBase):
 
 
 class Results(object):
+    # TODO: somewhere the filepath is set to the cachefilepath
     def __init__(self, filepath, frame, resolution,
                  atoms, domains, surface_cavities, center_cavities):
         self.filepath = filepath

@@ -22,6 +22,7 @@ class GLWidget(QtOpenGL.QGLWidget):
 
     def __init__(self, parent=None):
         QtOpenGL.QGLWidget.__init__(self, parent)
+        self.vis = None
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.update_needed = False
         self.dataset_loaded = False
@@ -35,11 +36,10 @@ class GLWidget(QtOpenGL.QGLWidget):
     def sizeHint(self):
         return QtCore.QSize(config.OpenGL.gl_window_size[0], config.OpenGL.gl_window_size[1])
 
-    def show_dataset(self, volume, filename, frame_nr, resolution):
-        """
-            shows calculation {calculation_nr} of frame {frame_nr} in file {filename}
-        """
-        self.vis = visualization.Visualization(volume, filename, frame_nr, resolution)
+    def show_dataset(self, results):
+        if self.vis is None:
+            self.vis = visualization.Visualization()
+        self.vis.setresults(results)
         self.dataset_loaded = True
         self.updateGL()
 
