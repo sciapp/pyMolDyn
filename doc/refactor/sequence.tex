@@ -1,13 +1,13 @@
 \section{Calculation Process}
 \begin{sequencediagram}
     \newinst{ui}{:UserInterface}
-    \newinst[3]{thread}{:CalculationThread}
-    \newinst[2]{calc}{:Calculation}
+    \newinst[3.5]{thread}{:CalculationThread}
+    \newinst[2.5]{calc}{:Calculation}
 
-    \begin{call}{ui}{CalculationThread(CalcSettings)}{thread}{CalculationThread}
+    \begin{call}{ui}{CalculationThread(CalculationSettings)}{thread}{CalculationThread}
     \end{call}
     \begin{messcall}{ui}{start()}{thread}
-        \begin{call}{thread}{calculate(CalcSettings)}{calc}{Results}
+        \begin{call}{thread}{calculate(CalculationSettings)}{calc}{Results}
         \end{call}
     \end{messcall}
     \begin{call}{ui}{wait()}{thread}{}
