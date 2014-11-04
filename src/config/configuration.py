@@ -171,5 +171,5 @@ class ConfigFile(object):
         for sec in section.sections:
             self.parse_section_to_node(section[sec], getattr(node, sec))
 
-config = ConfigObj()
+config = Configuration()
 config.read()
