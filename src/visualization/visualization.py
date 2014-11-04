@@ -26,6 +26,47 @@ class Visualization(object):
         self.fov = 45.0
 
         self.settings = VisualizationSettings()
+        if self.calculated:
+            res_name = '{}{}.hdf5'.format(config.Path.result_dir, ''.join(os.path.basename(filename).split(".")[:-1]))
+            cr = CalculationResults(res_name, frame_nr, resolution)
+            self.max_domain_index = cr.number_of_domains
+            self.domain_vertices_list = [t[0] for t in cr.domain_triangles]
+            self.domain_normals_list = [t[1] for t in cr.domain_triangles]
+            self.max_cavity_index = cr.number_of_multicavities
+            self.cavity_vertices_list = [t[0] for t in cr.multicavity_triangles]
+            self.cavity_normals_list = [t[1] for t in cr.multicavity_triangles]
+
+        if self.center_based_calculated:
+            self.max_center_cavity_index = cr.number_of_center_multicavities
+            self.center_cavity_vertices_list = [t[0] for t in cr.center_multicavity_triangles]
+            self.center_cavity_normals_list = [t[1] for t in cr.center_multicavity_triangles]
+
+        self.init()
+
+    def init(self):
+        if self.calculated:
+            for domain_index in range(self.max_domain_index):
+                domain_vertices = self.domain_vertices_list[domain_index]
+                domain_normals = self.domain_normals_list[domain_index]
+                num_domain_vertices = len(domain_vertices) * 3
+                mesh = gr3.createmesh(num_domain_vertices, domain_vertices, domain_normals, [1.0, 1.0, 1.0]*num_domain_vertices)
+                self.domain_meshes.append(mesh)
+
+            for cavity_index in range(self.max_cavity_index):
+                cavity_vertices = self.cavity_vertices_list[cavity_index]
+                cavity_normals = self.cavity_normals_list[cavity_index]
+                num_cavity_vertices = len(cavity_vertices) * 3
+                mesh = gr3.createmesh(num_cavity_vertices, cavity_vertices, cavity_normals, [1.0, 1.0, 1.0]*num_cavity_vertices)
+                self.cavity_meshes.append(mesh)
+
+            if self.center_based_calculated:
+                for cavity_index in range(self.max_center_cavity_index):
+        #        for cavity_index in range(self.max_center_cavity_index-1):  fixes Index Error 256K dataset
+                    center_cavity_vertices = self.center_cavity_vertices_list[cavity_index]
+                    center_cavity_normals = self.center_cavity_normals_list[cavity_index]
+                    num_center_cavity_vertices = len(center_cavity_vertices) * 3
+                    mesh = gr3.createmesh(num_center_cavity_vertices, center_cavity_vertices, center_cavity_normals, [1.0, 1.0, 1.0]*num_center_cavity_vertices)
+                    self.center_cavity_meshes.append(mesh)
 
         self.create_scene()
         self.set_camera(100, 100)
