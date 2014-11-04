@@ -275,7 +275,7 @@ class Domains(CavitiesBase):
             super(Domains, self).__init__(*args)
             centers = args[4]
 
-        self.centers = np.array(centers, dtype=np.float, copy=False)
+        self.centers = np.array(centers, dtype=np.int, copy=False)
 
     def tohdf(self, h5group, overwrite=True):
         super(Domains, self).tohdf(h5group, overwrite)

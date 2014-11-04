@@ -14,8 +14,9 @@ __all__ = ["Calculation",
 import os
 import core.data as data
 import core.file
+from core.file import File
 from datetime import datetime
-from algorithm import CavityCalculation, DomainCalculation
+from algorithm import CavityCalculation, DomainCalculation, FakeDomainCalculation
 from discretization import DiscretizationCache, AtomDiscretization
 import util.message as message
 from hashlib import sha256
@@ -48,86 +49,110 @@ class Calculation(object):
             cachedir = config.Path.result_dir
         self.cache = CalculationCache(cachedir)
 
-    def calculatedframes(self, inputfile, resolution, center=False):
+    def calculatedframes(self, filepath, resolution, surface=False, center=False):
         info = None
+        inputfile = File.open(filepath)
+        # TODO: error handling
         if isinstance(inputfile, core.file.ResultFile):
             info = inputfile.info
         else:
-            if inputfile.path in self.cache:
-                cf = self.cache[inputfile.path]
+            if filepath in self.cache:
+                cf = self.cache[filepath]
                 info = cf.info
         if not info is None:
-            if center:
+            if surface:
+                return info[resolution].surface_cavities
+            elif center:
                 return info[resolution].center_cavities
             else:
-                return info[resolution].surface_cavities
+                return info[resolution].domains
         else:
             return data.TimestampList(inputfile.info.num_frames)
 
-    def timestamp(self, inputfile, frame, resolution, center=False):
-        calc = self.calculatedframes(inputfile, resolution, center)
+    def timestamp(self, filepath, frame, resolution, surface=False, center=False):
+        calc = self.calculatedframes(filepath, resolution, surface, center)
         return calc[frame]
 
-    def iscalculated(self, *args):
-        inputfile, frame, resolution = args[:3]
-        if len(args) > 3:
-            center = args[3]
-        else:
-            center=False
-        return not self.timestamp(inputfile, frame,
-                                  resolution, center) is None
+    def iscalculated(self, filepath, frame, resolution, surface=False, center=False):
+        return not self.timestamp(filepath, frame,
+                                  resolution, surface, center) is None
 
-    def getresults(self, *args):
-        inputfile, frame, resolution = args[:3]
-        if len(args) > 3:
-            center = args[3]
-        else:
-            center=False
+    def getresults(self, filepath, frame, resolution, surface=False, center=False):
+        inputfile = File.open(filepath)
+        # TODO: error handling
         if isinstance(inputfile, core.file.ResultFile):
             resultfile = inputfile
         else:
-            resultfile = self.cache[inputfile.path]
+            resultfile = self.cache[filepath]
         results = resultfile.getresults(frame, resolution)
+        return results
 
-    def calculate(self, *args):
-        inputfile, frame, resolution = args[:3]
-        if len(args) > 3:
-            center = args[3]
-        else:
-            center=False
+    def calculateframe(self, filepath, frame, resolution, surface=False, center=False, atoms=None):
+        inputfile = File.open(filepath)
+        # TODO: error handling
         if isinstance(inputfile, core.file.ResultFile):
             resultfile = inputfile
         else:
-            resultfile = self.cache[inputfile.path]
+            resultfile = self.cache[filepath]
         results = resultfile.getresults(frame, resolution)
 
-        if not results is None \
-                and not results.domains is None \
-                and ((center and results.center_cavities) \
-                        or (not center and results.surface_cavities)):
+        if atoms is None:
+            atoms = inputfile.getatoms(frame)
+        volume = atoms.volume
+        if results is None:
+            results = data.Results(filepath, frame, resolution, atoms, None, None, None)
+
+        if not (results.domains is None
+                or (surface and results.surface_cavities is None) \
+                or (center and results.center_cavities is None)):
             message.print_message("Reusing results")
         else:
-            volume = inputfile.info.volume
-            atoms = inputfile.getatoms(frame)
-
+            # TODO: cache directory from config
             discretization_cache = DiscretizationCache('cache.hdf5')
             discretization = discretization_cache.get_discretization(volume, resolution)
             atom_discretization = AtomDiscretization(atoms, discretization)
-            domain_calculation = DomainCalculation(discretization, atom_discretization)
-            cavity_calculation = CavityCalculation(domain_calculation, use_surface_points = not center)
+            if results.domains is None \
+                    or (surface and results.surface_cavities is None):
+                # CavityCalculation depends on DomainCalculation
+                message.print_message("Calculating domains")
+                domain_calculation = DomainCalculation(discretization, atom_discretization)
+            if results.domains is None:
+                results.domains = data.Domains(domain_calculation)
 
-            domains = data.Domains(domain_calculation)
-            if center:
-                surface_cavities = None
-                center_cavities = data.Cavities(cavity_calculation)
-            else:
-                surface_cavities = data.Cavities(cavity_calculation)
-                center_cavities = None
-            results = data.Results(inputfile.path, frame, resolution,
-                                   atoms, domains,
-                                   surface_cavities, center_cavities)
+            if surface and results.surface_cavities is None:
+                message.print_message("Calculating surface-based cavities")
+                cavity_calculation = CavityCalculation(domain_calculation, use_surface_points = True)
+                results.surface_cavities = data.Cavities(cavity_calculation)
+
+            if center and results.center_cavities is None:
+                message.print_message("Calculating center-based cavities")
+                domain_calculation = FakeDomainCalculation(discretization, atom_discretization, results)
+                cavity_calculation = CavityCalculation(domain_calculation, use_surface_points = False)
+                results.center_cavities = data.Cavities(cavity_calculation)
+            # TODO: overwrite?
             resultfile.addresults(results)
+
         return results
+
+    def calculate(self, calcsettings):
+        allresults = []
+        for filename in calcsettings.filenames:
+            fileresults = []
+            filepath = os.path.abspath(filename)
+            if calcsettings.frames[0] == -1:
+                inputfile = File.open(filepath)
+                frames = range(inputfile.info.num_frames)
+            else:
+                frames = calcsettings.frames
+            for frame in frames:
+                frameresult = self.calculateframe(filepath,
+                        frame,
+                        calcsettings.resolution,
+                        surface=calcsettings.surface_cavities,
+                        center=calcsettings.center_cavities)
+                fileresults.append(frameresult)
+            allresults.append(fileresults)
+        return allresults
 
 
 class CalculationCache(object):
@@ -190,8 +215,9 @@ calculation = Calculation()
 
 def calculated(filename, frame_nr, resolution, use_center_points):
     trap("DEPRECATED")
-    f = core.file.XYZFile(filename)
-    return calculation.iscalculated(f, frame_nr - 1, resolution, use_center_points)
+    filepath = os.path.abspath(filename)
+    frame = frame_nr - 1
+    return calculation.iscalculated(filepath, frame, resolution, not use_center_points, use_center_points)
 
 
 def count_frames(filename):
@@ -202,28 +228,24 @@ def count_frames(filename):
 
 def calculated_frames(filename, resolution):
     trap("DEPRECATED")
-    f = core.file.XYZFile(filename)
-    timestamps = calculation.calculatedframes(f, resolution, False)
+    filepath = os.path.abspath(filename)
+    timestamps = calculation.calculatedframes(filepath, resolution, True, False)
     return [i + 1 for i, ts in enumerate(timestamps) if not ts is None]
 
 
 def getresults(filename, frame_nr, volume, resolution):
     trap("DEPRECATED")
-    results = None
-    if filename in calculation.cache:
-        cachefile = calculation.cache[filename]
-        results = cachefile.getresults(frame_nr - 1, resolution)
-    if results is None:
-        f = core.file.XYZFile(filename)
-        results = data.Results(f.path, frame_nr - 1, resolution, f.getatoms(frame_nr - 1), None, None, None)
-    return results
+    filepath = os.path.abspath(filename)
+    frame = frame_nr - 1
+    return calculation.getresults(filepath, frame, resolution, True, True)
 
 
 def calculate_cavities(filename, frame_nr, volume, resolution, use_center_points=False):
     trap("DEPRECATED")
-    f = core.file.XYZFile(filename)
+    filepath = os.path.abspath(filename)
+    frame = frame_nr - 1
     message.print_message("Cavity calculation...")
-    results = calculation.calculate(f, frame_nr - 1, resolution, use_center_points)
+    results = calculation.calculateframe(filepath, frame, resolution, not use_center_points, use_center_points)
     message.print_message('calculation finished')
     message.finish()
     return results

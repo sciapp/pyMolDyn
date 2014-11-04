@@ -31,5 +31,7 @@ if __name__ == "__main__":
     message.set_output_callbacks(progress, print_message, finish)
 
     p = PymoldynTest()
-    f = core.file.File.open(os.path.join(p.path, "GST_111_128_bulk.xyz"))
-    r = p.calculation.calculate(f, 0, 96, False)
+    f = os.path.join(p.path, "GST_111_128_bulk.xyz")
+    cs = core.calculation.CalculationSettings([f], [0], 96, True, True, True)
+    r = p.calculation.calculate(cs)
+    print r

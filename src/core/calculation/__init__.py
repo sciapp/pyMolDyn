@@ -9,4 +9,4 @@ __all__ = ["Calculation",
            "getresults"]
 
 
-from calculation import Calculation, calculated, count_frames, calculated_frames, calculate_cavities, getresults
+from calculation import Calculation, CalculationSettings, calculated, count_frames, calculated_frames, calculate_cavities, getresults
