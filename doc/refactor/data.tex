@@ -105,9 +105,9 @@
     \begin{class}[text width=\umlwidth]{Domains}{-1, -8}
         \inherit{CavitiesBase}
         
-        \attribute{+ centers : Array(Float)}
+        \attribute{+ centers : Array(Integer)}
 
-        \operation{+ Domains(timestamp : Timestamp, volumes : Array(Float), surface\_areas : Array(Float), triangles : List(Array(Float)), centers : Array(Float))}
+        \operation{+ Domains(timestamp : Timestamp, volumes : Array(Float), surface\_areas : Array(Float), triangles : List(Array(Float)), centers : Array(Integer))}
         \operation{+ Domains(h5group : HDF5Group)}
         \operation{+ tohdf(h5group : HDF5Group, overwrite : Boolean)}
     \end{class}

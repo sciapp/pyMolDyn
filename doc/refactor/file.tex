@@ -46,7 +46,7 @@ The implementation of \texttt{InputFile} is \texttt{XYZFile}, which reads a pybe
 \end{tikzpicture}
 
 The \texttt{types} dictionary is used to associate filename extensions (e.\,g.\ xyz) with implementations of \texttt{InputFile}.
-\texttt{\_\_getitem\_\_} looks up which class to use and instanciates it.
+\texttt{open} looks up which class to use and instanciates it.
 
 \todo{Overrideable \texttt{detectfiletype} method (flexibility),\\
 unfiltered file list}
