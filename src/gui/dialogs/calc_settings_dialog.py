@@ -98,7 +98,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
         data_list  = [(os.path.basename(filename),
                         calculation.timestamp(filename, self.resolution, center_based=True, frames=sel),
                         calculation.timestamp(filename, self.resolution, center_based=False, frames=sel))
-                        for filename in enumerate(self.filenames)]
+                        for filename in self.filenames]
 
         header = ['dataset', 'surface based', 'center based']
         table_model = TableModel(self, data_list, header)
@@ -169,8 +169,9 @@ class CalculationSettingsDialog(QtGui.QDialog):
         surface_based = self.surf_check.checkState() == QtCore.Qt.CheckState.Checked
         center_based = self.center_check.checkState() == QtCore.Qt.CheckState.Checked
         return calculation.CalculationSettings(self.filenames,
-                                               self.res_slider.value(),
                                                frames,
+                                               self.res_slider.value(),
+                                               True,
                                                surface_based,
                                                center_based), \
                                                ok

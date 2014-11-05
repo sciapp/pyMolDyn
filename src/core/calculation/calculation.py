@@ -8,7 +8,11 @@ __all__ = ["Calculation",
            "count_frames",
            "calculated_frames",
            "calculate_cavities",
-           "getresults"]
+           "getresults",
+           "delete_center_cavity_information",
+           "timestamp",
+           "calculate"]
+
 
 
 import os
@@ -251,5 +255,21 @@ def calculate_cavities(filename, frame_nr, volume, resolution, use_center_points
     message.finish()
     return results
 
+
 def delete_center_cavity_information(*args):
     pass
+
+
+def timestamp(filename, resolution, center_based, frames):
+    trap("DEPRECATED")
+    filepath = os.path.abspath(filename)
+    ts = calculation.calculatedframes(filepath, resolution, not center_based, center_based)
+    if frames[0] != -1:
+        ts = [ts[f - 1] for f in frames]
+    ts = ["X" if t is None else str(t) for t in ts]
+    return ts
+
+def calculate(settings):
+    trap("DEPRECATED")
+    return calculation.calculate(settings)
+

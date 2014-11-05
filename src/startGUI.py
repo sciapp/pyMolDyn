@@ -23,7 +23,6 @@ if __name__ == '__main__':
 #    filename = '../xyz/GST_111_196_bulk.xyz'
     filename = '../xyz/structure_c.xyz'
 #    filename = '../xyz/hexagonal.xyz'
-    volume = volumes.get_volume_from_file(filename)
     results = core.calculation.getresults(filename, 1, None, 32)
     window.show_dataset(results)
 

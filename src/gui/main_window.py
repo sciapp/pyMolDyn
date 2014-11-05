@@ -88,7 +88,8 @@ class MainWindow(QtGui.QMainWindow):
 
     def show_dataset(self, results):
         self.shown_dataset = results
-        self.statusBar().showMessage(os.path.basename(results.filepath))
+        status = "{}, frame {}, resolution {}".format(os.path.basename(results.filepath), results.frame + 1, results.resolution)
+        self.statusBar().showMessage(status)
         self.center.show_dataset(results)
 
 #    def closeEvent(self, event):

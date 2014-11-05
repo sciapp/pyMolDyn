@@ -33,9 +33,10 @@ class CalculationThread(QtCore.QThread):
     def __init__(self, parent, settings):
         QtCore.QThread.__init__(self, parent)
         self.settings = settings
+        self.results = None
 
     def run(self):
-        calculation.calculate(self.settings)
+        self.results = calculation.calculate(self.settings)
 
 
 class FileTab(QtGui.QWidget):
@@ -123,7 +124,7 @@ class FileTab(QtGui.QWidget):
             self.progress_dialog.exec_()
             thread.wait()
 
-            self.main_window.show_dataset(calculation.getresults(fn, frames[-1], volume, resolution))
+            self.main_window.show_dataset(thread.results[-1][-1])
             print_message("calculation finished")
             finish()
     #
