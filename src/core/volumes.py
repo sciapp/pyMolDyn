@@ -380,13 +380,3 @@ class Volume(object):
             param_list = s[1:]
             param = [cls.convert_functions[p](param_list[i]) for i,p in enumerate(cls.volumes[t][1])] # parsing parameter
         return cl(*param)
-
-
-def get_volume_from_file(filename):
-    trap("DEPRECATED")
-    with open(filename,'r') as f:
-        f.readline()
-        s = f.readline()
-    return Volume.fromstring(s)
-
-

@@ -11,11 +11,12 @@ type_dict = {
     int: ('integer', 'int'),
     float: ('float', 'float'),
     str: ('string', 'string'),
+    unicode: ('string', 'string'),
     bool: ('boolean', 'bool'),
 }
 
 
-class ConfigNode:
+class ConfigNode(object):
 
     def __init__(self):
         pass
@@ -77,7 +78,8 @@ class Configuration(ConfigNode):
                 self.recent_files[i] = self.recent_files[i + 1]
             self.recent_files[self.max_files - 1] = filename
         else:
-            self.append(filename)
+            self.recent_files.append(filename)
+        self.save()
 
     def save(self):
         """
@@ -94,7 +96,7 @@ class Configuration(ConfigNode):
         self._file.read()
 
 
-class ConfigFile:
+class ConfigFile(object):
     """
     ConfigFile that parses the settings to a configuration file using ConfigObj 4
     """
@@ -140,8 +142,8 @@ class ConfigFile:
         for attr_str in dir(node):
             attr = getattr(node, attr_str)
             if isinstance(attr, ConfigNode):
-                section[attr.__class__.__name__] = {}
-                self.parse_node_to_section(attr, section[attr.__class__.__name__])
+                section[type(attr).__name__] = {}
+                self.parse_node_to_section(attr, section[type(attr).__name__])
             elif not inspect.ismethod(attr) and not attr_str.startswith('_'):
                 section[attr_str] = attr
             else:
@@ -171,4 +173,3 @@ class ConfigFile:
 
 config = Configuration()
 config.read()
-

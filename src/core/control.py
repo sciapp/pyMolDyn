@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-from config import configuration
+from config.configuration import config
 from core import calculation
 import os.path
-from config.configuration import config
 
 
 # TODO: create Calculation object

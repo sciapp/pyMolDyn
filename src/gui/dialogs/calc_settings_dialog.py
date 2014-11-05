@@ -46,7 +46,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
 #        font = QFont("Courier New", 14)
 #        table_view.setFont(font)
         # set column width to fit contents (set font first!)
-        # enable sorting
+        # enable sortingq
 #        table_view.setSortingEnabled(True)
 
         ok_button = QtGui.QPushButton('Ok', self)
@@ -73,12 +73,15 @@ class CalculationSettingsDialog(QtGui.QDialog):
         self.table_view = CalculationTable(self)
         self.res_slider.setValue(self.resolution)
         self.update_table()
-        
-        self.checkbox = QtGui.QCheckBox('calculate center based cavities', self)
+
+        self.surf_check = QtGui.QCheckBox('calculate surface based cavities', self)
+        self.surf_check.setCheckState(QtCore.Qt.CheckState.Checked)
+        self.center_check = QtGui.QCheckBox('calculate center based cavities', self)
 
         vbox.addLayout(res_hbox)
         vbox.addWidget(self.table_view)
-        vbox.addWidget(self.checkbox)
+        vbox.addWidget(self.surf_check)
+        vbox.addWidget(self.center_check)
         if len(self.filenames) == 1 and not self.n_frames == 1:
             vbox.addWidget(self.frame_chooser)
         vbox.addLayout(button_hbox)
@@ -90,29 +93,16 @@ class CalculationSettingsDialog(QtGui.QDialog):
                 sel = self.frame_chooser.value()
             else:
                 sel = [1]
-            #do while
-            j = 0
-            data_list  = [( filename,
-                            self.timestamp(self.filenames[i], self.resolution, center_based=False, frames=sel),
-                            self.timestamp(self.filenames[i], self.resolution, center_based=True, frames=sel))
-                            for i, filename in enumerate(self.basenames)]
-            j += 1
-            while j < len(sel) and not calculation.calculated(filename, sel[j], self.resolution, False):
-                data_list  = [( filename,
-                                self.timestamp(self.filenames[i], self.resolution, center_based=True, frames=sel),
-                                self.timestamp(self.filenames[i], self.resolution, center_based=False, frames=sel))
-                                for i, filename in enumerate(self.basenames)]
-                j += 1
         else:
-            data_list  = [( filename,
-                            self.timestamp(self.filenames[i], self.resolution, center_based=True),
-                            self.timestamp(self.filenames[i], self.resolution, center_based=False))
-                            for i, filename in enumerate(self.basenames)]
-        
+            sel = [-1]
+        data_list  = [(os.path.basename(filename),
+                        calculation.timestamp(filename, self.resolution, center_based=True, frames=sel),
+                        calculation.timestamp(filename, self.resolution, center_based=False, frames=sel))
+                        for filename in enumerate(self.filenames)]
+
         header = ['dataset', 'surface based', 'center based']
         table_model = TableModel(self, data_list, header)
         self.table_view.setModel(table_model)
-        
         self.table_view.resizeColumnsToContents()
         self.table_view.resizeRowsToContents()
 
@@ -139,6 +129,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
         self.update_table()
         self.update_frame_chooser(self.resolution)
 
+    #TODO Use timestamp function in calculation
     def timestamp(self, filename, resolution, center_based, frames=-1):
         import h5py
 
@@ -163,7 +154,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
 
     def ok(self):
         self.done(QtGui.QDialog.Accepted)
-    
+
     def cancel(self):
         self.done(QtGui.QDialog.Rejected)
 
@@ -175,5 +166,11 @@ class CalculationSettingsDialog(QtGui.QDialog):
             frames = [1]
         else:
             frames = self.frame_chooser.value()
-        center_based = True if self.checkbox.checkState() == QtCore.Qt.CheckState.Checked else False
-        return self.res_slider.value(), frames, center_based, ok
+        surface_based = self.surf_check.checkState() == QtCore.Qt.CheckState.Checked
+        center_based = self.center_check.checkState() == QtCore.Qt.CheckState.Checked
+        return calculation.CalculationSettings(self.filenames,
+                                               self.res_slider.value(),
+                                               frames,
+                                               surface_based,
+                                               center_based), \
+                                               ok
