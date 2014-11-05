@@ -29,7 +29,7 @@ class Visualization(object):
         max_side_lengths = max(results.atoms.volume.side_lengths)
         self.d = self.d / self.max_side_lengths * max_side_lengths 
         self.max_side_lengths = max_side_lengths
-        self.far = 3 * self.d
+        self.far = 6 * max_side_lengths
         self.create_scene()
         self.set_camera(100, 100)
 

@@ -165,7 +165,11 @@ class HDF5File(ResultFile):
                         center_cavities = data.Cavities(group["center_cavities"])
                     else:
                         center_cavities = None
-                    results = data.Results(self.path, frame, resolution,
+                    if not self.info.sourcefilepath is None:
+                        filepath = self.info.sourcefilepath
+                    else:
+                        filepath = self.path
+                    results = data.Results(filepath, frame, resolution,
                                    atoms, domains, surface_cavities,
                                    center_cavities)
         else:

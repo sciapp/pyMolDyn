@@ -251,3 +251,5 @@ def calculate_cavities(filename, frame_nr, volume, resolution, use_center_points
     message.finish()
     return results
 
+def delete_center_cavity_information(*args):
+    pass
