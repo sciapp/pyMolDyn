@@ -245,7 +245,8 @@ def calculated_frames(filename, resolution):
     trap("DEPRECATED")
     filepath = os.path.abspath(filename)
     timestamps = calculation.calculatedframes(filepath, resolution, True, False)
-    return [i + 1 for i, ts in enumerate(timestamps) if not ts is None]
+    cf = [i + 1 for i, ts in enumerate(timestamps) if not ts is None]
+    return cf
 
 
 def getresults(filename, frame_nr, volume, resolution):
@@ -267,6 +268,7 @@ def calculate_cavities(filename, frame_nr, volume, resolution, use_center_points
 
 
 def delete_center_cavity_information(*args):
+    trap("DEPRECATED")
     pass
 
 
@@ -276,10 +278,17 @@ def timestamp(filename, resolution, center_based, frames):
     ts = calculation.calculatedframes(filepath, resolution, not center_based, center_based)
     if frames[0] != -1:
         ts = [ts[f - 1] for f in frames]
-    ts = ["X" if t is None else str(t) for t in ts]
+    def fmt(t):
+        if t is None:
+            return "X"
+        else:
+            return "{:02d}.{:02d}.{:04d} {:02d}:{:02d}".format(t.day, t.month, t.year, t.hour, t.minute)
+
+    ts = map(fmt, ts)
     return ts
 
 def calculate(settings):
     trap("DEPRECATED")
+    settings.frames = [f - 1 for f in settings.frames]
     return calculation.calculate(settings)
 

@@ -10,6 +10,7 @@ import inspect
 
 
 stream = sys.stdout
+ignore = ["DEPRECATED"]
 
 
 def trap(*args):
@@ -17,7 +18,10 @@ def trap(*args):
     if len(args) > 0:
         name = args[0]
         args = args[1:]
-    else: name = "TRAP"
+    else:
+        name = "TRAP"
+    if name in ignore:
+        return
     print >>stream, "{}:".format(name),
     for a in args:
         print >>stream, a,
