@@ -20,11 +20,11 @@
 
         \operation{+ ResultFile(path : String, sourcefilepath : String)}
         \operation{+ getresults(frame : Integer, resolution : Integer)}
-        \operation{+ addresults(results : Results)}
+        \operation{+ addresults(results : Results, overwrite : Boolean)}
         \operation[0]{+ readinfo() : ResultInfo}
         \operation[0]{+ writeinfo()}
         \operation[0]{+ readresults(frame : Integer, resolution : Integer) : Results}
-        \operation[0]{+ writeresults(results : Results)}
+        \operation[0]{+ writeresults(results : Results, overwrite : Boolean)}
     \end{abstractclass}
 \end{tikzpicture}
 

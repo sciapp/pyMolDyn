@@ -36,7 +36,8 @@ class CalculationSettings(object):
             resolution=config.Computation.std_resolution,
             domains=False,
             surface_cavities=False,
-            center_cavities=False):
+            center_cavities=False,
+            recalculate=False):
         self.filenames = list(filenames)
         self.frames = frames
         self.resolution = resolution
@@ -45,6 +46,7 @@ class CalculationSettings(object):
         self.center_cavities = center_cavities
         self.bonds = False
         self.dihedral_angles = False
+        self.recalculate = recalculate
 
 
 class Calculation(object):
@@ -92,7 +94,7 @@ class Calculation(object):
             results = data.Results(filepath, frame, resolution, inputfile.getatoms(frame), None, None, None)
         return results
 
-    def calculateframe(self, filepath, frame, resolution, surface=False, center=False, atoms=None):
+    def calculateframe(self, filepath, frame, resolution, surface=False, center=False, atoms=None, recalculate=False):
         inputfile = File.open(filepath)
         # TODO: error handling
         if isinstance(inputfile, core.file.ResultFile):
@@ -106,6 +108,11 @@ class Calculation(object):
         volume = atoms.volume
         if results is None:
             results = data.Results(filepath, frame, resolution, atoms, None, None, None)
+
+        if recalculate:
+            results.domains = None
+            results.surface_cavities = None
+            results.center_cavities = None
 
         if not (results.domains is None
                 or (surface and results.surface_cavities is None) \
@@ -135,8 +142,10 @@ class Calculation(object):
                 cavity_calculation = CavityCalculation(domain_calculation, use_surface_points = False)
                 results.center_cavities = data.Cavities(cavity_calculation)
             # TODO: overwrite?
-            resultfile.addresults(results)
+            resultfile.addresults(results, overwrite=recalculate)
+            message.print_message('calculation finished')
 
+        message.finish()
         return results
 
     def calculate(self, calcsettings):
@@ -154,7 +163,8 @@ class Calculation(object):
                         frame,
                         calcsettings.resolution,
                         surface=calcsettings.surface_cavities,
-                        center=calcsettings.center_cavities)
+                        center=calcsettings.center_cavities,
+                        recalculate=calcsettings.recalculate)
                 fileresults.append(frameresult)
             allresults.append(fileresults)
         return allresults

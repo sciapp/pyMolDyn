@@ -88,8 +88,8 @@ class ResultFile(InputFile):
         else:
             return None
 
-    def addresults(self, results):
-        self.writeresults(results)
+    def addresults(self, results, overwrite=True):
+        self.writeresults(results, overwrite=overwrite)
         resinfo = self.info[results.resolution]
         if results.domains:
             resinfo.domains[results.frame] \
@@ -108,7 +108,7 @@ class ResultFile(InputFile):
     def readresults(self, frame, resolution):
         raise NotImplementedError
 
-    def writeresults(self, results):
+    def writeresults(self, results, overwrite=True):
         raise NotImplementedError
 
 
@@ -176,23 +176,24 @@ class HDF5File(ResultFile):
             results = None
         return results
 
-    def writeresults(self, results):
+    def writeresults(self, results, overwrite=True):
         #TODO: error handling
         #TODO: results valid? 
         with h5py.File(self.path) as f:
             #TODO: only write when neccessary
             group = f.require_group("atoms/frame{}".format(results.frame))
+            # TODO: is it OK to never overwrite atoms?
             results.atoms.tohdf(group, overwrite=False)
             group = f.require_group("results/frame{}/resolution{}".format(
                                     results.frame, results.resolution))
             subgroup = group.require_group("domains")
-            results.domains.tohdf(subgroup)
+            results.domains.tohdf(subgroup, overwrite=overwrite)
             if not results.surface_cavities is None:
                 subgroup = group.require_group("surface_cavities")
-                results.surface_cavities.tohdf(subgroup)
+                results.surface_cavities.tohdf(subgroup, overwrite=overwrite)
             if not results.center_cavities is None:
                 subgroup = group.require_group("center_cavities")
-                results.center_cavities.tohdf(subgroup)
+                results.center_cavities.tohdf(subgroup, overwrite=overwrite)
 
 
 class File(object):

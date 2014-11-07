@@ -144,7 +144,7 @@ class Visualization(object):
 
 
 class VisualizationSettings(object):
-    def __init__(self, cavities=True, domains=False, alt_cavities=False, atoms=True, bounding_box=True):
+    def __init__(self, domains=False, cavities=True, alt_cavities=False, atoms=True, bounding_box=True):
         self.show_cavities = cavities
         self.show_domains = domains
         self.show_alt_cavities = alt_cavities
