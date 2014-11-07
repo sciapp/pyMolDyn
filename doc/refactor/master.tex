@@ -19,8 +19,10 @@
 \widowpenalty = 10000
 \displaywidowpenalty = 10000
 
+%\renewcommand{\umlfillcolor}{white}
+%\renewcommand{\umldrawcolor}{black}
 \newlength{\umlwidth}
-\setlength{\umlwidth}{12cm}
+\setlength{\umlwidth}{\linewidth}
 
 \newcommand{\todo}[1]{\noindent\framebox[\linewidth]{\parbox{\linewidth}{\textbf{TODO:}\\#1}}}
 
@@ -35,11 +37,17 @@
 
 %\chapter{Introduction}
 
-\chapter{Class description}
+\chapter{Program Description}
+\input{sequence}
+
+\chapter{Class Description}
 \input{data}
 \input{file}
 \input{calculation}
-\input{control}
 \input{visualization}
+\input{control}
+
+\chapter{File Format}
+\input{hdf5file}
 
 \end{document}

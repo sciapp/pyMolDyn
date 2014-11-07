@@ -27,21 +27,21 @@
     \hline
     \textbf{Class Names} & \textbf{Planned} & \textbf{Implemented} & \textbf{Integrated} \\
     \hline
-    Atoms & 2014-10-07 & 2014-10-07 & \\
+    Atoms & 2014-10-21 & 2014-10-21 & \\
     \hline
-    Volume & --- & old & old \\
+    Volume & 2014-10-28 & 2014-10-28 & old \\
     \hline
     Results, Cavities, Domains & 2014-10-07 & 2014-10-07 & \\
     \hline
-    FileInfo, ResultFileInfo, etc. & 2014-10-07 & 2014-10-07 & \\
+    FileInfo, ResultFileInfo, etc. & 2014-10-21 & 2014-10-21 & \\
     \hline
-    InputFile & 2014-10-07 & 2014-10-07 & \\
+    InputFile & 2014-10-21 & 2014-10-21 & \\
     \hline
-    ResultFile & 2014-10-07 & 2014-10-07 & \\
+    ResultFile & 2014-10-21 & 2014-10-21 & \\
     \hline
-    FileManager & 2014-10-09 & 2014-10-07 & \\
+    File & 2014-10-28 & 2014-10-28 & \\
     \hline
-    Calculation, Cache & 2014-10-07 & 2014-10-07 & \\
+    Calculation, Cache & 2014-11-04 & 2014-11-04 & \\
     \hline
     Calculation Algorithm & --- & old & old \\
     \hline
@@ -49,16 +49,31 @@
     \hline
     Configuration & --- & old & old \\
     \hline
-    CalculationSettings & & & \\
+    CalculationSettings & 2014-11-04 & & \\
     \hline
-    & & & \\
+    VisualizationSettings & 2014-10-22 & 2014-10-22 & \\
     \hline
-    & & & \\
-    \hline
-    & & & \\
+    File Format & 2014-10-21 & 2014-10-21 & \\
     \hline
     & & & \\
     \hline
 \end{tabular}
+
+
+\section*{TODO}
+\subsection*{Software design}
+\begin{itemize}\itemsep0pt
+    \item Instanciate \texttt{Calculation} at a sensible place
+    \item Pass around the \texttt{Control} object
+    \item Logging system (debuglevel etc.)
+    \item Analyze and improve module dependencies
+\end{itemize}
+
+
+\subsection*{Documentation}
+\begin{itemize}\itemsep0pt
+    \item Uses/used-by relations
+    \item Module tree (with classes)
+\end{itemize}
 
 \end{document}

@@ -7,10 +7,30 @@ The interface to get calculation Results:\\
         
         \operation{+ Calculation()}
         \operation{+ Calculation(cachedir : String)}
-        \operation{+ calculatedframes(inputfile : InputFile, resolution : Integer, center : Boolean) : List(Timestamp)}
-        \operation{+ timestamp(inputfile : InputFile, frame : Integer, resolution : Integer, center : Boolean) : Timestamp}
-        \operation{+ \_\_contains\_\_(inputfile : InputFile, frame : Integer, resolution : Integer, center : Boolean) : Boolean}
-        \operation{+ \_\_getitem\_\_(inputfile : InputFile, frame : Integer, resolution : Integer, center : Boolean) : Results}
+        \operation{+ calculatedframes(filepath : String, resolution : Integer, surface : Boolean, center : Boolean) : List(Timestamp)}
+        \operation{+ timestamp(filepath : String, frame : Integer, resolution : Integer, surface : Boolean, center : Boolean) : Timestamp}
+        \operation{+ iscalculated(filepath : String, frame : Integer, resolution : Integer, surface : Boolean, center : Boolean) : Boolean}
+        \operation{+ getresults(filepath : String, frame : Integer, resolution : Integer, surface : Boolean, center : Boolean) : Results}
+        \operation{+ calculateframe(filepath : String, frame : Integer, resolution : Integer, surface : Boolean, center : Boolean) : Results}
+        \operation{+ calculate(calcsettings : CalculationSettings): List(List(Results))}
+    \end{class}
+\end{tikzpicture}
+\\
+If results are cached, \texttt{getresults} returns them; if not, it returns a \texttt{Results} object with only \texttt{Atoms}.
+\texttt{calculateframes} either loads results from cache or calculates them.
+\texttt{calculate} returns a list with an entry for each selected file. This entry itself is a list with a \texttt{Result} for each selcted frame.
+
+\noindent
+\begin{tikzpicture}
+    \begin{class}[text width=\umlwidth]{CalculationSettings}{0, 0}
+        \attribute{+ filenames : List(String)}
+        \attribute{+ frames : List(Integer)}
+        \attribute{+ resolution : Integer}
+        \attribute{+ domains : Boolean}
+        \attribute{+ surface\_cavities : Boolean}
+        \attribute{+ center\_cavities : Boolean}
+        \attribute{+ bonds : Boolean}
+        \attribute{+ dihedral\_angles : Boolean}
     \end{class}
 \end{tikzpicture}
 
@@ -22,11 +42,10 @@ The internal mechanism of caching and creating an index file:\\
         \attribute{+ indexfilepath : String}
         
         \operation{+ CalculationCache(directory : String)}
-        \operation{+ \_\_contains\_\_(filepath : String)}
-        \operation{+ \_\_getitem\_\_(filepath : String)}
+        \operation{+ \_\_contains\_\_(filepath : String) : Boolean}
+        \operation{+ \_\_getitem\_\_(filepath : String) : ResultFile}
     \end{class}
 \end{tikzpicture}
-
 
 \subsection{Algorithm}
 \todo{This part has not been refactored yet.}
@@ -45,7 +64,6 @@ The internal mechanism of caching and creating an index file:\\
     \end{class}
 \end{tikzpicture}
 
-\vspace*{\baselineskip}
 \noindent
 \begin{tikzpicture}
     \begin{class}[text width=\umlwidth]{CavityCalculation}{0, 0}
@@ -66,7 +84,6 @@ The internal mechanism of caching and creating an index file:\\
 \end{tikzpicture}
 \\\todo{Check what data types the code really produces}
 
-\vspace*{\baselineskip}
 \noindent
 \begin{tikzpicture}
     \begin{class}[text width=\umlwidth]{FakeDomainCalculation}{0, 0}
@@ -74,7 +91,7 @@ The internal mechanism of caching and creating an index file:\\
         \attribute{+ atom\_discretization : AtomDiscretization}
         \attribute{+ centers : Array(Float)}
 
-        \operation{+ FakeDomainCalculation(discretization : Discretization, atom\_discretization : AtomDiscretization, results  :CalculationResults)}
+        \operation{+ FakeDomainCalculation(discretization : Discretization, atom\_discretization : AtomDiscretization, results : CalculationResults)}
     \end{class}
 \end{tikzpicture}
 \\\todo{\texttt{FakeDomainCalculation} uses the deprecated \texttt{CalculationResults}}

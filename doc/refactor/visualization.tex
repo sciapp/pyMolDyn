@@ -2,6 +2,29 @@
 
 \begin{tikzpicture}
     \begin{class}[text width=\umlwidth]{Visualization}{0, 0}
+        \attribute{+ volume : Volume}
+        \attribute{+ atoms : Atoms}
+        \attribute{+ results : Results}
+        \attribute{+ settings : VisualizationSettings}
 
+        \operation{+ Visualization()}
+        \operation{+ setresults(results : Results)}
+        \operation{+ create\_scene(show\_domains : Boolean, show\_surface\_cavities : Boolean, show\_center\_cavities : Boolean)}
+        \operation{+ zoom(delta : Float)}
+        \operation{+ rotate\_mouse(dx : Float, dy : Float)}
+        \operation{+ paint(width : Integer, height : Integer)}
+    \end{class}
+\end{tikzpicture}
+
+\noindent
+\begin{tikzpicture}
+    \begin{class}[text width=\umlwidth]{VisualizationSettings}{0, 0}
+        \attribute{+ show\_domains : Boolean}
+        \attribute{+ show\_cavities : Boolean}
+        \attribute{+ show\_alt\_cavities : Boolean}
+        \attribute{+ show\_atoms : Boolean}
+        \attribute{+ show\_bounding\_box : Boolean}
+
+        \operation{+ VisualizationSettings()}
     \end{class}
 \end{tikzpicture}
