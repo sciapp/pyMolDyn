@@ -6,6 +6,7 @@ import visualization
 from config.configuration import config
 from OpenGL.GL import glReadPixels, GL_FLOAT, GL_DEPTH_COMPONENT
 from util.gl_util import create_perspective_projection_matrix, create_look_at_matrix
+from util.trap import trap
 
 
 class UpdateGLEvent(QtCore.QEvent):
@@ -40,7 +41,11 @@ class GLWidget(QtOpenGL.QGLWidget):
     def show_dataset(self, results):
         if self.vis is None:
             self.vis = self.control.visualization
-        self.vis.setresults(results)
+        if self.vis.results is None:
+            trap("WARNING", "setting Visualization.results because they are not set")
+            self.vis.setresults(results)
+        else:
+            trap("WARNING", "not setting Visualization.results")
         self.dataset_loaded = True
         self.updateGL()
 

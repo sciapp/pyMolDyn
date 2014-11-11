@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-# TODO: checkbox to overwrite results
+# TODO: fix indexing in framechooser.py, see FIXMEs in this file
 
 
 from gui.dialogs.util.calc_table import CalculationTable, TableModel
@@ -88,11 +88,14 @@ class CalculationSettingsDialog(QtGui.QDialog):
         self.surf_check = QtGui.QCheckBox('calculate surface based cavities', self)
         self.surf_check.setCheckState(QtCore.Qt.CheckState.Checked)
         self.center_check = QtGui.QCheckBox('calculate center based cavities', self)
+        self.overwrite_check = QtGui.QCheckBox('overwrite existing results', self)
 
         vbox.addLayout(res_hbox)
         vbox.addWidget(self.table_view)
         vbox.addWidget(self.surf_check)
         vbox.addWidget(self.center_check)
+        vbox.addWidget(self.overwrite_check)
+
         if len(self.filenames) == 1 and not self.n_frames == 1:
             vbox.addWidget(self.frame_chooser)
         vbox.addLayout(button_hbox)
@@ -172,10 +175,12 @@ class CalculationSettingsDialog(QtGui.QDialog):
             frames = [f - 1 for f in self.frame_chooser.value()]
         surface_based = self.surf_check.checkState() == QtCore.Qt.CheckState.Checked
         center_based = self.center_check.checkState() == QtCore.Qt.CheckState.Checked
+        overwrite = self.overwrite_check.checkState() == QtCore.Qt.CheckState.Checked
         return calculation.CalculationSettings(self.filenames,
                                                frames,
                                                self.res_slider.value(),
                                                True,
                                                surface_based,
-                                               center_based), \
+                                               center_based,
+                                               overwrite), \
                                                ok

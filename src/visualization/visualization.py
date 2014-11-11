@@ -23,6 +23,7 @@ class Visualization(object):
         self.far = 3 * self.d
         self.fov = 45.0
 
+        self.results = None
         self.settings = VisualizationSettings()
 
     def setresults(self, results):

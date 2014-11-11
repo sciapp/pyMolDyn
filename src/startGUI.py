@@ -24,8 +24,10 @@ if __name__ == '__main__':
     filename = '../xyz/structure_c.xyz'
 #    filename = '../xyz/hexagonal.xyz'
 
-    # TODO: remove this
-    results = core.calculation.getresults(filename, 1, None, 32)
-    window.show_dataset(results)
+    control = window.control
+    settings = core.calculation.CalculationSettings([filename], [1], 32)
+    control.calculate(settings)
+    control.update()
+    window.show_dataset(None) # FIXME: UI does not react without calling this
 
     sys.exit(app.exec_())

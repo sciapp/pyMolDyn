@@ -6,9 +6,16 @@
     \begin{class}[text width=\umlwidth]{Control}{0, 0}
         \attribute{+ config : Configuration}
         \attribute{+ calculation : Calculation}
-        \attribute{+ filemanager : FileManager}
+        \attribute{+ visualization : Visualization}
+        \attribute{+ results : List(List(Results))}
+        \attribute{+ calculationcallback : Function(Function, CalculationSettings)}
+        \attribute{\# lock : Lock}
 
         \operation{+ Control()}
+        \operation{\# \_calculate(settings : CalculationSettings)}
+        \operation{+ calculate(settings : CalculationSettings)}
+        \operation{+ update()}
+        \operation{+ $<<$static$>>$ defaultcallback(func : Function, settings : CalculationSettings)}
     \end{class}
 \end{tikzpicture}
 

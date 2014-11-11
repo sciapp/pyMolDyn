@@ -106,6 +106,7 @@ class Calculation(object):
         return results
 
     def calculateframe(self, filepath, frame, resolution, surface=False, center=False, atoms=None, recalculate=False):
+        message.progress(0)
         inputfile = File.open(filepath)
         # TODO: error handling
         if isinstance(inputfile, core.file.ResultFile):
@@ -122,8 +123,10 @@ class Calculation(object):
 
         if recalculate:
             results.domains = None
-            results.surface_cavities = None
-            results.center_cavities = None
+            if surface:
+                results.surface_cavities = None
+            if center:
+                results.center_cavities = None
 
         if not (results.domains is None
                 or (surface and results.surface_cavities is None) \
@@ -134,6 +137,7 @@ class Calculation(object):
             discretization_cache = DiscretizationCache('cache.hdf5')
             discretization = discretization_cache.get_discretization(volume, resolution)
             atom_discretization = AtomDiscretization(atoms, discretization)
+            message.progress(10)
             if results.domains is None \
                     or (surface and results.surface_cavities is None):
                 # CavityCalculation depends on DomainCalculation
@@ -141,21 +145,23 @@ class Calculation(object):
                 domain_calculation = DomainCalculation(discretization, atom_discretization)
             if results.domains is None:
                 results.domains = data.Domains(domain_calculation)
+            message.progress(40)
 
             if surface and results.surface_cavities is None:
                 message.print_message("Calculating surface-based cavities")
                 cavity_calculation = CavityCalculation(domain_calculation, use_surface_points = True)
                 results.surface_cavities = data.Cavities(cavity_calculation)
+            message.progress(70)
 
             if center and results.center_cavities is None:
                 message.print_message("Calculating center-based cavities")
                 domain_calculation = FakeDomainCalculation(discretization, atom_discretization, results)
                 cavity_calculation = CavityCalculation(domain_calculation, use_surface_points = False)
                 results.center_cavities = data.Cavities(cavity_calculation)
-            # TODO: overwrite?
             resultfile.addresults(results, overwrite=recalculate)
-            message.print_message('calculation finished')
 
+        message.progress(100)
+        message.print_message('calculation finished')
         message.finish()
         return results
 
