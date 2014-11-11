@@ -48,6 +48,17 @@ class CalculationSettings(object):
         self.dihedral_angles = False
         self.recalculate = recalculate
 
+    def copy(self):
+        filenames = [f for f in self.filenames]
+        frames = [f for f in self.frames]
+        return CalculationSettings(filenames,
+                frames,
+                self.resolution,
+                self.domains,
+                self.surface_cavities,
+                self.center_cavities,
+                self.recalculate)
+
 
 class Calculation(object):
     def __init__(self, cachedir=None):

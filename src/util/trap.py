@@ -10,7 +10,8 @@ import inspect
 
 
 stream = sys.stdout
-ignore = ["DEPRECATED"]
+ignore = []
+abort = ["CRITICAL"]
 
 
 def trap(*args):
@@ -33,4 +34,7 @@ def trap(*args):
                     st[2][3],
                     os.path.relpath(st[2][1]),
                     st[2][2])
+    if name in abort:
+        print >>stream, "aborting."
+        sys.exit(1)
 

@@ -20,12 +20,13 @@ class GLWidget(QtOpenGL.QGLWidget):
         OpenGL widget to show the 3D-scene
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, parent):
         QtOpenGL.QGLWidget.__init__(self, parent)
         self.vis = None
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.update_needed = False
         self.dataset_loaded = False
+        self.control = parent.control
 
     def initializeGL(self):
         pass
@@ -38,7 +39,7 @@ class GLWidget(QtOpenGL.QGLWidget):
 
     def show_dataset(self, results):
         if self.vis is None:
-            self.vis = visualization.Visualization()
+            self.vis = self.control.visualization
         self.vis.setresults(results)
         self.dataset_loaded = True
         self.updateGL()

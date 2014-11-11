@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+
+
+# TODO: checkbox to overwrite results
+
+
 from gui.dialogs.util.calc_table import CalculationTable, TableModel
 from gui.dialogs.util.framechooser import LabeledFrameChooser
 from core import calculation
@@ -14,18 +19,22 @@ class CalculationSettingsDialog(QtGui.QDialog):
     def __init__(self, parent, filenames):
         QtGui.QDialog.__init__(self, parent)
 
-        self.init_gui(filenames)
+        self.control = parent.control
+        self.filenames = filenames
+        self.basenames  = [os.path.basename(path) for path in filenames]
+        # TODO: last used resolution
+        self.resolution = config.Computation.std_resolution
+
+        self.init_gui()
         self.setWindowTitle("Calculation Settings")
+
     
-    def init_gui(self, filenames):
+    def init_gui(self):
 
         vbox            = QtGui.QVBoxLayout() 
         button_hbox     = QtGui.QHBoxLayout() 
         res_hbox        = QtGui.QHBoxLayout()
-        self.resolution = config.Computation.std_resolution
 
-        self.filenames  = filenames
-        self.basenames  = [os.path.basename(path) for path in filenames]
         self.res_slider = QtGui.QSlider(QtCore.Qt.Horizontal, self)
         self.res_slider.setMinimum(self.FRAME_MIN)
         self.res_slider.setMaximum(self.FRAME_MAX)
@@ -64,9 +73,11 @@ class CalculationSettingsDialog(QtGui.QDialog):
         button_hbox.addStretch()
 
         if len(self.filenames) == 1:
-            self.n_frames    = calculation.count_frames(filenames[0])
+            timestamps = self.timestamps()[0]
+            self.n_frames = len(timestamps)
             if not self.n_frames == 1:
-                calc_frames = calculation.calculated_frames(filenames[0], self.resolution)
+                # FIXME: indexing
+                calc_frames = [i + 1 for i, t in enumerate(timestamps) if t != "X"]
                 self.frame_chooser = LabeledFrameChooser(self, 1, self.n_frames, calc_frames, 'Frame')
                 self.frame_chooser.value_changed.connect(self.update_table)
         
@@ -91,14 +102,19 @@ class CalculationSettingsDialog(QtGui.QDialog):
         if len(self.filenames) == 1:
             if not self.n_frames == 1:
                 sel = self.frame_chooser.value()
+                # FIXME: indexing
+                sel = [s - 1 for s in sel]
             else:
-                sel = [1]
+                sel = [0]
         else:
-            sel = [-1]
-        data_list  = [(os.path.basename(filename),
-                        calculation.timestamp(filename, self.resolution, center_based=True, frames=sel),
-                        calculation.timestamp(filename, self.resolution, center_based=False, frames=sel))
-                        for filename in self.filenames]
+            sel = range(self.n_frames)
+        
+        surface_ts = [[ts[s] for s in sel] for ts in self.timestamps(center_based=False)]
+        surface_ts = ["X" if "X" in ts else ts[0] for ts in surface_ts]
+        center_ts = [[ts[s] for s in sel] for ts in self.timestamps(center_based=True)]
+        center_ts = ["X" if "X" in ts else ts[0] for ts in center_ts]
+
+        data_list = zip(self.basenames, surface_ts, center_ts)
 
         header = ['dataset', 'surface based', 'center based']
         table_model = TableModel(self, data_list, header)
@@ -108,7 +124,9 @@ class CalculationSettingsDialog(QtGui.QDialog):
 
     def update_frame_chooser(self, resolution):
         if len(self.filenames) == 1 and self.n_frames != 1:
-            calc_frames = calculation.calculated_frames(self.filenames[0], resolution)
+            timestamps = self.timestamps()[0]
+            # FIXME: indexing
+            calc_frames = [i + 1 for i, t in enumerate(timestamps) if t != "X"]
             self.frame_chooser.set_calculated_frames(calc_frames)
 
     def lineedit_return(self):
@@ -129,28 +147,13 @@ class CalculationSettingsDialog(QtGui.QDialog):
         self.update_table()
         self.update_frame_chooser(self.resolution)
 
-    #TODO Use timestamp function in calculation
-    def timestamp(self, filename, resolution, center_based, frames=-1):
-        import h5py
-
-        if os.path.isfile(filename):
-            if frames == -1:
-                frames = range(1, calculation.count_frames(filename)+1)
-
-            if all([calculation.calculated(filename, frame, resolution, False) for frame in frames]):
-                if center_based:
-                    if not all([calculation.calculated(filename, frame, resolution, True) for frame in frames]):
-                        return 'X'
-                base_name = ''.join(os.path.basename(filename).split(".")[:-1])
-                exp_name = "{}{}.hdf5".format(config.Path.result_dir, base_name)
-                try:
-                    with h5py.File(exp_name, "r") as file:
-                        for calc in file['frame{}'.format(frames[0])].values():
-                            if calc.attrs['resolution'] == resolution:
-                                return calc.attrs['timestamp']
-                except:
-                    pass
-        return 'X'
+    def timestamps(self, center_based=False):
+        return [self.control.calculation.calculatedframes(
+                os.path.abspath(fn),
+                self.resolution,
+                not center_based,
+                center_based).prettystrings()
+                for fn in self.filenames]
 
     def ok(self):
         self.done(QtGui.QDialog.Accepted)
@@ -163,9 +166,10 @@ class CalculationSettingsDialog(QtGui.QDialog):
         if len(self.filenames) > 1:
             frames = [-1]
         elif self.n_frames == 1:
-            frames = [1]
+            frames = [0]
         else:
-            frames = self.frame_chooser.value()
+            # FIXME: indexing
+            frames = [f - 1 for f in self.frame_chooser.value()]
         surface_based = self.surf_check.checkState() == QtCore.Qt.CheckState.Checked
         center_based = self.center_check.checkState() == QtCore.Qt.CheckState.Checked
         return calculation.CalculationSettings(self.filenames,

@@ -17,12 +17,12 @@ class MainWindow(QtGui.QMainWindow):
     def __init__(self, control):
         QtGui.QMainWindow.__init__(self, None)
 
+        self.control            = control
         self.center             = CentralWidget(self)
         self.file_dock          = FileTabDock(self)
         self.view_dock          = ViewTabDock(self)
         self.image_video_dock   = ImageVideoTabDock(self)
         self.statistics_dock    = StatisticsTabDock(self)
-        self.control            = control
 
         self.docks = []
 
@@ -88,8 +88,8 @@ class MainWindow(QtGui.QMainWindow):
 
     def show_dataset(self, results):
         self.shown_dataset = results
-        status = "{}, frame {}, resolution {}".format(os.path.basename(results.filepath), results.frame + 1, results.resolution)
-        self.statusBar().showMessage(status)
+        #status = "{}, frame {}, resolution {}".format(os.path.basename(results.filepath), results.frame + 1, results.resolution)
+        #self.statusBar().showMessage(status)
         self.center.show_dataset(results)
 
 #    def closeEvent(self, event):
@@ -106,6 +106,7 @@ class CentralWidget(QtGui.QWidget):
 
     def __init__(self, parent):
         QtGui.QWidget.__init__(self, parent)
+        self.control = parent.control
         self.setWindowTitle('pyMolDyn 2')
         self.init_gui()
  

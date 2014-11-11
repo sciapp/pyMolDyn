@@ -23,6 +23,8 @@ if __name__ == '__main__':
 #    filename = '../xyz/GST_111_196_bulk.xyz'
     filename = '../xyz/structure_c.xyz'
 #    filename = '../xyz/hexagonal.xyz'
+
+    # TODO: remove this
     results = core.calculation.getresults(filename, 1, None, 32)
     window.show_dataset(results)
 

@@ -30,13 +30,13 @@ class CalculationThread(QtCore.QThread):
     """
         Thread to calculate the cavities
     """
-    def __init__(self, parent, settings):
+    def __init__(self, parent, func, settings):
         QtCore.QThread.__init__(self, parent)
+        self.func = func
         self.settings = settings
-        self.results = None
 
     def run(self):
-        self.results = calculation.calculate(self.settings)
+        self.func(self.settings)
 
 
 class FileTab(QtGui.QWidget):
@@ -52,6 +52,7 @@ class FileTab(QtGui.QWidget):
 
         p = self.progress_dialog
         self.main_window.set_output_callbacks(p.progress, p.print_step, p.calculation_finished)
+        self.control = main_window.control
 
     def init_gui(self):
         self.vbox = QtGui.QVBoxLayout()
@@ -76,10 +77,6 @@ class FileTab(QtGui.QWidget):
         self.file_list.itemSelectionChanged.connect(self.selection_changed)
         self.vbox.addWidget(self.file_list)
 
-#        for f in os.listdir("../xyz"):
-#            if f.endswith(".xyz"):
-#                self.file_list.add_file(os.path.join("../xyz", f))
-        # load recent files
         for path in config.recent_files:
             self.file_list.add_file(path)
 
@@ -100,6 +97,12 @@ class FileTab(QtGui.QWidget):
             if fn:
                 self.file_list.add_file(fn)
 
+    def calculationcallback(self, func, settings):
+        thread = CalculationThread(self, func, settings)
+        thread.finished.connect(self.control.update)
+        thread.start()
+        self.progress_dialog.exec_()
+
     def calculate(self):
         filenames = map(str, self.file_list.get_selection())
         if len(filenames) == 0:
@@ -109,41 +112,8 @@ class FileTab(QtGui.QWidget):
         settings, ok = dia.calculation_settings()
 
         if ok:
-            calculated = [calculation.calculated(fn, frame, settings.resolution, False) for frame in settings.frames for fn in settings.filenames]
-            if any(calculated):
-                #show Yes No Dialog
-                reply = QtGui.QMessageBox.warning(self,
-                                                'Warning',
-                                                "Are you sure that the existing results should be overwritten?",
-                                                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-                                                QtGui.QMessageBox.No)
-                if reply == QtGui.QMessageBox.No:
-                    return
-            thread = CalculationThread(self, settings)
-            thread.start()
-            self.progress_dialog.exec_()
-            thread.wait()
-
-            self.main_window.show_dataset(thread.results[-1][-1])
-            print_message("calculation finished")
-            finish()
-    #
-    # def calculate_frames(self, filename, frame_nr, resolution, use_center_points):
-    #     if calculation.calculated(filename, frame_nr, resolution, True):
-    #         base_name = ''.join(os.path.basename(filename).split(".")[:-1])
-    #         exp_name = "{}{}.hdf5".format(config.Path.result_dir, base_name)
-    #         calculation.delete_center_cavity_information(exp_name, frame_nr, resolution)
-    #
-    #     if use_center_points:
-    #         if not calculation.calculated(filename, frame_nr, resolution, False):
-    #             thread = CalculationThread(self, filename, frame_nr, resolution, False)
-    #             thread.start()
-    #             self.progress_dialog.exec_()
-    #             thread.wait()
-    #
-    #     thread = CalculationThread(self, filename, frame_nr, resolution, use_center_points)
-    #     thread.start()
-    #     self.progress_dialog.exec_()
+            self.control.calculationcallback = self.calculationcallback
+            self.control.calculate(settings)
 
 
 class DragList(QtGui.QListWidget):

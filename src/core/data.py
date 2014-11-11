@@ -70,6 +70,14 @@ class TimestampList(object):
     def tostrlist(self):
         return ["" if x is None else str(x) for x in self.timestamps]
 
+    def prettystrings(self):
+        def fmt(t):
+            if t is None:
+                return "X"
+            else:
+                return "{:02d}.{:02d}.{:04d} {:02d}:{:02d}".format(t.day, t.month, t.year, t.hour, t.minute)
+        return map(fmt, self.timestamps)
+
 
 class CalculatedFrames(object):
     def __init__(self, *args):
