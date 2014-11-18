@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 
 
-# TODO: fix indexing in framechooser.py, see FIXMEs in this file
-
-
 from gui.dialogs.util.calc_table import CalculationTable, TableModel
 from gui.dialogs.util.framechooser import LabeledFrameChooser
 from core import calculation
 import os.path
 from config.configuration import config
 from PySide import QtGui, QtCore
+
 
 class CalculationSettingsDialog(QtGui.QDialog):
 
@@ -76,9 +74,8 @@ class CalculationSettingsDialog(QtGui.QDialog):
             timestamps = self.timestamps()[0]
             self.n_frames = len(timestamps)
             if not self.n_frames == 1:
-                # FIXME: indexing
-                calc_frames = [i + 1 for i, t in enumerate(timestamps) if t != "X"]
-                self.frame_chooser = LabeledFrameChooser(self, 1, self.n_frames, calc_frames, 'Frame')
+                calc_frames = [i for i, t in enumerate(timestamps) if t != "X"]
+                self.frame_chooser = LabeledFrameChooser(self, self.n_frames, calc_frames, 'Frame')
                 self.frame_chooser.value_changed.connect(self.update_table)
         
         self.table_view = CalculationTable(self)
@@ -105,16 +102,16 @@ class CalculationSettingsDialog(QtGui.QDialog):
         if len(self.filenames) == 1:
             if not self.n_frames == 1:
                 sel = self.frame_chooser.value()
-                # FIXME: indexing
-                sel = [s - 1 for s in sel]
             else:
                 sel = [0]
         else:
             sel = range(self.n_frames)
         
+        # get timestamps for selected frames for each file
         surface_ts = [[ts[s] for s in sel] for ts in self.timestamps(center_based=False)]
-        surface_ts = ["X" if "X" in ts else ts[0] for ts in surface_ts]
         center_ts = [[ts[s] for s in sel] for ts in self.timestamps(center_based=True)]
+        # reduce to a single value per file
+        surface_ts = ["X" if "X" in ts else ts[0] for ts in surface_ts]
         center_ts = ["X" if "X" in ts else ts[0] for ts in center_ts]
 
         data_list = zip(self.basenames, surface_ts, center_ts)
@@ -128,8 +125,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
     def update_frame_chooser(self, resolution):
         if len(self.filenames) == 1 and self.n_frames != 1:
             timestamps = self.timestamps()[0]
-            # FIXME: indexing
-            calc_frames = [i + 1 for i, t in enumerate(timestamps) if t != "X"]
+            calc_frames = [i for i, t in enumerate(timestamps) if t != "X"]
             self.frame_chooser.set_calculated_frames(calc_frames)
 
     def lineedit_return(self):
@@ -171,8 +167,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
         elif self.n_frames == 1:
             frames = [0]
         else:
-            # FIXME: indexing
-            frames = [f - 1 for f in self.frame_chooser.value()]
+            frames = self.frame_chooser.value()
         surface_based = self.surf_check.checkState() == QtCore.Qt.CheckState.Checked
         center_based = self.center_check.checkState() == QtCore.Qt.CheckState.Checked
         overwrite = self.overwrite_check.checkState() == QtCore.Qt.CheckState.Checked

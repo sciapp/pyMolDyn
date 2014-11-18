@@ -10,12 +10,12 @@ from PySide import QtCore, QtGui
 class LabeledFrameChooser(QtGui.QWidget):
     value_changed = QtCore.Signal()
 
-    def __init__(self, parent, minf, maxf, calculated, text):
+    def __init__(self, parent, num_frames, calculated, text):
         QtGui.QWidget.__init__(self, parent)
         
-        self.framebar   = FrameBar(self, minf, maxf, calculated)
+        self.framebar   = FrameBar(self, num_frames, calculated)
         self.text       = text
-        self.maxf       = maxf
+        self.num_frames = num_frames
 
         self.init_gui()
 
@@ -57,7 +57,9 @@ class LabeledFrameChooser(QtGui.QWidget):
 
     def lineedit_return_pressed(self):
         try:
-            l = [int(i.strip()) for i in str(self.lineedit.text()).split(',')]
+            l_1 = [int(i.strip()) for i in str(self.lineedit.text()).split(',')]
+            # translate indices from human to machine 
+            l = [i - 1 for i in l_1]
         except ValueError:
             print 'Enter a valid number'
         self.framebar.set_selection(l)
@@ -69,24 +71,27 @@ class LabeledFrameChooser(QtGui.QWidget):
         self.update_lineedit()
 
     def update_lineedit(self):
-        self.lineedit.setText(str(self.framebar.get_selection())[1:-1])
+        sel = self.framebar.get_selection()
+        # translate indices from machine to human
+        sel_1 = [i + 1 for i in sel]
+        s_1 = ", ".join([str(i) for i in sel_1])
+        self.lineedit.setText(s_1)
 
     def value(self):
         return self.framebar.get_selection()
 
 class FrameBar(QtGui.QWidget):
 
-    def __init__(self, parent, minf, maxf, calculated):
+    def __init__(self, parent, num_frames, calculated):
         QtGui.QWidget.__init__(self, parent)
         
         self.parent         = parent
-        self.minf           = minf
-        self.maxf           = maxf
+        self.num_frames     = num_frames
         self.calculated     = calculated
         self.width          = 300
         self.height         = 10 
-        self.selection      = [self.minf]
-        self.last_clicked   = self.minf 
+        self.selection      = [0]
+        self.last_clicked   = 0 
 
         self.setMinimumSize(self.width+5, self.height+5)
 
@@ -94,7 +99,7 @@ class FrameBar(QtGui.QWidget):
         red     = QtGui.QColor(255,180,180)
         green   = QtGui.QColor(180,255,180)
         blue    = QtGui.QColor(180,180,255)
-        self.h  = float(self.width)/(self.maxf-self.minf+1)
+        self.h  = float(self.width)/(self.num_frames)
 
         p = self.painter
         
@@ -104,15 +109,15 @@ class FrameBar(QtGui.QWidget):
         p.drawRect(0, 0, self.width, self.height)
         p.setBrush(green)
         for frame in self.calculated:
-            i = frame - 1
+            i = frame
             p.drawRect(i*self.h, 1, self.h, self.height-1)
         p.setBrush(blue)
         for sel in self.selection:
             i = sel
-            p.drawRect((i-self.minf)*self.h, 1, self.h, self.height-1)
+            p.drawRect(i*self.h, 1, self.h, self.height-1)
         p.setPen(QtCore.Qt.SolidLine)
         p.setBrush(QtCore.Qt.NoBrush)
-        for i in range(self.maxf - self.minf + 1):
+        for i in range(self.num_frames):
             p.drawLine( (i+1) * self.h ,0, (i+1) * self.h, self.height)
         p.drawRect(0, 0, self.width, self.height)
 
@@ -126,7 +131,7 @@ class FrameBar(QtGui.QWidget):
 
     def process_mouse_press(self, e):
         if e.buttons() and QtCore.Qt.LeftButton:
-            clicked = self.minf + int(e.x()/self.h)
+            clicked = int(e.x()/self.h)
             if 0 < e.x() < self.width and 0 < e.y() < self.height:
                 self.process_mouse_event(clicked, e)
         e.ignore()
@@ -150,7 +155,7 @@ class FrameBar(QtGui.QWidget):
 
     def mouseMoveEvent(self, e):
         if e.buttons() and QtCore.Qt.LeftButton:
-            clicked = self.minf + int(e.x()/self.h)
+            clicked = int(e.x()/self.h)
             if 0 < e.x() < self.width:
                 self.process_mouse_event(clicked, e)
         e.ignore()
@@ -160,7 +165,7 @@ class FrameBar(QtGui.QWidget):
 
     def set_selection(self, l):
         for value in l:
-            if self.minf > value or value > self.maxf:
+            if not 0 <= value < self.num_frames:
                 l.remove(value)
             self.selection = l
             self.repaint()
