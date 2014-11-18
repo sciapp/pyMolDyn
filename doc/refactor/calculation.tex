@@ -11,7 +11,7 @@ The interface to get calculation Results:\\
         \operation{+ timestamp(filepath : String, frame : Integer, resolution : Integer, surface : Boolean, center : Boolean) : Timestamp}
         \operation{+ iscalculated(filepath : String, frame : Integer, resolution : Integer, surface : Boolean, center : Boolean) : Boolean}
         \operation{+ getresults(filepath : String, frame : Integer, resolution : Integer, surface : Boolean, center : Boolean) : Results}
-        \operation{+ calculateframe(filepath : String, frame : Integer, resolution : Integer, surface : Boolean, center : Boolean, recalculate : Boolean) : Results}
+        \operation{+ calculateframe(filepath : String, frame : Integer, resolution : Integer, domains : Boolean, surface : Boolean, center : Boolean, recalculate : Boolean) : Results}
         \operation{+ calculate(calcsettings : CalculationSettings): List(List(Results))}
     \end{class}
 \end{tikzpicture}

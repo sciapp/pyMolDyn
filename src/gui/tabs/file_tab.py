@@ -100,6 +100,7 @@ class FileTab(QtGui.QWidget):
     def calculationcallback(self, func, settings):
         thread = CalculationThread(self, func, settings)
         thread.finished.connect(self.control.update)
+        thread.finished.connect(self.main_window.updatestatus)
         thread.start()
         self.progress_dialog.exec_()
 

@@ -105,7 +105,7 @@ class Calculation(object):
             results = data.Results(filepath, frame, resolution, inputfile.getatoms(frame), None, None, None)
         return results
 
-    def calculateframe(self, filepath, frame, resolution, surface=False, center=False, atoms=None, recalculate=False):
+    def calculateframe(self, filepath, frame, resolution, domains=False, surface=False, center=False, atoms=None, recalculate=False):
         message.progress(0)
         inputfile = File.open(filepath)
         # TODO: error handling
@@ -128,7 +128,7 @@ class Calculation(object):
             if center:
                 results.center_cavities = None
 
-        if not (results.domains is None
+        if not ((domains and results.domains is None) \
                 or (surface and results.surface_cavities is None) \
                 or (center and results.center_cavities is None)):
             message.print_message("Reusing results")
@@ -138,7 +138,7 @@ class Calculation(object):
             discretization = discretization_cache.get_discretization(volume, resolution)
             atom_discretization = AtomDiscretization(atoms, discretization)
             message.progress(10)
-            if results.domains is None \
+            if (domains and results.domains is None) \
                     or (surface and results.surface_cavities is None):
                 # CavityCalculation depends on DomainCalculation
                 message.print_message("Calculating domains")
@@ -179,6 +179,7 @@ class Calculation(object):
                 frameresult = self.calculateframe(filepath,
                         frame,
                         calcsettings.resolution,
+                        domains=calcsettings.domains,
                         surface=calcsettings.surface_cavities,
                         center=calcsettings.center_cavities,
                         recalculate=calcsettings.recalculate)
@@ -278,7 +279,7 @@ def calculate_cavities(filename, frame_nr, volume, resolution, use_center_points
     filepath = os.path.abspath(filename)
     frame = frame_nr - 1
     message.print_message("Cavity calculation...")
-    results = calculation.calculateframe(filepath, frame, resolution, not use_center_points, use_center_points)
+    results = calculation.calculateframe(filepath, frame, resolution, True, not use_center_points, use_center_points)
     message.print_message('calculation finished')
     message.finish()
     return results

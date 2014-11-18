@@ -28,6 +28,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.update_needed = False
         self.dataset_loaded = False
         self.control = parent.control
+        self.vis = self.control.visualization
 
     def initializeGL(self):
         pass
@@ -40,17 +41,18 @@ class GLWidget(QtOpenGL.QGLWidget):
 
     def show_dataset(self, results):
         if self.vis is None:
+            trap("WARNING", "gl_widget.show_dataset: gl_widget.vis is None")
             self.vis = self.control.visualization
         if self.vis.results is None:
-            trap("WARNING", "setting Visualization.results because they are not set")
+            trap("WARNING", "gl_widget.show_dataset: setting Visualization.results because they are not set")
             self.vis.setresults(results)
         else:
-            trap("WARNING", "not setting Visualization.results")
+            trap("WARNING", "gl_widget.show_dataset: not setting Visualization.results")
         self.dataset_loaded = True
         self.updateGL()
 
     def mouseMoveEvent(self, e):
-        if self.dataset_loaded:
+        if not self.vis is None:
             dx = e.x() - self.x
             dy = e.y() - self.y
             if e.buttons() & QtCore.Qt.LeftButton:
@@ -63,7 +65,7 @@ class GLWidget(QtOpenGL.QGLWidget):
             self.updateGL()
 
     def wheelEvent(self, e):
-        if self.dataset_loaded:
+        if not self.vis is None:
             self.update_needed = True
             if e.modifiers() != QtCore.Qt.ShiftModifier:
                 if e.orientation() == QtCore.Qt.Orientation.Vertical:
@@ -78,13 +80,13 @@ class GLWidget(QtOpenGL.QGLWidget):
             QtGui.QApplication.postEvent(self, UpdateGLEvent())
 
     def mousePressEvent(self, e):
-        if self.dataset_loaded:
+        if not self.vis is None:
             if e.buttons() and QtCore.Qt.LeftButton:
                 self.x = e.x()
                 self.y = e.y()
 
     def mouseDoubleClickEvent(self, e):
-        if self.dataset_loaded:
+        if not self.vis is None:
             if e.buttons() and QtCore.Qt.LeftButton:
                 x = e.x()
                 y = self.height() - e.y()
@@ -109,7 +111,7 @@ class GLWidget(QtOpenGL.QGLWidget):
 
 #     def create_scene(self, show_box, show_atoms, show_domains, show_cavities=True, center_based_cavities=False):
     def create_scene(self):
-        if self.dataset_loaded:
+        if not self.vis is None:
             self.vis.create_scene()
             self.updateGL()
 
@@ -117,7 +119,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         """
             catches and processes key presses
         """
-        if self.dataset_loaded:
+        if not self.vis is None:
             rot_v_key = 15
             if e.key() == QtCore.Qt.Key_Right:
                 self.vis.rotate_mouse(rot_v_key, 0)
@@ -150,7 +152,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         """
             refresh scene
         """
-        if self.dataset_loaded:
+        if not self.vis is None:
             self.vis.paint(self.geometry().width(), self.geometry().height())
         else:
             import gr3
