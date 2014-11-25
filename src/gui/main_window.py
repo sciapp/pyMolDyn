@@ -70,7 +70,7 @@ class MainWindow(QtGui.QMainWindow):
 
     def show_settings(self):
         SettingsDialog()
-        self.show_dataset(self.shown_dataset)
+        self.control.update()
 
     def keyPressEvent(self, e):
         if e.key() == QtCore.Qt.Key_M:
@@ -85,10 +85,6 @@ class MainWindow(QtGui.QMainWindow):
 
     def set_output_callbacks(self, progress_func, print_func, finish_func):
         message.set_output_callbacks(progress_func, print_func, finish_func)
-
-    def show_dataset(self, results):
-        self.shown_dataset = results
-        self.center.show_dataset(results)
 
     def updatestatus(self):
         results = self.control.results[-1][-1]

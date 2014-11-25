@@ -39,13 +39,11 @@ class Visualization(object):
         show_domains = self.settings.show_domains
         show_surface_cavities = self.settings.show_cavities
         show_center_cavities = self.settings.show_alt_cavities
-        if show_surface_cavities:
-            show_domains = False
         if show_center_cavities:
             show_domains = False
             show_surface_cavities = False
-        if not show_surface_cavities and not show_center_cavities:
-            show_domains = True
+        elif show_surface_cavities:
+            show_domains = False
 
         c = config.Colors.background
         gr3.setbackgroundcolor(c[0], c[1], c[2], 1.0)

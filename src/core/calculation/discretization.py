@@ -10,7 +10,6 @@ import itertools
 import numpy as np
 import h5py
 from util.message import print_message, progress, finish
-from util.trap import trap
 import algorithm
 
 

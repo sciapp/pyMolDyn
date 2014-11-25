@@ -75,7 +75,7 @@ class TimestampList(object):
             if t is None:
                 return "X"
             else:
-                return "{:02d}.{:02d}.{:04d} {:02d}:{:02d}".format(t.day, t.month, t.year, t.hour, t.minute)
+                return t.strftime("%d.%m.%Y %H:%M:%S")
         return map(fmt, self.timestamps)
 
 

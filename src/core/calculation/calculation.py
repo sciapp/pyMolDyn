@@ -14,7 +14,6 @@ __all__ = ["Calculation",
            "calculate"]
 
 
-
 import os
 import core.data as data
 import core.file
@@ -24,8 +23,13 @@ from algorithm import CavityCalculation, DomainCalculation, FakeDomainCalculatio
 from discretization import DiscretizationCache, AtomDiscretization
 import util.message as message
 from hashlib import sha256
-from util.trap import trap
 from config.configuration import config
+from util.logger import Logger
+import sys
+
+
+logger = Logger("calculation")
+logger.setstream("default", sys.stdout, Logger.WARNING)
 
 
 class CalculationSettings(object):
@@ -247,20 +251,20 @@ calculation = Calculation()
 
 
 def calculated(filename, frame_nr, resolution, use_center_points):
-    trap("DEPRECATED")
+    logger.warn("use of deprecated function")
     filepath = os.path.abspath(filename)
     frame = frame_nr - 1
     return calculation.iscalculated(filepath, frame, resolution, not use_center_points, use_center_points)
 
 
 def count_frames(filename):
-    trap("DEPRECATED")
+    logger.warn("use of deprecated function")
     f = core.file.XYZFile(filename)
     return f.info.num_frames
 
 
 def calculated_frames(filename, resolution):
-    trap("DEPRECATED")
+    logger.warn("use of deprecated function")
     filepath = os.path.abspath(filename)
     timestamps = calculation.calculatedframes(filepath, resolution, True, False)
     cf = [i + 1 for i, ts in enumerate(timestamps) if not ts is None]
@@ -268,14 +272,14 @@ def calculated_frames(filename, resolution):
 
 
 def getresults(filename, frame_nr, volume, resolution):
-    trap("DEPRECATED")
+    logger.warn("use of deprecated function")
     filepath = os.path.abspath(filename)
     frame = frame_nr - 1
     return calculation.getresults(filepath, frame, resolution, True, True)
 
 
 def calculate_cavities(filename, frame_nr, volume, resolution, use_center_points=False):
-    trap("DEPRECATED")
+    logger.warn("use of deprecated function")
     filepath = os.path.abspath(filename)
     frame = frame_nr - 1
     message.print_message("Cavity calculation...")
@@ -286,12 +290,12 @@ def calculate_cavities(filename, frame_nr, volume, resolution, use_center_points
 
 
 def delete_center_cavity_information(*args):
-    trap("DEPRECATED")
+    logger.warn("use of deprecated function")
     pass
 
 
 def timestamp(filename, resolution, center_based, frames):
-    trap("DEPRECATED")
+    logger.warn("use of deprecated function")
     filepath = os.path.abspath(filename)
     ts = calculation.calculatedframes(filepath, resolution, not center_based, center_based)
     if frames[0] != -1:
@@ -300,13 +304,13 @@ def timestamp(filename, resolution, center_based, frames):
         if t is None:
             return "X"
         else:
-            return "{:02d}.{:02d}.{:04d} {:02d}:{:02d}".format(t.day, t.month, t.year, t.hour, t.minute)
+            t.strftime("%d.%m.%Y %H:%M:%S")
 
     ts = map(fmt, ts)
     return ts
 
 def calculate(settings):
-    trap("DEPRECATED")
+    logger.warn("use of deprecated function")
     settings.frames = [f - 1 for f in settings.frames]
     return calculation.calculate(settings)
 

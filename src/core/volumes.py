@@ -23,7 +23,6 @@ import itertools
 import numpy as np
 import numpy.linalg as la
 from math import acos
-from util.trap import trap
 
 
 # TODO: check __str__ routines, make them use vectors
