@@ -1,26 +1,26 @@
 ``volumes`` -- Volumes for Bravais lattice systems
 ==================================================
-.. automodule:: volumes
+.. automodule:: core.volumes
 
 Triclinic volumes
 -----------------
-.. autoclass:: volumes.TriclinicVolume
+.. autoclass:: TriclinicVolume
    :members:
 
 Special cases
 +++++++++++++
-.. autoclass:: volumes.MonoclinicVolume
+.. autoclass:: MonoclinicVolume
    :members:
-.. autoclass:: volumes.OrthorhombicVolume
+.. autoclass:: OrthorhombicVolume
    :members:
-.. autoclass:: volumes.TetragonalVolume
+.. autoclass:: TetragonalVolume
    :members:
-.. autoclass:: volumes.RhombohedralVolume
+.. autoclass:: RhombohedralVolume
    :members:
-.. autoclass:: volumes.CubicVolume
+.. autoclass:: CubicVolume
    :members:
 
 Hexagonal volumes
 -----------------
-.. autoclass:: volumes.HexagonalVolume
+.. autoclass:: HexagonalVolume
    :members:

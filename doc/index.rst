@@ -12,8 +12,10 @@ Contents:
    :maxdepth: 2
    :numbered:
    
-   calculation
+   data
    volumes
+   calculation
+   algorithm
 
 
 Indices and tables

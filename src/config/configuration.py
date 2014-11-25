@@ -110,7 +110,10 @@ class ConfigFile(object):
         """
         spec_file = configobj.ConfigObj(CONFIG_SPEC_FILE)
         self.generate_spec_for_section(self.file, spec_file)
-        spec_file.write()
+        try:
+            spec_file.write()
+        except IOError as e:
+            print "IOError in configuration.py:114"
 
     def generate_spec_for_section(self, section, spec_section):
         """
@@ -131,9 +134,15 @@ class ConfigFile(object):
         self.file = configobj.ConfigObj(CONFIG_FILE)
         self.parse_node_to_section(self.config, self.file)
 
-        self.file.write()
+        try:
+            self.file.write()
+        except IOError as e:
+            print "IOError in configuration.py:138"
         self.generate_configspec()
-        self.file.write()
+        try:
+            self.file.write()
+        except IOError as e:
+            print "IOError in configuration.py:143"
 
     def parse_node_to_section(self, node, section):
         """

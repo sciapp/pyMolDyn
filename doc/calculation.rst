@@ -1,29 +1,15 @@
-``calculation`` -- The cavity calculation algorithms
+``calculation`` -- The cavity calculation
 ====================================================
-.. automodule:: calculation
+.. automodule:: core.calculation.calculation
 
 Atom data
 ---------
-.. autoclass:: Atoms
+.. autoclass:: Calculation
+    :members:
 
-.. autoclass:: AtomDiscretization
+.. autoclass:: CalculationCache
+    :members:
 
-``Discretization`` and the ``DiscretizationCache``
---------------------------------------------------
-.. autoclass:: Discretization
-   :members:
-   
-.. autoclass:: DiscretizationCache
-   :members:
+.. autoclass:: CalculationSettings
+    :members:
 
-Domain calculation
-------------------
-
-.. autoclass:: DomainCalculation
-   :members:
-   
-Surface-based cavity calculation
---------------------------------
-
-.. autoclass:: CavityCalculation
-   :members:
