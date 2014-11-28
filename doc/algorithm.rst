@@ -9,8 +9,8 @@ Domain calculation
 .. autoclass:: DomainCalculation
    :members:
    
-Surface-based cavity calculation
---------------------------------
+Cavity calculation
+------------------
 
 .. autoclass:: CavityCalculation
    :members:

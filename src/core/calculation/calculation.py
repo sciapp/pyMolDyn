@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-
+"""
+With the classes in this module the rather complicated calculation process
+can be started with a simple method call.
+Additionally, results are stored in a cache and can be reused later.
+"""
 
 __all__ = ["Calculation",
            "CalculationCache",
@@ -33,6 +37,30 @@ logger.setstream("default", sys.stdout, Logger.WARNING)
 
 
 class CalculationSettings(object):
+    """
+    Structure to store the parameters for one or more calculation.
+
+    **Attributes:**
+        `filenames` :
+            list of names of input files, from which the atoms will be loaded
+        `frames` :
+            list of frame numbers which are used for every filename
+            in `filenames`. ``[-1]`` means 'all frames'.
+        `resolution` :
+            resolution parameter for the discretization
+        `domains` :
+            calculate cavitiy domains
+        `surface_cavities` :
+            calculate surface-based cavities
+        `center_cavities` :
+            calculate center-based cavities
+        `bonds` :
+            calculate bonds
+        `dihedral_angles` :
+            calculate dihedral angles
+        `recalculate` :
+            results will be calculated even if cached results exists
+    """
 
     def __init__(self,
             filenames,
@@ -42,6 +70,8 @@ class CalculationSettings(object):
             surface_cavities=False,
             center_cavities=False,
             recalculate=False):
+        """
+        """
         self.filenames = list(filenames)
         self.frames = frames
         self.resolution = resolution
@@ -53,6 +83,10 @@ class CalculationSettings(object):
         self.recalculate = recalculate
 
     def copy(self):
+        """
+        **Returns:**
+            A deep copy of this object.
+        """
         filenames = [f for f in self.filenames]
         frames = [f for f in self.frames]
         return CalculationSettings(filenames,
@@ -65,12 +99,39 @@ class CalculationSettings(object):
 
 
 class Calculation(object):
+    """
+    This class provides the methods to start calculations.
+    Optionally, results can be read from a cache.
+    """
+
     def __init__(self, cachedir=None):
+        """
+        **Parameters:**
+            `cachedir` :
+                directory to store the cache files in; if none is given,
+                a default one is used
+        """
         if cachedir is None:
             cachedir = config.Path.result_dir
         self.cache = CalculationCache(cachedir)
 
     def calculatedframes(self, filepath, resolution, surface=False, center=False):
+        """
+        Query the cache if it contains results for the given parameters.
+
+        **Parameters:**
+            `filepath` :
+                absolute path of the input file
+            `resolution` :
+                resolution of the used discretization
+            `surface` :
+                query calculation results for surface-based cavities
+            `center` :
+                query calculation results for center-based cavities
+
+        **Returns:**
+            A `TimestampList` containing the dates of the calculation or `None`.
+        """
         info = None
         inputfile = File.open(filepath)
         # TODO: error handling
@@ -91,14 +152,43 @@ class Calculation(object):
             return data.TimestampList(inputfile.info.num_frames)
 
     def timestamp(self, filepath, frame, resolution, surface=False, center=False):
+        """
+        Query the cache if it contains results for the given parameters.
+
+        **Returns:**
+            The date and time when cached results were calculated
+            on `None` if they do not exist.
+        """
         calc = self.calculatedframes(filepath, resolution, surface, center)
         return calc[frame]
 
     def iscalculated(self, filepath, frame, resolution, surface=False, center=False):
+        """
+        **Returns:**
+            If the cache contains results for the given parameters.
+        """
         return not self.timestamp(filepath, frame,
                                   resolution, surface, center) is None
 
     def getresults(self, filepath, frame, resolution, surface=False, center=False):
+        """
+        Get cached results for the given parameters.
+
+        **Parameters:**
+            `filepath` :
+                absolute path of the input file
+            `frame` :
+                the frame number
+            `resolution` :
+                resolution of the used discretization
+            `surface` :
+                query calculation results for surface-based cavities
+            `center` :
+                query calculation results for center-based cavities
+
+        **Returns:**
+            A `Results` object if cached results exist, else `None`
+        """
         inputfile = File.open(filepath)
         # TODO: error handling
         if isinstance(inputfile, core.file.ResultFile):
@@ -110,6 +200,29 @@ class Calculation(object):
         return results
 
     def calculateframe(self, filepath, frame, resolution, domains=False, surface=False, center=False, atoms=None, recalculate=False):
+        """
+        Get results for the given parameters. They are either loaded from the
+        cache or calculated.
+
+        **Parameters:**
+            `filepath` :
+                absolute path of the input file
+            `frame` :
+                the frame number
+            `resolution` :
+                resolution of the used discretization
+            `domains` :
+                calculate cavitiy domains
+            `surface` :
+                calculate surface-based cavities
+            `center` :
+                calculate center-based cavities
+            `recalculate` :
+                results will be calculated even if cached results exists
+
+        **Returns:**
+            A `Results` object.
+        """
         message.progress(0)
         inputfile = File.open(filepath)
         # TODO: error handling
@@ -170,6 +283,19 @@ class Calculation(object):
         return results
 
     def calculate(self, calcsettings):
+        """
+        Calculate (or load from the cache) all results for the given settings.
+
+        **Parameters:**
+            `calcsettings` :
+                `CalculationSettings` object
+
+        **Returns:**
+            A list of list of `Results` objects. The outer list contains
+            an entry for each entry in `calcsettings.filenames`; the inner
+            list has a `Results` entry for each frame specified in
+            `calcsettings.frames`.
+        """
         allresults = []
         for filename in calcsettings.filenames:
             fileresults = []
@@ -193,8 +319,22 @@ class Calculation(object):
 
 
 class CalculationCache(object):
-    #TODO: replacement strategy
+    """
+    Stores calculation results. Associates the input file with a
+    'hdf5' file containing the calculated results.
+    This is realized with a single directory containing hdf5 files that
+    are named after the SHA256 value of the absolute path of the input file.
+    Additionally, an index file "index.txt" is created, which contains
+    the input file paths and the resulting hdf5 file names.
+    """
+
+    # TODO: replacement strategy
     def __init__(self, directory):
+        """
+        **Parameters:**
+            `directory` :
+                path of the directory in which the cahce files are stored
+        """
         self.directory = directory
         self.index = dict()
         self.indexfilepath = self.abspath("index.txt")
@@ -202,11 +342,30 @@ class CalculationCache(object):
         self.writeindex()
 
     def __contains__(self, filepath):
+        """
+        **Parameters:**
+            `filepath` :
+                path to the input file
+
+        **Returns:**
+            If a cache file for the given input file exists.
+        """
         sourcefilepath = os.path.abspath(filepath)
         cachefilepath = self.abspath(self.cachefile(sourcefilepath))
         return os.path.isfile(cachefilepath)
 
     def __getitem__(self, filepath):
+        """
+        Get the cache file for a given input file.
+
+        **Parameters:**
+            `filepath` :
+                path to the input file
+
+        **Returns:**
+            A `HDF5File` object. If it does not exist for the input file,
+            a new one is created.
+        """
         sourcefilepath = os.path.abspath(filepath)
         cachefilepath = self.abspath(self.cachefile(sourcefilepath))
         if not sourcefilepath in self.index:

@@ -1,15 +1,16 @@
-``calculation`` -- The cavity calculation
-====================================================
+``calculation`` -- Calculate Cavities and Domains
+=================================================
 .. automodule:: core.calculation.calculation
 
-Atom data
----------
 .. autoclass:: Calculation
-    :members:
-
-.. autoclass:: CalculationCache
+    :special-members: __init__
     :members:
 
 .. autoclass:: CalculationSettings
+    :special-members: __init__
+    :members:
+
+.. autoclass:: CalculationCache
+    :special-members: __init__, __getitem__, __contains__
     :members:
 
