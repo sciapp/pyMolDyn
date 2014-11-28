@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+This module provides classes to handle pyMolDyn related files.
+"""
 
 
 __all__ = ["File",
@@ -16,18 +19,41 @@ import data
 
 
 class InputFile(object):
+    """
+    Abstract access to a file that contains atom data for one or more frames.
+    Subclasses need to implement the `readinfo` and `readatoms` methods.
+    """
+
     def __init__(self, path):
+        """
+        **Parameters:**
+            `path` :
+                absolute path to the file
+        """
         self.path = path
         self._info = data.FileInfo()
         self.inforead = False
 
     @property
     def info(self):
+        """
+        `FileInfo` object that contains metadata
+        """
         if not self.inforead:
             self.readinfo()
         return self._info
 
     def getatoms(self, frame):
+        """
+        Read atom data for a specified frame.
+
+        **Parameters:**
+            `frame` :
+                the frame number
+
+        **Returns:**
+            an `Atoms` object
+        """
         return self.readatoms(frame)
 
     def readinfo(self):
@@ -38,6 +64,9 @@ class InputFile(object):
 
 
 class XYZFile(InputFile):
+    """
+    Implementation on `InputFile` for Open Babel 'xyz' files.
+    """
     def __init__(self, path):
         super(XYZFile, self).__init__(path)
 
@@ -77,18 +106,56 @@ class XYZFile(InputFile):
 
 
 class ResultFile(InputFile):
+    """
+    Abstract access to a file that contains both input data (atoms) and
+    calculated results.
+    The `info` attribute has the type `ResultInfo`.
+    In addition the `readinfo` and `readatoms` methods, subclasses must
+    implement `writeinfo`, `readresults` and `writeresults`.
+    """
+
     def __init__(self, path, sourcefilepath=None):
+        """
+        **Parameters:**
+            `path` :
+                absolute path to the file
+
+            `sourcefilepath` :
+                path to the file where the input data originally came from
+        """
         super(ResultFile, self).__init__(path)
         self._info = data.ResultInfo()
         self._info.sourcefilepath = sourcefilepath
 
     def getresults(self, frame, resolution):
+        """
+        Read results from this file.
+
+        **Parameters:**
+            `frame` :
+                the frame number
+            `resolution` :
+                the resolution of the calculation
+
+        **Returns:**
+            A `Results` object, if the file contains results for the
+            specified parameters. Otherwise it return `None`.
+        """
         if not self.info[resolution].domains[frame] is None:
             return self.readresults(frame, resolution)
         else:
             return None
 
     def addresults(self, results, overwrite=True):
+        """
+        Write calculated results into this file.
+
+        **Parameters:**
+            `results` :
+                the results to write
+            `overwrite` :
+                specifies if existing results should be overwritten
+        """
         self.writeresults(results, overwrite=overwrite)
         resinfo = self.info[results.resolution]
         if results.domains:
@@ -113,6 +180,9 @@ class ResultFile(InputFile):
 
 
 class HDF5File(ResultFile):
+    """
+    Implementation on `ResultFile` for 'hdf5' files.
+    """
     def __init__(self, path, sourcefilepath=None):
         super(HDF5File, self).__init__(path, sourcefilepath)
 
@@ -197,17 +267,42 @@ class HDF5File(ResultFile):
 
 
 class File(object):
+    """
+    Provides static methods for easy access to files and directories.
+    The class attribute `types` associates filename endings with
+    classes to handle them.
+    """
     types = {"xyz": XYZFile,
              "hdf5": HDF5File}
 
     @classmethod
     def listdir(cls, directory):
+        """
+        List all (possible) pyMolDyn files in the directory.
+
+        **Parameters:**
+            `directory` :
+                path to a directory
+
+        **Returns:**
+            A list of filenames which can be opened.
+        """
         return [f for f in os.listdir(directory)
                 if os.path.isfile(os.path.join(directory, f))
                    and f.split(".")[-1] in cls.types]
 
     @classmethod
     def open(cls, filepath):
+        """
+        Get the associated `InputFile` class for the given file.
+
+        **Parameters:**
+            `filepath` :
+                path to the file
+
+        **Returns:**
+            An object of a subclass of `InputFile`.
+        """
         e = filepath.split(".")[-1]
         if not e in cls.types:
             raise ValueError("Unknown file format")
@@ -216,6 +311,17 @@ class File(object):
 
     @classmethod
     def exists(cls, filepath):
+        """
+        Check if a file exists and if it can be opened.
+
+        **Parameters:**
+            `filepath` :
+                path to the file
+
+        **Returns:**
+            `True` if the file exists and there is a subclass of `InputFile`
+            associated with the filename ending.
+        """
         name = os.path.basename(filepath)
         directory = os.path.dirname(filepath)
         return name in cls.filelist(directory)

@@ -12,7 +12,6 @@ import dateutil.parser
 import h5py
 import pybel
 import volumes
-import calculation.algorithm as algorithm
 from config.configuration import config
 
 
@@ -523,6 +522,9 @@ class Domains(CavitiesBase):
         - ``Domains(hdf5group)`` :
             read the data from this hdf5 group
         """
+        # Import this here to avoid cyclic imports
+        import calculation.algorithm as algorithm
+
         if isinstance(args[0], h5py.Group):
             super(Domains, self).__init__(*args)
             h5group = args[0]
@@ -577,6 +579,9 @@ class Cavities(CavitiesBase):
         - ``Cavities(hdf5group)`` :
             read the data from this hdf5 group
         """
+        # Import this here to avoid cyclic imports
+        import calculation.algorithm as algorithm
+
         if isinstance(args[0], h5py.Group):
             super(Cavities, self).__init__(*args)
             h5group = args[0]
