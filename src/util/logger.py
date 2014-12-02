@@ -15,6 +15,7 @@ class Logger(object):
     ALERT = 1
     CRIT = 2
     ERR = 3
+    ERROR = 3
     WARNING = 4
     WARN = 4
     NOTICE = 5
@@ -56,6 +57,9 @@ class Logger(object):
         self._log(self.CRIT, message)
 
     def err(self, message):
+        self._log(self.ERR, message)
+
+    def error(self, message):
         self._log(self.ERR, message)
 
     def warn(self, message):
