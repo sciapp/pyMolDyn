@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Visualize Atoms and Cavities with GR3
+"""
 
 from math import sin, cos, sqrt, pi
 import gr3
@@ -11,6 +14,9 @@ from util.gl_util import create_perspective_projection_matrix, create_look_at_ma
 
 
 class Visualization(object):
+    """
+    Visualize Atoms and Cavities with GR3
+    """
     def __init__(self):
         self.max_side_lengths = 1.0
         self.mat = np.eye(4)
@@ -27,15 +33,25 @@ class Visualization(object):
         self.settings = VisualizationSettings()
 
     def setresults(self, results):
+        """
+        Set the results that will be displayed
+
+        **Parameters:**
+            `results` :
+                :class:`core.data.Results` object to visualize
+        """
         self.results = results
         max_side_lengths = max(results.atoms.volume.side_lengths)
         self.d = self.d / self.max_side_lengths * max_side_lengths 
         self.max_side_lengths = max_side_lengths
         self.far = 6 * max_side_lengths
         self.create_scene()
-        self.set_camera(100, 100)
 
     def create_scene(self):
+        """
+        Create GR3 meshes. ``self.results`` contains the mesh data
+        and in ``self.settings`` is specified which meshes shound be rendered.
+        """
         show_domains = self.settings.show_domains
         show_surface_cavities = self.settings.show_cavities
         show_center_cavities = self.settings.show_alt_cavities
@@ -94,19 +110,29 @@ class Visualization(object):
             gr3.deletemesh(c_int(mesh.value))
 
     def zoom(self, delta):
+        """
+        Adjust the zoom level.
+
+        **Parameters:**
+            `delta` :
+                the increment of the distance from the camera to the center
+        """
         zoom_v = 1./20
         zoom_cap = self.d + zoom_v*delta < (self.max_side_lengths)*4
         if self.d + zoom_v * delta > 0 and zoom_cap:
             self.d += zoom_v * delta
 
     def translate_mouse(self, dx, dy):
+        """
+        Translate the model.
+        """
         trans_v = 1./1000
         diff_vec = (dx * self.mat[:3, 0] + (-1 * dy) * self.mat[:3,1])
         self.mat[:3, 3] += -1 * max(self.d,20) * trans_v * diff_vec
 
     def rotate_mouse(self, dx, dy):
         """
-            calculates rotation to a given dx and dy on the screen
+        Rotate the model according to a mouse movement (dx, dy) on the screen.
         """
         rightt = self.mat[:3, 0]
         upt = self.mat[:3, 1]
@@ -123,7 +149,7 @@ class Visualization(object):
 
     def set_camera(self, width, height):
         """
-            updates the shown scene after perspective has changed
+        Update the shown scene after the perspective has changed.
         """
         rightt = self.mat[:3, 0]
         upt = self.mat[:3, 1]
@@ -137,16 +163,31 @@ class Visualization(object):
 
     def paint(self, width, height):
         """
-            refreshes the OpenGL scene
+        Refresh the OpenGL scene.
         """
         self.set_camera(width, height)
         gr3.drawimage(0, width, 0, height, width, height, gr3.GR3_Drawable.GR3_DRAWABLE_OPENGL)
 
 
 class VisualizationSettings(object):
+    """
+    Container for settings that control which part of the data is visualized.
+    Attributes:
+
+        `show_domains`
+
+        `show_cavities`
+
+        `show_alt_cavities`
+
+        `show_atoms`
+
+        `show_bounding_box`
+
+    """
     def __init__(self, domains=False, cavities=True, alt_cavities=False, atoms=True, bounding_box=True):
-        self.show_cavities = cavities
         self.show_domains = domains
+        self.show_cavities = cavities
         self.show_alt_cavities = alt_cavities
         self.show_atoms = atoms
         self.show_bounding_box = bounding_box

@@ -6,7 +6,8 @@ File and Directory Access
 -------------------------
 .. autoclass:: File
    :members:
-   
+
+.. autoclass:: FileError
 
 Input Files
 -----------
@@ -18,11 +19,13 @@ Input Files
 .. autoclass:: XYZFile
     :members:
 
+
 Result Files
 ------------
 
 .. autoclass:: ResultFile
    :special-members: __init__
+   :inherited-members:
    :members:
 
 .. autoclass:: HDF5File

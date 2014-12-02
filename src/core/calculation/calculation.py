@@ -32,7 +32,7 @@ from util.logger import Logger
 import sys
 
 
-logger = Logger("calculation")
+logger = Logger("core.calculation")
 logger.setstream("default", sys.stdout, Logger.WARNING)
 
 

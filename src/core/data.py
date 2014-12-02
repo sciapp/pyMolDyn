@@ -13,6 +13,11 @@ import h5py
 import pybel
 import volumes
 from config.configuration import config
+from util.logger import Logger
+
+
+logger = Logger("core.data")
+logger.setstream("default", sys.stdout, Logger.WARNING)
 
 
 __all__ = ["Atoms",
@@ -664,18 +669,22 @@ class Results(object):
     # Properties to be compatible to the old CalculationResults
     @property
     def number_of_atoms(self):
+        logger.warn("use of deprecated property")
         return self.atoms.number
 
     @property
     def atom_positions(self):
+        logger.warn("use of deprecated property")
         return self.atoms.positions
 
     @property
     def atom_radii(self):
+        logger.warn("use of deprecated property")
         return self.atoms.radii
 
     @property
     def number_of_domains(self):
+        logger.warn("use of deprecated property")
         if not self.domains is None:
             return self.domains.number
         else:
@@ -683,6 +692,7 @@ class Results(object):
 
     @property
     def domain_volumes(self):
+        logger.warn("use of deprecated property")
         if not self.domains is None:
             return self.domains.volumes
         else:
@@ -690,6 +700,7 @@ class Results(object):
 
     @property
     def domain_surface_areas(self):
+        logger.warn("use of deprecated property")
         if not self.domains is None:
             return self.domains.surface_areas
         else:
@@ -697,6 +708,7 @@ class Results(object):
 
     @property
     def domain_centers(self):
+        logger.warn("use of deprecated property")
         if not self.domains is None:
             return self.domains.centers
         else:
@@ -704,6 +716,7 @@ class Results(object):
 
     @property
     def domain_triangles(self):
+        logger.warn("use of deprecated property")
         if not self.domains is None:
             return self.domains.triangles
         else:
@@ -711,6 +724,7 @@ class Results(object):
 
     @property
     def number_of_multicavities(self):
+        logger.warn("use of deprecated property")
         if not self.surface_cavities is None:
             return self.surface_cavities.number
         else:
@@ -718,6 +732,7 @@ class Results(object):
 
     @property
     def multicavity_volumes(self):
+        logger.warn("use of deprecated property")
         if not self.surface_cavities is None:
             return self.surface_cavities.volumes
         else:
@@ -725,6 +740,7 @@ class Results(object):
 
     @property
     def multicavity_surface_areas(self):
+        logger.warn("use of deprecated property")
         if not self.surface_cavities is None:
             return self.surface_cavities.surface_areas
         else:
@@ -732,6 +748,7 @@ class Results(object):
 
     @property
     def multicavities(self):
+        logger.warn("use of deprecated property")
         if not self.surface_cavities is None:
             return self.surface_cavities.multicavities
         else:
@@ -739,6 +756,7 @@ class Results(object):
 
     @property
     def multicavity_triangles(self):
+        logger.warn("use of deprecated property")
         if not self.surface_cavities is None:
             return self.surface_cavities.triangles
         else:
@@ -746,6 +764,7 @@ class Results(object):
 
     @property
     def number_of_center_multicavities(self):
+        logger.warn("use of deprecated property")
         if not self.center_cavities is None:
             return self.center_cavities.number
         else:
@@ -753,6 +772,7 @@ class Results(object):
 
     @property
     def center_multicavity_volumes(self):
+        logger.warn("use of deprecated property")
         if not self.center_cavities is None:
             return self.center_cavities.volumes
         else:
@@ -760,6 +780,7 @@ class Results(object):
 
     @property
     def center_multicavity_surface_areas(self):
+        logger.warn("use of deprecated property")
         if not self.center_cavities is None:
             return self.center_cavities.surface_areas
         else:
@@ -767,6 +788,7 @@ class Results(object):
 
     @property
     def center_multicavities(self):
+        logger.warn("use of deprecated property")
         if not self.center_cavities is None:
             return self.center_cavities.multicavities
         else:
@@ -774,6 +796,7 @@ class Results(object):
 
     @property
     def center_multicavity_triangles(self):
+        logger.warn("use of deprecated property")
         if not self.center_cavities is None:
             return self.center_cavities.triangles
         else:

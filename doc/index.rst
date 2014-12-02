@@ -17,6 +17,8 @@ Contents:
    file
    calculation
    algorithm
+   visualization
+   control
 
 
 Indices and tables

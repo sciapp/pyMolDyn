@@ -20,13 +20,14 @@ import sys
 from util.logger import Logger
 
 
-logger = Logger("file")
+logger = Logger("core.file")
 logger.setstream("default", sys.stdout, Logger.WARNING)
 
 
 class FileError(Exception):
     """
-    Exception to be raised when the data inside a file are incorrect.
+    Exception which will be raised by the subclasses of :class:`InputFile`
+    if errors occur when handling the data inside the file.
     """
 
     def __init__(self, message, cause=None):
