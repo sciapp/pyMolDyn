@@ -32,7 +32,7 @@ from util.logger import Logger
 import sys
 
 
-logger = Logger("calculation")
+logger = Logger("core.calculation")
 logger.setstream("default", sys.stdout, Logger.WARNING)
 
 
@@ -232,7 +232,10 @@ class Calculation(object):
             resultfile = inputfile
         else:
             resultfile = self.cache[filepath]
-        results = resultfile.getresults(frame, resolution)
+        try:
+            results = resultfile.getresults(frame, resolution)
+        except:
+            results = None
 
         if atoms is None:
             atoms = inputfile.getatoms(frame)
@@ -340,6 +343,8 @@ class CalculationCache(object):
         self.directory = directory
         self.index = dict()
         self.indexfilepath = self.abspath("index.txt")
+        if not os.path.isdir(directory):
+            os.mkdir(directory)
         self.buildindex()
         self.writeindex()
 
