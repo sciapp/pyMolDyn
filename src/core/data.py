@@ -41,19 +41,19 @@ def writedataset(h5group, name, data, overwrite=True):
 
 class TimestampList(object):
     """
-    A `list`-like structure with a fixed length to store `datetime` objects.
-    For each frame it contains a calculation date or `None`.
+    A `list`-like structure with a fixed length to store :class:`datetime`
+    objects.  For each frame it contains a calculation date or `None`.
     """
 
     def __init__(self, *args):
         """
-        Creates an empty `TimestampList` with a given length
+        Creates an empty :class:`TimestampList` with a given length
         or copies values from a `list`.
 
         The constructor can be called in two ways:
 
         - ``TimestampList(num_frames)`` :
-            create an empty `TimestampList` with the length `num_frames`
+            create an empty :class:`TimestampList` with the length `num_frames`
 
         - ``TimestampList(list)`` :
             copy the values from the given list of strings
@@ -100,7 +100,7 @@ class TimestampList(object):
 
     def tostrlist(self):
         """
-        Converts the `datetime` objects to strings.
+        Converts the :class:`datetime` objects to strings.
         `None` values are converted to empty strings.
 
         **Returns:**
@@ -110,7 +110,7 @@ class TimestampList(object):
 
     def prettystrings(self):
         """
-        Converts the `datetime` objects to human-readable strings.
+        Converts the :class:`datetime` objects to human-readable strings.
         `None` values are converted to "X".
 
         **Returns:**
@@ -128,7 +128,7 @@ class CalculatedFrames(object):
     """
     Contains information what results are calculated for what frame.
     The information about the three kinds of results are stored in
-    these attributes of the type `TimestampList`:
+    these attributes of the type :class:`TimestampList`:
 
         `domains`
 
@@ -175,8 +175,8 @@ class CalculatedFrames(object):
 
         **Returns:**
 
-            If the `hasdata` method of any of the `TimestampList` attributes
-            returns `True`
+            If the `hasdata` method of any of the :class:`TimestampList`
+            attributes returns `True`
         """
         return self.domains.hasdata() or \
                self.surface_cavities.hasdata() or \
@@ -187,10 +187,10 @@ class CalculatedFrames(object):
         Write the data to a hdf5 Group.
 
         **Parameters:**
-            `h5group` : `h5py.Group`
+            `h5group` :
                 the hdf5 group in which the data will be written
 
-            `overwrite` : `bool`
+            `overwrite` :
                 specifies if existing data should be overwritten
         """
         if self.hasdata():
@@ -216,8 +216,6 @@ class FileInfo(object):
 
     def __init__(self, num_frames=None, volumestr=None):
         """
-        Construct a new `FileInfo` object.
-
         **Parameters:**
             `num_frames` :
                 number of frames which are stored in the file
@@ -238,7 +236,7 @@ class FileInfo(object):
 
 class ResultInfo(FileInfo):
     """
-    Information about a `ResultFile`:
+    Information about a :class:`core.file.ResultFile`:
 
         `num_frames` :
             number of frames which are stored in the file
@@ -259,12 +257,10 @@ class ResultInfo(FileInfo):
 
     def __init__(self, *args):
         """
-        Construct a new `ResultInfo` object.
-
         The constructor can be called in two ways:
 
         - ``ResultInfo()`` :
-            create an empty `ResultInfo` object
+            create an empty :class:`ResultInfo` object
 
         - ``ResultInfo(hdf5group)`` :
             read the data from this hdf5 group
@@ -288,15 +284,15 @@ class ResultInfo(FileInfo):
 
     def __getitem__(self, resolution):
         """
-        Get a `CalculatedFrames` object for the specified resulotion.
+        Get a :class:`CalculatedFrames` object for the specified resulotion.
 
         **Parameters:**
             `resolution`:
                 the resolution for which the information will be queried
 
         **Returns:**
-             A `CalculatedFrames` object with information about existing
-             calculations
+             A :class:`CalculatedFrames` object with information about
+             existing calculations.
         """
         if not resolution in self.calculatedframes:
             self.calculatedframes[resolution] = CalculatedFrames(self.num_frames)
@@ -311,7 +307,7 @@ class ResultInfo(FileInfo):
                 the resolution for which the information will be queried
 
         **Returns:**
-             If a `CalculatedFrames` object for this resolution exists
+             If a :class:`CalculatedFrames` object for this resolution exists
         """
         return resolution in self.calculatedframes
 
@@ -320,10 +316,10 @@ class ResultInfo(FileInfo):
         Write the data to a hdf5 Group.
 
         **Parameters:**
-            `h5group` : `h5py.Group`
+            `h5group` :
                 the hdf5 group in which the data will be written
 
-            `overwrite` : `bool`
+            `overwrite` :
                 specifies if existing data should be overwritten
         """
         h5group.attrs["num_frames"] = self.num_frames
@@ -365,15 +361,13 @@ class Atoms(object):
 
     def __init__(self, *args):
         """
-        Construct a new `Atoms` object.
-
         The constructor can be called in three ways:
 
         - ``Atoms(positions, radii, volume)`` :
             create the object using the given data
 
         - ``Atoms(molecule)`` :
-            read the data from this `pybel.Molecule` object
+            read the data from this :class:`pybel.Molecule` object
 
         - ``Atoms(hdf5group)`` :
             read the data from this hdf5 group
@@ -433,10 +427,10 @@ class Atoms(object):
         Write the data to a hdf5 Group.
 
         **Parameters:**
-            `h5group` : `h5py.Group`
+            `h5group` :
                 the hdf5 group in which the data will be written
 
-            `overwrite` : `bool`
+            `overwrite` :
                 specifies if existing data should be overwritten
         """
         h5group.parent.attrs["volume"] = str(self.volume)
@@ -447,13 +441,11 @@ class Atoms(object):
 class CavitiesBase(object):
     """
     Base class to store multiple surface-based objects in the 3-dimensional
-    space. The `Domains` and `Cavities` class inherit from it.
+    space. The :class:`Domains` and :class:`Cavities` class inherit from it.
     """
 
     def __init__(self, *args):
         """
-        Construct a new `CavitiesBase` object.
-
         The constructor can be called in two ways:
 
         - ``CavitiesBase(timestamp, volumes, surface_areas, triangles)`` :
@@ -488,10 +480,10 @@ class CavitiesBase(object):
         Write the data to a hdf5 Group.
 
         **Parameters:**
-            `h5group` : `h5py.Group`
+            `h5group` :
                 the hdf5 group in which the data will be written
 
-            `overwrite` : `bool`
+            `overwrite` :
                 specifies if existing data should be overwritten
         """
         h5group.attrs["timestamp"] = str(self.timestamp)
@@ -509,15 +501,14 @@ class Domains(CavitiesBase):
 
     def __init__(self, *args):
         """
-        Construct a new `Domains` object.
-
         The constructor can be called in three ways:
 
         - ``Domains(timestamp, volumes, surface_areas, triangles, centers)`` :
             create the object using the given data
 
         - ``Domains(domaincalculation)`` :
-            copy the data from this `algorithm.DomainCalculation` object
+            copy the data from this
+            :class:`core.calculation.algorithm.DomainCalculation` object
 
         - ``Domains(hdf5group)`` :
             read the data from this hdf5 group
@@ -549,10 +540,10 @@ class Domains(CavitiesBase):
         Write the data to a hdf5 Group.
 
         **Parameters:**
-            `h5group` : `h5py.Group`
+            `h5group` :
                 the hdf5 group in which the data will be written
 
-            `overwrite` : `bool`
+            `overwrite` :
                 specifies if existing data should be overwritten
         """
         super(Domains, self).tohdf(h5group, overwrite)
@@ -566,15 +557,14 @@ class Cavities(CavitiesBase):
 
     def __init__(self, *args):
         """
-        Construct a new `Cavities` object.
-
         The constructor can be called in three ways:
 
         - ``Cavities(timestamp, volumes, surface_areas, triangles, multicavities)`` :
             create the object using the given data
 
         - ``Cavities(cavitycalculation)`` :
-            copy the data from this `algorithm.CavityCalculation` object
+            copy the data from this
+            :class:`core.calculation.algorithm.CavityCalculation` object
 
         - ``Cavities(hdf5group)`` :
             read the data from this hdf5 group
@@ -613,10 +603,10 @@ class Cavities(CavitiesBase):
         Write the data to a hdf5 Group.
 
         **Parameters:**
-            `h5group` : `h5py.Group`
+            `h5group` :
                 the hdf5 group in which the data will be written
 
-            `overwrite` : `bool`
+            `overwrite` :
                 specifies if existing data should be overwritten
         """
         super(Cavities, self).tohdf(h5group, overwrite)

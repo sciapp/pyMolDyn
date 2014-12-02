@@ -130,7 +130,8 @@ class Calculation(object):
                 query calculation results for center-based cavities
 
         **Returns:**
-            A `TimestampList` containing the dates of the calculation or `None`.
+            A :class:`core.data.TimestampList` containing the dates
+            of the calculation or `None`.
         """
         info = None
         inputfile = File.open(filepath)
@@ -187,7 +188,8 @@ class Calculation(object):
                 query calculation results for center-based cavities
 
         **Returns:**
-            A `Results` object if cached results exist, else `None`
+            A :class:`core.data.Results` object if cached results exist,
+            else `None`
         """
         inputfile = File.open(filepath)
         # TODO: error handling
@@ -221,7 +223,7 @@ class Calculation(object):
                 results will be calculated even if cached results exists
 
         **Returns:**
-            A `Results` object.
+            A :class:`core.data.Results` object.
         """
         message.progress(0)
         inputfile = File.open(filepath)
@@ -288,10 +290,10 @@ class Calculation(object):
 
         **Parameters:**
             `calcsettings` :
-                `CalculationSettings` object
+                :class:`CalculationSettings` object
 
         **Returns:**
-            A list of list of `Results` objects. The outer list contains
+            A list of list of :class:`core.data.Results` objects. The outer list contains
             an entry for each entry in `calcsettings.filenames`; the inner
             list has a `Results` entry for each frame specified in
             `calcsettings.frames`.
@@ -363,8 +365,8 @@ class CalculationCache(object):
                 path to the input file
 
         **Returns:**
-            A `HDF5File` object. If it does not exist for the input file,
-            a new one is created.
+            A :class:`core.file.HDF5File` object.
+            If no cache file exist for the input file, a new one is created.
         """
         sourcefilepath = os.path.abspath(filepath)
         cachefilepath = self.abspath(self.cachefile(sourcefilepath))

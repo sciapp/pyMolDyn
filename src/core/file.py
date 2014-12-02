@@ -16,12 +16,36 @@ import pybel
 import h5py
 from datetime import datetime
 import data
+import sys
+from util.logger import Logger
+
+
+logger = Logger("file")
+logger.setstream("default", sys.stdout, Logger.WARNING)
+
+
+class FileError(Exception):
+    """
+    Exception to be raised when the data inside a file are incorrect.
+    """
+
+    def __init__(self, message, cause=None):
+        super(FileError, self).__init__(message, cause)
+        self.message = message
+        self.cause = cause
+
+    def __str__(self):
+        if self.cause is None:
+            f = "{}: {}"
+        else:
+            f = "{}: {} (caused by: {})"
+        return f.format(self.__class__.__name__, self.message, str(self.cause))
 
 
 class InputFile(object):
     """
     Abstract access to a file that contains atom data for one or more frames.
-    Subclasses need to implement the `readinfo` and `readatoms` methods.
+    Subclasses need to implement the ``readinfo()`` and ``readatoms(frame)`` methods.
     """
 
     def __init__(self, path):
@@ -37,10 +61,13 @@ class InputFile(object):
     @property
     def info(self):
         """
-        `FileInfo` object that contains metadata
+        :class:`core.data.FileInfo` object that contains metadata
         """
         if not self.inforead:
-            self.readinfo()
+            try:
+                self.readinfo()
+            except IOError as e:
+                logger.error(str(e))
         return self._info
 
     def getatoms(self, frame):
@@ -52,7 +79,12 @@ class InputFile(object):
                 the frame number
 
         **Returns:**
-            an `Atoms` object
+            an :class:`core.data.Atoms` object
+
+        **Raises:**
+            - :class:`IndexError`: if the frame is not in the file
+            - :class:`FileError`: if there are problems with the data in the file
+            - :class:`IOError`: if the file cannot be read
         """
         return self.readatoms(frame)
 
@@ -65,7 +97,7 @@ class InputFile(object):
 
 class XYZFile(InputFile):
     """
-    Implementation on `InputFile` for Open Babel 'xyz' files.
+    Implementation on :class:`InputFile` for Open Babel 'xyz' files.
     """
     def __init__(self, path):
         super(XYZFile, self).__init__(path)
@@ -77,8 +109,10 @@ class XYZFile(InputFile):
             self._info.volumestr = molecule.title
             self._info.num_frames = sum(1 for _ in f) + 1
             self.inforead = True
-        except:
-            raise ValueError("Cannot read file info")
+        except IOError:
+            raise
+        except Exception as e:
+            raise FileError("Cannot read file info.", e)
         finally:
             f.close()
 
@@ -100,6 +134,10 @@ class XYZFile(InputFile):
                 self.inforead = True
             if i < frame:
                 raise IndexError("Frame {} not found".format(frame))
+        except (IOError, IndexError):
+            raise
+        except Exception as e:
+            raise FileError("Cannot read atom data.", e)
         finally:
             f.close()
         return data.Atoms(molecule, self.info.volume)
@@ -140,6 +178,10 @@ class ResultFile(InputFile):
         **Returns:**
             A `Results` object, if the file contains results for the
             specified parameters. Otherwise it return `None`.
+
+        **Raises:**
+            - :class:`FileError`: if there are problems with the data in the file
+            - :class:`IOError`: if the file cannot be read
         """
         if not self.info[resolution].domains[frame] is None:
             return self.readresults(frame, resolution)
@@ -155,6 +197,10 @@ class ResultFile(InputFile):
                 the results to write
             `overwrite` :
                 specifies if existing results should be overwritten
+
+        **Raises:**
+            - :class:`FileError`: if there are problems with the data in the file
+            - :class:`IOError`: if the file cannot be read or written
         """
         self.writeresults(results, overwrite=overwrite)
         resinfo = self.info[results.resolution]
@@ -181,46 +227,71 @@ class ResultFile(InputFile):
 
 class HDF5File(ResultFile):
     """
-    Implementation on `ResultFile` for 'hdf5' files.
+    Implementation on :class:`ResultFile` for 'hdf5' files.
     """
     def __init__(self, path, sourcefilepath=None):
         super(HDF5File, self).__init__(path, sourcefilepath)
 
     def readatoms(self, frame):
-        #TODO: error handling
-        if os.path.isfile(self.path):
+        atoms = None
+        if not os.path.isfile(self.path):
+            raise IOError(2, "File not found.")
+        try:
             with h5py.File(self.path) as f:
-                atoms = data.Atoms(f["atoms/frame{}".format(frame)])
-        else:
-            atoms = None
+                group = "atoms/frame{}".format(frame)
+                if not group in f:
+                    raise IndexError("Frame {} not found".format(frame))
+                atoms = data.Atoms(f[group])
+        except (IOError, IndexError):
+            raise
+        except Exception as e:
+            raise FileError("Cannot read atom data.", e)
         return atoms
 
     def readinfo(self):
-        #TODO: error handling
-        with h5py.File(self.path) as f:
-            if "info" in f:
-                info = data.ResultInfo(f["info"])
-                if not self._info.sourcefilepath is None:
-                    info.sourcefilepath = self._info.sourcefilepath
-                self._info = info
-                self.inforead = True
+        if not os.path.isfile(self.path):
+            raise IOError(2, "File not found.")
+        try:
+            with h5py.File(self.path) as f:
+                if "info" in f:
+                    info = data.ResultInfo(f["info"])
+                    if not self._info.sourcefilepath is None:
+                        info.sourcefilepath = self._info.sourcefilepath
+                    self._info = info
+                    self.inforead = True
+        except IOError:
+            raise
+        except Exception as e:
+            raise FileError("Cannot read file info.", e)
+
         if not self.inforead \
                 and not self._info.sourcefilepath is None \
                 and os.path.isfile(self._info.sourcefilepath):
-            sf = File.open(self._info.sourcefilepath)
-            self._info.num_frames = sf.info.num_frames
-            self._info.volumestr = sf.info.volumestr
-            self.inforead = True
+            try:
+                sf = File.open(self._info.sourcefilepath)
+                self._info.num_frames = sf.info.num_frames
+                self._info.volumestr = sf.info.volumestr
+                self.inforead = True
+            except IOError:
+                raise
+            except Exception as e:
+                raise FileError("Cannot read file info.", e)
 
     def writeinfo(self):
-        #TODO: error handling
-        with h5py.File(self.path) as f:
-            h5group = f.require_group("info")
-            self.info.tohdf(h5group)
+        try:
+            with h5py.File(self.path) as f:
+                h5group = f.require_group("info")
+                self.info.tohdf(h5group)
+        except IOError:
+            raise
+        except Exception as e:
+            raise FileError("Cannot write file info.", e)
 
     def readresults(self, frame, resolution):
-        #TODO: error handling
-        if os.path.isfile(self.path):
+        if not os.path.isfile(self.path):
+            raise IOError(2, "File not found.")
+        try:
+            results = None
             with h5py.File(self.path) as f:
                 groupname = "results/frame{}/resolution{}".format(frame, resolution)
                 if groupname in f:
@@ -242,28 +313,33 @@ class HDF5File(ResultFile):
                     results = data.Results(filepath, frame, resolution,
                                    atoms, domains, surface_cavities,
                                    center_cavities)
-        else:
-            results = None
+        except IOError:
+            raise
+        except Exception as e:
+            raise FileError("Cannot read results.", e)
         return results
 
     def writeresults(self, results, overwrite=True):
-        #TODO: error handling
-        #TODO: results valid? 
-        with h5py.File(self.path) as f:
-            #TODO: only write when neccessary
-            group = f.require_group("atoms/frame{}".format(results.frame))
-            # TODO: is it OK to never overwrite atoms?
-            results.atoms.tohdf(group, overwrite=False)
-            group = f.require_group("results/frame{}/resolution{}".format(
-                                    results.frame, results.resolution))
-            subgroup = group.require_group("domains")
-            results.domains.tohdf(subgroup, overwrite=overwrite)
-            if not results.surface_cavities is None:
-                subgroup = group.require_group("surface_cavities")
-                results.surface_cavities.tohdf(subgroup, overwrite=overwrite)
-            if not results.center_cavities is None:
-                subgroup = group.require_group("center_cavities")
-                results.center_cavities.tohdf(subgroup, overwrite=overwrite)
+        # TODO: results valid?
+        try:
+            with h5py.File(self.path) as f:
+                group = f.require_group("atoms/frame{}".format(results.frame))
+                # TODO: is it OK to never overwrite atoms?
+                results.atoms.tohdf(group, overwrite=False)
+                group = f.require_group("results/frame{}/resolution{}".format(
+                                        results.frame, results.resolution))
+                subgroup = group.require_group("domains")
+                results.domains.tohdf(subgroup, overwrite=overwrite)
+                if not results.surface_cavities is None:
+                    subgroup = group.require_group("surface_cavities")
+                    results.surface_cavities.tohdf(subgroup, overwrite=overwrite)
+                if not results.center_cavities is None:
+                    subgroup = group.require_group("center_cavities")
+                    results.center_cavities.tohdf(subgroup, overwrite=overwrite)
+        except IOError:
+            raise
+        except Exception as e:
+            raise FileError("Cannot write results.", e)
 
 
 class File(object):
@@ -294,14 +370,17 @@ class File(object):
     @classmethod
     def open(cls, filepath):
         """
-        Get the associated `InputFile` class for the given file.
+        Get the associated :class:`InputFile` object for the given file.
 
         **Parameters:**
             `filepath` :
                 path to the file
 
         **Returns:**
-            An object of a subclass of `InputFile`.
+            An object of a subclass of :class:`InputFile`.
+
+        **Raises:**
+            :class:`ValueError` if the file format is unknown.
         """
         e = filepath.split(".")[-1]
         if not e in cls.types:
@@ -319,7 +398,7 @@ class File(object):
                 path to the file
 
         **Returns:**
-            `True` if the file exists and there is a subclass of `InputFile`
+            `True` if the file exists and there is a subclass of :class:`InputFile`
             associated with the filename ending.
         """
         name = os.path.basename(filepath)
