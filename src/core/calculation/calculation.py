@@ -234,7 +234,8 @@ class Calculation(object):
             resultfile = self.cache[filepath]
         try:
             results = resultfile.getresults(frame, resolution)
-        except:
+        except Exception as e:
+            logger.debug("error in resultfile.getresults: {}".format(e))
             results = None
 
         if atoms is None:

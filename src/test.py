@@ -58,10 +58,6 @@ def addelements():
                     group["elements"] = satoms.elements
 
 
-def testpartialpdf():
-    pass
-
 if __name__ == "__main__":
-    #main()
+    main()
     #addelements()
-    testpartialpdf()

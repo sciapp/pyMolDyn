@@ -5,9 +5,16 @@ import numpy as np
 import scipy as sp
 from scipy import stats
 import matplotlib.pyplot as plt
+from util.logger import Logger
+import sys
+from core.calculation.discretization import DiscretizationCache
 
 
-def createstats(pos1, pos2=None):
+logger = Logger("statistics.partialpdf")
+logger.setstream("default", sys.stdout, Logger.DEBUG)
+
+
+def createstat(pos1, pos2=None):
     if pos2 is None:
         n = pos1.shape[0]
         samples = np.zeros([(n * n - n) / 2])
@@ -30,28 +37,6 @@ def createstats(pos1, pos2=None):
     return samples
     
 
-def plotstep(x, y, colors='b'):
-    plt.hlines(y[:-1], x[:-1], x[1:], colors=colors)
-    plt.xlim((x[0], x[-1]))
-    plt.ylim((y.min(), y.max()))
-
-def plotpde(samples, **kwargs):
-    xval = np.hstack((0.0, samples))
-    yval = np.linspace(0, 1, xval.size)
-    #d = (yval[1:] - yval[:-1]) / (xval[1:] - xval[:-1])
-
-    kde = sp.stats.gaussian_kde(samples)
-    kx = np.linspace(0, samples.max(), 200)
-    ky = kde(kx)
-    iy = sp.integrate.cumtrapz(ky, kx)
-
-    plt.figure()
-    plt.plot(kx, ky, "r", **kwargs)
-    #plt.figure()
-    #plotstep(xval, yval)
-    #plt.plot(kx, iy, "r", **kwargs)
-
-
 def partialpdf(atoms, cavitycenters=None):
     elements = np.unique(atoms.elements).tolist()
     if not cavitycenters is None and not "cav" in elements:
@@ -67,42 +52,79 @@ def partialpdf(atoms, cavitycenters=None):
         else:
             positions[i] = cavitycenters
 
-    stats = []
+    stat = []
     for i, e1 in enumerate(elements):
         for j in range(i, len(elements)):
             e2 = elements[j]
             if i == j:
-                s = createstats(positions[i])
+                s = createstat(positions[i])
             else:
-                s = createstats(positions[i], positions[j])
-            stats.append((e1, e2, s))
-            print (e1, e2), (positions[i].shape[0], positions[j].shape[0]), s.size
+                s = createstat(positions[i], positions[j])
+            stat.append((e1, e2, s))
 
-    for e1, e2, s in stats:
-        if s.size > 1:
-            plotpde(s)
-            plt.title(e1 + " - " + e2)
-    plt.show()
+    return stat
 
 
-def test():
-    class TestAtoms:
-        def __init__(self, e, p):
-            self.elements = e
-            self.positions = p
+def continuous_coordinates(coords, volume, resolution):
+    dcache = DiscretizationCache('cache.hdf5')
+    disc = dcache.get_discretization(volume, resolution)
 
-    e = np.array(["Te", "Ge", "Ge", "Sb", "Ge", "Te"])
-    p = np.arange(e.size * 3, dtype=float).reshape(-1, 3)
-    a = TestAtoms(e, p)
-    cc = np.array([[6, 5, 4], [3, 2, 1]], dtype=float)
-    print e
-    print p
-    print cc
-    print
+    return np.array(map(disc.discrete_to_continuous, coords))
 
-    partialpdf(a, cc)
+
+class TestPartialPDE(object):
+    @staticmethod
+    def plotpde(samples, **kwargs):
+        kde = sp.stats.gaussian_kde(samples)
+        kx = np.linspace(0, samples.max(), 200)
+        ky = kde(kx)
+        #iy = sp.integrate.cumtrapz(ky, kx)
+
+        plt.figure()
+        plt.plot(kx, ky, "r", **kwargs)
+        #plt.figure()
+        #plt.plot(kx, iy, "r", **kwargs)
+
+    class TestAtoms(object):
+        def __init__(self):
+            self.elements = np.array(["Te", "Ge", "Ge", "Sb", "Ge", "Te"])
+            self.positions = np.arange(e.size * 3, dtype=float).reshape(-1, 3)
+            self.centers = np.array([[6, 5, 4], [3, 2, 1]], dtype=float)
+
+    @classmethod
+    def run(cls):
+        #a = TestAtoms()
+        #stat = partialpdf(a, a.centers)
+
+        import core.calculation as calculation
+        calc = calculation.Calculation("../results")
+        filename = "../xyz/structure_c.xyz"
+        resolution = 64
+        #filename = "../xyz/GST_111_128_bulk.xyz"
+        #resolution = 128
+        settings = calculation.CalculationSettings(
+                [filename],
+                [0], resolution, True, False, False)
+        print "calculating..."
+        res = calc.calculate(settings)[0][0]
+        centers = continuous_coordinates(res.domains.centers,
+                                         res.atoms.volume,
+                                         resolution)
+#        np.savez("structure_c_128",
+#                positions=res.atoms.positions,
+#                elements=res.atoms.elements,
+#                centers=centers)
+
+        print "generating statistics..."
+        stat = partialpdf(res.atoms, centers)
+        for e1, e2, s in stat:
+            if s.size > 1:
+                print "{} - {}: {} distances".format(e1, e2, s.size)
+                cls.plotpde(s)
+                plt.title(e1 + " - " + e2)
+        plt.show()
 
 
 if __name__ == "__main__":
-    test()
+    TestPartialPDE.run()
 

@@ -382,7 +382,7 @@ class Atoms(object):
             positions = h5group["positions"]
             radii = h5group["radii"]
             if "elements" in h5group:
-                elements = h5group.attrs["elements"]
+                elements = h5group["elements"]
             else:
                 logger.warn("Dataset 'elements' not found. Using 'atom' as default value")
                 elements = np.empty(len(radii), dtype="|S4")
