@@ -368,7 +368,7 @@ class Atoms(object):
         """
         The constructor can be called in three ways:
 
-        - ``Atoms(positions, radii, volume)`` :
+        - ``Atoms(positions, radii, elements, volume)`` :
             create the object using the given data
 
         - ``Atoms(molecule)`` :
@@ -381,6 +381,12 @@ class Atoms(object):
             h5group = args[0]
             positions = h5group["positions"]
             radii = h5group["radii"]
+            if "elements" in h5group:
+                elements = h5group.attrs["elements"]
+            else:
+                logger.warn("Dataset 'elements' not found. Using 'atom' as default value")
+                elements = np.empty(len(radii), dtype="|S4")
+                elements[:] = "atom"
             if "volume" in h5group.attrs:
                 volume = h5group.attrs["volume"]
             else:
@@ -396,11 +402,13 @@ class Atoms(object):
             else:
                 func = lambda atom: atom.coords
             positions = map(func, molecule)
+            elements = map(lambda atom: atom.type, molecule)
             radii = None
         else:
             positions = args[0]
             radii = args[1]
-            self.volume = args[2]
+            elements = args[2]
+            self.volume = args[3]
             if isinstance(self.volume, str):
                 self.volume = volumes.Volume.fromstring(self.volume)
 
@@ -411,6 +419,7 @@ class Atoms(object):
         else:
             self.radii = np.ones((self.number), dtype=np.float) \
                          * config.Computation.atom_radius
+        self.elements = np.array(elements, dtype="|S4", copy=False)
 
         # old code: 
         #self.sorted_radii = sorted(list(set(self.radii)), reverse=True)
@@ -441,6 +450,10 @@ class Atoms(object):
         h5group.parent.attrs["volume"] = str(self.volume)
         writedataset(h5group, "positions", self.positions, overwrite)
         writedataset(h5group, "radii", self.radii, overwrite)
+        if np.any(self.elements == "atom"):
+            logger.warn("Atom.elements contains default values. Not writing dataset.")
+        else:
+            writedataset(h5group, "elements", self.elements, overwrite)
 
 
 class CavitiesBase(object):

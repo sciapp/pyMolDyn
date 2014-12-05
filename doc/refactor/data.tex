@@ -7,11 +7,12 @@
         \attribute{+ number : Integer}
         \attribute{+ positions : Array(Float)}
         \attribute{+ radii : Array(Float)}
+        \attribute{+ elements : Array(String)}
         \attribute{+ sorted\_positions : Array(Float)}
         \attribute{+ sorted\_radii : Array(Float)}
         \attribute{+ radii\_as\_indices: Array(Integer)}
 
-        \operation{+ Atoms(positions : Array(Float), radii : Array(Float), volume : Volume)}
+        \operation{+ Atoms(positions : Array(Float), radii : Array(Float), elements : Array(String), volume : Volume)}
         \operation{+ Atoms(h5group : HDF5Group)}
         \operation{+ Atoms(molecule : PybelMolecule, volume : Volume)}
         \operation{+ tohdf(h5group : HDF5Group, overwrite : Boolean)}
