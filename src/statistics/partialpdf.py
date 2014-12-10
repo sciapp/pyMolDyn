@@ -66,7 +66,7 @@ class PartialPDF(object):
                                     self.elements,
                                     self.centers)
 
-    def pdf(self, elem1, elem2, h=1.0):
+    def pdf(self, elem1, elem2, h=1.0, cutoff=None):
         """
         Calculate a smoothed pair distribution function between the elements
         `elem1` and `elem2`.
@@ -95,11 +95,26 @@ class PartialPDF(object):
             logger.debug("No statistical data for '{}-{}' found.".format(
                     elem1, elem2))
             return None
+        
+        if cutoff is None:
+            cutoff = data.max()
 
-        #TODO
-        weights = self.volume / (4.0 * math.pi * data**2 \
-                * data.size)
-        return Smoothing.smooth(data, weights, h, Smoothing.gausskernel)
+        sel = np.where(np.logical_and(data > 1e-10, data <= cutoff))[0]
+        sel = data[sel]
+        if len(sel) < 2:
+            logger.debug("Not enough data for '{}-{}' in cutoff={} range.".format(elem1, elem2, cutoff))
+            return None
+
+        def wfunc(r):
+            y = np.zeros_like(r)
+            i = np.where(np.abs(r) > 1e-10)
+            y[i] = self.volume / (data.size * 4 * math.pi * (r[i])**2)
+            return y
+        exact = FunctionKDE(sel, wfunc, h, normalize=False)
+
+        weights = self.volume / (data.size * 4 * math.pi * sel**2)
+        approx = WeightedKDE(sel, weights, h, normalize=False)
+        return approx
 
     @staticmethod
     def _correlatedistance(pos1, pos2=None):
@@ -165,106 +180,189 @@ class PartialPDF(object):
                     s = cls._correlatedistance(pos[i])
                 else:
                     s = cls._correlatedistance(pos[i], pos[j])
-                #s = s[np.where(s <= 13.8)[0]]
                 if len(s) > 1:
                     stats.append((e1, e2, s))
 
         return stats
 
 
-class Smoothing(object):
-    """
-    Contains smoothing kernels and kernel-based smoothing functions.
-    """
+class Kernels(object):
+    @staticmethod
+    def gauss(x):
+        c = 1.0 / math.sqrt(2.0 * math.pi)
+        return c * np.exp(-0.5 * x**2)
 
     @staticmethod
-    def gausskernel(h):
-        c = 1.0 / h / math.sqrt(2.0 * math.pi)
-        def kern(x):
-            return c * np.exp(-0.5 * (x / h)**2)
-        return kern
-
-    @staticmethod
-    def compactkernel(h):
-        h *= 2.0
-        c = 2.25228362104 / h
-        def kern(x):
-            if not isinstance(x, np.ndarray):
-                if abs(x) < h:
-                    return c * math.exp(1.0 / ((x / h)**2 - 1.0))
-                else:
-                    return 0.0
+    def compact(x):
+        c = 2.25228362104 / 2.0
+        if not isinstance(x, np.ndarray):
+            if abs(x) < 2.0:
+                return c * math.exp(1.0 / ((x / 2.0)**2 - 1.0))
             else:
-                i = np.where(np.abs(x) < h)
-                y = np.zeros(x.size)
-                y[i] = c * np.exp(1.0 / ((x[i] / h)**2 - 1.0))
-                return y
-
-        return kern
-
-    @staticmethod
-    def triangkernel(h):
-        h *= 2.0
-        c = 1.0 / h
-        def kern(x):
-            if not isinstance(x, np.ndarray):
-                if abs(x) < h:
-                    return c * (1.0 - abs(x / h))
-                else:
-                    return 0.0
-            else:
-                i = np.where(np.abs(x) < h)
-                y = np.zeros(x.size)
-                y[i] = c * (1.0 - np.abs(x[i] / h))
-                return y
-
-        return kern
+                return 0.0
+        else:
+            i = np.where(np.abs(x) < 2.0)[0]
+            y = np.zeros(x.size)
+            y[i] = c * np.exp(1.0 / ((x[i] / 2.0)**2 - 1.0))
+            return y
 
     @staticmethod
-    def quadkernel(h):
-        h *= 2.0
-        c = 0.5 / h
-        def kern(x):
-            if not isinstance(x, np.ndarray):
-                if abs(x) < h:
-                    return c
-                else:
-                    return 0.0
+    def triang(x):
+        c = 0.5
+        if not isinstance(x, np.ndarray):
+            if abs(x) < 2.0:
+                return c * (1.0 - abs(x / 2.0))
             else:
-                i = np.where(np.abs(x) < h)
-                y = np.zeros(x.size)
-                y[i] = c
-                return y
+                return 0.0
+        else:
+            i = np.where(np.abs(x) < 2.0)[0]
+            y = np.zeros(x.size)
+            y[i] = c * (1.0 - np.abs(x[i] / 2.0))
+            return y
 
-        return kern
+    @staticmethod
+    def quad(x):
+        c = 0.5
+        if not isinstance(x, np.ndarray):
+            if abs(x) < 1.0:
+                return c
+            else:
+                return 0.0
+        else:
+            i = np.where(np.abs(x) < 1.0)[0]
+            y = np.zeros(x.size)
+            y[i] = c
+            return y
 
     @staticmethod
     def bandwidth(n, d=1):
+        """
+        Scott's factor for bandwidth estimation
+        """
         return n ** (-1.0 / (d + 4.0))
 
-    @classmethod
-    def kde(cls, samples, h, kernelgen=None):
-        if kernelgen is None:
-            kernelgen = cls.gausskernel
-        kernel = kernelgen(cls.bandwidth(len(samples)) * h)
-        def pdf(x):
-            s = np.zeros([x.size])
-            for xi in samples:
-                s += kernel(x - xi)
-            return s / len(samples)
-        return pdf
+    @staticmethod
+    def halfquad(x):
+        c = 1.0
+        if not isinstance(x, np.ndarray):
+            if 0 <= x < 1.0:
+                return c
+            else:
+                return 0.0
+        else:
+            i = np.where(np.logical_and(x >= 0.0, x < 1.0))[0]
+            y = np.zeros(x.size)
+            y[i] = c
+            return y
 
-    @classmethod
-    def smooth(cls, xval, yval, h, kernelgen=None):
-        if kernelgen is None:
-            kernelgen = cls.gausskernel
-        kernel = kernelgen(cls.bandwidth(len(xval)) * h)
-        def func(x):
-            s = np.zeros([x.size])
-            for xi, yi in zip(xval, yval):
-                s += yi * kernel(x - xi)
-            return s
-        return func
+
+class KDE(object):
+    """
+    Kernel density estimation.
+    """
+
+    def __init__(self, sample, h=1.0, kernel=Kernels.gauss):
+        """
+        **Parameters:**
+            `sample` :
+                1-dimensional random sample
+            `h` :
+                Relative smoothing parameter
+            `kernel` :
+                Smoothing kernel function
+
+        **Returns:**
+            Function of `x` that accepts numpy arrays.
+        """
+        self.sample = sample
+        self.h = h
+        self.kernel = kernel
+        self.bandwidth = Kernels.bandwidth(len(sample))
+
+    def __call__(self, x):
+        hh = self.h * self.bandwidth
+        y = np.zeros([x.size])
+        for xi in self.sample:
+            y += self.kernel((x - xi) / hh) / hh
+        return y / len(self.sample)
+
+
+class WeightedKDE(KDE):
+    """
+    Multiply a kernel density estimation with weights
+    """
+
+    def __init__(self, sample, weights, h=1.0,
+            kernel=Kernels.gauss, normalize=True):
+        """
+        **Parameters:**
+            `sample` :
+                1-dimensional random sample
+            `weights` :
+                Array of values with which the kernels get multiplied
+            `h` :
+                Relative smoothing parameter
+            `kernel` :
+                Smoothing kernel function
+            `normalize` :
+                Specifies if the function should be normalized with
+                ``1 / len(sample)``, as it is usual for a KDE.
+                Set this to ``False`` if the weights already contain a
+                normalization.
+
+        **Returns:**
+            Function of `x` that accepts numpy arrays.
+        """
+        super(WeightedKDE, self).__init__(sample, h, kernel)
+        self.weights = weights
+        self.normalize = normalize
+
+    def __call__(self, x):
+        hh = self.h * self.bandwidth
+        y = np.zeros([x.size])
+        for xi, w in zip(self.sample, self.weights):
+            y += w * self.kernel((x - xi) / hh) / hh
+        if self.normalize:
+            y /= len(self.sample)
+        return y
+
+
+class FunctionKDE(KDE):
+    """
+    Multiply a function with kernel density estimation
+    """
+
+    def __init__(self, sample, func, h=1.0,
+            kernel=Kernels.gauss, normalize=True):
+        """
+        **Parameters:**
+            `sample` :
+                1-dimensional random sample
+            `func` :
+                Callable that can work with numpy arrays
+            `h` :
+                Relative smoothing parameter
+            `kernel` :
+                Smoothing kernel function
+            `normalize` :
+                Specifies if the function should be normalized with
+                ``1 / len(sample)``, as it is usual for a KDE.
+                Set this to ``False`` if the function already contain a
+                normalization.
+
+        **Returns:**
+            Function of `x` that accepts numpy arrays.
+        """
+        super(FunctionKDE, self).__init__(sample, h, kernel)
+        self.func = func
+        self.normalize = normalize
+
+    def __call__(self, x):
+        y = super(FunctionKDE, self).__call__(x)
+        y *= self.func(x)
+        if not self.normalize:
+            y *= len(self.sample)
+        return y
 
 
 class TestPartialPDF(object):
@@ -286,7 +384,7 @@ class TestPartialPDF(object):
         plt.figure()
         cls.plotfunc(pdf, e1, e2, px, 0.5, "g--")
         cls.plotfunc(pdf, e1, e2, px, 1.0, "r-")
-        cls.plotfunc(pdf, e1, e2, px, 5.0, "b--")
+        cls.plotfunc(pdf, e1, e2, px, 2.0, "b--")
         plt.legend(loc=0)
         plt.title("{}-{}".format(e1, e2))
 
@@ -324,3 +422,9 @@ class TestPartialPDF(object):
 
 if __name__ == "__main__":
     TestPartialPDF.run()
+    #x = np.linspace(-3, 3, 200)
+    #plt.plot(x, Kernels.gauss(x))
+    #plt.plot(x, Kernels.compact(x))
+    #plt.plot(x, Kernels.triang(x))
+    #plt.plot(x, Kernels.quad(x))
+    #plt.show()
