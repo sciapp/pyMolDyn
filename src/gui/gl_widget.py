@@ -5,8 +5,8 @@ from PySide import QtCore, QtGui, QtOpenGL
 import visualization
 from config.configuration import config
 from OpenGL.GL import glReadPixels, GL_FLOAT, GL_DEPTH_COMPONENT
-from util.gl_util import create_perspective_projection_matrix, create_look_at_matrix
 
+from util.gl_util import create_perspective_projection_matrix, create_look_at_matrix
 
 class UpdateGLEvent(QtCore.QEvent):
 
@@ -25,7 +25,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.update_needed = False
         self.dataset_loaded = False
-        self.control = parent.control
+        self.control = parent.parent.control
 
     @property
     def vis(self):
@@ -136,4 +136,5 @@ class GLWidget(QtOpenGL.QGLWidget):
             refresh scene
         """
         self.vis.paint(self.geometry().width(), self.geometry().height())
+
 
