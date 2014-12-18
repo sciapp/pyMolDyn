@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Calculate partial pair distribution functions.
+Calculate radial distribution functions.
 """
 
 
-__all__ = ["PartialPDF"]
+__all__ = ["RDF"]
 
 
 import numpy as np
@@ -15,27 +15,27 @@ import sys
 from core.calculation.discretization import DiscretizationCache
 
 
-logger = Logger("statistics.partialpdf")
+logger = Logger("statistics.rdf")
 logger.setstream("default", sys.stdout, Logger.DEBUG)
 
 
-class PartialPDF(object):
+class RDF(object):
     """
-    Calculate partial pair distribution functions for atoms and cavities.
+    Calculate radial distribution functions for atoms and cavities.
     """
 
     def __init__(self, *args):
         # TODO: volume not as a number
         """
         Create a sample from atom and cavity positions and smooth them to
-        get the partial PDFs
+        get the RDFs
 
         The constructor can be called in two ways:
 
-        - ``PartialPDF(results)`` :
+        - ``RDF(results)`` :
             retrieve the data from :class:`core.data.Results`
 
-        - ``PartialPDF(positions, elements, cavitycenters, totalvolume)`` :
+        - ``RDF(positions, elements, cavitycenters, totalvolume)`` :
             use the given arrays and the total volume of the crystal
         """
         if len(args) == 1:
@@ -54,7 +54,7 @@ class PartialPDF(object):
         elif len(args) == 4:
             positions, elements, centers, volume = args
         else:
-            raise TypeError("PartialPDF expects 1 or 4 parameters")
+            raise TypeError("RDF expects 1 or 4 parameters")
 
         self.positions = np.array(positions, copy=False)
         self.elements = np.array(elements, dtype="|S4", copy=False)
@@ -67,9 +67,9 @@ class PartialPDF(object):
                                     self.elements,
                                     self.centers)
 
-    def pdf(self, elem1, elem2, h=1.0, cutoff=None, kernel=None):
+    def rdf(self, elem1, elem2, h=1.0, cutoff=None, kernel=None):
         """
-        Calculate a smoothed pair distribution function between the elements
+        Calculate a smoothed radial distribution function between the elements
         `elem1` and `elem2`.
 
         **Parameters:**
@@ -81,7 +81,7 @@ class PartialPDF(object):
                 the more the function is smoothed.
 
         **Returns:**
-            Python function that represents the pair distribution function.
+            Python function that represents the radial distribution function.
             It also accepts Numpy arrays as input.
             Returns `None` if the given elements do not exist or if there is
             not enough data to create the function.
@@ -416,7 +416,7 @@ class FunctionKDE(KDE):
         return y
 
 
-class TestPartialPDF(object):
+class TestRDF(object):
     @staticmethod
     def continuous_coordinates(coords, volume, resolution):
         dcache = DiscretizationCache('cache.hdf5')
@@ -425,17 +425,17 @@ class TestPartialPDF(object):
         return np.array(map(disc.discrete_to_continuous, coords))
 
     @staticmethod
-    def plotfunc(pdf, e1, e2, px, h, *args):
-        gr = pdf.pdf(e1, e2, h)
+    def plotfunc(rdf, e1, e2, px, h, *args):
+        gr = rdf.rdf(e1, e2, h)
         plt.plot(px, gr(px), *args, label=str(gr.bandwidth))
 
     @classmethod
-    def plotpdf(cls, pdf, e1, e2):
+    def plotrdf(cls, rdf, e1, e2):
         px = np.linspace(0, 10, 400)
         plt.figure()
-        cls.plotfunc(pdf, e1, e2, px, 0.25, "g--")
-        cls.plotfunc(pdf, e1, e2, px, 0.5, "r-")
-        cls.plotfunc(pdf, e1, e2, px, 1.0, "b--")
+        cls.plotfunc(rdf, e1, e2, px, 0.25, "g--")
+        cls.plotfunc(rdf, e1, e2, px, 0.5, "r-")
+        #cls.plotfunc(rdf, e1, e2, px, 1.0, "b--")
         plt.legend(loc=0)
         plt.title("{}-{}".format(e1, e2))
 
@@ -446,7 +446,7 @@ class TestPartialPDF(object):
         #elements = f["elements"]
         #centers = f["centers"]
         #volume = 19858.15991672
-        #pdf = PartialPDF(positions, elements, centers, volume)
+        #rdf = RDF(positions, elements, centers, volume)
         import core.calculation as calculation
         calc = calculation.Calculation("../results")
         filename = "../xyz/structure_c.xyz"
@@ -464,21 +464,21 @@ class TestPartialPDF(object):
                                              res.atoms.volume,
                                              res.resolution)
         print "generating statistics..."
-        pdf = PartialPDF(res)
-        #pdf = PartialPDF(res.atoms.positions, res.atoms.elements,
+        rdf = RDF(res)
+        #rdf = RDF(res.atoms.positions, res.atoms.elements,
         #                  centers, res.atoms.volume.volume)
 
 
 
         print "plotting..."
-        cls.plotpdf(pdf, "Ge", "Ge")
-        cls.plotpdf(pdf, "Ge", "Te")
-        cls.plotpdf(pdf, "cav", "cav")
+        cls.plotrdf(rdf, "Ge", "Ge")
+        cls.plotrdf(rdf, "Ge", "Te")
+        cls.plotrdf(rdf, "cav", "cav")
         plt.show()
 
 
 if __name__ == "__main__":
-    TestPartialPDF.run()
+    TestRDF.run()
     #x = np.linspace(-3, 3, 200)
     #plt.plot(x, Kernels.gauss(x))
     #plt.plot(x, Kernels.compact(x))
