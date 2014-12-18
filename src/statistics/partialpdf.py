@@ -25,6 +25,7 @@ class PartialPDF(object):
     """
 
     def __init__(self, *args):
+        # TODO: volume not as a number
         """
         Create a sample from atom and cavity positions and smooth them to
         get the partial PDFs
@@ -66,7 +67,7 @@ class PartialPDF(object):
                                     self.elements,
                                     self.centers)
 
-    def pdf(self, elem1, elem2, h=1.0, cutoff=None):
+    def pdf(self, elem1, elem2, h=1.0, cutoff=None, kernel=None):
         """
         Calculate a smoothed pair distribution function between the elements
         `elem1` and `elem2`.
@@ -85,6 +86,8 @@ class PartialPDF(object):
             Returns `None` if the given elements do not exist or if there is
             not enough data to create the function.
         """
+        if kernel is None:
+            kernel = Kernels.gauss
         data = None
         for s in self.stats:
             if set((elem1.lower(), elem2.lower())) \
@@ -107,14 +110,14 @@ class PartialPDF(object):
 
         def wfunc(r):
             y = np.zeros_like(r)
-            i = np.where(np.abs(r) > 1e-10)
-            y[i] = self.volume / (data.size * 4 * math.pi * (r[i])**2)
+            i = np.where(np.abs(r) > 1e-10)[0]
+            y[i] = self.volume / (data.size * 4 * math.pi * r[i]**2)
             return y
         exact = FunctionKDE(sel, wfunc, h, normalize=False)
 
-        weights = self.volume / (data.size * 4 * math.pi * sel**2)
-        approx = WeightedKDE(sel, weights, h, normalize=False)
-        return approx
+        #weights = self.volume / (data.size * 4 * math.pi * sel**2)
+        #approx = WeightedKDE(sel, weights, h, normalize=False)
+        return exact
 
     @staticmethod
     def _correlatedistance(pos1, pos2=None):
@@ -186,6 +189,39 @@ class PartialPDF(object):
         return stats
 
 
+class Functions(object):
+    class Convolution(object):
+        """
+        Discrete convolution
+        """
+        def __init__(self, x, y=None, h=1.0, kernel=None):
+            if y is None:
+                np.ones_like(x)
+            if kernel is None:
+                kernel = Kernels.gauss
+            self.x = x
+            self.y = y
+            self.h = h
+            self.kernel = kernel
+
+        def __call__(self, x):
+            fx = np.zeros_like(x)
+            for xi, yi in zip(self.x, self.y):
+                fx += yi * self.kernel((x - xi) / self.h) / self.h
+            return fx
+
+    class Product(object):
+        """
+        Product of two functions
+        """
+        def __init__(self, f, g):
+            self.f = f
+            self.g = g
+
+        def __call__(self, x):
+            return self.f(x) * self.g(x)
+
+
 class Kernels(object):
     @staticmethod
     def gauss(x):
@@ -235,14 +271,7 @@ class Kernels(object):
             return y
 
     @staticmethod
-    def bandwidth(n, d=1):
-        """
-        Scott's factor for bandwidth estimation
-        """
-        return n ** (-1.0 / (d + 4.0))
-
-    @staticmethod
-    def halfquad(x):
+    def posquad(x):
         c = 1.0
         if not isinstance(x, np.ndarray):
             if 0 <= x < 1.0:
@@ -255,13 +284,34 @@ class Kernels(object):
             y[i] = c
             return y
 
+    @staticmethod
+    def negquad(x):
+        c = 1.0
+        if not isinstance(x, np.ndarray):
+            if -1.0 < x <= 0.0:
+                return c
+            else:
+                return 0.0
+        else:
+            i = np.where(np.logical_and(x > -1.0, x <= 0.0))[0]
+            y = np.zeros(x.size)
+            y[i] = c
+            return y
+
+    @staticmethod
+    def bandwidth(n, d=1):
+        """
+        Scott's factor for bandwidth estimation
+        """
+        return (4.0 / 3.0 * n) ** (-1.0 / (d + 4.0))
+
 
 class KDE(object):
     """
     Kernel density estimation.
     """
 
-    def __init__(self, sample, h=1.0, kernel=Kernels.gauss):
+    def __init__(self, sample, h=1.0, kernel=Kernels.gauss, normalize=True):
         """
         **Parameters:**
             `sample` :
@@ -276,15 +326,19 @@ class KDE(object):
         """
         self.sample = sample
         self.h = h
+        self.normalize = normalize
         self.kernel = kernel
-        self.bandwidth = Kernels.bandwidth(len(sample))
+        self.bw_estimate = np.std(sample) * Kernels.bandwidth(len(sample))
+        self.bandwidth = self.h * self.bw_estimate
 
     def __call__(self, x):
-        hh = self.h * self.bandwidth
+        hh = self.bandwidth
         y = np.zeros([x.size])
         for xi in self.sample:
             y += self.kernel((x - xi) / hh) / hh
-        return y / len(self.sample)
+        if self.normalize:
+            y /= len(self.sample)
+        return y
 
 
 class WeightedKDE(KDE):
@@ -313,9 +367,8 @@ class WeightedKDE(KDE):
         **Returns:**
             Function of `x` that accepts numpy arrays.
         """
-        super(WeightedKDE, self).__init__(sample, h, kernel)
+        super(WeightedKDE, self).__init__(sample, h, kernel, normalize)
         self.weights = weights
-        self.normalize = normalize
 
     def __call__(self, x):
         hh = self.h * self.bandwidth
@@ -325,6 +378,7 @@ class WeightedKDE(KDE):
         if self.normalize:
             y /= len(self.sample)
         return y
+
 
 
 class FunctionKDE(KDE):
@@ -353,15 +407,12 @@ class FunctionKDE(KDE):
         **Returns:**
             Function of `x` that accepts numpy arrays.
         """
-        super(FunctionKDE, self).__init__(sample, h, kernel)
+        super(FunctionKDE, self).__init__(sample, h, kernel, normalize)
         self.func = func
-        self.normalize = normalize
 
     def __call__(self, x):
         y = super(FunctionKDE, self).__call__(x)
         y *= self.func(x)
-        if not self.normalize:
-            y *= len(self.sample)
         return y
 
 
@@ -376,20 +427,26 @@ class TestPartialPDF(object):
     @staticmethod
     def plotfunc(pdf, e1, e2, px, h, *args):
         gr = pdf.pdf(e1, e2, h)
-        plt.plot(px, gr(px), *args, label=str(h))
+        plt.plot(px, gr(px), *args, label=str(gr.bandwidth))
 
     @classmethod
     def plotpdf(cls, pdf, e1, e2):
         px = np.linspace(0, 10, 400)
         plt.figure()
-        cls.plotfunc(pdf, e1, e2, px, 0.5, "g--")
-        cls.plotfunc(pdf, e1, e2, px, 1.0, "r-")
-        cls.plotfunc(pdf, e1, e2, px, 2.0, "b--")
+        cls.plotfunc(pdf, e1, e2, px, 0.25, "g--")
+        cls.plotfunc(pdf, e1, e2, px, 0.5, "r-")
+        cls.plotfunc(pdf, e1, e2, px, 1.0, "b--")
         plt.legend(loc=0)
         plt.title("{}-{}".format(e1, e2))
 
     @classmethod
     def run(cls):
+        #f = np.load("structure_c_128.npz")
+        #positions = f["positions"]
+        #elements = f["elements"]
+        #centers = f["centers"]
+        #volume = 19858.15991672
+        #pdf = PartialPDF(positions, elements, centers, volume)
         import core.calculation as calculation
         calc = calculation.Calculation("../results")
         filename = "../xyz/structure_c.xyz"
