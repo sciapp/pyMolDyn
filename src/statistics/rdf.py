@@ -9,7 +9,6 @@ __all__ = ["RDF"]
 
 import numpy as np
 import math
-import matplotlib.pyplot as plt
 from util.logger import Logger
 import sys
 from core.calculation.discretization import DiscretizationCache
@@ -25,7 +24,6 @@ class RDF(object):
     """
 
     def __init__(self, *args):
-        # TODO: volume not as a number
         """
         Create a sample from atom and cavity positions and smooth them to
         get the RDFs
@@ -35,19 +33,18 @@ class RDF(object):
         - ``RDF(results)`` :
             retrieve the data from :class:`core.data.Results`
 
-        - ``RDF(positions, elements, cavitycenters, totalvolume)`` :
-            use the given arrays and the total volume of the crystal
+        - ``RDF(positions, elements, cavitycenters, volume)`` :
+            use the given arrays and the volume object
         """
         if len(args) == 1:
             results = args[0]
             positions = results.atoms.positions
             elements = results.atoms.elements
-            volume = results.atoms.volume.volume
+            volume = results.atoms.volume
             if not results.domains is None:
                 centers = results.domains.centers
                 dcache = DiscretizationCache('cache.hdf5')
-                disc = dcache.get_discretization(results.atoms.volume,
-                                                 results.resolution)
+                disc = dcache.get_discretization(volume, results.resolution)
                 centers = map(disc.discrete_to_continuous, centers)
             else:
                 centers = []
@@ -59,15 +56,15 @@ class RDF(object):
         self.positions = np.array(positions, copy=False)
         self.elements = np.array(elements, dtype="|S4", copy=False)
         self.centers = np.array(centers, copy=False)
-        self.volume = float(volume)
+        self.volume = volume
         self.num_atoms = np.where(self.elements != "cav")[0].size
-        self.numberdensity = float(self.num_atoms) / self.volume
+        self.numberdensity = float(self.num_atoms) / self.volume.volume
 
         self.stats = self._genstats(self.positions,
                                     self.elements,
                                     self.centers)
 
-    def rdf(self, elem1, elem2, h=1.0, cutoff=None, kernel=None):
+    def rdf(self, elem1, elem2, cutoff=None, h=0.5, kernel=None):
         """
         Calculate a smoothed radial distribution function between the elements
         `elem1` and `elem2`.
@@ -80,6 +77,9 @@ class RDF(object):
                 Smoothing parameter. The greater `h` is,
                 the more the function is smoothed.
 
+            `kernel` :
+                Smoothing kernel
+
         **Returns:**
             Python function that represents the radial distribution function.
             It also accepts Numpy arrays as input.
@@ -87,7 +87,8 @@ class RDF(object):
             not enough data to create the function.
         """
         if kernel is None:
-            kernel = Kernels.gauss
+            kernel = Kernels.epanechnikov
+
         data = None
         for s in self.stats:
             if set((elem1.lower(), elem2.lower())) \
@@ -101,24 +102,24 @@ class RDF(object):
         
         if cutoff is None:
             cutoff = data.max()
-
         sel = np.where(np.logical_and(data > 1e-10, data <= cutoff))[0]
         sel = data[sel]
         if len(sel) < 2:
             logger.debug("Not enough data for '{}-{}' in cutoff={} range.".format(elem1, elem2, cutoff))
             return None # TODO: raise Exception
 
+        if h > 0.9 * sel.min():
+            logger.debug("Bandwidth {} above threshold. Setting to {}.".format(h, 0.9 * sel.min()))
+            h = 0.9 * sel.min()
+        kde = Functions.Convolution(sel, h=h, kernel=Kernels.epanechnikov)
+
         def wfunc(r):
             y = np.zeros_like(r)
             i = np.where(np.abs(r) > 1e-10)[0]
-            y[i] = self.volume / (data.size * 4 * math.pi * r[i]**2)
+            y[i] = self.volume.volume / (data.size * 4 * math.pi * r[i]**2)
             return y
-        exact = FunctionKDE(sel, wfunc, h, normalize=False)
-        print "xi={}, h={}, h_est={}, err={}".format(sel.min(), exact.bandwidth, math.sqrt(0.5) * sel.min(), exact(np.array([0.0001]))[0])
 
-        #weights = self.volume / (data.size * 4 * math.pi * sel**2)
-        #approx = WeightedKDE(sel, weights, h, normalize=False)
-        return exact
+        return Functions.Product(kde, wfunc)
 
     @staticmethod
     def _correlatedistance(pos1, pos2=None):
@@ -191,13 +192,18 @@ class RDF(object):
 
 
 class Functions(object):
+    """
+    Utility class with Callables
+    """
+
     class Convolution(object):
         """
         Discrete convolution
         """
+
         def __init__(self, x, y=None, h=1.0, kernel=None):
             if y is None:
-                np.ones_like(x)
+                y = np.ones_like(x)
             if kernel is None:
                 kernel = Kernels.gauss
             self.x = x
@@ -215,6 +221,7 @@ class Functions(object):
         """
         Product of two functions
         """
+
         def __init__(self, f, g):
             self.f = f
             self.g = g
@@ -224,6 +231,10 @@ class Functions(object):
 
 
 class Kernels(object):
+    """
+    Utility class with smoothing kernels
+    """
+
     @staticmethod
     def gauss(x):
         c = 1.0 / math.sqrt(2.0 * math.pi)
@@ -231,30 +242,30 @@ class Kernels(object):
 
     @staticmethod
     def compact(x):
-        c = 2.25228362104 / 2.0
+        c = 2.25228362104
         if not isinstance(x, np.ndarray):
-            if abs(x) < 2.0:
-                return c * math.exp(1.0 / ((x / 2.0)**2 - 1.0))
+            if abs(x) < 1.0:
+                return c * math.exp(1.0 / (x**2 - 1.0))
             else:
                 return 0.0
         else:
-            i = np.where(np.abs(x) < 2.0)[0]
+            i = np.where(np.abs(x) < 1.0)[0]
             y = np.zeros(x.size)
-            y[i] = c * np.exp(1.0 / ((x[i] / 2.0)**2 - 1.0))
+            y[i] = c * np.exp(1.0 / (x[i]**2 - 1.0))
             return y
 
     @staticmethod
     def triang(x):
-        c = 0.5
+        c = 1.0
         if not isinstance(x, np.ndarray):
-            if abs(x) < 2.0:
-                return c * (1.0 - abs(x / 2.0))
+            if abs(x) < 1.0:
+                return c * (1.0 - abs(x))
             else:
                 return 0.0
         else:
-            i = np.where(np.abs(x) < 2.0)[0]
+            i = np.where(np.abs(x) < 1.0)[0]
             y = np.zeros(x.size)
-            y[i] = c * (1.0 - np.abs(x[i] / 2.0))
+            y[i] = c * (1.0 - np.abs(x[i]))
             return y
 
     @staticmethod
@@ -320,117 +331,7 @@ class Kernels(object):
         return (4.0 / 3.0 * n) ** (-1.0 / (d + 4.0))
 
 
-class KDE(object):
-    """
-    Kernel density estimation.
-    """
-
-    def __init__(self, sample, h=1.0, kernel=Kernels.gauss, normalize=True):
-        """
-        **Parameters:**
-            `sample` :
-                1-dimensional random sample
-            `h` :
-                Relative smoothing parameter
-            `kernel` :
-                Smoothing kernel function
-
-        **Returns:**
-            Function of `x` that accepts numpy arrays.
-        """
-        self.sample = sample
-        self.h = h
-        self.normalize = normalize
-        self.kernel = kernel
-        self.bw_estimate = np.std(sample) * Kernels.bandwidth(len(sample))
-        self.bandwidth = self.h * self.bw_estimate
-
-    def __call__(self, x):
-        hh = self.bandwidth
-        y = np.zeros_like(x)
-        for xi in self.sample:
-            y += self.kernel((x - xi) / hh) / hh
-        if self.normalize:
-            y /= len(self.sample)
-        return y
-
-
-class WeightedKDE(KDE):
-    """
-    Multiply a kernel density estimation with weights
-    """
-
-    def __init__(self, sample, weights, h=1.0,
-            kernel=Kernels.gauss, normalize=True):
-        """
-        **Parameters:**
-            `sample` :
-                1-dimensional random sample
-            `weights` :
-                Array of values with which the kernels get multiplied
-            `h` :
-                Relative smoothing parameter
-            `kernel` :
-                Smoothing kernel function
-            `normalize` :
-                Specifies if the function should be normalized with
-                ``1 / len(sample)``, as it is usual for a KDE.
-                Set this to ``False`` if the weights already contain a
-                normalization.
-
-        **Returns:**
-            Function of `x` that accepts numpy arrays.
-        """
-        super(WeightedKDE, self).__init__(sample, h, kernel, normalize)
-        self.weights = weights
-
-    def __call__(self, x):
-        hh = self.bandwidth
-        y = np.zeros([x.size])
-        for xi, w in zip(self.sample, self.weights):
-            y += w * self.kernel((x - xi) / hh) / hh
-        if self.normalize:
-            y /= len(self.sample)
-        return y
-
-
-
-class FunctionKDE(KDE):
-    """
-    Multiply a function with kernel density estimation
-    """
-
-    def __init__(self, sample, func, h=1.0,
-            kernel=Kernels.gauss, normalize=True):
-        """
-        **Parameters:**
-            `sample` :
-                1-dimensional random sample
-            `func` :
-                Callable that can work with numpy arrays
-            `h` :
-                Relative smoothing parameter
-            `kernel` :
-                Smoothing kernel function
-            `normalize` :
-                Specifies if the function should be normalized with
-                ``1 / len(sample)``, as it is usual for a KDE.
-                Set this to ``False`` if the function already contain a
-                normalization.
-
-        **Returns:**
-            Function of `x` that accepts numpy arrays.
-        """
-        super(FunctionKDE, self).__init__(sample, h, kernel, normalize)
-        self.func = func
-
-    def __call__(self, x):
-        y = super(FunctionKDE, self).__call__(x)
-        y *= self.func(x)
-        return y
-
-
-class TestRDF(object):
+class _TestRDF(object):
     @staticmethod
     def continuous_coordinates(coords, volume, resolution):
         dcache = DiscretizationCache('cache.hdf5')
@@ -440,8 +341,8 @@ class TestRDF(object):
 
     @staticmethod
     def plotfunc(rdf, e1, e2, px, h, *args):
-        gr = rdf.rdf(e1, e2, h)
-        plt.plot(px, gr(px), *args, label=str(gr.bandwidth))
+        gr = rdf.rdf(e1, e2, h=h)
+        plt.plot(px, gr(px), *args, label=str(h))
 
     @classmethod
     def plotrdf(cls, rdf, e1, e2):
@@ -449,18 +350,12 @@ class TestRDF(object):
         plt.figure()
         cls.plotfunc(rdf, e1, e2, px, 0.25, "g--")
         cls.plotfunc(rdf, e1, e2, px, 0.5, "r-")
-        #cls.plotfunc(rdf, e1, e2, px, 1.0, "b--")
+        cls.plotfunc(rdf, e1, e2, px, 1.0, "b--")
         plt.legend(loc=0)
         plt.title("{}-{}".format(e1, e2))
 
     @classmethod
     def run(cls):
-        #f = np.load("structure_c_128.npz")
-        #positions = f["positions"]
-        #elements = f["elements"]
-        #centers = f["centers"]
-        #volume = 19858.15991672
-        #rdf = RDF(positions, elements, centers, volume)
         import core.calculation as calculation
         calc = calculation.Calculation("../results")
         filename = "../xyz/structure_c.xyz"
@@ -474,15 +369,13 @@ class TestRDF(object):
                 [frame], resolution, True, False, False)
         print "calculating..."
         res = calc.calculate(settings)[0][0]
-        centers = cls.continuous_coordinates(res.domains.centers,
-                                             res.atoms.volume,
-                                             res.resolution)
         print "generating statistics..."
         rdf = RDF(res)
+        #centers = cls.continuous_coordinates(res.domains.centers,
+        #                                     res.atoms.volume,
+        #                                     res.resolution)
         #rdf = RDF(res.atoms.positions, res.atoms.elements,
-        #                  centers, res.atoms.volume.volume)
-
-
+        #                  centers, res.atoms.volume)
 
         print "plotting..."
         cls.plotrdf(rdf, "Ge", "Ge")
@@ -492,8 +385,9 @@ class TestRDF(object):
 
 
 if __name__ == "__main__":
-    TestRDF.run()
-    #x = np.linspace(-3, 3, 200)
+    import matplotlib.pyplot as plt
+    _TestRDF.run()
+    #x = np.linspace(-2, 2, 200)
     #plt.plot(x, Kernels.gauss(x))
     #plt.plot(x, Kernels.compact(x))
     #plt.plot(x, Kernels.triang(x))
