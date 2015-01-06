@@ -97,7 +97,7 @@ class RDF(object):
         if data is None:
             logger.debug("No statistical data for '{}-{}' found.".format(
                     elem1, elem2))
-            return None
+            return None # TODO: raise Exception
         
         if cutoff is None:
             cutoff = data.max()
@@ -106,7 +106,7 @@ class RDF(object):
         sel = data[sel]
         if len(sel) < 2:
             logger.debug("Not enough data for '{}-{}' in cutoff={} range.".format(elem1, elem2, cutoff))
-            return None
+            return None # TODO: raise Exception
 
         def wfunc(r):
             y = np.zeros_like(r)
@@ -114,6 +114,7 @@ class RDF(object):
             y[i] = self.volume / (data.size * 4 * math.pi * r[i]**2)
             return y
         exact = FunctionKDE(sel, wfunc, h, normalize=False)
+        print "xi={}, h={}, h_est={}, err={}".format(sel.min(), exact.bandwidth, math.sqrt(0.5) * sel.min(), exact(np.array([0.0001]))[0])
 
         #weights = self.volume / (data.size * 4 * math.pi * sel**2)
         #approx = WeightedKDE(sel, weights, h, normalize=False)
@@ -124,10 +125,10 @@ class RDF(object):
         """
         Measure the distances between coordinates.
 
-        - ``correlatedistance(pos1)`` :
+        - ``_correlatedistance(pos1)`` :
             Correlate the coordinates in `pos1` with each other
 
-        - ``correlatedistance(pos1, pos2)`` :
+        - ``_correlatedistance(pos1, pos2)`` :
             Correlate each coordinate in pos1 with each coordinate in pos2
 
         **Returns:**
@@ -299,6 +300,19 @@ class Kernels(object):
             return y
 
     @staticmethod
+    def epanechnikov(x):
+        if not isinstance(x, np.ndarray):
+            if abs(x) < 1.0:
+                return 3 / 4 * (1.0 - x**2)
+            else:
+                return 0.0
+        else:
+            i = np.where(np.abs(x) < 1.0)[0]
+            y = np.zeros_like(x)
+            y[i] = 3.0 / 4.0 * (1.0 - x[i]**2)
+            return y
+
+    @staticmethod
     def bandwidth(n, d=1):
         """
         Scott's factor for bandwidth estimation
@@ -333,7 +347,7 @@ class KDE(object):
 
     def __call__(self, x):
         hh = self.bandwidth
-        y = np.zeros([x.size])
+        y = np.zeros_like(x)
         for xi in self.sample:
             y += self.kernel((x - xi) / hh) / hh
         if self.normalize:
@@ -371,7 +385,7 @@ class WeightedKDE(KDE):
         self.weights = weights
 
     def __call__(self, x):
-        hh = self.h * self.bandwidth
+        hh = self.bandwidth
         y = np.zeros([x.size])
         for xi, w in zip(self.sample, self.weights):
             y += w * self.kernel((x - xi) / hh) / hh
@@ -484,4 +498,5 @@ if __name__ == "__main__":
     #plt.plot(x, Kernels.compact(x))
     #plt.plot(x, Kernels.triang(x))
     #plt.plot(x, Kernels.quad(x))
+    #plt.plot(x, Kernels.epanechnikov(x))
     #plt.show()
