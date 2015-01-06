@@ -2,15 +2,14 @@
 
 
 import os
-from core import calculation
 from gui.tabs.file_tab import FileTabDock
 from gui.tabs.view_tab import ViewTabDock
 from gui.tabs.image_video_tab import ImageVideoTabDock
 from gui.tabs.statistics_tab import StatisticsTabDock
-from gui.gl_widget import GLWidget
 from PySide import QtCore, QtGui
 from gui.dialogs.settings_dialog import SettingsDialog
 from util import message
+from gl_stack import GLStack
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -111,13 +110,25 @@ class CentralWidget(QtGui.QWidget):
         self.init_gui()
  
     def init_gui(self):
-        self.gl_widget  = GLWidget(self)
+        self.gl_stack  = GLStack(self)
+        self.gl_widget = self.gl_stack.gl_widget
+        combo = QtGui.QComboBox()
+        combo.addItem('GL')
+        combo.addItem('GR')
+        combo.activated[str].connect(self.on_combo)
 
-        main_layout = QtGui.QHBoxLayout()
-        main_layout.addWidget(self.gl_widget)
+        layout =  QtGui.QVBoxLayout()
+        layout.addWidget(self.gl_stack)
+        layout.addWidget(combo)
 
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.setLayout(main_layout)
+        self.setLayout(layout)
+
+    def on_combo(self, string):
+        if string == 'GL':
+            self.gl_stack.setCurrentIndex(0)
+        else:
+            self.gl_stack.setCurrentIndex(1)
 
     def show_dataset(self, results):
         self.gl_widget.show_dataset(results)
