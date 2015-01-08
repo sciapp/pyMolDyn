@@ -192,6 +192,10 @@ class GRView(QtGui.QWidget):
         self.setLayout(vbox)
         self.show()
 
+    def keyPressEvent(self, event):
+        if event.key() == QtCore.Qt.Key_Return:
+            self.draw()
+
     def draw(self):
         xvalues = None
         yvalues = None
@@ -223,7 +227,7 @@ class GRView(QtGui.QWidget):
         self.gr_widget.draw()
 
     def export(self):
-        pass
+        print "exporting not yet supported"
 
     def refresh(self):
         results = self.control.results
