@@ -137,6 +137,10 @@ class GRView(QtGui.QWidget):
         self.control = parent.control
         self.results = None
         self.rdf = None
+
+        self.init_gui()
+
+    def init_gui(self):
         vbox = QtGui.QVBoxLayout()
         grid = QtGui.QGridLayout()
         self.gr_widget = GrWidget()
@@ -151,6 +155,24 @@ class GRView(QtGui.QWidget):
         self.elem2 = QtGui.QComboBox(self)
         elembox.addWidget(self.elem2, 0, 2)
         grid.addLayout(elembox, 0, 0)
+
+        rangebox = QtGui.QHBoxLayout()
+        rangebox.addWidget(QtGui.QLabel("Plot range:", self))
+        self.range1 = QtGui.QLineEdit("0", self)
+        rangebox.addWidget(self.range1)
+        rangebox.addWidget(QtGui.QLabel("-", self))
+        self.range2 = QtGui.QLineEdit("10", self)
+        rangebox.addWidget(self.range2)
+        grid.addLayout(rangebox, 0, 1)
+
+        cutoffbox = QtGui.QHBoxLayout()
+        cutoffbox.addWidget(QtGui.QLabel("Cutoff:", self))
+        self.cutoff = QtGui.QLineEdit("", self)
+        cutoffbox.addWidget(self.cutoff)
+        cutoffbox.addWidget(QtGui.QLabel("Bandwidth:", self))
+        self.bandwidth = QtGui.QLineEdit("0.5", self)
+        cutoffbox.addWidget(self.bandwidth)
+        grid.addLayout(cutoffbox, 0, 2)
 
         self.plotbutton = QtGui.QPushButton("Plot", self)
         grid.addWidget(self.plotbutton, 1, 0)
@@ -176,14 +198,26 @@ class GRView(QtGui.QWidget):
         title = None
         if self.rdf is None:
             self.refresh()
-        e1 = str(self.elem1.currentText())
-        e2 = str(self.elem2.currentText())
         if not self.rdf is None:
-            f = self.rdf.rdf(e1, e2)
+            elem1 = str(self.elem1.currentText())
+            elem2 = str(self.elem2.currentText())
+            range1 = float(str(self.range1.text()))
+            range2 = float(str(self.range2.text()))
+            cutoff = str(self.cutoff.text())
+            if len(cutoff) > 0 and float(cutoff) > 0:
+                cutoff = float(cutoff)
+            else:
+                cutoff = None
+            bandwidth = str(self.bandwidth.text())
+            if len(bandwidth) > 0 and float(bandwidth) > 0:
+                bandwidth = float(bandwidth)
+            else:
+                bandwidth = 0.5
+            f = self.rdf.rdf(elem1, elem2, cutoff=cutoff, h=bandwidth)
             if not f is None:
-                xvalues = np.linspace(0, 10, 400)
+                xvalues = np.linspace(range1, range2, 400)
                 yvalues = f(xvalues)
-                title = "{} - {}".format(e1, e2)
+                title = "{} - {}".format(elem1, elem2)
 
         self.gr_widget.setdata(xvalues, yvalues, title)
         self.gr_widget.draw()
