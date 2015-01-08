@@ -25,7 +25,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.update_needed = False
         self.dataset_loaded = False
-        self.control = parent.parent.control
+        self.control = parent.control
 
     @property
     def vis(self):
@@ -136,5 +136,4 @@ class GLWidget(QtOpenGL.QGLWidget):
             refresh scene
         """
         self.vis.paint(self.geometry().width(), self.geometry().height())
-
 

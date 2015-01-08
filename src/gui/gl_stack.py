@@ -9,6 +9,7 @@ class GLStack(QtGui.QStackedWidget):
     def __init__(self, parent):
         QtGui.QStackedWidget.__init__(self, parent)
         self.parent = parent
+        self.control = parent.control
         self.gl_widget = GLWidget(self)
         self.gr_view = GRView(self)
 
