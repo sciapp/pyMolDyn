@@ -62,7 +62,8 @@ class RDF(object):
 
         self.stats = self._genstats(self.positions,
                                     self.elements,
-                                    self.centers)
+                                    self.centers,
+                                    self.volume)
 
     def rdf(self, elem1, elem2, cutoff=None, h=0.5, kernel=None):
         """
@@ -122,7 +123,7 @@ class RDF(object):
         return Functions.Product(kde, wfunc)
 
     @staticmethod
-    def _correlatedistance(pos1, pos2=None):
+    def _correlatedistance(pos1, pos2=None, volume=None):
         """
         Measure the distances between coordinates.
 
@@ -135,29 +136,31 @@ class RDF(object):
         **Returns:**
             A sorted sample.
         """
+        if volume is None:
+            distance = lambda x, y: y-x
+        else:
+            distance = volume.get_distance
+
         if pos2 is None:
             n = pos1.shape[0]
-            samples = np.zeros([(n * n - n) / 2])
-            k = 0
-            for i in range(n):
-                for j in range(i + 1, n):
-                    samples[k] = np.linalg.norm(pos1[i, :] - pos1[j, :], 2)
-                    k += 1
+            # TODO: list comprehension
+            a1 = pos1[0:-1]
+            a2 = pos1[1:]
+            for i in range(2, n):
+                a1 = np.vstack((a1, pos1[0:-i]))
+                a2 = np.vstack((a2, pos1[i:]))
         else:
             n1 = pos1.shape[0]
             n2 = pos2.shape[0]
-            samples = np.zeros([n1 * n2])
-            k = 0
-            for i in range(n1):
-                for j in range(n2):
-                    samples[k] = np.linalg.norm(pos1[i, :] - pos2[j, :], 2)
-                    k += 1
+            a1 = np.hstack([pos1] * n2).reshape(n1 * n2, 3)
+            a2 = np.vstack([pos2] * n1)
+        samples = np.linalg.norm(distance(a1, a2), 2, axis=-1)
         samples.sort()
 
         return samples
 
     @classmethod
-    def _genstats(cls, positions, elements, centers):
+    def _genstats(cls, positions, elements, centers, volume=None):
         """
         Iterate through the elements and cavities and correlate the
         distances between atoms of that element/cavity and atoms of
@@ -182,9 +185,9 @@ class RDF(object):
             for j in range(i, len(elemlist)):
                 e2 = elemlist[j]
                 if i == j:
-                    s = cls._correlatedistance(pos[i])
+                    s = cls._correlatedistance(pos[i], volume=volume)
                 else:
-                    s = cls._correlatedistance(pos[i], pos[j])
+                    s = cls._correlatedistance(pos[i], pos[j], volume=volume)
                 if len(s) > 1:
                     stats.append((e1, e2, s))
 

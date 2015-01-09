@@ -3,11 +3,11 @@
 To support various materials, different Bravais lattice systems need to be used
 in pyMolDyn2, so that the shapes and periodic boundary conditions of different
 crystalline structures are taken into account. These lattice systems are used as simulation volume and this module provides a
-class for each of the 7 lattice systems. All of these are centered at 
+class for each of the 7 lattice systems. All of these are centered at
 (0,0,0).
 
 As monoclinic, orthorombic, tetragonal, rhombohedral and cubic systems are
-special cases of a triclinic system, the corresponding classes inherit from 
+special cases of a triclinic system, the corresponding classes inherit from
 TriclinicVolume.
 
 For more information about the Bravais lattice systems, see:
@@ -37,17 +37,17 @@ class HexagonalVolume(object):
         self.a = float(a)
         self.c = float(c)
         f = 2*self.a*sin(pi/3)
-        
+
         #: The lattice system translation vectors (`right`, `right-up`, `forward`)
         self.translation_vectors = [(cos(pi*i/3)*f, sin(pi*i/3)*f, 0) for i in range(2)] + [(0, 0, self.c)]
-      
+
         #: The side lengths of an axis-aligned bounding box
         self.side_lengths = [2*self.a*sin(pi/3), 2*self.a, self.c]
-        
-        #: The cell volume, calculated as 6 times the area of an equilateral 
+
+        #: The cell volume, calculated as 6 times the area of an equilateral
         #: triangle with side length a (3**0.5/4*a*a) times the height c.
         self.volume = 6*(3**0.5/4*self.a*self.a)*self.c
-        
+
         #: A list of edges as point pairs
         self.edges = []
         for i in range(6):
@@ -81,7 +81,7 @@ class HexagonalVolume(object):
         if ay > self.a/2 and ay > self.a - ax*cot(pi/3):
             return False
         return True
-        
+
     def get_equivalent_point(self, point):
         '''
         For a given point, this method returns an equivalent point inside the volume.
@@ -94,7 +94,7 @@ class HexagonalVolume(object):
         for i, translation_vector_length in enumerate(translation_vector_lengths):
             translation_vectors[i] /= translation_vector_length
         projection_matrix = np.matrix(translation_vectors)
-        
+
         may_be_outside = True
         while may_be_outside:
             projected_point = (projection_matrix * np.matrix(equivalent_point).T)
@@ -106,6 +106,25 @@ class HexagonalVolume(object):
             else:
                 may_be_outside = False
         return tuple(equivalent_point)
+
+    def get_distance(self, p1, p2):
+        '''
+        Return the shortest distance vector between two points.
+
+        **Parameters:**
+            `p1`, `p2` :
+                List or numpy array containing points as row vectors.
+
+        **Returns:**
+            Numpy array containing the distance vectors.
+        '''
+        # TODO
+        #tp1 = (self.M * np.matrix(p1, copy=False).T).T
+        #tp2 = (self.M * np.matrix(p2, copy=False).T).T
+        #td = tp2 - tp1
+        #td -= np.ceil(td - 0.5)
+        #return np.array((self.Minv * td.T).T, copy=False)
+        return np.array(p2, copy=False) - np.array(p1, copy=False)
         
     def __repr__(self):
         return "HEXAGONAL a=%f c=%f" % (self.a, self.c)
@@ -116,8 +135,8 @@ class HexagonalVolume(object):
 
 class TriclinicVolume(object):
     '''
-    A triclinic volume centered at the origin with the angles ``alpha``, 
-    ``beta``, ``gamma`` and the side lengths ``a``, ``b`` and ``c``. It has the 
+    A triclinic volume centered at the origin with the angles ``alpha``,
+    ``beta``, ``gamma`` and the side lengths ``a``, ``b`` and ``c``. It has the
     shape of a parallelepiped.
     '''
     def __init__(self, *args):
@@ -171,13 +190,13 @@ class TriclinicVolume(object):
             for l in range(3):
                 min_point[l] = min(min_point[l], point[l])
                 max_point[l] = max(max_point[l], point[l])
-                
+
         #: The side lengths of an axis-aligned bounding box
         self.side_lengths = [d-c for c,d in zip(min_point, max_point)]
-        
+
         #: The cell volume
         self.volume = self.V*self.a*self.b*self.c
-        
+
         edges = [((-0.5, -0.5, -0.5), (-0.5, -0.5, 0.5)), ((-0.5, -0.5, -0.5), (-0.5, 0.5, -0.5)), ((-0.5, -0.5, -0.5), (0.5, -0.5, -0.5)), ((-0.5, -0.5, 0.5), (-0.5, 0.5, 0.5)), ((-0.5, -0.5, 0.5), (0.5, -0.5, 0.5)), ((-0.5, 0.5, -0.5), (-0.5, 0.5, 0.5)), ((-0.5, 0.5, -0.5), (0.5, 0.5, -0.5)), ((-0.5, 0.5, 0.5), (0.5, 0.5, 0.5)), ((0.5, -0.5, -0.5), (0.5, -0.5, 0.5)), ((0.5, -0.5, -0.5), (0.5, 0.5, -0.5)), ((0.5, -0.5, 0.5), (0.5, 0.5, 0.5)), ((0.5, 0.5, -0.5), (0.5, 0.5, 0.5))]
         new_edges = []
         for edge in edges:
@@ -189,14 +208,14 @@ class TriclinicVolume(object):
             new_edges.append((point1, point2))
         #: A list of edges as point pairs
         self.edges = new_edges
-        
+
     def is_inside(self, point):
         '''
         Returns True if point is inside of the volume, False otherwise.
         '''
         fractional_point = self.M*np.matrix(point).T
         return all((-0.5 < float(c) < 0.5 for c in fractional_point))
-                
+
     def get_equivalent_point(self, point):
         '''
         For a given point, this method returns an equivalent point inside the volume.
@@ -208,7 +227,24 @@ class TriclinicVolume(object):
         new_point = self.Minv*np.matrix(fractional_point).T
         new_point = tuple(new_point.T.tolist()[0])
         return new_point
-        
+
+    def get_distance(self, p1, p2):
+        '''
+        Return the shortest distance vector between two points.
+
+        **Parameters:**
+            `p1`, `p2` :
+                List or numpy array containing points as row vectors.
+
+        **Returns:**
+            Numpy array containing the distance vectors.
+        '''
+        tp1 = (self.M * np.matrix(p1, copy=False).T).T
+        tp2 = (self.M * np.matrix(p2, copy=False).T).T
+        td = tp2 - tp1
+        td -= np.ceil(td - 0.5)
+        return np.array((self.Minv * td.T).T, copy=False)
+
     def __repr__(self):
         return "TRICLINIC a=%f b=%f c=%f alpha=%f beta=%f gamma=%f" % (self.a, self.b, self.c, self.alpha, self.beta, self.gamma)
 
@@ -339,7 +375,7 @@ class CubicVolume(TriclinicVolume):
             v2 = np.array([float(f) for f in args[3:6]])
             v3 = np.array([float(f) for f in args[6:]])
             TriclinicVolume.__init__(self, v1, v2, v3)
-        
+
     def __repr__(self):
         return "CUBIC a=%f" % self.a
 
