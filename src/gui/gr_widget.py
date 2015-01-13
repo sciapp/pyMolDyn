@@ -38,6 +38,7 @@ class GrWidget(QtGui.QWidget) :
         self.xvalues = None
         self.yvalues = None
         self.title = None
+        self.datapoints = None
 
     def init_gui(self, form) :
         form.setWindowTitle("GrWidget")
@@ -59,10 +60,11 @@ class GrWidget(QtGui.QWidget) :
         gr.emergencyclosegks()
         self.close()
 
-    def setdata(self, xvalues, yvalues, title):
+    def setdata(self, xvalues, yvalues, title, datapoints=None):
         self.xvalues = xvalues
         self.yvalues = yvalues
         self.title = title
+        self.datapoints = datapoints
 
     def draw(self) :
         self.setStyleSheet("background-color:white;");
@@ -101,6 +103,11 @@ class GrWidget(QtGui.QWidget) :
             gr.polyline(self.xvalues, self.yvalues)
         else:
             gr.text(0.4, 0.45, "no elements selected")
+
+        if not self.datapoints is None:
+            gr.setmarkertype(gr.MARKERTYPE_SOLID_TRI_UP)
+            gr.setmarkercolorind(2)
+            gr.polymarker(self.datapoints, np.zeros_like(self.datapoints))
 
         gr.setlinecolorind(1)
         gr.axes(0.2, 0.2, rangex[0], rangey[0], 5, 5, 0.0075)
@@ -170,7 +177,7 @@ class GRView(QtGui.QWidget):
         self.cutoff = QtGui.QLineEdit("", self)
         cutoffbox.addWidget(self.cutoff)
         cutoffbox.addWidget(QtGui.QLabel("Bandwidth:", self))
-        self.bandwidth = QtGui.QLineEdit("0.5", self)
+        self.bandwidth = QtGui.QLineEdit("", self)
         cutoffbox.addWidget(self.bandwidth)
         grid.addLayout(cutoffbox, 0, 2)
 
@@ -193,13 +200,15 @@ class GRView(QtGui.QWidget):
         self.show()
 
     def keyPressEvent(self, event):
-        if event.key() == QtCore.Qt.Key_Return:
+        if event.key() == QtCore.Qt.Key_Return \
+                or event.key() == QtCore.Qt.Key_Enter:
             self.draw()
 
     def draw(self):
         xvalues = None
         yvalues = None
         title = None
+        datapoints = None
         if self.rdf is None:
             self.refresh()
         if not self.rdf is None:
@@ -216,14 +225,15 @@ class GRView(QtGui.QWidget):
             if len(bandwidth) > 0 and float(bandwidth) > 0:
                 bandwidth = float(bandwidth)
             else:
-                bandwidth = 0.5
+                bandwidth = None
             f = self.rdf.rdf(elem1, elem2, cutoff=cutoff, h=bandwidth)
             if not f is None:
                 xvalues = np.linspace(range1, range2, 400)
                 yvalues = f(xvalues)
                 title = "{} - {}".format(elem1, elem2)
+                datapoints = f.f.x
 
-        self.gr_widget.setdata(xvalues, yvalues, title)
+        self.gr_widget.setdata(xvalues, yvalues, title, datapoints)
         self.gr_widget.draw()
 
     def export(self):

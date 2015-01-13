@@ -65,7 +65,7 @@ class RDF(object):
                                     self.centers,
                                     self.volume)
 
-    def rdf(self, elem1, elem2, cutoff=None, h=0.5, kernel=None):
+    def rdf(self, elem1, elem2, cutoff=None, h=None, kernel=None):
         """
         Calculate a smoothed radial distribution function between the elements
         `elem1` and `elem2`.
@@ -109,6 +109,9 @@ class RDF(object):
             logger.debug("Not enough data for '{}-{}' in cutoff={} range.".format(elem1, elem2, cutoff))
             return None # TODO: raise Exception
 
+        if h is None:
+            h = min(0.5, 0.5772778 * sel.min())
+
         if h > 0.9 * sel.min():
             logger.debug("Bandwidth {} above threshold. Setting to {}.".format(h, 0.9 * sel.min()))
             h = 0.9 * sel.min()
@@ -143,12 +146,8 @@ class RDF(object):
 
         if pos2 is None:
             n = pos1.shape[0]
-            # TODO: list comprehension
-            a1 = pos1[0:-1]
-            a2 = pos1[1:]
-            for i in range(2, n):
-                a1 = np.vstack((a1, pos1[0:-i]))
-                a2 = np.vstack((a2, pos1[i:]))
+            a1 = np.vstack([pos1[0:-i, :] for i in range(1, n)])
+            a2 = np.vstack([pos1[i:, :] for i in range(1, n)])
         else:
             n1 = pos1.shape[0]
             n2 = pos2.shape[0]
@@ -346,14 +345,17 @@ class _TestRDF(object):
     def plotfunc(rdf, e1, e2, px, h, *args):
         gr = rdf.rdf(e1, e2, h=h)
         plt.plot(px, gr(px), *args, label=str(h))
+        py = gr(px)
+        m = np.argmax(py)
+        print "h={}, xi={}, g({}) = {}".format(gr.f.h, gr.f.x.min(), px[m], py[m])
 
     @classmethod
     def plotrdf(cls, rdf, e1, e2):
-        px = np.linspace(0, 10, 400)
+        px = np.linspace(0, 2, 1000)
         plt.figure()
         cls.plotfunc(rdf, e1, e2, px, 0.25, "g--")
         cls.plotfunc(rdf, e1, e2, px, 0.5, "r-")
-        cls.plotfunc(rdf, e1, e2, px, 1.0, "b--")
+        #cls.plotfunc(rdf, e1, e2, px, 1.0, "b--")
         plt.legend(loc=0)
         plt.title("{}-{}".format(e1, e2))
 
@@ -381,8 +383,8 @@ class _TestRDF(object):
         #                  centers, res.atoms.volume)
 
         print "plotting..."
-        cls.plotrdf(rdf, "Ge", "Ge")
-        cls.plotrdf(rdf, "Ge", "Te")
+        #cls.plotrdf(rdf, "Ge", "Ge")
+        #cls.plotrdf(rdf, "Ge", "Te")
         cls.plotrdf(rdf, "cav", "cav")
         plt.show()
 
