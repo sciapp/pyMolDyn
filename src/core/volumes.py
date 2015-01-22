@@ -17,12 +17,11 @@ Author: Florian Rhiem <f.rhiem@fz-juelich.de>
 '''
 
 
-from math import ceil, sin, cos, pi
+from math import ceil, sin, cos, pi, sqrt, acos
 cot = lambda alpha: cos(alpha) / sin(alpha)
 import itertools
 import numpy as np
 import numpy.linalg as la
-from math import acos
 
 
 # TODO: check __str__ routines, make them use vectors
@@ -107,6 +106,21 @@ class HexagonalVolume(object):
                 may_be_outside = False
         return tuple(equivalent_point)
 
+    def _wrap(self, p):
+        f = sqrt(3) * self.a
+        M60 = np.matrix([
+            [           0.5, 0.5 * sqrt(3), 0.0],
+            [-0.5 * sqrt(3),           0.5, 0.0],
+            [           0.0,           0.0, 1.0]])
+        p[:,2] -= np.ceil(p[:,2] / self.c - 0.5) * self.c
+        p[:,0] -= np.ceil(p[:,0] / f - 0.5) * f
+        p = (M60 * p.T).T
+        p[:,0] -= np.ceil(p[:,0] / f - 0.5) * f
+        p = (M60 * p.T).T
+        p[:,0] -= np.ceil(p[:,0] / f - 0.5) * f
+        p = ((M60 * M60).T * p.T).T
+        return p
+
     def get_distance(self, p1, p2):
         '''
         Return the shortest distance vector between two points.
@@ -118,13 +132,10 @@ class HexagonalVolume(object):
         **Returns:**
             Numpy array containing the distance vectors.
         '''
-        # TODO
-        #tp1 = (self.M * np.matrix(p1, copy=False).T).T
-        #tp2 = (self.M * np.matrix(p2, copy=False).T).T
-        #td = tp2 - tp1
-        #td -= np.ceil(td - 0.5)
-        #return np.array((self.Minv * td.T).T, copy=False)
-        return np.array(p2, copy=False) - np.array(p1, copy=False)
+        p1 = self._wrap(np.matrix(p1, copy=True))
+        p2 = self._wrap(np.matrix(p2, copy=True))
+        d = self._wrap(p2 - p1)
+        return np.array(d, copy=False)
         
     def __repr__(self):
         return "HEXAGONAL a=%f c=%f" % (self.a, self.c)
@@ -406,7 +417,7 @@ class Volume(object):
 
     @classmethod
     def fromstring(cls, s):
-        s = s.split(' ')
+        s = s.split()
         t = s[0].upper() # volume type
         cl = cls.volumes[t][0] # volume class
         if len(s) == 10: # cell vectors given

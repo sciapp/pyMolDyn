@@ -4,6 +4,10 @@ Calculate radial distribution functions.
 """
 
 
+MINDISTANCE = 2.0 # shorter distances are ignored
+RDFCUTOFF = 1.0   # g(r) = 0 if r < RDFCUTOFF
+
+
 __all__ = ["RDF"]
 
 
@@ -88,6 +92,7 @@ class RDF(object):
             not enough data to create the function.
         """
         if kernel is None:
+            #kernel = Kernels.epanechnikov
             kernel = Kernels.epanechnikov
 
         data = None
@@ -103,23 +108,26 @@ class RDF(object):
         
         if cutoff is None:
             cutoff = data.max()
-        sel = np.where(np.logical_and(data > 1e-10, data <= cutoff))[0]
+        sel = np.where(np.logical_and(data > MINDISTANCE, data <= cutoff))[0]
         sel = data[sel]
         if len(sel) < 2:
             logger.debug("Not enough data for '{}-{}' in cutoff={} range.".format(elem1, elem2, cutoff))
             return None # TODO: raise Exception
 
         if h is None:
-            h = min(0.5, 0.5772778 * sel.min())
+            ## magic constant
+            ## minimizes the first peak
+            #h = min(0.5, 0.5772778 * sel.min())
+            h = 0.4
 
-        if h > 0.9 * sel.min():
-            logger.debug("Bandwidth {} above threshold. Setting to {}.".format(h, 0.9 * sel.min()))
-            h = 0.9 * sel.min()
-        kde = Functions.Convolution(sel, h=h, kernel=Kernels.epanechnikov)
+        #if h > 0.9 * sel.min():
+        #    logger.debug("Bandwidth {} above threshold. Setting to {}.".format(h, 0.9 * sel.min()))
+        #    h = 0.9 * sel.min()
+        kde = Functions.Convolution(sel, h=h, kernel=kernel)
 
         def wfunc(r):
             y = np.zeros_like(r)
-            i = np.where(np.abs(r) > 1e-10)[0]
+            i = np.where(np.abs(r) > RDFCUTOFF)[0]
             y[i] = self.volume.volume / (data.size * 4 * math.pi * r[i]**2)
             return y
 

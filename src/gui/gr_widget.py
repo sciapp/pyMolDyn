@@ -107,6 +107,7 @@ class GrWidget(QtGui.QWidget) :
         if not self.datapoints is None:
             gr.setmarkertype(gr.MARKERTYPE_SOLID_TRI_UP)
             gr.setmarkercolorind(2)
+            gr.setmarkersize(1.0)
             gr.polymarker(self.datapoints, np.zeros_like(self.datapoints))
 
         gr.setlinecolorind(1)
@@ -237,7 +238,15 @@ class GRView(QtGui.QWidget):
         self.gr_widget.draw()
 
     def export(self):
-        print "exporting not yet supported"
+        extensions = (".eps", ".ps", ".pdf", ".png", ".bmp", ".jpg", ".jpeg", ".png", ".tiff", ".fig", ".svg", ".wmf")
+        qtext = "*" + " *".join(extensions)
+        filepath, _ = QtGui.QFileDialog.getSaveFileName(self, "Save Image", \
+                ".", "Image Files ({})".format(qtext))
+        if len(filepath) == 0:
+            return
+        gr.beginprint(filepath)
+        self.draw()
+        gr.endprint()
 
     def refresh(self):
         results = self.control.results
