@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import core.data
 import core.calculation
 import core.file
 import util.message as message
@@ -12,7 +13,7 @@ class PymoldynTest(object):
         self.calculation = core.calculation.Calculation()
 
 
-if __name__ == "__main__":
+def main():
     def print_message(*s):
         print "message:", s[0],
         for x in s[1:]:
@@ -35,3 +36,28 @@ if __name__ == "__main__":
     cs = core.calculation.CalculationSettings([f], [0], 96, True, True, True)
     r = p.calculation.calculate(cs)
     print r
+
+
+def addelements():
+    import h5py
+
+    p = PymoldynTest()
+    cd = p.calculation.cache.directory
+    fl = core.file.File.listdir(cd)
+    fl = [os.path.abspath(os.path.join(cd, f)) for f in fl]
+
+    for fpath in fl:
+        with h5py.File(fpath) as rf:
+            info = core.data.ResultInfo(rf["info"])
+            sf = core.file.File.open(info.sourcefilepath)
+            for gname in rf["atoms"].keys():
+                frame = int(gname[5:])
+                group = rf["atoms/frame{}".format(frame)]
+                if not "elements" in group:
+                    satoms = sf.getatoms(frame)
+                    group["elements"] = satoms.elements
+
+
+if __name__ == "__main__":
+    main()
+    #addelements()

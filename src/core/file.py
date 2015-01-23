@@ -68,7 +68,8 @@ class InputFile(object):
             try:
                 self.readinfo()
             except IOError as e:
-                logger.error(str(e))
+                #logger.error(str(e))
+                pass
         return self._info
 
     def getatoms(self, frame):

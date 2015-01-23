@@ -1,5 +1,5 @@
 
-SUBDIRS = computation gui util visualization config core statistics
+SUBDIRS =
 
 all:
 	for i in $(SUBDIRS); do make -C $$i all; done

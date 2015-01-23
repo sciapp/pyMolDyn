@@ -47,7 +47,7 @@ class Configuration(ConfigNode):
 
     class Computation(ConfigNode):
         def __init__(self):
-            self.atom_radius     = 2.65
+            self.atom_radius     = 2.8
             self.std_resolution  = 64
 
     class Path(ConfigNode):

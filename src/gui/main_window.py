@@ -2,15 +2,14 @@
 
 
 import os
-from core import calculation
 from gui.tabs.file_tab import FileTabDock
 from gui.tabs.view_tab import ViewTabDock
 from gui.tabs.image_video_tab import ImageVideoTabDock
 from gui.tabs.statistics_tab import StatisticsTabDock
-from gui.gl_widget import GLWidget
 from PySide import QtCore, QtGui
 from gui.dialogs.settings_dialog import SettingsDialog
 from util import message
+from gl_stack import GLStack
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -89,7 +88,7 @@ class MainWindow(QtGui.QMainWindow):
     def updatestatus(self):
         results = self.control.results[-1][-1]
         self.shown_dataset = results
-        status = "{}, frame {}, resolution {}".format(os.path.basename(results.filepath), results.frame + 1, results.resolution)
+        status = str(results)
         self.statusBar().showMessage(status)
 
 #    def closeEvent(self, event):
@@ -108,16 +107,30 @@ class CentralWidget(QtGui.QWidget):
         QtGui.QWidget.__init__(self, parent)
         self.control = parent.control
         self.setWindowTitle('pyMolDyn 2')
+        self.widget_titles = (
+                "3D View",
+                "Radial Distribution",
+                "Volume Histogram")
         self.init_gui()
  
     def init_gui(self):
-        self.gl_widget  = GLWidget(self)
+        self.gl_stack  = GLStack(self)
+        self.gl_widget = self.gl_stack.gl_widget
+        combo = QtGui.QComboBox()
+        for title in self.widget_titles:
+            combo.addItem(title)
+        combo.activated[str].connect(self.on_combo)
 
-        main_layout = QtGui.QHBoxLayout()
-        main_layout.addWidget(self.gl_widget)
+        layout =  QtGui.QVBoxLayout()
+        layout.addWidget(self.gl_stack)
+        layout.addWidget(combo)
 
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.setLayout(main_layout)
+        self.setLayout(layout)
+
+    def on_combo(self, string):
+        index = self.widget_titles.index(string)
+        self.gl_stack.setCurrentIndex(index)
 
     def show_dataset(self, results):
         self.gl_widget.show_dataset(results)
