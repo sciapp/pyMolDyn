@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from PySide import QtGui
 from gl_widget import GLWidget
-from gr_widget import GRView
+from rdf_widget import RDFWidget
+from histogram_widget import HistogramWidget
 
 
 class GLStack(QtGui.QStackedWidget):
@@ -11,9 +12,11 @@ class GLStack(QtGui.QStackedWidget):
         self.parent = parent
         self.control = parent.control
         self.gl_widget = GLWidget(self)
-        self.gr_view = GRView(self)
+        self.rdf_widget = RDFWidget(self)
+        self.histogram_widget = HistogramWidget(self)
 
         self.addWidget(self.gl_widget)
-        self.addWidget(self.gr_view)
+        self.addWidget(self.rdf_widget)
+        self.addWidget(self.histogram_widget)
 
         self.show()

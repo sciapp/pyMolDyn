@@ -7,6 +7,7 @@ Most of them can be read and written to hdf5 files.
 
 import numpy as np
 import sys
+import os
 from datetime import datetime
 import dateutil.parser
 import h5py
@@ -678,6 +679,17 @@ class Results(object):
         self.domains = domains
         self.surface_cavities = surface_cavities
         self.center_cavities = center_cavities
+
+    def __str__(self):
+        s = "{}, frame {}, resolution {}".format(
+                os.path.basename(self.filepath),
+                self.frame + 1,
+                self.resolution)
+        if not self.surface_cavities is None and not self.atoms.volume is None:
+            cavvolume = np.sum(self.surface_cavities.volumes)
+            volpercent = 100 * cavvolume / self.atoms.volume.volume
+            s += ", {:0.1f}% cavities".format(volpercent)
+        return s
 
     # Properties to be compatible to the old CalculationResults
     @property

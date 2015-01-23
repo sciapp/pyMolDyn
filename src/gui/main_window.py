@@ -88,7 +88,7 @@ class MainWindow(QtGui.QMainWindow):
     def updatestatus(self):
         results = self.control.results[-1][-1]
         self.shown_dataset = results
-        status = "{}, frame {}, resolution {}".format(os.path.basename(results.filepath), results.frame + 1, results.resolution)
+        status = str(results)
         self.statusBar().showMessage(status)
 
 #    def closeEvent(self, event):
@@ -107,14 +107,18 @@ class CentralWidget(QtGui.QWidget):
         QtGui.QWidget.__init__(self, parent)
         self.control = parent.control
         self.setWindowTitle('pyMolDyn 2')
+        self.widget_titles = (
+                "3D View",
+                "Radial Distribution",
+                "Volume Histogram")
         self.init_gui()
  
     def init_gui(self):
         self.gl_stack  = GLStack(self)
         self.gl_widget = self.gl_stack.gl_widget
         combo = QtGui.QComboBox()
-        combo.addItem('GL')
-        combo.addItem('GR')
+        for title in self.widget_titles:
+            combo.addItem(title)
         combo.activated[str].connect(self.on_combo)
 
         layout =  QtGui.QVBoxLayout()
@@ -125,10 +129,8 @@ class CentralWidget(QtGui.QWidget):
         self.setLayout(layout)
 
     def on_combo(self, string):
-        if string == 'GL':
-            self.gl_stack.setCurrentIndex(0)
-        else:
-            self.gl_stack.setCurrentIndex(1)
+        index = self.widget_titles.index(string)
+        self.gl_stack.setCurrentIndex(index)
 
     def show_dataset(self, results):
         self.gl_widget.show_dataset(results)

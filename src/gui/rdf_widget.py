@@ -16,11 +16,11 @@ import numpy as np
 import os
 
 
-logger = Logger("gui.gr_widget")
+logger = Logger("gui.rdf_widget")
 logger.setstream("default", sys.stdout, Logger.DEBUG)
 
 
-class GrWidget(QtGui.QWidget) :
+class GrPlotWidget(QtGui.QWidget) :
     def __init__(self, *args) :
         QtGui.QWidget.__init__(self)
 
@@ -41,7 +41,6 @@ class GrWidget(QtGui.QWidget) :
         self.datapoints = None
 
     def init_gui(self, form) :
-        form.setWindowTitle("GrWidget")
         form.resize(QtCore.QSize(500, 500).expandedTo(form.minimumSizeHint()))
 
         #self.DrawButton = QtGui.QPushButton(form)
@@ -104,11 +103,12 @@ class GrWidget(QtGui.QWidget) :
         else:
             gr.text(0.4, 0.45, "no elements selected")
 
-        if not self.datapoints is None:
-            gr.setmarkertype(gr.MARKERTYPE_SOLID_TRI_UP)
-            gr.setmarkercolorind(2)
-            gr.setmarkersize(1.0)
-            gr.polymarker(self.datapoints, np.zeros_like(self.datapoints))
+        ## rug plot
+        #if not self.datapoints is None:
+        #    gr.setmarkertype(gr.MARKERTYPE_SOLID_TRI_UP)
+        #    gr.setmarkercolorind(2)
+        #    gr.setmarkersize(1.0)
+        #    gr.polymarker(self.datapoints, np.zeros_like(self.datapoints))
 
         gr.setlinecolorind(1)
         gr.axes(0.2, 0.2, rangex[0], rangey[0], 5, 5, 0.0075)
@@ -137,7 +137,7 @@ class GrWidget(QtGui.QWidget) :
         self.painter.end()
 
 
-class GRView(QtGui.QWidget):
+class RDFWidget(QtGui.QWidget):
 
     def __init__(self, parent):
         QtGui.QWidget.__init__(self, parent)
@@ -151,7 +151,7 @@ class GRView(QtGui.QWidget):
     def init_gui(self):
         vbox = QtGui.QVBoxLayout()
         grid = QtGui.QGridLayout()
-        self.gr_widget = GrWidget()
+        self.gr_widget = GrPlotWidget()
 
         self.datasetlabel = QtGui.QLabel("No data loaded. Press 'Refresh'.", self)
         self.datasetlabel.setAlignment(QtCore.Qt.AlignHCenter)
@@ -264,11 +264,7 @@ class GRView(QtGui.QWidget):
                 self.elem2.addItems(e)
                 self.gr_widget.setdata(None, None, None)
                 self.gr_widget.draw()
-            dataset = "{}, frame {}, resolution {}".format(
-                    os.path.basename(results.filepath),
-                    results.frame + 1,
-                    results.resolution)
-            self.datasetlabel.setText(dataset)
+            self.datasetlabel.setText(str(results))
         else:
             self.datasetlabel.setText("")
             self.elem1.clear()
