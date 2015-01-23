@@ -409,7 +409,6 @@ class FakeDomainCalculation(object):
     '''
 
     def __init__(self, discretization, atom_discretization, results):
-        #self.centers = results.domain_centers
         self.centers = results.domains.centers
         self.discretization = discretization
         self.atom_discretization = atom_discretization
