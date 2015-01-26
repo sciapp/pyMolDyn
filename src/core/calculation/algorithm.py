@@ -77,6 +77,7 @@ from computation.split_and_merge.pipeline import start_split_and_merge_pipeline
 import util.colored_exceptions
 import time
 from util.message import print_message, progress, finish
+from extension import atomstogrid
 
 
 dimension = 3
@@ -90,8 +91,7 @@ class DomainCalculation:
         discretization and filled with zeros.
      2. For each atom, all points in the grid closer to this atom than the 
         discrete cavity cutoff radius are set to a point indicating the atom
-        index (atom_index+1). This is done with a 'sphere grid', which can be 
-        reused for atoms with the same discrete radius.
+        index (atom_index+1).
      3. At this point, every point in the grid which is inside of the volume and
         still has a value of zero is part of a cavity domain. To find these 
         domains, an optimized split and merge algorithm is applied to the whole grid. 
@@ -108,28 +108,12 @@ class DomainCalculation:
         self.grid = np.zeros(self.discretization.d, dtype=np.int64)
 
         # step 2
-        last_radius_index = -1  # (for reuse of sphere grids)
-        atom_information = itertools.izip(range(len(self.atom_discretization.discrete_positions)),
-                                          self.atom_discretization.atoms.radii_as_indices,
-                                          self.atom_discretization.discrete_positions)
-        for atom_index, radius_index, real_discrete_position in atom_information:
-            discrete_radius = self.atom_discretization.sorted_discrete_radii[radius_index]
-            if radius_index != last_radius_index:
-                last_radius_index = radius_index
-                sphere_grid = np.zeros([discrete_radius * 2 + 1 for i in dimensions], dtype=np.bool)
-                for point in itertools.product(range(discrete_radius * 2 + 1), repeat=dimension):
-                    squared_distance_to_grid_center = sum(
-                        [(point[i] - discrete_radius) * (point[i] - discrete_radius) for i in dimensions])
-                    sphere_grid[point] = (squared_distance_to_grid_center <= discrete_radius * discrete_radius)
-            for v in self.discretization.combined_translation_vectors + [(0, 0, 0)]:
-                discrete_position = [real_discrete_position[i] + v[i] for i in dimensions]
-                for point in itertools.product(range(discrete_radius * 2 + 1), repeat=dimension):
-                    if sphere_grid[point]:
-                        p = [point[i] - discrete_radius + discrete_position[i] for i in dimensions]
-                        if all([0 <= p[i] <= self.discretization.d[i] - 1 for i in dimensions]):
-                            grid_value = self.discretization.grid[tuple(p)]
-                            if grid_value == 0:
-                                self.grid[tuple(p)] = atom_index + 1
+        atomstogrid(self.grid,
+                self.atom_discretization.discrete_positions,
+                self.atom_discretization.atoms.radii_as_indices,
+                self.atom_discretization.sorted_discrete_radii,
+                self.discretization.combined_translation_vectors + [(0, 0, 0)],
+                self.discretization.grid)
         # step 3
         self.centers, self.surface_point_list = start_split_and_merge_pipeline(self.grid, self.discretization.grid,
                                                                                self.atom_discretization.discrete_positions,

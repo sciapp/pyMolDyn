@@ -1,5 +1,5 @@
 
-SUBDIRS =
+SUBDIRS = extension
 
 all:
 	for i in $(SUBDIRS); do make -C $$i all; done

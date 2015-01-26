@@ -119,6 +119,7 @@ class Discretization(object):
         # step 3
         self.translation_vectors = [[int(floor(c / self.s_step + 0.5)) for c in v] for v in
                                     self.volume.translation_vectors]
+        # TODO: remove unnecesary vectors in hexagonal volumes
         self.combined_translation_vectors = [
             [sum([v[0][j] * v[1] for v in zip(self.translation_vectors, i)]) for j in dimensions] for i in
             itertools.product((-1, 0, 1), repeat=dimension) if any(i)]
