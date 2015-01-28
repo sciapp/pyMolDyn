@@ -6,6 +6,7 @@ __all__ = ["atomstogrid"]
 
 import numpy as np
 import itertools
+import sys
 
 
 dimension = 3
@@ -48,4 +49,52 @@ def atomstogrid(grid, discrete_positions, radii_indices, discrete_radii, transla
                                 if this_squared_distance < other_squared_distance:
                                     grid[tuple(p)] = atom_index + 1
 
+
+def mark_cavities(domain_grid,
+        discretization_grid,
+        grid_dimensions,
+        sg, sg_cube_size, to_subgrid,
+        atom_positions,
+        translation_vectors,
+        surface_point_list,
+        use_surface_points):
+    grid = np.zeros(grid_dimensions, dtype=np.int64)
+    for p in itertools.product(*map(range, grid_dimensions)):
+        if use_surface_points:
+            grid_value = domain_grid[p]
+            if grid_value == 0:  # outside the volume
+                grid[p] = 0
+                possibly_in_cavity = False
+            elif grid_value < 0:  # cavity domain (stored as: -index-1), therefore guaranteed to be in a cavity
+                grid[p] = grid_value
+                possibly_in_cavity = True
+            elif grid_value > 0:  # in radius of atom (stored as: index+1), therefore possibly in a cavity
+                grid[p] = 0
+                possibly_in_cavity = True
+        else:
+            possibly_in_cavity = (discretization_grid[p] == 0)
+        if possibly_in_cavity:
+            # step 5
+            min_squared_atom_distance = sys.maxint
+            sgp = to_subgrid(p)
+            for i in itertools.product((0, 1, -1), repeat=dimension):
+                sgci = [sgp[j] + i[j] for j in dimensions]
+                for atom_position in sg[sgci[0]][sgci[1]][sgci[2]][0]:
+                    squared_atom_distance = sum(
+                        [(atom_position[j] - p[j]) * (atom_position[j] - p[j]) for j in dimensions])
+                    min_squared_atom_distance = min(min_squared_atom_distance, squared_atom_distance)
+            for i in itertools.product((0, 1, -1), repeat=dimension):
+                next = False
+                sgci = [sgp[j] + i[j] for j in dimensions]
+                for domain_index, domain_seed_point in zip(sg[sgci[0]][sgci[1]][sgci[2]][2],
+                                                           sg[sgci[0]][sgci[1]][sgci[2]][1]):
+                    squared_domain_seed_point_distance = sum(
+                        [(domain_seed_point[j] - p[j]) * (domain_seed_point[j] - p[j]) for j in dimensions])
+                    if squared_domain_seed_point_distance < min_squared_atom_distance:
+                        grid[p] = -domain_index - 1
+                        next = True
+                        break
+                if next:
+                    break
+    return grid
 

@@ -1,7 +1,28 @@
 #include <stdlib.h>
+#include <math.h>
+#include <limits.h>
 
 #define SQUARE(x) ((x)*(x))
-#define INDEXCUBE(i,j,k) (((i)*cubesize+(j))*cubesize+(k))
+#define CLIP(x,a,b) ((x)<(a)?(a):((x)>(b)?(b):(x)))
+
+
+typedef struct subgrid_cell {
+    int num_atoms;
+    int *atom_positions;
+    int num_domains;
+    int *domain_points;
+    int *domain_indices;
+} subgrid_cell_t;
+
+typedef struct subgrid {
+    subgrid_cell_t *a;
+    int cubesize;
+    int ncells;
+    int dimensions[3];
+    int strides[3];
+} subgrid_t;
+
+
 #define INDEXGRID(i,j,k) ((int64_t)(i)*strides[0]+(j)*strides[1]+(k)*strides[2])
 #define INDEXDISCGRID(i,j,k) ((int64_t)(i)*discgrid_strides[0]+(j)*discgrid_strides[1]+(k)*discgrid_strides[2])
 
@@ -108,3 +129,208 @@ void atomstogrid(
         }
     }
 }
+
+#undef INDEXGRID
+#undef INDEXDISCGRID
+
+
+subgrid_t *subgrid_create(int cubesize, int grid_dimensions[3])
+{
+    subgrid_t *sg;
+    int k;
+
+    sg = malloc(sizeof(subgrid_t));
+    sg->cubesize = cubesize;
+    for (k = 0; k < 3; k++) {
+        sg->dimensions[k] = (int) ceil((double) grid_dimensions[k] / cubesize) + 4;
+    }
+    sg->ncells = sg->dimensions[0] * sg->dimensions[1] * sg->dimensions[2];
+    sg->strides[0] = sg->dimensions[1] * sg->dimensions[2];
+    sg->strides[1] = sg->dimensions[2];
+    sg->strides[2] = 1;
+
+    sg->a = calloc(sg->ncells, sizeof(subgrid_cell_t));
+
+    return sg;
+}
+
+void subgrid_destroy(subgrid_t *sg)
+{
+    int i;
+
+    for (i = 0; i < sg->ncells; i++) {
+        free(sg->a[i].atom_positions);
+        free(sg->a[i].domain_points);
+        free(sg->a[i].domain_indices);
+    }
+    free(sg->a);
+    free(sg);
+}
+
+static
+int subgrid_index(subgrid_t *sg, int *pos)
+{
+    int k;
+    int z;
+    int index;
+
+    index = 0;
+    for (k = 0; k < 3; k++) {
+        z = pos[k] / sg->cubesize + 2;
+        index += CLIP(z, 0, sg->dimensions[k] - 1) * sg->strides[k];
+    }
+    return index;
+}
+
+void subgrid_add_atoms(subgrid_t *sg,
+        int natoms, int *atom_positions,
+        int ntranslations, int *translations)
+{
+    int i, j;
+    int real_pos[3];
+    subgrid_cell_t *cell;
+
+    for (i = 0; i < natoms; i++) {
+        for (j = 0; j < ntranslations; j++) {
+            real_pos[0] = atom_positions[i * 3 + 0] + translations[j * 3 + 0];
+            real_pos[1] = atom_positions[i * 3 + 1] + translations[j * 3 + 1];
+            real_pos[2] = atom_positions[i * 3 + 2] + translations[j * 3 + 2];
+            cell = sg->a + subgrid_index(sg, real_pos);
+            cell->atom_positions = realloc(cell->atom_positions,
+                    (cell->num_atoms + 1) * 3 * sizeof(int));
+            cell->atom_positions[3 * cell->num_atoms + 0] = real_pos[0];
+            cell->atom_positions[3 * cell->num_atoms + 1] = real_pos[1];
+            cell->atom_positions[3 * cell->num_atoms + 2] = real_pos[2];
+            cell->num_atoms++;
+        }
+    }
+}
+
+void subgrid_add_domains(subgrid_t *sg,
+        int npoints, int *domain_indices, int *domain_points,
+        int ntranslations, int *translations)
+{
+    int i, j;
+    int real_pos[3];
+    subgrid_cell_t *cell;
+
+    for (i = 0; i < npoints; i++) {
+        for (j = 0; j < ntranslations; j++) {
+            real_pos[0] = domain_points[i * 3 + 0] + translations[j * 3 + 0];
+            real_pos[1] = domain_points[i * 3 + 1] + translations[j * 3 + 1];
+            real_pos[2] = domain_points[i * 3 + 2] + translations[j * 3 + 2];
+            cell = sg->a + subgrid_index(sg, real_pos);
+            cell->domain_indices = realloc(cell->domain_indices,
+                    (cell->num_domains + 1) * sizeof(int));
+            cell->domain_indices[cell->num_domains] = domain_indices[i];
+            cell->domain_points = realloc(cell->domain_points,
+                    (cell->num_domains + 1) * 3 * sizeof(int));
+            cell->domain_points[3 * cell->num_domains + 0] = real_pos[0];
+            cell->domain_points[3 * cell->num_domains + 1] = real_pos[1];
+            cell->domain_points[3 * cell->num_domains + 2] = real_pos[2];
+            cell->num_domains++;
+        }
+    }
+}
+
+#define INDEXGRID(i,j,k) ((int64_t)(i)*strides[0]+(j)*strides[1]+(k)*strides[2])
+#define INDEXDISCGRID(i,j,k) ((int64_t)(i)*discgrid_strides[0]+(j)*discgrid_strides[1]+(k)*discgrid_strides[2])
+
+void mark_cavities(int64_t *grid, int64_t *domain_grid, int dimensions[3], int strides[3],
+        char *discretization_grid, int discgrid_strides[3],
+        subgrid_t *sg, int use_surface_points)
+{
+    int pos[3];
+    int grid_index;
+    int grid_value;
+    int sg_index;
+    int min_squared_atom_distance;
+    int squared_atom_distance;
+    int neigh[3];
+    int neigh_index;
+    subgrid_cell_t *cell;
+    int i;
+    int breaknext;
+    int squared_domain_distance;
+
+    for (pos[0] = 0; pos[0] < dimensions[0]; pos[0]++) {
+        for (pos[1] = 0; pos[1] < dimensions[1]; pos[1]++) {
+            for (pos[2] = 0; pos[2] < dimensions[2]; pos[2]++) {
+                if (use_surface_points) {
+                    grid_index = INDEXGRID(pos[0], pos[1], pos[2]);
+                    grid_value = domain_grid[grid_index];
+                    if (grid_value == 0) {
+                        /* outside the volume */
+                        grid[grid_index] = 0;
+                        continue;
+                    } else if (grid_value < 0) {
+                        /* cavity domain (stored as: -index-1), therefore guaranteed to be in a cavity */
+                        grid[grid_index] = grid_value;
+                        continue;
+                    } else {
+                        grid[grid_index] = 0;
+                    }
+                } else {
+                    if (discretization_grid[INDEXDISCGRID(pos[0], pos[1], pos[2])] != 0) {
+                        continue;
+                    }
+                }
+                /* step 5 */
+                min_squared_atom_distance = INT_MAX;
+                sg_index = subgrid_index(sg, pos);
+                for (neigh[0] = -1; neigh[0] <= 1; neigh[0]++) {
+                    for (neigh[1] = -1; neigh[1] <= 1; neigh[1]++) {
+                        for (neigh[2] = -1; neigh[2] <= 1; neigh[2]++) {
+                            neigh_index = sg_index + neigh[0] * sg->strides[0]
+                                    + neigh[1] * sg->strides[1]
+                                    + neigh[2] * sg->strides[2];
+                            cell = sg->a + neigh_index;
+                            for (i = 0; i < cell->num_atoms; i++) {
+                                squared_atom_distance = 
+                                        SQUARE(cell->atom_positions[i * 3 + 0] - pos[0])
+                                        + SQUARE(cell->atom_positions[i * 3 + 1] - pos[1])
+                                        + SQUARE(cell->atom_positions[i * 3 + 2] - pos[2]);
+                                if (squared_atom_distance < min_squared_atom_distance) {
+                                    min_squared_atom_distance = squared_atom_distance;
+                                }
+                            }
+                        }
+                    }
+                }
+                breaknext = 0;
+                for (neigh[0] = -1; neigh[0] <= 1; neigh[0]++) {
+                    for (neigh[1] = -1; neigh[1] <= 1; neigh[1]++) {
+                        for (neigh[2] = -1; neigh[2] <= 1; neigh[2]++) {
+                            neigh_index = sg_index + neigh[0] * sg->strides[0]
+                                    + neigh[1] * sg->strides[1]
+                                    + neigh[2] * sg->strides[2];
+                            cell = sg->a + neigh_index;
+                            for (i = 0; i < cell->num_domains; i++) {
+                                squared_domain_distance = 
+                                        SQUARE(cell->domain_points[i * 3 + 0] - pos[0])
+                                        + SQUARE(cell->domain_points[i * 3 + 1] - pos[1])
+                                        + SQUARE(cell->domain_points[i * 3 + 2] - pos[2]);
+                                if (squared_domain_distance < min_squared_atom_distance) {
+                                    grid[grid_index] = -cell->domain_indices[i] - 1;
+                                    breaknext = 1;
+                                    break; /* i */
+                                }
+                            }
+                            if (breaknext) {
+                                break; /* neigh[2] */
+                            }
+                        }
+                        if (breaknext) {
+                            break; /* neigh[1] */
+                        }
+                    }
+                    if (breaknext) {
+                        break; /* neigh[0] */
+                    }
+                }
+            }
+        }
+    }
+}
+#undef INDEXGRID
+#undef INDEXDISCGRID

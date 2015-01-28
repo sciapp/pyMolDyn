@@ -63,7 +63,7 @@ contain the relevant information.
 
 Author: Florian Rhiem <f.rhiem@fz-juelich.de>
 '''
-from math import ceil, floor
+from math import ceil, floor, sqrt
 import itertools
 import sys
 import numpy as np
@@ -121,9 +121,15 @@ class DomainCalculation:
                                                                                self.discretization.get_translation_vector)
         print_message("number of domains:", len(self.centers))
         self.domain_volumes = []
+        self.domain_radii = [] #TODO: put in results? doc!
         for domain_index in range(len(self.centers)):
             domain_volume = (self.grid == -(domain_index + 1)).sum() * (self.discretization.s_step ** 3)
             self.domain_volumes.append(domain_volume)
+            rmax2 = 0
+            for surface_point in self.surface_point_list[domain_index]:
+                r2 = sum([(cx - sx)**2 for cx, sx in zip(self.centers[domain_index], surface_point)])
+                rmax2 = max(rmax2, r2)
+            self.domain_radii.append(sqrt(rmax2))
         self.triangles()
 
     def triangles(self):
@@ -210,6 +216,8 @@ class CavityCalculation:
             self.grid = self.domain_calculation.grid
             num_surface_points = sum(map(len, self.domain_calculation.surface_point_list))
             print_message("number of surface points:", num_surface_points)
+        else:
+            self.grid = None
 
         # step 1
         max_radius = self.domain_calculation.atom_discretization.sorted_discrete_radii[0]
@@ -242,44 +250,29 @@ class CavityCalculation:
                     self.sg[sgp[0]][sgp[1]][sgp[2]][1].append(real_domain_seed_point)
                     self.sg[sgp[0]][sgp[1]][sgp[2]][2].append(domain_index)
         # step 4
-        self.grid3 = np.zeros(self.domain_calculation.discretization.d, dtype=np.int64)
-        for p in itertools.product(*map(range, self.domain_calculation.discretization.d)):
-            if use_surface_points:
-                grid_value = self.grid[p]
-                if grid_value == 0:  # outside the volume
-                    self.grid3[p] = 0
-                    possibly_in_cavity = False
-                elif grid_value < 0:  # cavity domain (stored as: -index-1), therefore guaranteed to be in a cavity
-                    self.grid3[p] = grid_value
-                    possibly_in_cavity = True
-                elif grid_value > 0:  # in radius of atom (stored as: index+1), therefore possibly in a cavity
-                    self.grid3[p] = 0
-                    possibly_in_cavity = True
-            else:
-                possibly_in_cavity = (self.domain_calculation.discretization.grid[p] == 0)
-            if possibly_in_cavity:
-                # step 5
-                min_squared_atom_distance = sys.maxint
-                sgp = self.to_subgrid(p)
-                for i in itertools.product((0, 1, -1), repeat=dimension):
-                    sgci = [sgp[j] + i[j] for j in dimensions]
-                    for atom_position in self.sg[sgci[0]][sgci[1]][sgci[2]][0]:
-                        squared_atom_distance = sum(
-                            [(atom_position[j] - p[j]) * (atom_position[j] - p[j]) for j in dimensions])
-                        min_squared_atom_distance = min(min_squared_atom_distance, squared_atom_distance)
-                for i in itertools.product((0, 1, -1), repeat=dimension):
-                    next = False
-                    sgci = [sgp[j] + i[j] for j in dimensions]
-                    for domain_index, domain_seed_point in zip(self.sg[sgci[0]][sgci[1]][sgci[2]][2],
-                                                               self.sg[sgci[0]][sgci[1]][sgci[2]][1]):
-                        squared_domain_seed_point_distance = sum(
-                            [(domain_seed_point[j] - p[j]) * (domain_seed_point[j] - p[j]) for j in dimensions])
-                        if squared_domain_seed_point_distance < min_squared_atom_distance:
-                            self.grid3[p] = -domain_index - 1
-                            next = True
-                            break
-                    if next:
-                        break
+        from extension.extension_ctypes import mark_cavities as mark_cavities_c
+        from extension.extension_python import mark_cavities as mark_cavities_py
+        self.grid3 = mark_cavities_py(self.grid,
+                self.domain_calculation.discretization.grid,
+                self.domain_calculation.discretization.d,
+                self.sg,
+                self.sg_cube_size,
+                self.to_subgrid,
+                self.domain_calculation.atom_discretization.discrete_positions,
+                [(0, 0, 0)] + self.domain_calculation.discretization.combined_translation_vectors,
+                domain_seed_point_lists,
+                use_surface_points)
+        grid3 = mark_cavities_c(self.grid,
+                self.domain_calculation.discretization.grid,
+                self.domain_calculation.discretization.d,
+                self.sg,
+                self.sg_cube_size,
+                self.to_subgrid,
+                self.domain_calculation.atom_discretization.discrete_positions,
+                [(0, 0, 0)] + self.domain_calculation.discretization.combined_translation_vectors,
+                domain_seed_point_lists,
+                use_surface_points)
+        print "CavityCalculation, find_cavities: Difference =", np.max(np.abs(self.grid3 - grid3))
 
         num_domains = len(self.domain_calculation.centers)
         grid_volume = (self.domain_calculation.discretization.grid == 0).sum()
