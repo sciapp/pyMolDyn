@@ -31,7 +31,21 @@ def atomstogrid(grid, discrete_positions, radii_indices, discrete_radii, transla
                 if sphere_grid[point]:
                     p = [point[i] - discrete_radius + discrete_position[i] for i in dimensions]
                     if all([0 <= p[i] <= grid.shape[i] - 1 for i in dimensions]):
-                        grid_value = discretization_grid[tuple(p)]
-                        if grid_value == 0:
-                            grid[tuple(p)] = atom_index + 1
+                        discretization_grid_value = discretization_grid[tuple(p)]
+                        if discretization_grid_value == 0:
+                            grid_value = grid[tuple(p)]
+                            # check if the atom is the closest one
+                            if grid_value == 0:
+                                grid[tuple(p)] = atom_index + 1
+                            else:
+                                this_squared_distance = sum([(x - y)**2 for x, y in zip(discrete_position, p)])
+                                other_position = discrete_positions[grid_value - 1]
+                                for v2 in translation_vectors:
+                                    other_discrete_position = [other_position[i] + v2[i] for i in dimensions]
+                                    other_squared_distance = sum([(x - y)**2 for x, y in zip(other_discrete_position, p)])
+                                    if other_squared_distance <= this_squared_distance:
+                                        break
+                                if this_squared_distance < other_squared_distance:
+                                    grid[tuple(p)] = atom_index + 1
+
 

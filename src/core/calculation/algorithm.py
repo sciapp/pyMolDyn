@@ -91,7 +91,7 @@ class DomainCalculation:
         discretization and filled with zeros.
      2. For each atom, all points in the grid closer to this atom than the 
         discrete cavity cutoff radius are set to a point indicating the atom
-        index (atom_index+1).
+        index (atom_index+1) of the closest atom.
      3. At this point, every point in the grid which is inside of the volume and
         still has a value of zero is part of a cavity domain. To find these 
         domains, an optimized split and merge algorithm is applied to the whole grid. 

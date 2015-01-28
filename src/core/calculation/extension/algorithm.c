@@ -7,10 +7,13 @@
 
 /**
  * Mark spheres around atoms on the grid.
- * For each discretized atom and its equivalents in adjacent cells,
- * for each cell of the discretized sphere around them,
- * find the grid cells in which it lies,
- * and write the atom index into it, if the value is 0.
+ * For each discretized atom and its equivalents in adjacent cells:
+ * for each cell of the discretized sphere around them:
+ * find the grid cells which are inside the cutoff radius.
+ * For each of this grid cells:
+ * check if the cell is inside the volume,
+ * check if this atom is the closest to this cell
+ * and write the atom index (+1) into it.
  */
 void atomstogrid(
         int64_t *grid, int dimensions[3], int strides[3],
@@ -26,18 +29,30 @@ void atomstogrid(
     int transpos[3];
     int sphereindex[3];
     int gridpos[3];
+    int grid_index;
+    int grid_value;
+    int this_squared_distance;
+    int other_squared_distance;
+    int other_atompos[3];
+    int other_transpos[3];
 
     (void) nradii;
 
     for (i = 0; i < natoms; i++) {
         radius = radii[radii_indices[i]];
         cubesize = 2 * radius + 1;
-        for (k = 0; k < 3; k++) {
-            atompos[k] = atom_positions[i * 3 + k];
-        }
+        atompos[0] = atom_positions[i * 3 + 0];
+        atompos[1] = atom_positions[i * 3 + 1];
+        atompos[2] = atom_positions[i * 3 + 2];
         for (j = 0; j < ntranslations; j++) {
-            for (k = 0; k < 3; k++) {
-                transpos[k] = atompos[k] + translations[j * 3 + k];
+            transpos[0] = atompos[0] + translations[j * 3 + 0];
+            transpos[1] = atompos[1] + translations[j * 3 + 1];
+            transpos[2] = atompos[2] + translations[j * 3 + 2];
+            if (transpos[0] + radius < 0 || transpos[0] - radius >= dimensions[0]
+                    || transpos[1] + radius < 0 || transpos[1] - radius >= dimensions[1]
+                    || transpos[2] + radius < 0 || transpos[2] - radius >= dimensions[2]) {
+                /* entire cube is outside */
+                continue;
             }
             for (sphereindex[0] = 0; sphereindex[0] < cubesize; sphereindex[0]++) {
                 gridpos[0] = transpos[0] + sphereindex[0] - radius;
@@ -59,7 +74,33 @@ void atomstogrid(
                                 + SQUARE(sphereindex[2] - radius)
                                 <= SQUARE(radius) 
                                 && discretization_grid[INDEXDISCGRID(gridpos[0], gridpos[1], gridpos[2])] == 0) {
-                            grid[INDEXGRID(gridpos[0], gridpos[1], gridpos[2])] = i + 1;
+                            grid_index = INDEXGRID(gridpos[0], gridpos[1], gridpos[2]);
+                            grid_value = grid[grid_index];
+                            /* check if it is the closest atom */
+                            if (grid_value == 0) {
+                                grid[grid_index] = i + 1;
+                            } else {
+                                this_squared_distance = SQUARE(transpos[0] - gridpos[0])
+                                        + SQUARE(transpos[1] - gridpos[1])
+                                        + SQUARE(transpos[2] - gridpos[2]);
+                                other_atompos[0] = atom_positions[3 * (grid_value - 1) + 0];
+                                other_atompos[1] = atom_positions[3 * (grid_value - 1) + 1];
+                                other_atompos[2] = atom_positions[3 * (grid_value - 1) + 2];
+                                for (k = 0; k < ntranslations; k++) {
+                                    other_transpos[0] = other_atompos[0] + translations[k * 3 + 0];
+                                    other_transpos[1] = other_atompos[1] + translations[k * 3 + 1];
+                                    other_transpos[2] = other_atompos[2] + translations[k * 3 + 2];
+                                    other_squared_distance = SQUARE(other_transpos[0] - gridpos[0])
+                                            + SQUARE(other_transpos[1] - gridpos[1])
+                                            + SQUARE(other_transpos[2] - gridpos[2]);
+                                    if (other_squared_distance <= this_squared_distance) {
+                                        break;
+                                    }
+                                }
+                                if (this_squared_distance < other_squared_distance) {
+                                    grid[grid_index] = i + 1;
+                                }
+                            }
                         }
                     }
                 }
