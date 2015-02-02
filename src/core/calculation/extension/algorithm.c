@@ -134,6 +134,10 @@ void atomstogrid(
 #undef INDEXDISCGRID
 
 
+/**
+ * Routines to work with subgrids
+ */
+
 subgrid_t *subgrid_create(int cubesize, int grid_dimensions[3])
 {
     subgrid_t *sg;
@@ -176,7 +180,8 @@ int subgrid_index(subgrid_t *sg, int *pos)
 
     index = 0;
     for (k = 0; k < 3; k++) {
-        z = pos[k] / sg->cubesize + 2;
+        /* python's floor division */
+        z = (int) (floor((double) pos[k] / sg->cubesize)) + 2;
         index += CLIP(z, 0, sg->dimensions[k] - 1) * sg->strides[k];
     }
     return index;
@@ -236,6 +241,10 @@ void subgrid_add_domains(subgrid_t *sg,
 #define INDEXGRID(i,j,k) ((int64_t)(i)*strides[0]+(j)*strides[1]+(k)*strides[2])
 #define INDEXDISCGRID(i,j,k) ((int64_t)(i)*discgrid_strides[0]+(j)*discgrid_strides[1]+(k)*discgrid_strides[2])
 
+/**
+ * For each cell, determine if it is closer to a cavity domain than
+ * to an atom center. If so, mark the cell in the grid.
+ */
 void mark_cavities(int64_t *grid, int64_t *domain_grid, int dimensions[3], int strides[3],
         char *discretization_grid, int discgrid_strides[3],
         subgrid_t *sg, int use_surface_points)
@@ -256,8 +265,8 @@ void mark_cavities(int64_t *grid, int64_t *domain_grid, int dimensions[3], int s
     for (pos[0] = 0; pos[0] < dimensions[0]; pos[0]++) {
         for (pos[1] = 0; pos[1] < dimensions[1]; pos[1]++) {
             for (pos[2] = 0; pos[2] < dimensions[2]; pos[2]++) {
+                grid_index = INDEXGRID(pos[0], pos[1], pos[2]);
                 if (use_surface_points) {
-                    grid_index = INDEXGRID(pos[0], pos[1], pos[2]);
                     grid_value = domain_grid[grid_index];
                     if (grid_value == 0) {
                         /* outside the volume */

@@ -143,7 +143,7 @@ def subgrid_add_atoms(sg, atom_positions, translation_vectors):
     ntranslations_c = c_int(translations.shape[0])
     translations_c = translations.ctypes.data_as(POINTER(c_int))
 
-    lib.subgrid_add_atoms(sg, natoms_c, atom_positions_c, ntranslations_c, atom_positions_c)
+    lib.subgrid_add_atoms(sg, natoms_c, atom_positions_c, ntranslations_c, translations_c)
 
 
 def subgrid_add_domains(sg, domain_indices, domain_points, translation_vectors):
@@ -184,28 +184,31 @@ def mark_cavities_c(grid, domain_grid, discretization_grid, sg, use_surface_poin
 def mark_cavities(domain_grid,
         discretization_grid,
         grid_dimensions,
-        sg, sg_cube_size, to_subgrid,
+        sg_cube_size,
         atom_positions,
         translation_vectors,
-        surface_point_list,
+        domain_point_list,
         use_surface_points):
 
+    # step 1
     sg = subgrid_create(sg_cube_size, grid_dimensions)
+    # step 2
     subgrid_add_atoms(sg, atom_positions, translation_vectors)
 
+    # step 3
     domain_indices = []
     domain_points = []
-    for i in range(len(domain_indices)):
-        for p in surface_point_list[i]:
+    for i in range(len(domain_point_list)):
+        for p in domain_point_list[i]:
             domain_indices.append(i)
             domain_points.append(p)
     subgrid_add_domains(sg, domain_indices, domain_points, translation_vectors)
 
     grid = np.zeros(grid_dimensions, dtype=np.int64)
+    # step 4 and 5
     mark_cavities_c(grid, domain_grid, discretization_grid, sg, use_surface_points)
 
     subgrid_destroy(sg)
 
     return grid
-
 
