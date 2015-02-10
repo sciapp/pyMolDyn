@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <limits.h>
+#include <gr3.h>
 
 #define SQUARE(x) ((x)*(x))
 #define CLIP(x,a,b) ((x)<(a)?(a):((x)>(b)?(b):(x)))
@@ -238,6 +239,7 @@ void subgrid_add_domains(subgrid_t *sg,
     }
 }
 
+
 #define INDEXGRID(i,j,k) ((int64_t)(i)*strides[0]+(j)*strides[1]+(k)*strides[2])
 #define INDEXDISCGRID(i,j,k) ((int64_t)(i)*discgrid_strides[0]+(j)*discgrid_strides[1]+(k)*discgrid_strides[2])
 
@@ -343,3 +345,139 @@ void mark_cavities(int64_t *grid, int64_t *domain_grid, int dimensions[3], int s
 }
 #undef INDEXGRID
 #undef INDEXDISCGRID
+
+
+#define INDEXGRID(i,j,k) ((int64_t)(i)*strides[0]+(j)*strides[1]+(k)*strides[2])
+#define INDEXDISCGRID(i,j,k) ((int64_t)(i)*discgrid_strides[0]+(j)*discgrid_strides[1]+(k)*discgrid_strides[2])
+int cavity_triangles(
+        int64_t *cavity_grid,
+        int dimensions[3],
+        int strides[3],
+        int ncavity_indices,
+        int *cavity_indices,
+        float step[3],
+        float offset[3],
+        int8_t *discretization_grid,
+        int discgrid_strides[3],
+        float **vertices,
+        float **normals,
+        float *surface_area)
+{
+    uint16_t *counts;
+    int pos[3];
+    int gridindex;
+    int gridval;
+    int i, j, k;
+    int is_cavity;
+    int neigh[3];
+    int neighindex;
+    int bbox[2][3] = {{-1, -1, -1}, {-1, -1, -1}};
+    int ntriangles;
+    float *triangles_p;
+    float *continuous_vertices;
+    float *continuous_normals;
+    double area;
+    int any_outside;
+    float *vertex_p;
+    float *normal_p;
+    int disc_pos[3];
+    double a[3], b[3];
+    double cross[3];
+
+    counts = calloc(dimensions[0] * dimensions[1] * dimensions[2],
+            sizeof(uint16_t));
+    for (pos[0] = 1; pos[0] < dimensions[0] - 1; pos[0]++) {
+        for (pos[1] = 1; pos[1] < dimensions[1] - 1; pos[1]++) {
+            for (pos[2] = 1; pos[2] < dimensions[2] - 1; pos[2]++) {
+                gridindex = INDEXGRID(pos[0], pos[1], pos[2]);
+                counts[gridindex] = 100;
+                gridval = cavity_grid[gridindex];
+                is_cavity = 0;
+                for (i = 0; i < ncavity_indices; i++) {
+                    if (gridval == -cavity_indices[i] - 1) {
+                        is_cavity = 1;
+                        break;
+                    }
+                }
+                if (!is_cavity) {
+                    continue;
+                }
+                for (neigh[0] = -1; neigh[0] <= 1; neigh[0]++) {
+                    for (neigh[1] = -1; neigh[1] <= 1; neigh[1]++) {
+                        for (neigh[2] = -1; neigh[2] <= 1; neigh[2]++) {
+                            neighindex = gridindex + INDEXGRID(
+                                    neigh[0], neigh[2], neigh[2]);
+                            counts[neighindex]++;
+                        }
+                    }
+                }
+                for (i = 0; i < 3; i++) {
+                    if (bbox[0][i] == -1 ||
+                            bbox[0][i] > pos[i] - 1) {
+                        bbox[0][i] = pos[i] - 1;
+                    }
+                    if (bbox[1][i] == -1 ||
+                            bbox[1][i] < pos[i] + 1) {
+                        bbox[1][i] = pos[i] + 1;
+                    }
+                }
+            }
+        }
+    }
+    
+    ntriangles = gr3_triangulate(counts, 104,
+            dimensions[0], dimensions[1], dimensions[2],
+            strides[0], strides[1], strides[2],
+            1.0, 1.0, 1.0, 0.0, 0.0, 0.0,
+            (gr3_triangle_t **) &triangles_p);
+    free(counts);
+
+    continuous_vertices = malloc(ntriangles * 3 * 3 * sizeof(float));
+    continuous_normals = malloc(ntriangles * 3 * 3 * sizeof(float));
+    area = 0.0;
+    for (i = 0; i < ntriangles; i++) {
+        any_outside = 0;
+        for (j = 0; j < 3; j++) {
+            vertex_p = triangles_p + (i * 3 * 2 + j) * 3;
+            normal_p = vertex_p + 3 * 3;
+            for (k = 0; k < 3; k++) {
+                disc_pos[k] = floor(vertex_p[k] + 0.5);
+                continuous_vertices[(i * 3 + j) * 3 + k] = 
+                        vertex_p[k] * step[k] + offset[k];
+                continuous_normals[(i * 3 + j) * 3 + k] = 
+                        normal_p[k] / step[k];
+            }
+            if (discretization_grid[INDEXDISCGRID(
+                    disc_pos[0], disc_pos[1], disc_pos[2])] != 0) {
+                any_outside = 1;
+            }
+        }
+        if (!any_outside) {
+            for (k = 0; k < 3; k++) {
+                a[k] = continuous_vertices[(i * 3 + 1) * 3 + k]
+                        - continuous_vertices[(i * 3 + 0) * 3 + k];
+                b[k] = continuous_vertices[(i * 3 + 2) * 3 + k]
+                        - continuous_vertices[(i * 3 + 0) * 3 + k];
+            }
+            cross[0] = a[1] * b[2] - a[2] * b[1];
+            cross[1] = a[2] * b[0] - a[0] * b[2];
+            cross[2] = a[0] * b[1] - a[1] * b[0];
+            area += 0.5 * sqrt(cross[0] * cross[0]
+                    + cross[1] * cross[1] + cross[2] * cross[2]);
+        }
+    }
+    free(triangles_p);
+
+    *vertices = continuous_vertices;
+    *normals = continuous_normals;
+    *surface_area = area;
+    return ntriangles;
+}
+#undef INDEXGRID
+#undef INDEXDISCGRID
+
+
+void free_float_p(float *p)
+{
+    free(p);
+}

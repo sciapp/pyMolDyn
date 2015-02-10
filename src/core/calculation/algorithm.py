@@ -77,7 +77,7 @@ from computation.split_and_merge.pipeline import start_split_and_merge_pipeline
 import util.colored_exceptions
 import time
 from util.message import print_message, progress, finish
-from extension import atomstogrid, mark_cavities
+from extension import atomstogrid, mark_cavities, cavity_triangles
 
 
 dimension = 3
@@ -291,40 +291,22 @@ class CavityCalculation:
     def triangles(self):
         if hasattr(self, "cavity_triangles"):
             return self.cavity_triangles
-        cavity_triangles = []
         step = (self.domain_calculation.discretization.s_step,) * 3
         offset = self.domain_calculation.discretization.discrete_to_continuous((0, 0, 0))
-        cavity_surface_areas = []
+        triangles = []
+        surface_areas = []
         for multicavity in self.multicavities:
             print_message(multicavity)
-            grid = np.zeros(self.grid3.shape, dtype=np.bool)
-            for cavity_index in multicavity:
-                grid = np.logical_or(grid, self.grid3 == -(cavity_index + 1))
-            views = []
-            for x, y, z in itertools.product(*map(xrange, (3, 3, 3))):
-                view = grid[x:grid.shape[0] - 2 + x, y:grid.shape[1] - 2 + y, z:grid.shape[2] - 2 + z]
-                views.append(view)
-            grid = np.zeros(grid.shape, np.uint16)
-            grid[:, :, :] = 0
-            grid[1:-1, 1:-1, 1:-1] = sum(views) + 100
-            cavity_triangles.append(triangulate(grid, step, offset, 100 + 4))
-            cavity_surface_area = 0
-            for cavity_triangle in cavity_triangles[-1][0]:
-                any_outside = False
-                for vertex in cavity_triangle:
-                    discrete_vertex = self.domain_calculation.discretization.continuous_to_discrete(vertex)
-                    if self.domain_calculation.discretization.grid[discrete_vertex] != 0:
-                        any_outside = True
-                        break
-                if not any_outside:
-                    v1, v2, v3 = cavity_triangle
-                    a = v2 - v1
-                    b = v3 - v1
-                    triangle_surface_area = la.norm(np.cross(a, b)) * 0.5
-                    cavity_surface_area += triangle_surface_area
-            cavity_surface_areas.append(cavity_surface_area)
-        self.cavity_triangles = cavity_triangles
-        self.cavity_surface_areas = cavity_surface_areas
+            vertices, normals, surface_area = cavity_triangles(
+                    self.grid3,
+                    multicavity,
+                    step, offset,
+                    self.domain_calculation.discretization.grid)
+            triangles.append((vertices, normals))
+            surface_areas.append(surface_area)
+
+        self.cavity_triangles = triangles
+        self.cavity_surface_areas = surface_areas
         return cavity_triangles
 
 

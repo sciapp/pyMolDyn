@@ -1,20 +1,28 @@
 # -*- coding: utf-8 -*-
 
 
-__all__ = ["atomstogrid"]
+__all__ = ["atomstogrid",
+           "mark_cavities",
+           "cavity_triangles"]
 
 
 import numpy as np
 import itertools
 import sys
 from math import ceil
+from gr3 import triangulate
 
 
 dimension = 3
 dimensions = range(dimension)
 
 
-def atomstogrid(grid, discrete_positions, radii_indices, discrete_radii, translation_vectors, discretization_grid):
+def atomstogrid(grid,
+        discrete_positions,
+        radii_indices,
+        discrete_radii,
+        translation_vectors,
+        discretization_grid):
     last_radius_index = -1  # (for reuse of sphere grids)
     atom_information = itertools.izip(range(len(discrete_positions)),
                                       radii_indices,
@@ -151,3 +159,43 @@ def mark_cavities(domain_grid,
                     break
     return grid
 
+
+def cavity_triangles(cavity_grid,
+        cavity_indices,
+        step, offset,
+        discretization_grid):
+    cavity_triangles = []
+    cavity_surface_areas = []
+    grid = np.zeros(cavity_grid.shape, dtype=np.bool)
+
+    for cavity_index in cavity_indices:
+        grid = np.logical_or(grid, cavity_grid == -(cavity_index + 1))
+    views = []
+    for x, y, z in itertools.product(*map(xrange, (3, 3, 3))):
+        view = grid[x:grid.shape[0] - 2 + x, y:grid.shape[1] - 2 + y, z:grid.shape[2] - 2 + z]
+        views.append(view)
+    grid = np.zeros(grid.shape, np.uint16)
+    grid[:, :, :] = 0
+    grid[1:-1, 1:-1, 1:-1] = sum(views) + 100
+
+    vertices, normals = triangulate(grid, (1, 1, 1), (0, 0, 0), 100 + 4)
+    discrete_vertices = np.array(np.floor(vertices + 0.5), dtype=np.int)
+    vertices *= np.tile(step, (vertices.shape[0], 3, 1))
+    vertices += np.tile(offset, (vertices.shape[0], 3, 1))
+    normals /= np.tile(step, (normals.shape[0], 3, 1))
+
+    cavity_surface_area = 0
+    for cavity_triangle, discrete_triangle in itertools.izip(vertices, discrete_vertices):
+        any_outside = False
+        for vertex, discrete_vertex in itertools.izip(cavity_triangle, discrete_triangle):
+            if discretization_grid[tuple(discrete_vertex)] != 0:
+                any_outside = True
+                break
+        if not any_outside:
+            v1, v2, v3 = cavity_triangle
+            a = v2 - v1
+            b = v3 - v1
+            triangle_surface_area = np.linalg.norm(np.cross(a, b)) * 0.5
+            cavity_surface_area += triangle_surface_area
+
+    return vertices, normals, cavity_surface_area

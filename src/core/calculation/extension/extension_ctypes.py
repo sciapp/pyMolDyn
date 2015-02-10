@@ -2,11 +2,12 @@
 
 
 __all__ = ["atomstogrid",
-           "mark_cavities"]
+           "mark_cavities",
+           "cavity_triangles"]
 
 
 import numpy as np
-from ctypes import c_int, c_int64, c_int8, POINTER, sizeof, CDLL, Structure
+from ctypes import c_int, c_int64, c_int8, POINTER, sizeof, CDLL, Structure, byref, c_float, cast
 import sys
 import os
 
@@ -91,6 +92,24 @@ lib.mark_cavities.argtypes = [
         c_int * 3,          # discgrid_strides
         POINTER(subgrid_t), # sg
         c_int]              # use_surface_points
+
+lib.cavity_triangles.restype = c_int
+lib.cavity_triangles.argtypes = [
+        POINTER(c_int64),          # cavity_grid
+        c_int * 3,                 # dimensions
+        c_int * 3,                 # strides
+        c_int,                     # ncavity_indices
+        POINTER(c_int),            # cavity_indices
+        c_float * 3,               # step
+        c_float * 3,               # offset
+        POINTER(c_int8),           # discretization_grid
+        c_int * 3,                 # discgrid_strides
+        POINTER(POINTER(c_float)), # vertices
+        POINTER(POINTER(c_float)), # normals
+        POINTER(c_float)]          # surface_area
+
+lib.free_float_p.restype = None
+lib.free_float_p.argtypes = [POINTER(c_float)]
 
 
 def atomstogrid(grid, discrete_positions, radii_indices, discrete_radii, translation_vectors, discretization_grid):
@@ -212,3 +231,48 @@ def mark_cavities(domain_grid,
 
     return grid
 
+
+def cavity_triangles(cavity_grid,
+        cavity_indices,
+        step, offset,
+        discretization_grid):
+    cavity_grid_c = cavity_grid.ctypes.data_as(POINTER(c_int64))
+    dimensions_c = (c_int * 3)(*cavity_grid.shape)
+    strides_c = (c_int * 3)(*[s / cavity_grid.itemsize for s in cavity_grid.strides])
+
+    if not isinstance(cavity_indices, np.ndarray) and not \
+            isinstance(cavity_indices, list):
+        cavity_indices = list(cavity_indices)
+    ncavity_indices_c = c_int(len(cavity_indices))
+    cavity_indices = np.ascontiguousarray(cavity_indices, dtype=int_type)
+    cavity_indices_c = cavity_indices.ctypes.data_as(POINTER(c_int))
+
+    step_c = (c_float * 3)(*step)
+    offset_c = (c_float * 3)(*offset)
+
+    discretization_grid_c = discretization_grid.ctypes.data_as(POINTER(c_int8))
+    discgrid_strides_c = (c_int * 3)(*[s / discretization_grid.itemsize for s in discretization_grid.strides])
+
+    vertices_c = POINTER(c_float)()
+    normals_c = POINTER(c_float)()
+    surface_area_c = c_float()
+
+    ntriangles = lib.cavity_triangles(
+            cavity_grid_c, dimensions_c, strides_c,
+            ncavity_indices_c, cavity_indices_c,
+            step_c, offset_c,
+            discretization_grid_c, discgrid_strides_c,
+            byref(vertices_c), byref(normals_c), byref(surface_area_c))
+
+    ArrayType = c_float * ntriangles * 3 * 3
+    vertices_p = cast(vertices_c, POINTER(ArrayType))
+    vertices = np.frombuffer(vertices_p.contents, dtype=c_float)
+    vertices = np.array(vertices, dtype=float, copy=True).reshape((ntriangles, 3, 3))
+    lib.free_float_p(vertices_c)
+    normals_p = cast(normals_c, POINTER(ArrayType))
+    normals = np.frombuffer(normals_p.contents, dtype=c_float)
+    normals = np.array(normals, dtype=float, copy=True).reshape((ntriangles, 3, 3))
+    lib.free_float_p(normals_c)
+    surface_area = surface_area_c.value
+
+    return vertices, normals, surface_area
