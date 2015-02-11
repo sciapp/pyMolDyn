@@ -101,7 +101,7 @@ class GrPlotWidget(QtGui.QWidget) :
             gr.setlinecolorind(2)
             gr.polyline(self.xvalues, self.yvalues)
         else:
-            gr.text(0.4, 0.45, "no elements selected")
+            gr.text(0.4 * self.sizex, 0.5 * self.sizey, "no elements selected")
 
         ## rug plot
         #if not self.datapoints is None:
@@ -115,7 +115,7 @@ class GrPlotWidget(QtGui.QWidget) :
         gr.axes(0.2, 0.2, rangex[1], rangey[1], -5, -5, -0.0075)
 
         if not self.title is None:
-            gr.text(0.75, 0.65, self.title)
+            gr.text(0.8 * self.sizex, 0.9 * self.sizey, self.title)
         self.update()
 
     def resizeEvent(self, event):
@@ -133,6 +133,7 @@ class GrPlotWidget(QtGui.QWidget) :
         self.painter = QtGui.QPainter()
         self.painter.begin(self)
         os.environ['GKSconid'] = "%x!%x" % (long(shiboken.getCppPointer(self)[0]), long(shiboken.getCppPointer(self.painter)[0]))
+        self.draw()
         gr.updatews()
         self.painter.end()
 
