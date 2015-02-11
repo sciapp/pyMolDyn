@@ -256,7 +256,9 @@ class RDFWidget(QtGui.QWidget):
                 self.results = results
                 self.rdf = RDF(results)
                 e = np.unique(results.atoms.elements).tolist()
-                if len(results.domains.centers) > 0 and not "cav" in e:
+                if not results.domains is None \
+                        and len(results.domains.centers) > 0 \
+                        and not "cav" in e:
                     e.append("cav")
                 self.elem1.clear()
                 self.elem1.addItems(e)
