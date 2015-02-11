@@ -13,6 +13,7 @@ from util.logger import Logger
 import sys
 import numpy as np
 import os
+from math import floor
 
 
 logger = Logger("gui.histogram_widget")
@@ -83,14 +84,16 @@ class GrHistogramWidget(QtGui.QWidget) :
                 gr.fillrect(self.xvalues[i], self.xvalues[i] + self.widths[i] * 0.8,
                         0.0, self.yvalues[i])
         else:
-            gr.text(0.44, 0.45, "no data")
+            gr.text(0.45 * self.sizex, 0.5 * self.sizey, "no data")
 
         gr.setlinecolorind(1)
-        gr.axes(1.0, 0.2, rangex[0], rangey[0], 10, 5, 0.0075)
-        gr.axes(1.0, 0.2, rangex[1], rangey[1], -10, -5, -0.0075)
+        xtick = floor(0.02 * (rangex[1] - rangey[0]) * 100.0) / 100.0
+        ytick = floor(0.04 * (rangey[1] - rangey[0]) * 50.0) / 50.0
+        gr.axes(xtick, ytick, rangex[0], rangey[0], 10, 5, 0.0075)
+        gr.axes(xtick, ytick, rangex[1], rangey[1], -10, -5, -0.0075)
 
         if not self.title is None:
-            gr.text(0.75, 0.65, self.title)
+            gr.text(0.8 * self.sizex, 0.9 * self.sizey, self.title)
         self.update()
 
     def resizeEvent(self, event):
@@ -108,6 +111,7 @@ class GrHistogramWidget(QtGui.QWidget) :
         self.painter = QtGui.QPainter()
         self.painter.begin(self)
         os.environ['GKSconid'] = "%x!%x" % (long(shiboken.getCppPointer(self)[0]), long(shiboken.getCppPointer(self.painter)[0]))
+        self.draw()
         gr.updatews()
         self.painter.end()
 
@@ -130,11 +134,27 @@ class HistogramWidget(QtGui.QWidget):
         self.datasetlabel = QtGui.QLabel("No data loaded. Press 'Refresh'.", self)
         self.datasetlabel.setAlignment(QtCore.Qt.AlignHCenter)
 
+
+        selectbox = QtGui.QHBoxLayout()
+        selectbuttongroup = QtGui.QButtonGroup(self)
+        self.volumebutton = QtGui.QRadioButton("Cavity Volume", self)
+        selectbox.addWidget(self.volumebutton)
+        selectbuttongroup.addButton(self.volumebutton)
+        self.areabutton = QtGui.QRadioButton("Surface Area", self)
+        selectbox.addWidget(self.areabutton)
+        selectbuttongroup.addButton(self.areabutton)
+        self.volumebutton.setChecked(True)
+        grid.addLayout(selectbox, 0, 0)
+
+        self.weightbutton = QtGui.QCheckBox("Weighted Histogram", self)
+        self.weightbutton.setChecked(True)
+        grid.addWidget(self.weightbutton, 0, 1)
+
         binbox = QtGui.QHBoxLayout()
         binbox.addWidget(QtGui.QLabel("Number of Bins:", self), 0, 0)
         self.nbins = QtGui.QLineEdit(self)
         binbox.addWidget(self.nbins, 0, 1)
-        grid.addLayout(binbox, 0, 0)
+        grid.addLayout(binbox, 0, 2)
 
         self.plotbutton = QtGui.QPushButton("Plot", self)
         grid.addWidget(self.plotbutton, 1, 0)
@@ -172,9 +192,15 @@ class HistogramWidget(QtGui.QWidget):
                 nbins = float(nbins)
             else:
                 nbins = 50
-            volumes = self.results.surface_cavities.volumes
-            if len(volumes) > 0:
-                hist, bin_edges = np.histogram(volumes, bins=nbins)
+            if self.volumebutton.isChecked():
+                data = self.results.surface_cavities.volumes
+            else:
+                data = self.results.surface_cavities.surface_areas
+            if len(data) > 0:
+                if self.weightbutton.isChecked():
+                    hist, bin_edges = np.histogram(data, bins=nbins, weights = data)
+                else:
+                    hist, bin_edges = np.histogram(data, bins=nbins)
                 widths = bin_edges[1:] - bin_edges[:-1]
                 xvalues = bin_edges[:-1]
                 yvalues = hist

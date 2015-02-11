@@ -16,6 +16,7 @@ import math
 from util.logger import Logger
 import sys
 from core.calculation.discretization import DiscretizationCache
+import itertools
 
 
 logger = Logger("statistics.rdf")
@@ -123,7 +124,7 @@ class RDF(object):
         #if h > 0.9 * sel.min():
         #    logger.debug("Bandwidth {} above threshold. Setting to {}.".format(h, 0.9 * sel.min()))
         #    h = 0.9 * sel.min()
-        kde = Functions.Convolution(sel, h=h, kernel=kernel)
+        kde = Functions.KDE(sel, h=h, kernel=kernel)
 
         def wfunc(r):
             y = np.zeros_like(r)
@@ -206,9 +207,10 @@ class Functions(object):
     Utility class with Callables
     """
 
-    class Convolution(object):
+    class KDE(object):
         """
-        Discrete convolution
+        Kernel density estimation. Calculate a convolution
+        of delta pulses with a smoothing kernel.
         """
 
         def __init__(self, x, y=None, h=1.0, kernel=None):
@@ -221,11 +223,19 @@ class Functions(object):
             self.h = h
             self.kernel = kernel
 
-        def __call__(self, x):
-            fx = np.zeros_like(x)
-            for xi, yi in zip(self.x, self.y):
-                fx += yi * self.kernel((x - xi) / self.h) / self.h
-            return fx
+        def __call__(self, p):
+            result = np.zeros_like(p)
+            if len(self.x) <= len(p):
+                p = np.asarray(p)
+                for xi, yi in itertools.izip(self.x, self.y):
+                    result += yi * self.kernel((p - xi) / self.h) / self.h
+            else:
+                x = np.asarray(self.x)
+                y = np.asarray(self.y)
+                for i, pi in enumerate(p):
+                    result[i] = np.sum(y * self.kernel((pi - x) / self.h) / self.h)
+
+            return result
 
     class Product(object):
         """
