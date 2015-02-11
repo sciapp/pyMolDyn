@@ -110,7 +110,7 @@ class CentralWidget(QtGui.QWidget):
         self.widget_titles = (
                 "3D View",
                 "Radial Distribution",
-                "Volume Histogram")
+                "Cavity Histograms")
         self.init_gui()
  
     def init_gui(self):
