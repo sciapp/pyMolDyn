@@ -84,7 +84,7 @@ class GrHistogramWidget(QtGui.QWidget) :
                 gr.fillrect(self.xvalues[i], self.xvalues[i] + self.widths[i] * 0.8,
                         0.0, self.yvalues[i])
         else:
-            gr.text(0.44, 0.45, "no data")
+            gr.text(0.45 * self.sizex, 0.5 * self.sizey, "no data")
 
         gr.setlinecolorind(1)
         xtick = floor(0.02 * (rangex[1] - rangey[0]) * 100.0) / 100.0
@@ -93,7 +93,7 @@ class GrHistogramWidget(QtGui.QWidget) :
         gr.axes(xtick, ytick, rangex[1], rangey[1], -10, -5, -0.0075)
 
         if not self.title is None:
-            gr.text(0.75, 0.65, self.title)
+            gr.text(0.8 * self.sizex, 0.9 * self.sizey, self.title)
         self.update()
 
     def resizeEvent(self, event):
@@ -111,6 +111,7 @@ class GrHistogramWidget(QtGui.QWidget) :
         self.painter = QtGui.QPainter()
         self.painter.begin(self)
         os.environ['GKSconid'] = "%x!%x" % (long(shiboken.getCppPointer(self)[0]), long(shiboken.getCppPointer(self.painter)[0]))
+        self.draw()
         gr.updatews()
         self.painter.end()
 
