@@ -137,40 +137,23 @@ class DomainCalculation:
             return self.domain_triangles
         number_of_domains = len(self.centers)
         print_message(number_of_domains)
-        domain_triangles = []
-        domain_surface_areas = []
+        triangles = []
+        surface_areas = []
         step = (self.discretization.s_step,) * 3
         offset = self.discretization.discrete_to_continuous((0, 0, 0))
         for domain_index in range(number_of_domains):
             print_message("Calculating triangles for domain", domain_index)
-            grid_value = -(domain_index + 1)
-            grid = (self.grid == grid_value)
-            views = []
-            for x, y, z in itertools.product(*map(xrange, (3, 3, 3))):
-                view = grid[x:grid.shape[0] - 2 + x, y:grid.shape[1] - 2 + y, z:grid.shape[2] - 2 + z]
-                views.append(view)
-            grid = np.zeros(grid.shape, np.uint16)
-            grid[:, :, :] = 0
-            grid[1:-1, 1:-1, 1:-1] = sum(views) + 100
-            domain_triangles.append(triangulate(grid, step, offset, 101))
-            domain_surface_area = 0
-            for domain_triangle in domain_triangles[-1][0]:
-                any_outside = False
-                for vertex in domain_triangle:
-                    discrete_vertex = self.discretization.continuous_to_discrete(vertex)
-                    if self.discretization.grid[discrete_vertex] != 0:
-                        any_outside = True
-                        break
-                if not any_outside:
-                    v1, v2, v3 = domain_triangle
-                    a = v2 - v1
-                    b = v3 - v1
-                    triangle_surface_area = la.norm(np.cross(a, b)) * 0.5
-                    domain_surface_area += triangle_surface_area
-            domain_surface_areas.append(domain_surface_area)
-        self.domain_triangles = domain_triangles
-        self.domain_surface_areas = domain_surface_areas
-        return domain_triangles
+            vertices, normals, surface_area = cavity_triangles(
+                    self.grid,
+                    [domain_index],
+                    1, step, offset,
+                    self.discretization.grid)
+            triangles.append((vertices, normals))
+            surface_areas.append(surface_area)
+
+        self.domain_triangles = triangles
+        self.domain_surface_areas = surface_areas
+        return triangles
 
 
 class CavityCalculation:
@@ -300,7 +283,7 @@ class CavityCalculation:
             vertices, normals, surface_area = cavity_triangles(
                     self.grid3,
                     multicavity,
-                    step, offset,
+                    4, step, offset,
                     self.domain_calculation.discretization.grid)
             triangles.append((vertices, normals))
             surface_areas.append(surface_area)

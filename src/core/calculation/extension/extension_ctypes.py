@@ -100,6 +100,7 @@ lib.cavity_triangles.argtypes = [
         c_int * 3,                 # strides
         c_int,                     # ncavity_indices
         POINTER(c_int),            # cavity_indices
+        c_int,                     # isolevel
         c_float * 3,               # step
         c_float * 3,               # offset
         POINTER(c_int8),           # discretization_grid
@@ -234,7 +235,7 @@ def mark_cavities(domain_grid,
 
 def cavity_triangles(cavity_grid,
         cavity_indices,
-        step, offset,
+        isolevel, step, offset,
         discretization_grid):
     cavity_grid_c = cavity_grid.ctypes.data_as(POINTER(c_int64))
     dimensions_c = (c_int * 3)(*cavity_grid.shape)
@@ -247,6 +248,7 @@ def cavity_triangles(cavity_grid,
     cavity_indices = np.ascontiguousarray(cavity_indices, dtype=int_type)
     cavity_indices_c = cavity_indices.ctypes.data_as(POINTER(c_int))
 
+    isolevel_c = c_int(isolevel)
     step_c = (c_float * 3)(*step)
     offset_c = (c_float * 3)(*offset)
 
@@ -260,7 +262,7 @@ def cavity_triangles(cavity_grid,
     ntriangles = lib.cavity_triangles(
             cavity_grid_c, dimensions_c, strides_c,
             ncavity_indices_c, cavity_indices_c,
-            step_c, offset_c,
+            isolevel_c, step_c, offset_c,
             discretization_grid_c, discgrid_strides_c,
             byref(vertices_c), byref(normals_c), byref(surface_area_c))
 

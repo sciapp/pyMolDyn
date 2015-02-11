@@ -355,6 +355,7 @@ int cavity_triangles(
         int strides[3],
         int ncavity_indices,
         int *cavity_indices,
+        int isolevel,
         float step[3],
         float offset[3],
         int8_t *discretization_grid,
@@ -390,7 +391,7 @@ int cavity_triangles(
         for (pos[1] = 1; pos[1] < dimensions[1] - 1; pos[1]++) {
             for (pos[2] = 1; pos[2] < dimensions[2] - 1; pos[2]++) {
                 gridindex = INDEXGRID(pos[0], pos[1], pos[2]);
-                counts[gridindex] = 100;
+                counts[gridindex] += 100;
                 gridval = cavity_grid[gridindex];
                 is_cavity = 0;
                 for (i = 0; i < ncavity_indices; i++) {
@@ -406,7 +407,7 @@ int cavity_triangles(
                     for (neigh[1] = -1; neigh[1] <= 1; neigh[1]++) {
                         for (neigh[2] = -1; neigh[2] <= 1; neigh[2]++) {
                             neighindex = gridindex + INDEXGRID(
-                                    neigh[0], neigh[2], neigh[2]);
+                                    neigh[0], neigh[1], neigh[2]);
                             counts[neighindex]++;
                         }
                     }
@@ -424,11 +425,24 @@ int cavity_triangles(
             }
         }
     }
+    for (i = 0; i < 3; i++) {
+        if (bbox[0][i] >= 1) {
+            bbox[0][i]--;
+        }
+        if (bbox[1][i] < dimensions[i] - 1) {
+            bbox[1][i]++;
+        }
+    }
     
-    ntriangles = gr3_triangulate(counts, 104,
-            dimensions[0], dimensions[1], dimensions[2],
+    ntriangles = gr3_triangulate(
+            counts + INDEXGRID(bbox[0][0], bbox[0][1], bbox[0][2]),
+            100 + isolevel,
+            bbox[1][0] - bbox[0][0] + 1,
+            bbox[1][1] - bbox[0][1] + 1,
+            bbox[1][2] - bbox[0][2] + 1,
             strides[0], strides[1], strides[2],
-            1.0, 1.0, 1.0, 0.0, 0.0, 0.0,
+            1.0, 1.0, 1.0,
+            bbox[0][0], bbox[0][1], bbox[0][2],
             (gr3_triangle_t **) &triangles_p);
     free(counts);
 

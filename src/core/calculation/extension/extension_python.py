@@ -162,7 +162,7 @@ def mark_cavities(domain_grid,
 
 def cavity_triangles(cavity_grid,
         cavity_indices,
-        step, offset,
+        isolevel, step, offset,
         discretization_grid):
     cavity_triangles = []
     cavity_surface_areas = []
@@ -178,7 +178,7 @@ def cavity_triangles(cavity_grid,
     grid[:, :, :] = 0
     grid[1:-1, 1:-1, 1:-1] = sum(views) + 100
 
-    vertices, normals = triangulate(grid, (1, 1, 1), (0, 0, 0), 100 + 4)
+    vertices, normals = triangulate(grid, (1, 1, 1), (0, 0, 0), 100 + isolevel)
     discrete_vertices = np.array(np.floor(vertices + 0.5), dtype=np.int)
     vertices *= np.tile(step, (vertices.shape[0], 3, 1))
     vertices += np.tile(offset, (vertices.shape[0], 3, 1))
