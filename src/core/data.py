@@ -439,6 +439,7 @@ class Atoms(object):
         self.radii_as_indices = np.sort(indices)
 
         self._covalence_radii = None
+        self._colors = None
 
     @property
     def covalence_radii(self):
@@ -449,6 +450,16 @@ class Atoms(object):
                 covalence_radii[i] = core.elements.radii[element_number]
             self._covalence_radii = covalence_radii
         return self._covalence_radii
+
+    @property
+    def colors(self):
+        if self._colors is None:
+            colors = np.zeros((self.number, 3), np.float32)
+            for i, element in enumerate(self.elements):
+                element_number = core.elements.numbers[element.upper()]
+                colors[i] = core.elements.colors[element_number]
+            self._colors = colors/255
+        return self._colors
 
     def tohdf(self, h5group, overwrite=True):
         """
