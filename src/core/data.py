@@ -16,6 +16,7 @@ import volumes
 from config.configuration import config
 from util.logger import Logger
 import core.elements
+import core.bonds
 
 
 logger = Logger("core.data")
@@ -439,6 +440,7 @@ class Atoms(object):
         self.radii_as_indices = np.sort(indices)
 
         self._covalence_radii = None
+        self._bonds = None
 
     @property
     def covalence_radii(self):
@@ -449,6 +451,12 @@ class Atoms(object):
                 covalence_radii[i] = core.elements.radii[element_number]
             self._covalence_radii = covalence_radii
         return self._covalence_radii
+
+    @property
+    def bonds(self):
+        if self._bonds is None:
+            self._bonds = core.bonds.get_bonds_with_radii(self, 1.15)
+        return self._bonds
 
     def tohdf(self, h5group, overwrite=True):
         """

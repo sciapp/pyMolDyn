@@ -8,6 +8,7 @@ import gr3
 from config.configuration import config
 import core.calculation as calculation
 import numpy as np
+import numpy.linalg as la
 import os
 from ctypes import c_int
 from util.gl_util import create_perspective_projection_matrix, create_look_at_matrix, create_rotation_matrix_homogenous, create_translation_matrix_homogenous
@@ -85,6 +86,23 @@ class Visualization(object):
                     self.results.atoms.positions,
                     [config.Colors.atoms] * self.results.atoms.number,
                     [edge_radius * 4] * self.results.atoms.number)
+
+            if self.settings.show_bonds:
+                bonds = self.results.atoms.bonds
+                for start_index, target_indices in enumerate(bonds):
+                    if len(target_indices) == 0:
+                        continue
+                    start_position = self.results.atoms.positions[start_index]
+                    target_positions = self.results.atoms.positions[target_indices]
+                    directions = target_positions - start_position
+                    bond_lengths = la.norm(directions, axis=1)
+                    directions /= bond_lengths.reshape(len(directions), 1)
+                    gr3.drawcylindermesh(len(target_indices),
+                                         target_positions,
+                                         -directions,
+                                         np.ones(directions.shape),
+                                         np.ones(bond_lengths.shape)*edge_radius,
+                                         bond_lengths)
 
         if self.results is None:
             return
@@ -185,9 +203,11 @@ class VisualizationSettings(object):
         `show_bounding_box`
 
     """
-    def __init__(self, domains=False, cavities=True, alt_cavities=False, atoms=True, bounding_box=True):
+    def __init__(self, domains=False, cavities=True, alt_cavities=False,
+                 atoms=True, bonds=True, bounding_box=True):
         self.show_domains = domains
         self.show_cavities = cavities
         self.show_alt_cavities = alt_cavities
         self.show_atoms = atoms
+        self.show_bonds = bonds
         self.show_bounding_box = bounding_box
