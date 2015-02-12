@@ -1,6 +1,7 @@
 from PySide import QtCore, QtGui
 import sys
 from config.configuration import config, Configuration
+from gui.gl_widget import UpdateGLEvent, GLWidget
 
 
 class ColorSettingsPage(QtGui.QWidget):
@@ -175,6 +176,10 @@ class SettingsDialog(QtGui.QDialog):
         self._tmp.save()
         config.read()
         self.accept()
+        for widget in QtGui.QApplication.topLevelWidgets():
+            for gl_widget in widget.findChildren(GLWidget):
+                gl_widget.update_needed = True
+                QtGui.QApplication.postEvent(gl_widget, UpdateGLEvent())
 
     def restore_defaults(self):
         reply = QtGui.QMessageBox.question(self, 'Message',
