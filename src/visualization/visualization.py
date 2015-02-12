@@ -100,7 +100,7 @@ class Visualization(object):
                     gr3.drawcylindermesh(len(target_indices),
                                          target_positions,
                                          -directions,
-                                         np.ones(directions.shape),
+                                         [config.Colors.bonds] * self.results.atoms.number,
                                          np.ones(bond_lengths.shape)*edge_radius,
                                          bond_lengths)
 
