@@ -15,6 +15,7 @@ import pybel
 import volumes
 from config.configuration import config
 from util.logger import Logger
+import core.elements
 
 
 logger = Logger("core.data")
@@ -436,6 +437,18 @@ class Atoms(object):
         unique_radii, indices = np.unique(-self.radii, return_inverse=True)
         self.sorted_radii = -unique_radii
         self.radii_as_indices = np.sort(indices)
+
+        self._covalence_radii = None
+
+    @property
+    def covalence_radii(self):
+        if self._covalence_radii is None:
+            covalence_radii = np.zeros(self.number, np.float32)
+            for i, element in enumerate(self.elements):
+                element_number = core.elements.numbers[element.upper()]
+                covalence_radii[i] = core.elements.radii[element_number]
+            self._covalence_radii = covalence_radii
+        return self._covalence_radii
 
     def tohdf(self, h5group, overwrite=True):
         """

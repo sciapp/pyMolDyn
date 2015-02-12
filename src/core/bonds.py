@@ -34,7 +34,7 @@ def get_bonds_with_radii(atoms, radii_sum_factor):
     for index, position in enumerate(atoms.positions):
         distance_vector_array = atoms.positions[index+1:] - position
         distance_squared_array = np.sum(np.square(distance_vector_array), axis=1)
-        delta_squared = np.square((atoms.radii[index+1:] + atoms.radii[index]) * radii_sum_factor)
+        delta_squared = np.square((atoms.covalence_radii[index+1:] + atoms.covalence_radii[index]) * radii_sum_factor)
         bond_target_indices = (distance_squared_array <= delta_squared).nonzero()[0] + index + 1
         bond_target_index_arrays.append(bond_target_indices)
     return bond_target_index_arrays
@@ -123,7 +123,7 @@ def main():
     f = file.File.open(file_name)
     atoms = f.getatoms(frame)
     bond_target_index_arrays = get_bonds_with_constant_delta(atoms, 2.8)
-    #bond_target_index_arrays = get_bonds_with_radii(atoms, 0.5)
+    #bond_target_index_arrays = get_bonds_with_radii(atoms, 1.15)
     bond_angles, bond_chain_angles = calculate_bond_angles(atoms, bond_target_index_arrays)
     with open("bonds.txt", 'w') as outfile:
         for source_index, target_indices in enumerate(bond_target_index_arrays):
