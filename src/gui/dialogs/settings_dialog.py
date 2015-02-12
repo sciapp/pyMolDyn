@@ -50,9 +50,9 @@ class ColorSettingsPage(QtGui.QWidget):
             pix = QtGui.QPixmap(50, 50)
             pix.fill(color)
             self.button_dict[s].setIcon(QtGui.QIcon(pix))
-        for i, clr_val in enumerate(list(color.toTuple()[:3])):
-            tmp_cfg_clr = getattr(self._config, 'Colors')
-            getattr(tmp_cfg_clr, s)[i] = clr_val / 255.
+            for i, clr_val in enumerate(color.getRgb()[:3]):
+                tmp_cfg_clr = getattr(self._config, 'Colors')
+                getattr(tmp_cfg_clr, s)[i] = clr_val / 255.
 
 
 class ComputationSettingsPage(QtGui.QWidget):
