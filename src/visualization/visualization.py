@@ -42,7 +42,7 @@ class Visualization(object):
         """
         self.results = results
         max_side_lengths = max(results.atoms.volume.side_lengths)
-        self.d = self.d / self.max_side_lengths * max_side_lengths 
+        self.d = self.d / self.max_side_lengths * max_side_lengths
         self.max_side_lengths = max_side_lengths
         self.far = 6 * max_side_lengths
         self.create_scene()
@@ -75,38 +75,39 @@ class Visualization(object):
         edge_lengths = [sum([c*c for c in edge])**0.5 for edge in edge_directions]
         edge_radius = min(edge_lengths)/200
         if self.settings.show_bounding_box:
-            gr3.drawcylindermesh(num_edges, edge_positions, edge_directions, [config.Colors.bounding_box]*num_edges, [edge_radius]*num_edges, edge_lengths)
+            gr3.drawcylindermesh(num_edges, edge_positions, edge_directions,
+                                 [config.Colors.bounding_box]*num_edges,
+                                 [edge_radius]*num_edges, edge_lengths)
             corners = list(set([tuple(edge[0]) for edge in edges] + [tuple(edge[1]) for edge in edges]))
             num_corners = len(corners)
-            gr3.drawspheremesh(num_corners, corners, [(1,1,1)]*num_edges, [edge_radius]*num_edges)
+            gr3.drawspheremesh(num_corners, corners,
+                               [(1, 1, 1)]*num_edges, [edge_radius]*num_edges)
 
-        if self.settings.show_atoms and not self.results.atoms is None:
+        if self.settings.show_atoms and self.results.atoms is not None:
             gr3.drawspheremesh(self.results.atoms.number,
-                    self.results.atoms.positions,
-                    [config.Colors.atoms] * self.results.atoms.number,
-                    [edge_radius * 4] * self.results.atoms.number)
+                               self.results.atoms.positions,
+                               [config.Colors.atoms]*self.results.atoms.number,
+                               [edge_radius * 4] * self.results.atoms.number)
 
         if self.results is None:
             return
-        if show_domains and not self.results.domains is None:
+        if show_domains and self.results.domains is not None:
             self.draw_cavities(self.results.domains, config.Colors.domain)
-        if show_surface_cavities \
-                and not self.results.surface_cavities is None:
-            self.draw_cavities(self.results.surface_cavities, \
-                    config.Colors.cavity)
-        if show_center_cavities \
-                and not self.results.center_cavities is None:
-            self.draw_cavities(self.results.center_cavities, \
-                    config.Colors.alt_cavity)
+        if show_surface_cavities and self.results.surface_cavities is not None:
+            self.draw_cavities(self.results.surface_cavities,
+                               config.Colors.cavity)
+        if show_center_cavities and self.results.center_cavities is not None:
+            self.draw_cavities(self.results.center_cavities,
+                               config.Colors.alt_cavity)
 
     def draw_cavities(self, cavities, color):
         for triangles in cavities.triangles:
-            mesh = gr3.createmesh(triangles.shape[1] * 3, \
-                    triangles[0, :, :, :],
-                    triangles[1, :, :, :],
-                    [color] * (triangles.shape[1] * 3))
+            mesh = gr3.createmesh(triangles.shape[1] * 3,
+                                  triangles[0, :, :, :],
+                                  triangles[1, :, :, :],
+                                  [color] * (triangles.shape[1] * 3))
             gr3.drawmesh(mesh, 1, (0, 0, 0), (0, 0, 1), (0, 1, 0),
-                    (1, 1, 1), (1, 1, 1))
+                         (1, 1, 1), (1, 1, 1))
             gr3.deletemesh(c_int(mesh.value))
 
     def zoom(self, delta):
@@ -127,8 +128,8 @@ class Visualization(object):
         Translate the model.
         """
         trans_v = 1./1000
-        diff_vec = (dx * self.mat[:3, 0] + (-1 * dy) * self.mat[:3,1])
-        self.mat[:3, 3] += -1 * max(self.d,20) * trans_v * diff_vec
+        diff_vec = (dx * self.mat[:3, 0] + (-1 * dy) * self.mat[:3, 1])
+        self.mat[:3, 3] += -1 * max(self.d, 20) * trans_v * diff_vec
 
     def rotate_mouse(self, dx, dy):
         """
@@ -144,7 +145,7 @@ class Visualization(object):
         rot_axis = np.cross(diff_vec, pt)
         rot_axis /= np.linalg.norm(rot_axis)
         # rotation matrix with min rotation angle
-        m = create_rotation_matrix_homogenous(max(self.d,20)*rot_v*(dx**2+dy**2)**0.5, rot_axis[0], rot_axis[1], rot_axis[2])
+        m = create_rotation_matrix_homogenous(max(self.d, 20)*rot_v*(dx**2+dy**2)**0.5, rot_axis[0], rot_axis[1], rot_axis[2])
         self.mat = m.dot(self.mat)
 
     def set_camera(self, width, height):

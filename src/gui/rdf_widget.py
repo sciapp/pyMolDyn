@@ -20,8 +20,8 @@ logger = Logger("gui.rdf_widget")
 logger.setstream("default", sys.stdout, Logger.DEBUG)
 
 
-class GrPlotWidget(QtGui.QWidget) :
-    def __init__(self, *args) :
+class GrPlotWidget(QtGui.QWidget):
+    def __init__(self, *args):
         QtGui.QWidget.__init__(self)
 
         self.init_gui(self)
@@ -29,8 +29,8 @@ class GrPlotWidget(QtGui.QWidget) :
         os.environ["GKS_WSTYPE"] = "381"
         os.environ["GKS_DOUBLE_BUF"] = "True"
 
-        #self.connect(self.DrawButton, QtCore.SIGNAL("clicked()"), self.draw)
-        #self.connect(self.QuitButton, QtCore.SIGNAL("clicked()"), self.quit)
+        # self.connect(self.DrawButton, QtCore.SIGNAL("clicked()"), self.draw)
+        # self.connect(self.QuitButton, QtCore.SIGNAL("clicked()"), self.quit)
         self.w = 500
         self.h = 500
         self.sizex = 1
@@ -40,22 +40,22 @@ class GrPlotWidget(QtGui.QWidget) :
         self.title = None
         self.datapoints = None
 
-    def init_gui(self, form) :
+    def init_gui(self, form):
         form.resize(QtCore.QSize(500, 500).expandedTo(form.minimumSizeHint()))
 
-        #self.DrawButton = QtGui.QPushButton(form)
-        #self.DrawButton.setText("Draw")
-        #self.DrawButton.setGeometry(QtCore.QRect(290, 5, 100, 25))
-        #self.DrawButton.setObjectName("draw")
+        # self.DrawButton = QtGui.QPushButton(form)
+        # self.DrawButton.setText("Draw")
+        # self.DrawButton.setGeometry(QtCore.QRect(290, 5, 100, 25))
+        # self.DrawButton.setObjectName("draw")
 
-        #self.QuitButton = QtGui.QPushButton(form)
-        #self.QuitButton.setText("Quit")
-        #self.QuitButton.setGeometry(QtCore.QRect(395, 5, 100, 25))
-        #self.QuitButton.setObjectName("quit")
+        # self.QuitButton = QtGui.QPushButton(form)
+        # self.QuitButton.setText("Quit")
+        # self.QuitButton.setGeometry(QtCore.QRect(395, 5, 100, 25))
+        # self.QuitButton.setObjectName("quit")
 
         QtCore.QMetaObject.connectSlotsByName(form)
 
-    def quit(self) :
+    def quit(self):
         gr.emergencyclosegks()
         self.close()
 
@@ -65,31 +65,32 @@ class GrPlotWidget(QtGui.QWidget) :
         self.title = title
         self.datapoints = datapoints
 
-    def draw(self) :
-        self.setStyleSheet("background-color:white;");
+    def draw(self):
+        self.setStyleSheet("background-color:white;")
 
-        #x = range(0, 128)
-        #y = range(0, 128)
-        #z = readfile(os.path.join(os.path.dirname(os.path.realpath(__file__)),
-        #                          "kws.dat"), separator='$')
-        #zrange = max(z) - min(z)
-        #h = [min(z) + i * 0.025 * zrange for i in range(0, 40)]
+        # x = range(0, 128)
+        # y = range(0, 128)
+        # z = readfile(os.path.join(os.path.dirname(os.path.realpath(__file__)),
+        #                           "kws.dat"), separator='$')
+        # zrange = max(z) - min(z)
+        # h = [min(z) + i * 0.025 * zrange for i in range(0, 40)]
 
-        if not self.xvalues is None:
+        if self.xvalues is not None:
             rangex = (self.xvalues.min(), self.xvalues.max())
         else:
             rangex = (0, 10)
-        if not self.yvalues is None:
+        if self.yvalues is not None:
             rangey = gr.adjustrange(self.yvalues.min(), self.yvalues.max())
         else:
             rangey = (0, 4)
 
         gr.clearws()
-        mwidth  = self.w * 2.54 / self.logicalDpiX() / 100
+        mwidth = self.w * 2.54 / self.logicalDpiX() / 100
         mheight = self.h * 2.54 / self.logicalDpiY() / 100
         gr.setwsviewport(0, mwidth, 0, mheight)
         gr.setwswindow(0, self.sizex, 0, self.sizey)
-        gr.setviewport(0.075 * self.sizex, 0.95 * self.sizex, 0.075 * self.sizey, 0.95 * self.sizey)
+        gr.setviewport(0.075 * self.sizex, 0.95 * self.sizex,
+                       0.075 * self.sizey, 0.95 * self.sizey)
         gr.setwindow(rangex[0], rangex[1], rangey[0], rangey[1])
         gr.setcharheight(0.012)
 
@@ -97,24 +98,24 @@ class GrPlotWidget(QtGui.QWidget) :
         gr.setfillcolorind(0)
         gr.fillrect(rangex[0], rangex[1], rangey[0], rangey[1])
 
-        if not self.xvalues is None and not self.yvalues is None:
+        if self.xvalues is not None and self.yvalues is not None:
             gr.setlinecolorind(2)
             gr.polyline(self.xvalues, self.yvalues)
         else:
             gr.text(0.4 * self.sizex, 0.5 * self.sizey, "no elements selected")
 
-        ## rug plot
-        #if not self.datapoints is None:
-        #    gr.setmarkertype(gr.MARKERTYPE_SOLID_TRI_UP)
-        #    gr.setmarkercolorind(2)
-        #    gr.setmarkersize(1.0)
-        #    gr.polymarker(self.datapoints, np.zeros_like(self.datapoints))
+        # rug plot
+        # if not self.datapoints is None:
+        #     gr.setmarkertype(gr.MARKERTYPE_SOLID_TRI_UP)
+        #     gr.setmarkercolorind(2)
+        #     gr.setmarkersize(1.0)
+        #     gr.polymarker(self.datapoints, np.zeros_like(self.datapoints))
 
         gr.setlinecolorind(1)
         gr.axes(0.2, 0.2, rangex[0], rangey[0], 5, 5, 0.0075)
         gr.axes(0.2, 0.2, rangex[1], rangey[1], -5, -5, -0.0075)
 
-        if not self.title is None:
+        if self.title is not None:
             gr.text(0.8 * self.sizex, 0.9 * self.sizey, self.title)
         self.update()
 
@@ -129,10 +130,12 @@ class GrPlotWidget(QtGui.QWidget) :
             self.sizey = 1
         self.draw()
 
-    def paintEvent(self, ev) :
+    def paintEvent(self, ev):
         self.painter = QtGui.QPainter()
         self.painter.begin(self)
-        os.environ['GKSconid'] = "%x!%x" % (long(shiboken.getCppPointer(self)[0]), long(shiboken.getCppPointer(self.painter)[0]))
+        self_pointer = long(shiboken.getCppPointer(self)[0])
+        painter_pointer = long(shiboken.getCppPointer(self.painter)[0])
+        os.environ['GKSconid'] = "%x!%x" % (self_pointer, painter_pointer)
         self.draw()
         gr.updatews()
         self.painter.end()
@@ -213,7 +216,7 @@ class RDFWidget(QtGui.QWidget):
         datapoints = None
         if self.rdf is None:
             self.refresh()
-        if not self.rdf is None:
+        if self.rdf is not None:
             elem1 = str(self.elem1.currentText())
             elem2 = str(self.elem2.currentText())
             range1 = float(str(self.range1.text()))
@@ -229,7 +232,7 @@ class RDFWidget(QtGui.QWidget):
             else:
                 bandwidth = None
             f = self.rdf.rdf(elem1, elem2, cutoff=cutoff, h=bandwidth)
-            if not f is None:
+            if f is not None:
                 xvalues = np.linspace(range1, range2, 400)
                 yvalues = f(xvalues)
                 title = "{} - {}".format(elem1, elem2)
@@ -239,10 +242,11 @@ class RDFWidget(QtGui.QWidget):
         self.gr_widget.draw()
 
     def export(self):
-        extensions = (".eps", ".ps", ".pdf", ".png", ".bmp", ".jpg", ".jpeg", ".png", ".tiff", ".fig", ".svg", ".wmf")
+        extensions = (".eps", ".ps", ".pdf", ".png", ".bmp", ".jpg", ".jpeg",
+                      ".png", ".tiff", ".fig", ".svg", ".wmf")
         qtext = "*" + " *".join(extensions)
-        filepath, _ = QtGui.QFileDialog.getSaveFileName(self, "Save Image", \
-                ".", "Image Files ({})".format(qtext))
+        filepath, _ = QtGui.QFileDialog.getSaveFileName(self, "Save Image",
+                                                        ".", "Image Files ({})".format(qtext))
         if len(filepath) == 0:
             return
         gr.beginprint(filepath)
@@ -251,15 +255,15 @@ class RDFWidget(QtGui.QWidget):
 
     def refresh(self):
         results = self.control.results
-        if not results is None:
+        if results is not None:
             results = results[-1][-1]
             if self.results != results or self.rdf is None:
                 self.results = results
                 self.rdf = RDF(results)
                 e = np.unique(results.atoms.elements).tolist()
-                if not results.domains is None \
+                if results.domains is not None \
                         and len(results.domains.centers) > 0 \
-                        and not "cav" in e:
+                        and "cav" not in e:
                     e.append("cav")
                 self.elem1.clear()
                 self.elem1.addItems(e)
