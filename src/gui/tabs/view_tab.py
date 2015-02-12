@@ -39,6 +39,7 @@ class ViewTab(QtGui.QWidget):
 
         self.box_check = QtGui.QCheckBox('show bounding box', self)
         self.atom_check = QtGui.QCheckBox('show atoms', self)
+        self.bonds_check = QtGui.QCheckBox('show bonds', self)
         self.domain_check = QtGui.QCheckBox('show domains', self)
         self.cavity_check = QtGui.QCheckBox('show cavities', self)
         self.alt_cav_check = QtGui.QCheckBox('show alt. cavities', self)
@@ -52,18 +53,21 @@ class ViewTab(QtGui.QWidget):
 
         self.box_check.setCheckState(QtCore.Qt.CheckState.Checked if True else QtCore.Qt.CheckState.Unchecked)
         self.atom_check.setCheckState(QtCore.Qt.CheckState.Checked)
+        self.bonds_check.setCheckState(QtCore.Qt.CheckState.Checked)
         self.domain_check.setCheckState(QtCore.Qt.CheckState.Unchecked)
         self.cavity_check.setCheckState(QtCore.Qt.CheckState.Checked)
         self.alt_cav_check.setCheckState(QtCore.Qt.CheckState.Unchecked)
 
         self.box_check.stateChanged.connect(self.on_checkbox)
         self.atom_check.stateChanged.connect(self.on_checkbox)
+        self.bonds_check.stateChanged.connect(self.on_checkbox)
         self.domain_check.stateChanged.connect(self.on_checkbox)
         self.cavity_check.stateChanged.connect(self.on_checkbox)
         self.alt_cav_check.stateChanged.connect(self.on_checkbox)
 
         view_box.addWidget(self.box_check)
         view_box.addWidget(self.atom_check)
+        view_box.addWidget(self.bonds_check)
         view_box.addWidget(self.domain_check)
         view_box.addWidget(self.cavity_check)
         view_box.addWidget(self.alt_cav_check)
@@ -78,6 +82,7 @@ class ViewTab(QtGui.QWidget):
         settings = self.gl_widget.vis.settings
         settings.show_bounding_box = self.box_check.checkState() == QtCore.Qt.CheckState.Checked
         settings.show_atoms = self.atom_check.checkState() == QtCore.Qt.CheckState.Checked
+        settings.show_bonds = self.bonds_check.checkState() == QtCore.Qt.CheckState.Checked
         settings.show_domains = self.domain_check.checkState() == QtCore.Qt.CheckState.Checked
         settings.show_cavities = self.cavity_check.checkState() == QtCore.Qt.CheckState.Checked
         settings.show_alt_cavities = self.alt_cav_check.checkState() == QtCore.Qt.CheckState.Checked
