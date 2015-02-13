@@ -52,14 +52,6 @@ class Visualization(object):
         Create GR3 meshes. ``self.results`` contains the mesh data
         and in ``self.settings`` is specified which meshes shound be rendered.
         """
-        show_domains = self.settings.show_domains
-        show_surface_cavities = self.settings.show_cavities
-        show_center_cavities = self.settings.show_alt_cavities
-        if show_center_cavities:
-            show_domains = False
-            show_surface_cavities = False
-        elif show_surface_cavities:
-            show_domains = False
 
         c = config.Colors.background
         gr3.setbackgroundcolor(c[0], c[1], c[2], 1.0)
@@ -67,6 +59,15 @@ class Visualization(object):
 
         if self.results is None:
             return
+
+        show_domains = self.settings.show_domains
+        show_surface_cavities = self.settings.show_cavities
+        show_center_cavities = self.settings.show_alt_cavities
+        if show_center_cavities and self.results.center_cavities is not None:
+            show_domains = False
+            show_surface_cavities = False
+        elif show_surface_cavities and self.results.surface_cavities is not None:
+            show_domains = False
 
         edges = self.results.atoms.volume.edges
         num_edges = len(edges)
