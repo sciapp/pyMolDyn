@@ -168,6 +168,12 @@ class Visualization(object):
         self.set_camera(width, height)
         gr3.drawimage(0, width, 0, height, width, height, gr3.GR3_Drawable.GR3_DRAWABLE_OPENGL)
 
+    def save_screenshot(self, file_name, width=3840, height=2160):
+        """
+        Save a screenshot in the given resolution.
+        """
+        gr3.export(file_name, width, height)
+
 
 class VisualizationSettings(object):
     """

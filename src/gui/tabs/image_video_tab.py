@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from PySide import QtGui
+from gui.gl_widget import GLWidget
 
 
 class ImageVideoTabDock(QtGui.QDockWidget):
@@ -20,6 +21,7 @@ class ImageVideoTabDock(QtGui.QDockWidget):
 
         self.setFeatures(QtGui.QDockWidget.DockWidgetMovable | QtGui.QDockWidget.DockWidgetFloatable)
 
+
 class ImageVideoTab(QtGui.QWidget):
     """
         tab 'image/video' in the main widget
@@ -32,7 +34,16 @@ class ImageVideoTab(QtGui.QWidget):
     def init_gui(self):
         self.vbox = QtGui.QVBoxLayout()
 
-        image_video_button = QtGui.QPushButton('image_video button', self)
-        self.vbox.addWidget(image_video_button)
+        screenshot_button = QtGui.QPushButton('Save screenshot', self)
+        screenshot_button.clicked.connect(self.save_screenshot)
+        self.vbox.addWidget(screenshot_button)
 
         self.setLayout(self.vbox)
+
+    def save_screenshot(self):
+        file_name, okay = QtGui.QFileDialog.getSaveFileName(self,
+            'Save screenshot...', filter='Portable Network Graphics (*.png)')
+        if okay and file_name:
+            for widget in QtGui.QApplication.topLevelWidgets():
+                for gl_widget in widget.findChildren(GLWidget):
+                    gl_widget.vis.save_screenshot(file_name)
