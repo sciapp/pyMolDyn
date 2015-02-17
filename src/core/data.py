@@ -444,6 +444,7 @@ class Atoms(object):
 
         self._covalence_radii = None
         self._bonds = None
+        self._colors = None
 
     @property
     def covalence_radii(self):
@@ -460,6 +461,16 @@ class Atoms(object):
         if self._bonds is None:
             self._bonds = core.bonds.get_bonds_with_radii(self, 1.15)
         return self._bonds
+
+    @property
+    def colors(self):
+        if self._colors is None:
+            colors = np.zeros((self.number, 3), np.float32)
+            for i, element in enumerate(self.elements):
+                element_number = core.elements.numbers[element.upper()]
+                colors[i] = core.elements.colors[element_number]
+            self._colors = colors/255
+        return self._colors
 
     def tohdf(self, h5group, overwrite=True):
         """

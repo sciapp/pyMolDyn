@@ -88,7 +88,7 @@ class Visualization(object):
         if self.settings.show_atoms and self.results.atoms is not None:
             gr3.drawspheremesh(self.results.atoms.number,
                                self.results.atoms.positions,
-                               [config.Colors.atoms]*self.results.atoms.number,
+                               self.results.atoms.colors,
                                [edge_radius * 4] * self.results.atoms.number)
 
             if self.settings.show_bonds:
