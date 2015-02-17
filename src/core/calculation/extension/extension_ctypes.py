@@ -3,7 +3,8 @@
 
 __all__ = ["atomstogrid",
            "mark_cavities",
-           "cavity_triangles"]
+           "cavity_triangles",
+           "cavity_intersections"]
 
 
 import numpy as np
@@ -111,6 +112,14 @@ lib.cavity_triangles.argtypes = [
 
 lib.free_float_p.restype = None
 lib.free_float_p.argtypes = [POINTER(c_float)]
+
+lib.cavity_intersections.restype = None
+lib.cavity_intersections.argtypes = [
+        POINTER(c_int64), # grid
+        c_int * 3,        # dimensions
+        c_int * 3,        # strides
+        c_int,            # num_domains
+        POINTER(c_int8)]  # intersection_table
 
 
 def atomstogrid(grid, discrete_positions, radii_indices, discrete_radii, translation_vectors, discretization_grid):
@@ -278,3 +287,17 @@ def cavity_triangles(cavity_grid,
     surface_area = surface_area_c.value
 
     return vertices, normals, surface_area
+
+
+def cavity_intersections(grid, num_domains):
+    dimensions_c = (c_int * 3)(*grid.shape)
+    strides_c = (c_int * 3)(*[s / grid.itemsize for s in grid.strides])
+    grid_c = grid.ctypes.data_as(POINTER(c_int64))
+
+    num_domains_c = c_int(num_domains)
+    intersection_table = np.zeros((num_domains, num_domains), dtype=np.int8)
+    intersection_table_c = intersection_table.ctypes.data_as(POINTER(c_int8))
+
+    lib.cavity_intersections(grid_c, dimensions_c, strides_c, num_domains_c, intersection_table_c)
+
+    return intersection_table

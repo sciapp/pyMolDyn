@@ -3,7 +3,8 @@
 
 __all__ = ["atomstogrid",
            "mark_cavities",
-           "cavity_triangles"]
+           "cavity_triangles",
+           "cavity_intersections"]
 
 
 import numpy as np
@@ -199,3 +200,21 @@ def cavity_triangles(cavity_grid,
             cavity_surface_area += triangle_surface_area
 
     return vertices, normals, cavity_surface_area
+
+
+def cavity_intersections(grid, num_domains):
+    intersection_table = np.zeros((num_domains, num_domains), dtype=np.int8)
+    directions = []
+    for dx, dy, dz in itertools.product((0, 1), repeat=3):
+        if any((dx > 0, dy > 0, dz > 0)):
+            directions.append((dx, dy, dz))
+    for p in itertools.product(*[xrange(x - 1) for x in grid.shape]):
+        domain1 = -grid[p] - 1
+        if domain1 != -1:
+            for direction in directions:
+                p2 = tuple([p[i] + direction[i] for i in dimensions])
+                domain2 = -grid[p2] - 1
+                if domain2 != -1:
+                    intersection_table[domain1][domain2] = 1
+                    intersection_table[domain2][domain1] = 1
+    return intersection_table

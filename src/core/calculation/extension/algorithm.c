@@ -495,3 +495,48 @@ void free_float_p(float *p)
 {
     free(p);
 }
+
+
+#define INDEXGRID(i,j,k) ((int64_t)(i)*strides[0]+(j)*strides[1]+(k)*strides[2])
+void cavity_intersections(
+        int64_t *grid,
+        int dimensions[3],
+        int strides[3],
+        int num_domains,
+        int8_t *intersection_table)
+{
+    int pos[3];
+    int neigh[3];
+    int gridindex, neighindex;
+    int64_t domain1, domain2;
+
+    for (pos[0] = 0; pos[0] < dimensions[0] - 1; pos[0]++) {
+        for (pos[1] = 0; pos[1] < dimensions[1] - 1; pos[1]++) {
+            for (pos[2] = 0; pos[2] < dimensions[2] - 1; pos[2]++) {
+                gridindex = INDEXGRID(pos[0], pos[1], pos[2]);
+                domain1 = -grid[gridindex] - 1;
+                if (domain1 != -1) {
+                    for (neigh[0] = 0; neigh[0] <= 1; neigh[0]++) {
+                        for (neigh[1] = 0; neigh[1] <= 1; neigh[1]++) {
+                            for (neigh[2] = 0; neigh[2] <= 1; neigh[2]++) {
+                                if (neigh[0] == 0
+                                        && neigh[1] == 0
+                                        && neigh[2] == 0) {
+                                    continue;
+                                }
+                                neighindex = gridindex + INDEXGRID(
+                                        neigh[0], neigh[1], neigh[2]);
+                                domain2 = -grid[neighindex] - 1;
+                                if (domain2 != -1) {
+                                    intersection_table[domain1 * num_domains + domain2] = 1;
+                                    intersection_table[domain2 * num_domains + domain1] = 1;
+                                } /* if domain2 */
+                            } /* for neigh[2] */
+                        } /* for neigh[1] */
+                    } /* for neigh[0] */
+                } /* if domain1 */
+            } /* for pos[2] */
+        } /* for pos[1] */
+    } /* for pos[0] */
+}
+#undef INDEXGRID

@@ -77,7 +77,7 @@ from computation.split_and_merge.pipeline import start_split_and_merge_pipeline
 import util.colored_exceptions
 import time
 from util.message import print_message, progress, finish
-from extension import atomstogrid, mark_cavities, cavity_triangles
+from extension import atomstogrid, mark_cavities, cavity_triangles, cavity_intersections
 
 
 dimension = 3
@@ -115,13 +115,14 @@ class DomainCalculation:
                 self.discretization.combined_translation_vectors + [(0, 0, 0)],
                 self.discretization.grid)
         # step 3
-        self.centers, self.surface_point_list = start_split_and_merge_pipeline(self.grid, self.discretization.grid,
-                                                                               self.atom_discretization.discrete_positions,
-                                                                               self.discretization.combined_translation_vectors,
-                                                                               self.discretization.get_translation_vector)
+        self.centers, self.surface_point_list = start_split_and_merge_pipeline(
+                self.grid,
+                self.discretization.grid,
+                self.atom_discretization.discrete_positions,
+                self.discretization.combined_translation_vectors,
+                self.discretization.get_translation_vector)
         print_message("number of domains:", len(self.centers))
         self.domain_volumes = []
-        self.domain_radii = [] #TODO: put in results? doc!
         for domain_index in range(len(self.centers)):
             domain_volume = (self.grid == -(domain_index + 1)).sum() * (self.discretization.s_step ** 3)
             self.domain_volumes.append(domain_volume)
@@ -129,7 +130,6 @@ class DomainCalculation:
             for surface_point in self.surface_point_list[domain_index]:
                 r2 = sum([(cx - sx)**2 for cx, sx in zip(self.centers[domain_index], surface_point)])
                 rmax2 = max(rmax2, r2)
-            self.domain_radii.append(sqrt(rmax2))
         self.triangles()
 
     def triangles(self):
@@ -226,20 +226,21 @@ class CavityCalculation:
                 1.0 * (self.grid3 == -(domain_index + 1)).sum() * (self.domain_calculation.discretization.s_step ** 3))
 
         # step 6
-        intersection_table = np.zeros((num_domains, num_domains), dtype=np.int8)
-        directions = []
-        for dx, dy, dz in itertools.product((0, 1), repeat=3):
-            if any((dx > 0, dy > 0, dz > 0)):
-                directions.append((dx, dy, dz))
-        for p in itertools.product(*[range(x - 1) for x in self.domain_calculation.discretization.d]):
-            domain1 = -self.grid3[p] - 1
-            if domain1 != -1:
-                for direction in directions:
-                    p2 = tuple([p[i] + direction[i] for i in dimensions])
-                    domain2 = -self.grid3[p2] - 1
-                    if domain2 != -1:
-                        intersection_table[domain1][domain2] = 1
-                        intersection_table[domain2][domain1] = 1
+#        intersection_table = np.zeros((num_domains, num_domains), dtype=np.int8)
+#        directions = []
+#        for dx, dy, dz in itertools.product((0, 1), repeat=3):
+#            if any((dx > 0, dy > 0, dz > 0)):
+#                directions.append((dx, dy, dz))
+#        for p in itertools.product(*[range(x - 1) for x in self.domain_calculation.discretization.d]):
+#            domain1 = -self.grid3[p] - 1
+#            if domain1 != -1:
+#                for direction in directions:
+#                    p2 = tuple([p[i] + direction[i] for i in dimensions])
+#                    domain2 = -self.grid3[p2] - 1
+#                    if domain2 != -1:
+#                        intersection_table[domain1][domain2] = 1
+#                        intersection_table[domain2][domain1] = 1
+        intersection_table = cavity_intersections(self.grid3, num_domains)
         multicavities = []
         for domain in range(num_domains):
             neighbors = set([domain])
