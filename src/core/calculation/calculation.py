@@ -5,19 +5,6 @@ can be started with a simple method call.
 Additionally, results are stored in a cache and can be reused later.
 """
 
-__all__ = ["Calculation",
-           "CalculationCache",
-           "CalculationSettings",
-           "calculated",
-           "count_frames",
-           "calculated_frames",
-           "calculate_cavities",
-           "getresults",
-           "delete_center_cavity_information",
-           "timestamp",
-           "calculate"]
-
-
 import os
 import core.data as data
 import core.file
@@ -31,6 +18,17 @@ from config.configuration import config
 from util.logger import Logger
 import sys
 
+__all__ = ["Calculation",
+           "CalculationCache",
+           "CalculationSettings",
+           "calculated",
+           "count_frames",
+           "calculated_frames",
+           "calculate_cavities",
+           "getresults",
+           "delete_center_cavity_information",
+           "timestamp",
+           "calculate"]
 
 logger = Logger("core.calculation")
 logger.setstream("default", sys.stdout, Logger.WARNING)
@@ -63,13 +61,13 @@ class CalculationSettings(object):
     """
 
     def __init__(self,
-            filenames,
-            frames=[-1],
-            resolution=config.Computation.std_resolution,
-            domains=False,
-            surface_cavities=False,
-            center_cavities=False,
-            recalculate=False):
+                 filenames,
+                 frames=[-1],
+                 resolution=config.Computation.std_resolution,
+                 domains=False,
+                 surface_cavities=False,
+                 center_cavities=False,
+                 recalculate=False):
         """
         """
         self.filenames = list(filenames)
@@ -90,12 +88,12 @@ class CalculationSettings(object):
         filenames = [f for f in self.filenames]
         frames = [f for f in self.frames]
         return CalculationSettings(filenames,
-                frames,
-                self.resolution,
-                self.domains,
-                self.surface_cavities,
-                self.center_cavities,
-                self.recalculate)
+                                   frames,
+                                   self.resolution,
+                                   self.domains,
+                                   self.surface_cavities,
+                                   self.center_cavities,
+                                   self.recalculate)
 
 
 class Calculation(object):
@@ -142,7 +140,7 @@ class Calculation(object):
             if filepath in self.cache:
                 cf = self.cache[filepath]
                 info = cf.info
-        if not info is None:
+        if info is not None:
             if surface:
                 return info[resolution].surface_cavities
             elif center:
@@ -195,7 +193,7 @@ class Calculation(object):
         # TODO: error handling
         if isinstance(inputfile, core.file.ResultFile):
             results = inputfile.getresults(frame, resolution)
-        elif filepath in self.cache: 
+        elif filepath in self.cache:
             results = self.cache[filepath].getresults(frame, resolution)
         else:
             results = data.Results(filepath, frame, resolution, inputfile.getatoms(frame), None, None, None)
@@ -251,8 +249,8 @@ class Calculation(object):
             if center:
                 results.center_cavities = None
 
-        if not ((domains and results.domains is None) \
-                or (surface and results.surface_cavities is None) \
+        if not ((domains and results.domains is None)
+                or (surface and results.surface_cavities is None)
                 or (center and results.center_cavities is None)):
             message.print_message("Reusing results")
         else:
@@ -272,14 +270,14 @@ class Calculation(object):
 
             if surface and results.surface_cavities is None:
                 message.print_message("Calculating surface-based cavities")
-                cavity_calculation = CavityCalculation(domain_calculation, use_surface_points = True)
+                cavity_calculation = CavityCalculation(domain_calculation, use_surface_points=True)
                 results.surface_cavities = data.Cavities(cavity_calculation)
             message.progress(70)
 
             if center and results.center_cavities is None:
                 message.print_message("Calculating center-based cavities")
                 domain_calculation = FakeDomainCalculation(discretization, atom_discretization, results)
-                cavity_calculation = CavityCalculation(domain_calculation, use_surface_points = False)
+                cavity_calculation = CavityCalculation(domain_calculation, use_surface_points=False)
                 results.center_cavities = data.Cavities(cavity_calculation)
             resultfile.addresults(results, overwrite=recalculate)
 
@@ -312,13 +310,14 @@ class Calculation(object):
             else:
                 frames = calcsettings.frames
             for frame in frames:
-                frameresult = self.calculateframe(filepath,
-                        frame,
-                        calcsettings.resolution,
-                        domains=calcsettings.domains,
-                        surface=calcsettings.surface_cavities,
-                        center=calcsettings.center_cavities,
-                        recalculate=calcsettings.recalculate)
+                frameresult = self.calculateframe(
+                    filepath,
+                    frame,
+                    calcsettings.resolution,
+                    domains=calcsettings.domains,
+                    surface=calcsettings.surface_cavities,
+                    center=calcsettings.center_cavities,
+                    recalculate=calcsettings.recalculate)
                 fileresults.append(frameresult)
             allresults.append(fileresults)
         return allresults
@@ -376,11 +375,11 @@ class CalculationCache(object):
         """
         sourcefilepath = os.path.abspath(filepath)
         cachefilepath = self.abspath(self.cachefile(sourcefilepath))
-        if not sourcefilepath in self.index:
+        if sourcefilepath not in self.index:
             self.index[sourcefilepath] = cachefilepath
             self.writeindex()
         cachefile = core.file.HDF5File(cachefilepath, sourcefilepath)
-        #TODO: what if not sourcefilepath == cachefile.info.sourcefilepath
+        # TODO: what if not sourcefilepath == cachefile.info.sourcefilepath
         return cachefile
 
     def abspath(self, filename):
@@ -398,7 +397,7 @@ class CalculationCache(object):
             try:
                 cachefile = core.file.HDF5File(cachepath)
                 filepath = cachefile.info.sourcefilepath
-                if not filepath is None \
+                if filepath is not None \
                         and filename == self.cachefile(filepath):
                     self.index[filepath] = filename
             except (IOError, AttributeError):
@@ -411,7 +410,7 @@ class CalculationCache(object):
                 print >>f, filepath + "; " + cachefile
 
 
-#TODO: remove deprecated operations below
+# TODO: remove deprecated operations below
 
 
 calculation = Calculation()
@@ -434,7 +433,7 @@ def calculated_frames(filename, resolution):
     logger.warn("use of deprecated function")
     filepath = os.path.abspath(filename)
     timestamps = calculation.calculatedframes(filepath, resolution, True, False)
-    cf = [i + 1 for i, ts in enumerate(timestamps) if not ts is None]
+    cf = [i + 1 for i, ts in enumerate(timestamps) if ts is not None]
     return cf
 
 
@@ -467,6 +466,7 @@ def timestamp(filename, resolution, center_based, frames):
     ts = calculation.calculatedframes(filepath, resolution, not center_based, center_based)
     if frames[0] != -1:
         ts = [ts[f - 1] for f in frames]
+
     def fmt(t):
         if t is None:
             return "X"
@@ -476,8 +476,8 @@ def timestamp(filename, resolution, center_based, frames):
     ts = map(fmt, ts)
     return ts
 
+
 def calculate(settings):
     logger.warn("use of deprecated function")
     settings.frames = [f - 1 for f in settings.frames]
     return calculation.calculate(settings)
-

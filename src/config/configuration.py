@@ -30,45 +30,44 @@ class Configuration(ConfigNode):
     class Colors(ConfigNode):
 
         def __init__(self):
-            self.cavity         = [0.2, 0.4, 1.]
-            self.domain         = [0., 1., 0.5]
-            self.alt_cavity     = [0.9, 0.4, 0.2]
-            self.background     = [0.0, 0.0, 0.0]
-            self.bounding_box   = [1.0, 1.0, 1.0]
-            self.atoms          = [1.0, 1.0, 1.0]
+            self.cavity = [0.2, 0.4, 1.]
+            self.domain = [0., 1., 0.5]
+            self.alt_cavity = [0.9, 0.4, 0.2]
+            self.background = [0.0, 0.0, 0.0]
+            self.bounding_box = [1.0, 1.0, 1.0]
+            self.atoms = [1.0, 1.0, 1.0]
 
     class OpenGL(ConfigNode):
 
         def __init__(self):
-           # camera_position =
-           # offset          = (0.0, 0.0, 0.0)
-            self.gl_window_size  = [800, 800]
+            # camera_position =
+            # offset          = (0.0, 0.0, 0.0)
+            self.gl_window_size = [800, 800]
             pass
 
     class Computation(ConfigNode):
         def __init__(self):
-            self.atom_radius     = 2.8
-            self.std_resolution  = 64
+            self.atom_radius = 2.8
+            self.std_resolution = 64
 
     class Path(ConfigNode):
 
         def __init__(self):
             self.result_dir = '../results/'
-            self.ffmpeg     = '/usr/local/bin/ffmpeg'
+            self.ffmpeg = '/usr/local/bin/ffmpeg'
 
     def __init__(self):
         # standard configuration
-        self.Colors          = Configuration.Colors()
-        self.OpenGL          = Configuration.OpenGL()
-        self.Computation     = Configuration.Computation()
-        self.Path            = Configuration.Path()
+        self.Colors = Configuration.Colors()
+        self.OpenGL = Configuration.OpenGL()
+        self.Computation = Configuration.Computation()
+        self.Path = Configuration.Path()
 
         self.window_position = [-1, -1]
-        self.recent_files    = ['']
-        self.max_files       = 5
+        self.recent_files = ['']
+        self.max_files = 5
 
         self._file = ConfigFile(self)
-
 
     def add_recent_file(self, filename):
         if len(self.recent_files) == 1 and not self.recent_files[0]:
@@ -156,7 +155,7 @@ class ConfigFile(object):
                 section[attr_str] = attr
             else:
                 pass
-                #print attr_str, 'NOT PROCESSED'
+                # print attr_str, 'NOT PROCESSED'
 
     def read(self):
         """
@@ -166,7 +165,8 @@ class ConfigFile(object):
             self.save()
         else:
             validator = validate.Validator()
-            self.file = configobj.ConfigObj(CONFIG_FILE, configspec=CONFIG_SPEC_FILE)
+            self.file = configobj.ConfigObj(CONFIG_FILE,
+                                            configspec=CONFIG_SPEC_FILE)
             self.file.validate(validator)
             self.parse_section_to_node(self.file, self.config)
 

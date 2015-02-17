@@ -3,14 +3,6 @@
 This module provides classes to handle pyMolDyn related files.
 """
 
-
-__all__ = ["File",
-           "InputFile",
-           "ResultFile",
-           "XYZFile",
-           "HDF5File"]
-
-
 import os
 import pybel
 import h5py
@@ -19,6 +11,11 @@ import data
 import sys
 from util.logger import Logger
 
+__all__ = ["File",
+           "InputFile",
+           "ResultFile",
+           "XYZFile",
+           "HDF5File"]
 
 logger = Logger("core.file")
 logger.setstream("default", sys.stdout, Logger.WARNING)
@@ -68,7 +65,7 @@ class InputFile(object):
             try:
                 self.readinfo()
             except IOError as e:
-                #logger.error(str(e))
+                # logger.error(str(e))
                 pass
         return self._info
 
@@ -241,7 +238,7 @@ class HDF5File(ResultFile):
         try:
             with h5py.File(self.path) as f:
                 group = "atoms/frame{}".format(frame)
-                if not group in f:
+                if group not in f:
                     raise IndexError("Frame {} not found".format(frame))
                 atoms = data.Atoms(f[group])
         except (IOError, IndexError):
@@ -257,7 +254,7 @@ class HDF5File(ResultFile):
             with h5py.File(self.path) as f:
                 if "info" in f:
                     info = data.ResultInfo(f["info"])
-                    if not self._info.sourcefilepath is None:
+                    if self._info.sourcefilepath is not None:
                         info.sourcefilepath = self._info.sourcefilepath
                     self._info = info
                     self.inforead = True
@@ -267,7 +264,7 @@ class HDF5File(ResultFile):
             raise FileError("Cannot read file info.", e)
 
         if not self.inforead \
-                and not self._info.sourcefilepath is None \
+                and self._info.sourcefilepath is not None \
                 and os.path.isfile(self._info.sourcefilepath):
             try:
                 sf = File.open(self._info.sourcefilepath)
@@ -308,13 +305,13 @@ class HDF5File(ResultFile):
                         center_cavities = data.Cavities(group["center_cavities"])
                     else:
                         center_cavities = None
-                    if not self.info.sourcefilepath is None:
+                    if self.info.sourcefilepath is not None:
                         filepath = self.info.sourcefilepath
                     else:
                         filepath = self.path
                     results = data.Results(filepath, frame, resolution,
-                                   atoms, domains, surface_cavities,
-                                   center_cavities)
+                                           atoms, domains, surface_cavities,
+                                           center_cavities)
         except IOError:
             raise
         except Exception as e:
@@ -332,10 +329,10 @@ class HDF5File(ResultFile):
                                         results.frame, results.resolution))
                 subgroup = group.require_group("domains")
                 results.domains.tohdf(subgroup, overwrite=overwrite)
-                if not results.surface_cavities is None:
+                if results.surface_cavities is not None:
                     subgroup = group.require_group("surface_cavities")
                     results.surface_cavities.tohdf(subgroup, overwrite=overwrite)
-                if not results.center_cavities is None:
+                if results.center_cavities is not None:
                     subgroup = group.require_group("center_cavities")
                     results.center_cavities.tohdf(subgroup, overwrite=overwrite)
         except IOError:
@@ -367,7 +364,7 @@ class File(object):
         """
         return [f for f in os.listdir(directory)
                 if os.path.isfile(os.path.join(directory, f))
-                   and f.split(".")[-1] in cls.types]
+                and f.split(".")[-1] in cls.types]
 
     @classmethod
     def open(cls, filepath):
@@ -385,7 +382,7 @@ class File(object):
             :class:`ValueError` if the file format is unknown.
         """
         e = filepath.split(".")[-1]
-        if not e in cls.types:
+        if e not in cls.types:
             raise ValueError("Unknown file format")
         FileClass = cls.types[e]
         return FileClass(os.path.abspath(filepath))
@@ -406,6 +403,3 @@ class File(object):
         name = os.path.basename(filepath)
         directory = os.path.dirname(filepath)
         return name in cls.filelist(directory)
-
-
-

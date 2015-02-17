@@ -25,11 +25,10 @@ def finish(*args):
     if callable(_finish):
         return _finish(*args)
 
+
 def set_output_callbacks(progress_func, print_func, finished_func):
     global _progress, _print_message, _finish
 
-    _progress =  progress_func
+    _progress = progress_func
     _print_message = print_func
     _finish = finished_func
-
-

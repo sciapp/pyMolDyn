@@ -102,7 +102,7 @@ class TimestampList(object):
         **Returns:**
             If any item is not `None`
         """
-        return any(map(lambda x: not x is None, self.timestamps))
+        return any(map(lambda x: x is not None, self.timestamps))
 
     def tostrlist(self):
         """
@@ -170,7 +170,7 @@ class CalculatedFrames(object):
             self.domains = TimestampList(num_frames)
             self.surface_cavities = TimestampList(num_frames)
             self.center_cavities = TimestampList(num_frames)
-    
+
     @property
     def num_frames(self):
         return self.domains.num_frames
@@ -184,9 +184,9 @@ class CalculatedFrames(object):
             If the `hasdata` method of any of the :class:`TimestampList`
             attributes returns `True`
         """
-        return self.domains.hasdata() or \
-               self.surface_cavities.hasdata() or \
-               self.center_cavities.hasdata()
+        return (self.domains.hasdata() or
+                self.surface_cavities.hasdata() or
+                self.center_cavities.hasdata())
 
     def tohdf(self, h5group, overwrite=True):
         """
@@ -200,15 +200,18 @@ class CalculatedFrames(object):
                 specifies if existing data should be overwritten
         """
         if self.hasdata():
-            writedataset(h5group, "domains", self.domains.tostrlist(), overwrite)
-            writedataset(h5group, "surface_cavities", self.surface_cavities.tostrlist(), overwrite)
-            writedataset(h5group, "center_cavities", self.center_cavities.tostrlist(), overwrite)
+            writedataset(h5group, "domains",
+                         self.domains.tostrlist(), overwrite)
+            writedataset(h5group, "surface_cavities",
+                         self.surface_cavities.tostrlist(), overwrite)
+            writedataset(h5group, "center_cavities",
+                         self.center_cavities.tostrlist(), overwrite)
 
 
 class FileInfo(object):
     """
     Contains information about input files:
-        
+
         `num_frames` :
             number of frames which are stored in the file
 
@@ -235,7 +238,7 @@ class FileInfo(object):
 
     @property
     def volume(self):
-        if self._volume is None and not self.volumestr is None:
+        if self._volume is None and self.volumestr is not None:
             self._volume = volumes.Volume.fromstring(self.volumestr)
         return self._volume
 
@@ -300,7 +303,7 @@ class ResultInfo(FileInfo):
              A :class:`CalculatedFrames` object with information about
              existing calculations.
         """
-        if not resolution in self.calculatedframes:
+        if resolution not in self.calculatedframes:
             self.calculatedframes[resolution] = CalculatedFrames(self.num_frames)
         return self.calculatedframes[resolution]
 
@@ -330,7 +333,7 @@ class ResultInfo(FileInfo):
         """
         h5group.attrs["num_frames"] = self.num_frames
         h5group.attrs["volume"] = self.volumestr
-        if not self.sourcefilepath is None:
+        if self.sourcefilepath is not None:
             h5group.attrs["sourcefile"] = self.sourcefilepath
         elif "sourcefile" in h5group.attrs:
             del h5group.attrs["sourcefile"]
@@ -356,7 +359,7 @@ class Atoms(object):
 
         - `sorted_positions` :
             `positions` sorted from largest to smallest radius
-        
+
         - `sorted_radii` :
             unique `radii` sorted from largest to smallest
 
@@ -415,22 +418,22 @@ class Atoms(object):
 
         self.positions = np.array(positions, dtype=np.float, copy=False)
         self.number = self.positions.shape[0]
-        if not radii is None:
+        if radii is not None:
             self.radii = np.array(radii, dtype=np.float, copy=False)
         else:
             self.radii = np.ones((self.number), dtype=np.float) \
                          * config.Computation.atom_radius
         self.elements = np.array(elements, dtype="|S4", copy=False)
 
-        # old code: 
-        #self.sorted_radii = sorted(list(set(self.radii)), reverse=True)
-        #self.radii_as_indices = []
-        #self.sorted_positions = []
-        #for index, radius in enumerate(self.sorted_radii):
-        #    for atom_index,atom_radius in enumerate(self.radii):
-        #        if radius == atom_radius:
-        #            self.radii_as_indices.append(index)
-        #            self.sorted_positions.append(self.positions[atom_index])
+        # old code:
+        # self.sorted_radii = sorted(list(set(self.radii)), reverse=True)
+        # self.radii_as_indices = []
+        # self.sorted_positions = []
+        # for index, radius in enumerate(self.sorted_radii):
+        #     for atom_index,atom_radius in enumerate(self.radii):
+        #         if radius == atom_radius:
+        #             self.radii_as_indices.append(index)
+        #             self.sorted_positions.append(self.positions[atom_index])
         indices = np.argsort(-self.radii, kind="mergesort")
         self.sorted_positions = self.positions[indices]
         unique_radii, indices = np.unique(-self.radii, return_inverse=True)
@@ -605,7 +608,7 @@ class Cavities(CavitiesBase):
             triangles = calculation.cavity_triangles
             multicavities = calculation.multicavities
             super(Cavities, self).__init__(timestamp, volumes,
-                                          surface_areas, triangles)
+                                           surface_areas, triangles)
         else:
             super(Cavities, self).__init__(*args)
             multicavities = args[4]
@@ -630,7 +633,8 @@ class Cavities(CavitiesBase):
         """
         super(Cavities, self).tohdf(h5group, overwrite)
         for index, cavities in enumerate(self.multicavities):
-            writedataset(h5group, "multicavities{}".format(index), cavities, overwrite)
+            writedataset(h5group, "multicavities{}".format(index),
+                         cavities, overwrite)
 
 
 class Results(object):
@@ -685,7 +689,7 @@ class Results(object):
                 os.path.basename(self.filepath),
                 self.frame + 1,
                 self.resolution)
-        if not self.surface_cavities is None and not self.atoms.volume is None:
+        if self.surface_cavities is not None and self.atoms.volume is not None:
             cavvolume = np.sum(self.surface_cavities.volumes)
             volpercent = 100 * cavvolume / self.atoms.volume.volume
             s += ", {:0.1f}% cavities".format(volpercent)
@@ -710,7 +714,7 @@ class Results(object):
     @property
     def number_of_domains(self):
         logger.warn("use of deprecated property")
-        if not self.domains is None:
+        if self.domains is not None:
             return self.domains.number
         else:
             return None
@@ -718,7 +722,7 @@ class Results(object):
     @property
     def domain_volumes(self):
         logger.warn("use of deprecated property")
-        if not self.domains is None:
+        if self.domains is not None:
             return self.domains.volumes
         else:
             return None
@@ -726,7 +730,7 @@ class Results(object):
     @property
     def domain_surface_areas(self):
         logger.warn("use of deprecated property")
-        if not self.domains is None:
+        if self.domains is not None:
             return self.domains.surface_areas
         else:
             return None
@@ -734,7 +738,7 @@ class Results(object):
     @property
     def domain_centers(self):
         logger.warn("use of deprecated property")
-        if not self.domains is None:
+        if self.domains is not None:
             return self.domains.centers
         else:
             return None
@@ -742,7 +746,7 @@ class Results(object):
     @property
     def domain_triangles(self):
         logger.warn("use of deprecated property")
-        if not self.domains is None:
+        if self.domains is not None:
             return self.domains.triangles
         else:
             return None
@@ -750,7 +754,7 @@ class Results(object):
     @property
     def number_of_multicavities(self):
         logger.warn("use of deprecated property")
-        if not self.surface_cavities is None:
+        if self.surface_cavities is not None:
             return self.surface_cavities.number
         else:
             return None
@@ -758,7 +762,7 @@ class Results(object):
     @property
     def multicavity_volumes(self):
         logger.warn("use of deprecated property")
-        if not self.surface_cavities is None:
+        if self.surface_cavities is not None:
             return self.surface_cavities.volumes
         else:
             return None
@@ -766,7 +770,7 @@ class Results(object):
     @property
     def multicavity_surface_areas(self):
         logger.warn("use of deprecated property")
-        if not self.surface_cavities is None:
+        if self.surface_cavities is not None:
             return self.surface_cavities.surface_areas
         else:
             return None
@@ -774,7 +778,7 @@ class Results(object):
     @property
     def multicavities(self):
         logger.warn("use of deprecated property")
-        if not self.surface_cavities is None:
+        if self.surface_cavities is not None:
             return self.surface_cavities.multicavities
         else:
             return None
@@ -782,7 +786,7 @@ class Results(object):
     @property
     def multicavity_triangles(self):
         logger.warn("use of deprecated property")
-        if not self.surface_cavities is None:
+        if self.surface_cavities is not None:
             return self.surface_cavities.triangles
         else:
             return None
@@ -790,7 +794,7 @@ class Results(object):
     @property
     def number_of_center_multicavities(self):
         logger.warn("use of deprecated property")
-        if not self.center_cavities is None:
+        if self.center_cavities is not None:
             return self.center_cavities.number
         else:
             return None
@@ -798,7 +802,7 @@ class Results(object):
     @property
     def center_multicavity_volumes(self):
         logger.warn("use of deprecated property")
-        if not self.center_cavities is None:
+        if self.center_cavities is not None:
             return self.center_cavities.volumes
         else:
             return None
@@ -806,7 +810,7 @@ class Results(object):
     @property
     def center_multicavity_surface_areas(self):
         logger.warn("use of deprecated property")
-        if not self.center_cavities is None:
+        if self.center_cavities is not None:
             return self.center_cavities.surface_areas
         else:
             return None
@@ -814,7 +818,7 @@ class Results(object):
     @property
     def center_multicavities(self):
         logger.warn("use of deprecated property")
-        if not self.center_cavities is None:
+        if self.center_cavities is not None:
             return self.center_cavities.multicavities
         else:
             return None
@@ -822,9 +826,7 @@ class Results(object):
     @property
     def center_multicavity_triangles(self):
         logger.warn("use of deprecated property")
-        if not self.center_cavities is None:
+        if self.center_cavities is not None:
             return self.center_cavities.triangles
         else:
             return None
-
-
