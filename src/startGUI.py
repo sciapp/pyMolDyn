@@ -4,6 +4,8 @@ import util.colored_exceptions
 from gui import main_window
 from core import volumes, control
 from PySide import QtGui
+from PySide import QtCore
+import signal
 import sys
 import os
 import core.calculation
@@ -32,5 +34,12 @@ if __name__ == '__main__':
     control.calculate(settings)
     control.update()
     window.updatestatus()
+
+    # Let the Python interpreter run every 50ms...
+    timer = QtCore.QTimer()
+    timer.start(50)
+    timer.timeout.connect(lambda: None)
+    # ... to allow it to quit the application on SIGINT (Ctrl-C)
+    signal.signal(signal.SIGINT, lambda *args: app.quit())
 
     sys.exit(app.exec_())

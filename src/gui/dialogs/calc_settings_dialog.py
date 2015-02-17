@@ -155,6 +155,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
                 for fn in self.filenames]
 
     def ok(self):
+        self.lineedit_return()
         self.done(QtGui.QDialog.Accepted)
 
     def cancel(self):

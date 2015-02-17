@@ -20,7 +20,7 @@ class GLWidget(QtOpenGL.QGLWidget):
     """
 
     def __init__(self, parent):
-        QtOpenGL.QGLWidget.__init__(self, parent)
+        QtOpenGL.QGLWidget.__init__(self, QtOpenGL.QGLFormat(QtOpenGL.QGL.SampleBuffers), parent)
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.update_needed = False
         self.dataset_loaded = False
