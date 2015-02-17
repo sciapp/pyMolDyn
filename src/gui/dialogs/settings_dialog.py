@@ -17,7 +17,8 @@ class ColorSettingsPage(QtGui.QWidget):
             'cavity': 'Cavity',
             'domain': 'Domain',
             'alt_cavity': 'Alt. Cavity',
-            'atoms': 'Atoms'
+            'atoms': 'Atoms',
+            'bonds': 'Bonds'
         }
 
         self.button_dict = {}

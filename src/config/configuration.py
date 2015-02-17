@@ -36,6 +36,7 @@ class Configuration(ConfigNode):
             self.background = [0.0, 0.0, 0.0]
             self.bounding_box = [1.0, 1.0, 1.0]
             self.atoms = [1.0, 1.0, 1.0]
+            self.bonds = [0.8, 0.8, 0.8]
 
     class OpenGL(ConfigNode):
 
