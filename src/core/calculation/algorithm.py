@@ -110,11 +110,11 @@ class DomainCalculation:
 
         # step 2
         atomstogrid(self.grid,
-                self.atom_discretization.discrete_positions,
-                self.atom_discretization.atoms.radii_as_indices,
-                self.atom_discretization.sorted_discrete_radii,
-                self.discretization.combined_translation_vectors + [(0, 0, 0)],
-                self.discretization.grid)
+                    self.atom_discretization.discrete_positions,
+                    self.atom_discretization.atoms.radii_as_indices,
+                    self.atom_discretization.sorted_discrete_radii,
+                    [(0, 0, 0)] + self.discretization.combined_translation_vectors,
+                    self.discretization.grid)
         # step 3
         self.centers, self.surface_point_list = start_split_and_merge_pipeline(self.grid, self.discretization.grid,
                                                                                self.atom_discretization.discrete_positions,
@@ -207,13 +207,13 @@ class CavityCalculation:
 
         # steps 1 to 5
         self.grid3 = mark_cavities(self.grid,
-                self.domain_calculation.discretization.grid,
-                self.domain_calculation.discretization.d,
-                self.sg_cube_size,
-                self.domain_calculation.atom_discretization.discrete_positions,
-                [(0, 0, 0)] + self.domain_calculation.discretization.combined_translation_vectors,
-                domain_seed_point_lists,
-                use_surface_points)
+                                   self.domain_calculation.discretization.grid,
+                                   self.domain_calculation.discretization.d,
+                                   self.sg_cube_size,
+                                   self.domain_calculation.atom_discretization.discrete_positions,
+                                   [(0, 0, 0)] + self.domain_calculation.discretization.combined_translation_vectors,
+                                   domain_seed_point_lists,
+                                   use_surface_points)
 
         num_domains = len(self.domain_calculation.centers)
         grid_volume = (self.domain_calculation.discretization.grid == 0).sum()
@@ -223,20 +223,6 @@ class CavityCalculation:
                 1.0 * (self.grid3 == -(domain_index + 1)).sum() * (self.domain_calculation.discretization.s_step ** 3))
 
         # step 6
-#        intersection_table = np.zeros((num_domains, num_domains), dtype=np.int8)
-#        directions = []
-#        for dx, dy, dz in itertools.product((0, 1), repeat=3):
-#            if any((dx > 0, dy > 0, dz > 0)):
-#                directions.append((dx, dy, dz))
-#        for p in itertools.product(*[range(x - 1) for x in self.domain_calculation.discretization.d]):
-#            domain1 = -self.grid3[p] - 1
-#            if domain1 != -1:
-#                for direction in directions:
-#                    p2 = tuple([p[i] + direction[i] for i in dimensions])
-#                    domain2 = -self.grid3[p2] - 1
-#                    if domain2 != -1:
-#                        intersection_table[domain1][domain2] = 1
-#                        intersection_table[domain2][domain1] = 1
         intersection_table = cavity_intersections(self.grid3, num_domains)
         multicavities = []
         for domain in range(num_domains):

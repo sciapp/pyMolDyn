@@ -146,10 +146,10 @@ def atomstogrid(grid, discrete_positions, radii_indices, discrete_radii, transla
     discretization_grid_p = discretization_grid.ctypes.data_as(POINTER(c_int8))
 
     lib.atomstogrid(grid_p, dimensions, strides,
-            natoms, discrete_positions_p, radii_indices_p,
-            nradii, discrete_radii_p,
-            ntranslations, translation_vectors_p,
-            discretization_grid_p, discretization_grid_strides)
+                    natoms, discrete_positions_p, radii_indices_p,
+                    nradii, discrete_radii_p,
+                    ntranslations, translation_vectors_p,
+                    discretization_grid_p, discretization_grid_strides)
 
 
 def subgrid_create(cubesize, grid_dimensions):
@@ -195,7 +195,7 @@ def mark_cavities_c(grid, domain_grid, discretization_grid, sg, use_surface_poin
     strides_c = (c_int * 3)(*[s / grid.itemsize for s in grid.strides])
     grid_c = grid.ctypes.data_as(POINTER(c_int64))
 
-    if not domain_grid is None:
+    if domain_grid is not None:
         domain_grid_c = domain_grid.ctypes.data_as(POINTER(c_int64))
     else:
         domain_grid_c = POINTER(c_int64)()
@@ -206,18 +206,18 @@ def mark_cavities_c(grid, domain_grid, discretization_grid, sg, use_surface_poin
     use_surface_points_c = c_int(use_surface_points)
 
     lib.mark_cavities(grid_c, domain_grid_c, dimensions_c, strides_c,
-            discretization_grid_c, discgrid_strides_c,
-            sg, use_surface_points_c)
+                      discretization_grid_c, discgrid_strides_c,
+                      sg, use_surface_points_c)
 
 
 def mark_cavities(domain_grid,
-        discretization_grid,
-        grid_dimensions,
-        sg_cube_size,
-        atom_positions,
-        translation_vectors,
-        domain_point_list,
-        use_surface_points):
+                  discretization_grid,
+                  grid_dimensions,
+                  sg_cube_size,
+                  atom_positions,
+                  translation_vectors,
+                  domain_point_list,
+                  use_surface_points):
 
     # step 1
     sg = subgrid_create(sg_cube_size, grid_dimensions)
@@ -243,9 +243,9 @@ def mark_cavities(domain_grid,
 
 
 def cavity_triangles(cavity_grid,
-        cavity_indices,
-        isolevel, step, offset,
-        discretization_grid):
+                     cavity_indices,
+                     isolevel, step, offset,
+                     discretization_grid):
     cavity_grid_c = cavity_grid.ctypes.data_as(POINTER(c_int64))
     dimensions_c = (c_int * 3)(*cavity_grid.shape)
     strides_c = (c_int * 3)(*[s / cavity_grid.itemsize for s in cavity_grid.strides])

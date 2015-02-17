@@ -19,11 +19,11 @@ dimensions = range(dimension)
 
 
 def atomstogrid(grid,
-        discrete_positions,
-        radii_indices,
-        discrete_radii,
-        translation_vectors,
-        discretization_grid):
+                discrete_positions,
+                radii_indices,
+                discrete_radii,
+                translation_vectors,
+                discretization_grid):
     last_radius_index = -1  # (for reuse of sphere grids)
     atom_information = itertools.izip(range(len(discrete_positions)),
                                       radii_indices,
@@ -78,9 +78,6 @@ class Subgrid(object):
             for v in translation_vectors:
                 real_atom_position = [atom_position[i] + v[i] for i in dimensions]
                 sgp = self.to_subgrid(real_atom_position)
-                (v[0], v[1], v[2],
-                real_atom_position[0],real_atom_position[1],real_atom_position[2],
-                (sgp[0] * self.sgd[1] + sgp[1]) * self.sgd[1] + sgp[2])
                 self.sg[sgp[0]][sgp[1]][sgp[2]][0].append(real_atom_position)
 
     def add_domains(self, domain_point_list, translation_vectors):
@@ -89,9 +86,6 @@ class Subgrid(object):
                 for v in translation_vectors:
                     real_domain_seed_point = [domain_seed_point[i] + v[i] for i in dimensions]
                     sgp = self.to_subgrid(real_domain_seed_point)
-                    (v[0], v[1], v[2],
-                    real_domain_seed_point[0],real_domain_seed_point[1],real_domain_seed_point[2],
-                    (sgp[0] * self.sgd[1] + sgp[1]) * self.sgd[1] + sgp[2])
                     self.sg[sgp[0]][sgp[1]][sgp[2]][1].append(real_domain_seed_point)
                     self.sg[sgp[0]][sgp[1]][sgp[2]][2].append(domain_index)
 
@@ -106,13 +100,13 @@ class Subgrid(object):
 
 
 def mark_cavities(domain_grid,
-        discretization_grid,
-        grid_dimensions,
-        sg_cube_size,
-        atom_positions,
-        translation_vectors,
-        domain_point_list,
-        use_surface_points):
+                  discretization_grid,
+                  grid_dimensions,
+                  sg_cube_size,
+                  atom_positions,
+                  translation_vectors,
+                  domain_point_list,
+                  use_surface_points):
 
     # steps 1 to 3
     sg = Subgrid(sg_cube_size, grid_dimensions)
@@ -162,9 +156,9 @@ def mark_cavities(domain_grid,
 
 
 def cavity_triangles(cavity_grid,
-        cavity_indices,
-        isolevel, step, offset,
-        discretization_grid):
+                     cavity_indices,
+                     isolevel, step, offset,
+                     discretization_grid):
     cavity_triangles = []
     cavity_surface_areas = []
     grid = np.zeros(cavity_grid.shape, dtype=np.bool)
