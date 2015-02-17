@@ -20,8 +20,8 @@ logger = Logger("gui.histogram_widget")
 logger.setstream("default", sys.stdout, Logger.DEBUG)
 
 
-class GrHistogramWidget(QtGui.QWidget) :
-    def __init__(self, *args) :
+class GrHistogramWidget(QtGui.QWidget):
+    def __init__(self, *args):
         QtGui.QWidget.__init__(self)
 
         self.init_gui(self)
@@ -38,7 +38,7 @@ class GrHistogramWidget(QtGui.QWidget) :
         self.title = None
         self.datapoints = None
 
-    def init_gui(self, form) :
+    def init_gui(self, form):
         form.resize(QtCore.QSize(500, 500).expandedTo(form.minimumSizeHint()))
         QtCore.QMetaObject.connectSlotsByName(form)
 
@@ -48,26 +48,27 @@ class GrHistogramWidget(QtGui.QWidget) :
         self.widths = widths
         self.title = title
 
-    def draw(self) :
-        self.setStyleSheet("background-color:white;");
+    def draw(self):
+        self.setStyleSheet("background-color:white;")
 
-        if not self.xvalues is None and not self.widths is None:
+        if self.xvalues is not None and self.widths is not None:
             maxidx = np.argmax(self.xvalues)
             rangex = (self.xvalues.min(),
-                    self.xvalues[maxidx] + self.widths[maxidx])
+                      self.xvalues[maxidx] + self.widths[maxidx])
         else:
             rangex = (0.0, 100.0)
-        if not self.yvalues is None:
+        if self.yvalues is not None:
             rangey = gr.adjustrange(0.0, self.yvalues.max())
         else:
             rangey = (0.0, 8.0)
 
         gr.clearws()
-        mwidth  = self.w * 2.54 / self.logicalDpiX() / 100
+        mwidth = self.w * 2.54 / self.logicalDpiX() / 100
         mheight = self.h * 2.54 / self.logicalDpiY() / 100
         gr.setwsviewport(0, mwidth, 0, mheight)
         gr.setwswindow(0, self.sizex, 0, self.sizey)
-        gr.setviewport(0.075 * self.sizex, 0.95 * self.sizex, 0.075 * self.sizey, 0.95 * self.sizey)
+        gr.setviewport(0.075 * self.sizex, 0.95 * self.sizex,
+                       0.075 * self.sizey, 0.95 * self.sizey)
         gr.setwindow(rangex[0], rangex[1], rangey[0], rangey[1])
         gr.setcharheight(0.012)
 
@@ -75,14 +76,14 @@ class GrHistogramWidget(QtGui.QWidget) :
         gr.setfillcolorind(0)
         gr.fillrect(rangex[0], rangex[1], rangey[0], rangey[1])
 
-        if not self.xvalues is None \
-                and not self.yvalues is None \
-                and not self.widths is None:
+        if self.xvalues is not None and self.yvalues is not None \
+                and self.widths is not None:
             gr.setfillintstyle(1)
             gr.setfillcolorind(2)
             for i in range(self.xvalues.size):
-                gr.fillrect(self.xvalues[i], self.xvalues[i] + self.widths[i] * 0.8,
-                        0.0, self.yvalues[i])
+                gr.fillrect(self.xvalues[i],
+                            self.xvalues[i] + self.widths[i] * 0.8,
+                            0.0, self.yvalues[i])
         else:
             gr.text(0.45 * self.sizex, 0.5 * self.sizey, "no data")
 
@@ -92,7 +93,7 @@ class GrHistogramWidget(QtGui.QWidget) :
         gr.axes(xtick, ytick, rangex[0], rangey[0], 10, 5, 0.0075)
         gr.axes(xtick, ytick, rangex[1], rangey[1], -10, -5, -0.0075)
 
-        if not self.title is None:
+        if self.title is not None:
             gr.text(0.8 * self.sizex, 0.9 * self.sizey, self.title)
         self.update()
 
@@ -107,10 +108,12 @@ class GrHistogramWidget(QtGui.QWidget) :
             self.sizey = 1
         self.draw()
 
-    def paintEvent(self, ev) :
+    def paintEvent(self, ev):
         self.painter = QtGui.QPainter()
         self.painter.begin(self)
-        os.environ['GKSconid'] = "%x!%x" % (long(shiboken.getCppPointer(self)[0]), long(shiboken.getCppPointer(self.painter)[0]))
+        self_pointer = long(shiboken.getCppPointer(self)[0])
+        painter_pointer = long(shiboken.getCppPointer(self.painter)[0])
+        os.environ['GKSconid'] = "%x!%x" % (self_pointer, painter_pointer)
         self.draw()
         gr.updatews()
         self.painter.end()
@@ -133,7 +136,6 @@ class HistogramWidget(QtGui.QWidget):
 
         self.datasetlabel = QtGui.QLabel("No data loaded. Press 'Refresh'.", self)
         self.datasetlabel.setAlignment(QtCore.Qt.AlignHCenter)
-
 
         selectbox = QtGui.QHBoxLayout()
         selectbuttongroup = QtGui.QButtonGroup(self)
@@ -186,7 +188,7 @@ class HistogramWidget(QtGui.QWidget):
         title = None
         if self.results is None:
             self.refresh()
-        if not self.results is None and not self.results.surface_cavities is None:
+        if self.results is not None and self.results.surface_cavities is not None:
             nbins = str(self.nbins.text())
             if len(nbins) > 0 and float(nbins) > 0:
                 nbins = float(nbins)
@@ -198,7 +200,7 @@ class HistogramWidget(QtGui.QWidget):
                 data = self.results.surface_cavities.surface_areas
             if len(data) > 0:
                 if self.weightbutton.isChecked():
-                    hist, bin_edges = np.histogram(data, bins=nbins, weights = data)
+                    hist, bin_edges = np.histogram(data, bins=nbins, weights=data)
                 else:
                     hist, bin_edges = np.histogram(data, bins=nbins)
                 widths = bin_edges[1:] - bin_edges[:-1]
@@ -209,11 +211,12 @@ class HistogramWidget(QtGui.QWidget):
         self.gr_widget.draw()
 
     def export(self):
-        extensions = (".eps", ".ps", ".pdf", ".png", ".bmp", ".jpg", ".jpeg", ".png", ".tiff", ".fig", ".svg", ".wmf")
+        extensions = (".eps", ".ps", ".pdf", ".png", ".bmp", ".jpg", ".jpeg",
+                      ".png", ".tiff", ".fig", ".svg", ".wmf")
         qtext = "*" + " *".join(extensions)
-        filepath, _ = QtGui.QFileDialog.getSaveFileName(self, "Save Image", \
-                ".", "Image Files ({})".format(qtext))
-        if len(filepath) == 0:
+        filepath, okay = QtGui.QFileDialog.getSaveFileName(self, "Save Image",
+                                                           ".", "Image Files ({})".format(qtext))
+        if not okay or len(filepath) == 0:
             return
         gr.beginprint(filepath)
         self.draw()
@@ -221,7 +224,7 @@ class HistogramWidget(QtGui.QWidget):
 
     def refresh(self):
         results = self.control.results
-        if not results is None:
+        if results is not None:
             results = results[-1][-1]
             if self.results != results:
                 self.results = results

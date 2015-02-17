@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
+
 from PySide import QtGui
-from gl_widget import GLWidget
-from rdf_widget import RDFWidget
-from histogram_widget import HistogramWidget
+from gui.gl_widget import GLWidget
+from gui.rdf_widget import RDFWidget
+from gui.histogram_widget import HistogramWidget
 
 
 class GLStack(QtGui.QStackedWidget):
-
     def __init__(self, parent):
         QtGui.QStackedWidget.__init__(self, parent)
         self.parent = parent

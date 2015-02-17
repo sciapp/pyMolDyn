@@ -2,9 +2,9 @@
 '''
 To support various materials, different Bravais lattice systems need to be used
 in pyMolDyn2, so that the shapes and periodic boundary conditions of different
-crystalline structures are taken into account. These lattice systems are used as simulation volume and this module provides a
-class for each of the 7 lattice systems. All of these are centered at
-(0,0,0).
+crystalline structures are taken into account. These lattice systems are used
+as simulation volume and this module provides a class for each of the 7 lattice
+systems. All of these are centered at (0,0,0).
 
 As monoclinic, orthorombic, tetragonal, rhombohedral and cubic systems are
 special cases of a triclinic system, the corresponding classes inherit from
@@ -53,21 +53,21 @@ class HexagonalVolume(object):
             # edge on the lower hexagon
             p1 = (sin(pi/3*i)*self.a, cos(pi/3*i)*self.a, -0.5*self.c)
             p2 = (sin(pi/3*(i+1))*self.a, cos(pi/3*(i+1))*self.a, -0.5*self.c)
-            self.edges.append((p1,p2))
+            self.edges.append((p1, p2))
             # edge on the upper hexagon
             p3 = (sin(pi/3*i)*self.a, cos(pi/3*i)*self.a, 0.5*self.c)
             p4 = (sin(pi/3*(i+1))*self.a, cos(pi/3*(i+1))*self.a, 0.5*self.c)
-            self.edges.append((p3,p4))
+            self.edges.append((p3, p4))
             # edge connecting the two hexagons
             p5 = (sin(pi/3*i)*self.a, cos(pi/3*i)*self.a, -0.5*self.c)
             p6 = (sin(pi/3*i)*self.a, cos(pi/3*i)*self.a, 0.5*self.c)
-            self.edges.append((p5,p6))
+            self.edges.append((p5, p6))
 
     def is_inside(self, point):
-        '''
+        """
         True if ``point`` is inside of the volume, False otherwise.
-        '''
-        x,y,z = point
+        """
+        x, y, z = point
         ax = abs(x)
         ay = abs(y)
         az = abs(z)
@@ -82,9 +82,9 @@ class HexagonalVolume(object):
         return True
 
     def get_equivalent_point(self, point):
-        '''
+        """
         For a given point, this method returns an equivalent point inside the volume.
-        '''
+        """
         equivalent_point = np.array(point)
         translation_vectors = np.array(self.translation_vectors)
         translation_vectors = np.append(translation_vectors, [translation_vectors[1]-translation_vectors[0]])
@@ -112,17 +112,17 @@ class HexagonalVolume(object):
             [           0.5, 0.5 * sqrt(3), 0.0],
             [-0.5 * sqrt(3),           0.5, 0.0],
             [           0.0,           0.0, 1.0]])
-        p[:,2] -= np.ceil(p[:,2] / self.c - 0.5) * self.c
-        p[:,0] -= np.ceil(p[:,0] / f - 0.5) * f
+        p[:, 2] -= np.ceil(p[:, 2] / self.c - 0.5) * self.c
+        p[:, 0] -= np.ceil(p[:, 0] / f - 0.5) * f
         p = (M60 * p.T).T
-        p[:,0] -= np.ceil(p[:,0] / f - 0.5) * f
+        p[:, 0] -= np.ceil(p[:, 0] / f - 0.5) * f
         p = (M60 * p.T).T
-        p[:,0] -= np.ceil(p[:,0] / f - 0.5) * f
+        p[:, 0] -= np.ceil(p[:, 0] / f - 0.5) * f
         p = ((M60 * M60).T * p.T).T
         return p
 
     def get_distance(self, p1, p2):
-        '''
+        """
         Return the shortest distance vector between two points.
 
         **Parameters:**
@@ -131,12 +131,12 @@ class HexagonalVolume(object):
 
         **Returns:**
             Numpy array containing the distance vectors.
-        '''
+        """
         p1 = self._wrap(np.matrix(p1, copy=True))
         p2 = self._wrap(np.matrix(p2, copy=True))
         d = self._wrap(p2 - p1)
         return np.array(d, copy=False)
-        
+
     def __repr__(self):
         return "HEXAGONAL a=%f c=%f" % (self.a, self.c)
 
@@ -145,25 +145,25 @@ class HexagonalVolume(object):
 
 
 class TriclinicVolume(object):
-    '''
+    """
     A triclinic volume centered at the origin with the angles ``alpha``,
     ``beta``, ``gamma`` and the side lengths ``a``, ``b`` and ``c``. It has the
     shape of a parallelepiped.
-    '''
+    """
     def __init__(self, *args):
         if len(args) == 6:
-            a           = args[0]
-            b           = args[1]
-            c           = args[2]
-            alpha       = args[3]
-            beta        = args[4]
-            gamma       = args[5]
-            self.a      = a
-            self.b      = b
-            self.c      = c
-            self.alpha  = alpha
-            self.beta   = beta
-            self.gamma  = gamma
+            a = args[0]
+            b = args[1]
+            c = args[2]
+            alpha = args[3]
+            beta = args[4]
+            gamma = args[5]
+            self.a = a
+            self.b = b
+            self.c = c
+            self.alpha = alpha
+            self.beta = beta
+            self.gamma = gamma
             self.V = (1-cos(alpha)**2-cos(beta)**2-cos(gamma)**2+2*cos(alpha)*cos(beta)*cos(gamma))**0.5
             #: The cartesian-to-fractional transformation matrix
             self.M = np.matrix([[1/a, 1/a * (-cos(gamma)/sin(gamma)), 1/a * (cos(alpha)*cos(gamma)-cos(beta))/(self.V*sin(gamma))],
@@ -181,29 +181,29 @@ class TriclinicVolume(object):
             self.c = la.norm(v3)
 
             alpha = acos((v1.dot(v3))/(self.a * self.c))
-            beta  = acos((v2.dot(v3))/(self.b * self.c))
+            beta = acos((v2.dot(v3))/(self.b * self.c))
             gamma = acos((v1.dot(v2))/(self.a * self.b))
-            self.alpha  = alpha
-            self.beta   = beta
-            self.gamma  = gamma
+            self.alpha = alpha
+            self.beta = beta
+            self.gamma = gamma
 
-            self.V      = (1-cos(alpha)**2-cos(beta)**2-cos(gamma)**2+2*cos(alpha)*cos(beta)*cos(gamma))**0.5
-            self.Minv   = np.matrix(np.array([v1,v2,v3]).T)
-            self.M      = np.matrix(la.inv(self.Minv))
+            self.V = (1-cos(alpha)**2-cos(beta)**2-cos(gamma)**2+2*cos(alpha)*cos(beta)*cos(gamma))**0.5
+            self.Minv = np.matrix(np.array([v1, v2, v3]).T)
+            self.M = np.matrix(la.inv(self.Minv))
 
         #: The lattice system translation vectors (`right`, `up`, `forward`)
         self.translation_vectors = [tuple(self.Minv.T[i].tolist()[0]) for i in range(3)]
         min_point = [float('inf')]*3
         max_point = [float('-inf')]*3
-        for i, j, k in itertools.product((-0.5,0,0.5),repeat=3):
-            point = self.Minv*np.matrix((i,j,k)).T
+        for i, j, k in itertools.product((-0.5, 0, 0.5), repeat=3):
+            point = self.Minv*np.matrix((i, j, k)).T
             point = point.T.tolist()[0]
             for l in range(3):
                 min_point[l] = min(min_point[l], point[l])
                 max_point[l] = max(max_point[l], point[l])
 
         #: The side lengths of an axis-aligned bounding box
-        self.side_lengths = [d-c for c,d in zip(min_point, max_point)]
+        self.side_lengths = [d-c for c, d in zip(min_point, max_point)]
 
         #: The cell volume
         self.volume = self.V*self.a*self.b*self.c
@@ -221,16 +221,16 @@ class TriclinicVolume(object):
         self.edges = new_edges
 
     def is_inside(self, point):
-        '''
+        """
         Returns True if point is inside of the volume, False otherwise.
-        '''
+        """
         fractional_point = self.M*np.matrix(point).T
         return all((-0.5 < float(c) < 0.5 for c in fractional_point))
 
     def get_equivalent_point(self, point):
-        '''
+        """
         For a given point, this method returns an equivalent point inside the volume.
-        '''
+        """
         fractional_point = self.M*np.matrix(point).T
         fractional_point = fractional_point.T.tolist()[0]
         for i in range(3):
@@ -240,7 +240,7 @@ class TriclinicVolume(object):
         return new_point
 
     def get_distance(self, p1, p2):
-        '''
+        """
         Return the shortest distance vector between two points.
 
         **Parameters:**
@@ -249,7 +249,7 @@ class TriclinicVolume(object):
 
         **Returns:**
             Numpy array containing the distance vectors.
-        '''
+        """
         tp1 = (self.M * np.matrix(p1, copy=False).T).T
         tp2 = (self.M * np.matrix(p2, copy=False).T).T
         td = tp2 - tp1
@@ -264,16 +264,16 @@ class TriclinicVolume(object):
 
 
 class MonoclinicVolume(TriclinicVolume):
-    '''
+    """
     A monoclinic volume, a special case of a triclinic volume with and ``alpha=gamma=pi/2``
-    '''
+    """
 
     def __init__(self, *args):
         if len(args) == 4:
-            a     = args[0]
-            b     = args[1]
-            c     = args[2]
-            beta  = args[3]
+            a = args[0]
+            b = args[1]
+            c = args[2]
+            beta = args[3]
             alpha = pi/2
             gamma = pi/2
             TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
@@ -291,19 +291,20 @@ class MonoclinicVolume(TriclinicVolume):
 
 
 class OrthorhombicVolume(TriclinicVolume):
-    '''
+    """
     An orthorhombic volume, a special case of a triclinic volume with ``alpha=beta=gamma=pi/2``
-    '''
+    """
     def __init__(self, *args):
         if len(args) == 3:
-            a     = args[0]
-            b     = args[1]
-            c     = args[2]
+            a = args[0]
+            b = args[1]
+            c = args[2]
             alpha = pi/2
             beta = pi/2
             gamma = pi/2
             TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
-        else: # cell vectors
+        else:
+            # cell vectors
             v1 = np.array([float(f) for f in args[0:3]])
             v2 = np.array([float(f) for f in args[3:6]])
             v3 = np.array([float(f) for f in args[6:]])
@@ -317,9 +318,9 @@ class OrthorhombicVolume(TriclinicVolume):
 
 
 class TetragonalVolume(TriclinicVolume):
-    '''
+    """
     A tetragonal volume, a special case of a triclinic volume with ``a=b`` and ``alpha=beta=gamma=pi/2``
-    '''
+    """
     def __init__(self, *args):
         if len(args) == 2:
             a = args[0]
@@ -329,7 +330,8 @@ class TetragonalVolume(TriclinicVolume):
             beta = pi/2
             gamma = pi/2
             TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
-        else: # cell vectors
+        else:
+            # cell vectors
             v1 = np.array([float(f) for f in args[0:3]])
             v2 = np.array([float(f) for f in args[3:6]])
             v3 = np.array([float(f) for f in args[6:]])
@@ -343,19 +345,20 @@ class TetragonalVolume(TriclinicVolume):
 
 
 class RhombohedralVolume(TriclinicVolume):
-    '''
+    """
     A rhombohedral volume, a special case of a triclinic volume with ``a=b=c`` and ``alpha=beta=gamma``.
-    '''
+    """
     def __init__(self, *args):
         if len(args) == 2:
-            a     = args[0]
+            a = args[0]
             alpha = args[1]
-            b     = a
-            c     = a
-            beta  = alpha
+            b = a
+            c = a
+            beta = alpha
             gamma = alpha
             TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
-        else: # cell vectors
+        else:
+            # cell vectors
             v1 = np.array([float(f) for f in args[0:3]])
             v2 = np.array([float(f) for f in args[3:6]])
             v3 = np.array([float(f) for f in args[6:]])
@@ -369,9 +372,9 @@ class RhombohedralVolume(TriclinicVolume):
 
 
 class CubicVolume(TriclinicVolume):
-    '''
+    """
     A cubic volume, a special case of a triclinic volume with ``a=b=c`` and ``alpha=beta=gamma=pi/2``
-    '''
+    """
     def __init__(self, *args):
         if len(args) == 1:
             a = args[0]
@@ -381,7 +384,8 @@ class CubicVolume(TriclinicVolume):
             beta = pi/2
             gamma = pi/2
             TriclinicVolume.__init__(self, a, b, c, alpha, beta, gamma)
-        else: # cell vectors
+        else:
+            # cell vectors
             v1 = np.array([float(f) for f in args[0:3]])
             v2 = np.array([float(f) for f in args[3:6]])
             v3 = np.array([float(f) for f in args[6:]])
@@ -395,34 +399,36 @@ class CubicVolume(TriclinicVolume):
 
 
 class Volume(object):
-    '''
+    """
     Can create Subclasses from descriptive String
-    '''
+    """
 
     volumes = {
-        'HEX' : (HexagonalVolume, 'ff'),
-        'MON' : (MonoclinicVolume, 'ffff'),
-        'TRI' : (TriclinicVolume, 'ffffff'),
-        'ORT' : (OrthorhombicVolume, 'fff'),
-        'TET' : (TetragonalVolume, 'ff'),
-        'RHO' : (RhombohedralVolume,'ff'),
-        'CUB' : (CubicVolume, 'f')
+        'HEX': (HexagonalVolume, 'ff'),
+        'MON':  (MonoclinicVolume, 'ffff'),
+        'TRI': (TriclinicVolume, 'ffffff'),
+        'ORT': (OrthorhombicVolume, 'fff'),
+        'TET': (TetragonalVolume, 'ff'),
+        'RHO': (RhombohedralVolume, 'ff'),
+        'CUB': (CubicVolume, 'f')
     }
 
     convert_functions = {
-        'f' : float,
-        'i' : int,
-        's' : str
+        'f': float,
+        'i': int,
+        's': str
     }
 
     @classmethod
     def fromstring(cls, s):
         s = s.split()
-        t = s[0].upper() # volume type
-        cl = cls.volumes[t][0] # volume class
-        if len(s) == 10: # cell vectors given
+        t = s[0].upper()        # volume type
+        cl = cls.volumes[t][0]  # volume class
+        if len(s) == 10:        # cell vectors given
             param = [float(f) for f in s[1:]]
         else:
             param_list = s[1:]
-            param = [cls.convert_functions[p](param_list[i]) for i,p in enumerate(cls.volumes[t][1])] # parsing parameter
+            # parsing parameter
+            param = [cls.convert_functions[p](param_list[i])
+                     for i, p in enumerate(cls.volumes[t][1])]
         return cl(*param)

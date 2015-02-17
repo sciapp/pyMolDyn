@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from functools import partial
 from PySide import QtGui, QtCore
 
 
@@ -12,13 +13,14 @@ class ViewTabDock(QtGui.QDockWidget):
         QtGui.QDockWidget.__init__(self, "view", parent)
         self.setWidget(QtGui.QWidget())
 
-        self.layout     = QtGui.QHBoxLayout()
-        self.view_tab   = ViewTab(self.widget(), parent)
+        self.layout = QtGui.QHBoxLayout()
+        self.view_tab = ViewTab(self.widget(), parent)
 
         self.layout.addWidget(self.view_tab)
         self.widget().setLayout(self.layout)
 
-        self.setFeatures(QtGui.QDockWidget.DockWidgetMovable | QtGui.QDockWidget.DockWidgetFloatable)
+        self.setFeatures(QtGui.QDockWidget.DockWidgetMovable
+                         | QtGui.QDockWidget.DockWidgetFloatable)
 
 
 class ViewTab(QtGui.QWidget):
@@ -39,31 +41,41 @@ class ViewTab(QtGui.QWidget):
 
         self.box_check = QtGui.QCheckBox('show bounding box', self)
         self.atom_check = QtGui.QCheckBox('show atoms', self)
+        self.bonds_check = QtGui.QCheckBox('show bonds', self)
         self.domain_check = QtGui.QCheckBox('show domains', self)
         self.cavity_check = QtGui.QCheckBox('show cavities', self)
         self.alt_cav_check = QtGui.QCheckBox('show alt. cavities', self)
 
-        #TODO synch with dataset
+        # TODO synch with dataset
         # self.box_check.setCheckState(self.vis_settings.show_bounding_box)
         # self.atom_check.setCheckState(self.vis_settings.show_atoms)
         # self.domain_check.setCheckState(self.vis_settings.show_domains)
         # self.cavity_check.setCheckState(self.vis_settings.show_cavities)
         # self.alt_cav_check.setCheckState(self.vis_settings.show_alt_cavities)
 
-        self.box_check.setCheckState(QtCore.Qt.CheckState.Checked if True else QtCore.Qt.CheckState.Unchecked)
-        self.atom_check.setCheckState(QtCore.Qt.CheckState.Checked)
-        self.domain_check.setCheckState(QtCore.Qt.CheckState.Unchecked)
-        self.cavity_check.setCheckState(QtCore.Qt.CheckState.Checked)
-        self.alt_cav_check.setCheckState(QtCore.Qt.CheckState.Unchecked)
+        self.box_check.setChecked(True)
+        self.atom_check.setChecked(True)
+        self.bonds_check.setChecked(True)
+        self.domain_check.setChecked(False)
+        self.cavity_check.setChecked(True)
+        self.alt_cav_check.setChecked(False)
 
-        self.box_check.stateChanged.connect(self.on_checkbox)
-        self.atom_check.stateChanged.connect(self.on_checkbox)
-        self.domain_check.stateChanged.connect(self.on_checkbox)
-        self.cavity_check.stateChanged.connect(self.on_checkbox)
-        self.alt_cav_check.stateChanged.connect(self.on_checkbox)
+        self.box_check.stateChanged.connect(partial(self.on_checkbox,
+                                                    self.box_check))
+        self.atom_check.stateChanged.connect(partial(self.on_checkbox,
+                                                     self.atom_check))
+        self.bonds_check.stateChanged.connect(partial(self.on_checkbox,
+                                                      self.bonds_check))
+        self.domain_check.stateChanged.connect(partial(self.on_checkbox,
+                                                       self.domain_check))
+        self.cavity_check.stateChanged.connect(partial(self.on_checkbox,
+                                                       self.cavity_check))
+        self.alt_cav_check.stateChanged.connect(partial(self.on_checkbox,
+                                                        self.alt_cav_check))
 
         view_box.addWidget(self.box_check)
         view_box.addWidget(self.atom_check)
+        view_box.addWidget(self.bonds_check)
         view_box.addWidget(self.domain_check)
         view_box.addWidget(self.cavity_check)
         view_box.addWidget(self.alt_cav_check)
@@ -74,12 +86,24 @@ class ViewTab(QtGui.QWidget):
         self.setLayout(vbox)
         self.show()
 
-    def on_checkbox(self):
+    def on_checkbox(self, check_box, check_state):
         settings = self.gl_widget.vis.settings
-        settings.show_bounding_box = self.box_check.checkState() == QtCore.Qt.CheckState.Checked
-        settings.show_atoms = self.atom_check.checkState() == QtCore.Qt.CheckState.Checked
-        settings.show_domains = self.domain_check.checkState() == QtCore.Qt.CheckState.Checked
-        settings.show_cavities = self.cavity_check.checkState() == QtCore.Qt.CheckState.Checked
-        settings.show_alt_cavities = self.alt_cav_check.checkState() == QtCore.Qt.CheckState.Checked
+        settings.show_bounding_box = self.box_check.isChecked()
+        settings.show_atoms = self.atom_check.isChecked()
+        if check_box == self.atom_check:
+            if not settings.show_atoms:
+                self.bonds_check.setEnabled(False)
+                self.bonds_check.setChecked(False)
+            else:
+                self.bonds_check.setEnabled(True)
+                if settings.show_bonds:
+                    self.bonds_check.setChecked(True)
+                else:
+                    self.bonds_check.setChecked(False)
+        if self.bonds_check.isEnabled():
+            settings.show_bonds = self.bonds_check.isChecked()
+        settings.show_domains = self.domain_check.isChecked()
+        settings.show_cavities = self.cavity_check.isChecked()
+        settings.show_alt_cavities = self.alt_cav_check.isChecked()
 
         self.gl_widget.create_scene()

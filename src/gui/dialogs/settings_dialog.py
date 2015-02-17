@@ -1,6 +1,8 @@
 from PySide import QtCore, QtGui
 import sys
+import functools
 from config.configuration import config, Configuration
+from gui.gl_widget import UpdateGLEvent, GLWidget
 
 
 class ColorSettingsPage(QtGui.QWidget):
@@ -15,7 +17,8 @@ class ColorSettingsPage(QtGui.QWidget):
             'cavity': 'Cavity',
             'domain': 'Domain',
             'alt_cavity': 'Alt. Cavity',
-            'atoms': 'Atoms'
+            'atoms': 'Atoms',
+            'bonds': 'Bonds'
         }
 
         self.button_dict = {}
@@ -26,11 +29,12 @@ class ColorSettingsPage(QtGui.QWidget):
             pix = QtGui.QPixmap(50, 50)
             cfg_clr = getattr(self._config, 'Colors')
             tmp = [int(f * 255) for f in getattr(cfg_clr, attr_str)]
-            pix.fill(QtGui.QColor(*tmp))
+            current_color = QtGui.QColor(*tmp)
+            pix.fill(current_color)
 
             b = QtGui.QPushButton(btn_str, self)
             self.button_dict[attr_str] = b
-            self.connect(b, QtCore.SIGNAL("clicked()"), lambda who=attr_str: self.show_color_dialog(who))
+            self.connect(b, QtCore.SIGNAL("clicked()"), functools.partial(self.show_color_dialog, attr_str, current_color))
             b.setIcon(QtGui.QIcon(pix))
 
             tmp_hbox = QtGui.QHBoxLayout()
@@ -41,15 +45,15 @@ class ColorSettingsPage(QtGui.QWidget):
         self.setLayout(vbox)
         self.show()
 
-    def show_color_dialog(self, s):
-        color = QtGui.QColorDialog.getColor()
+    def show_color_dialog(self, s, previous_color):
+        color = QtGui.QColorDialog.getColor(initial=previous_color)
         if color.isValid():
             pix = QtGui.QPixmap(50, 50)
             pix.fill(color)
             self.button_dict[s].setIcon(QtGui.QIcon(pix))
-        for i, clr_val in enumerate(list(color.toTuple()[:3])):
-            tmp_cfg_clr = getattr(self._config, 'Colors')
-            getattr(tmp_cfg_clr, s)[i] = clr_val / 255.
+            for i, clr_val in enumerate(color.getRgb()[:3]):
+                tmp_cfg_clr = getattr(self._config, 'Colors')
+                getattr(tmp_cfg_clr, s)[i] = clr_val / 255.
 
 
 class ComputationSettingsPage(QtGui.QWidget):
@@ -175,6 +179,10 @@ class SettingsDialog(QtGui.QDialog):
         self._tmp.save()
         config.read()
         self.accept()
+        for widget in QtGui.QApplication.topLevelWidgets():
+            for gl_widget in widget.findChildren(GLWidget):
+                gl_widget.update_needed = True
+                QtGui.QApplication.postEvent(gl_widget, UpdateGLEvent())
 
     def restore_defaults(self):
         reply = QtGui.QMessageBox.question(self, 'Message',

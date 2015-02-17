@@ -8,6 +8,7 @@ import gr3
 from config.configuration import config
 import core.calculation as calculation
 import numpy as np
+import numpy.linalg as la
 import os
 from ctypes import c_int
 from util.gl_util import create_perspective_projection_matrix, create_look_at_matrix, create_rotation_matrix_homogenous, create_translation_matrix_homogenous
@@ -42,7 +43,7 @@ class Visualization(object):
         """
         self.results = results
         max_side_lengths = max(results.atoms.volume.side_lengths)
-        self.d = self.d / self.max_side_lengths * max_side_lengths 
+        self.d = self.d / self.max_side_lengths * max_side_lengths
         self.max_side_lengths = max_side_lengths
         self.far = 6 * max_side_lengths
         self.create_scene()
@@ -52,14 +53,6 @@ class Visualization(object):
         Create GR3 meshes. ``self.results`` contains the mesh data
         and in ``self.settings`` is specified which meshes shound be rendered.
         """
-        show_domains = self.settings.show_domains
-        show_surface_cavities = self.settings.show_cavities
-        show_center_cavities = self.settings.show_alt_cavities
-        if show_center_cavities:
-            show_domains = False
-            show_surface_cavities = False
-        elif show_surface_cavities:
-            show_domains = False
 
         c = config.Colors.background
         gr3.setbackgroundcolor(c[0], c[1], c[2], 1.0)
@@ -68,6 +61,15 @@ class Visualization(object):
         if self.results is None:
             return
 
+        show_domains = self.settings.show_domains
+        show_surface_cavities = self.settings.show_cavities
+        show_center_cavities = self.settings.show_alt_cavities
+        if show_center_cavities and self.results.center_cavities is not None:
+            show_domains = False
+            show_surface_cavities = False
+        elif show_surface_cavities and self.results.surface_cavities is not None:
+            show_domains = False
+
         edges = self.results.atoms.volume.edges
         num_edges = len(edges)
         edge_positions = [edge[0] for edge in edges]
@@ -75,38 +77,56 @@ class Visualization(object):
         edge_lengths = [sum([c*c for c in edge])**0.5 for edge in edge_directions]
         edge_radius = min(edge_lengths)/200
         if self.settings.show_bounding_box:
-            gr3.drawcylindermesh(num_edges, edge_positions, edge_directions, [config.Colors.bounding_box]*num_edges, [edge_radius]*num_edges, edge_lengths)
+            gr3.drawcylindermesh(num_edges, edge_positions, edge_directions,
+                                 [config.Colors.bounding_box]*num_edges,
+                                 [edge_radius]*num_edges, edge_lengths)
             corners = list(set([tuple(edge[0]) for edge in edges] + [tuple(edge[1]) for edge in edges]))
             num_corners = len(corners)
-            gr3.drawspheremesh(num_corners, corners, [(1,1,1)]*num_edges, [edge_radius]*num_edges)
+            gr3.drawspheremesh(num_corners, corners,
+                               [(1, 1, 1)]*num_edges, [edge_radius]*num_edges)
 
-        if self.settings.show_atoms and not self.results.atoms is None:
+        if self.settings.show_atoms and self.results.atoms is not None:
             gr3.drawspheremesh(self.results.atoms.number,
-                    self.results.atoms.positions,
-                    [config.Colors.atoms] * self.results.atoms.number,
-                    [edge_radius * 4] * self.results.atoms.number)
+                               self.results.atoms.positions,
+                               self.results.atoms.colors,
+                               [edge_radius * 4] * self.results.atoms.number)
+
+            if self.settings.show_bonds:
+                bonds = self.results.atoms.bonds
+                for start_index, target_indices in enumerate(bonds):
+                    if len(target_indices) == 0:
+                        continue
+                    start_position = self.results.atoms.positions[start_index]
+                    target_positions = self.results.atoms.positions[target_indices]
+                    directions = target_positions - start_position
+                    bond_lengths = la.norm(directions, axis=1)
+                    directions /= bond_lengths.reshape(len(directions), 1)
+                    gr3.drawcylindermesh(len(target_indices),
+                                         target_positions,
+                                         -directions,
+                                         [config.Colors.bonds] * self.results.atoms.number,
+                                         np.ones(bond_lengths.shape)*edge_radius,
+                                         bond_lengths)
 
         if self.results is None:
             return
-        if show_domains and not self.results.domains is None:
+        if show_domains and self.results.domains is not None:
             self.draw_cavities(self.results.domains, config.Colors.domain)
-        if show_surface_cavities \
-                and not self.results.surface_cavities is None:
-            self.draw_cavities(self.results.surface_cavities, \
-                    config.Colors.cavity)
-        if show_center_cavities \
-                and not self.results.center_cavities is None:
-            self.draw_cavities(self.results.center_cavities, \
-                    config.Colors.alt_cavity)
+        if show_surface_cavities and self.results.surface_cavities is not None:
+            self.draw_cavities(self.results.surface_cavities,
+                               config.Colors.cavity)
+        if show_center_cavities and self.results.center_cavities is not None:
+            self.draw_cavities(self.results.center_cavities,
+                               config.Colors.alt_cavity)
 
     def draw_cavities(self, cavities, color):
         for triangles in cavities.triangles:
-            mesh = gr3.createmesh(triangles.shape[1] * 3, \
-                    triangles[0, :, :, :],
-                    triangles[1, :, :, :],
-                    [color] * (triangles.shape[1] * 3))
+            mesh = gr3.createmesh(triangles.shape[1] * 3,
+                                  triangles[0, :, :, :],
+                                  triangles[1, :, :, :],
+                                  [color] * (triangles.shape[1] * 3))
             gr3.drawmesh(mesh, 1, (0, 0, 0), (0, 0, 1), (0, 1, 0),
-                    (1, 1, 1), (1, 1, 1))
+                         (1, 1, 1), (1, 1, 1))
             gr3.deletemesh(c_int(mesh.value))
 
     def zoom(self, delta):
@@ -127,8 +147,8 @@ class Visualization(object):
         Translate the model.
         """
         trans_v = 1./1000
-        diff_vec = (dx * self.mat[:3, 0] + (-1 * dy) * self.mat[:3,1])
-        self.mat[:3, 3] += -1 * max(self.d,20) * trans_v * diff_vec
+        diff_vec = (dx * self.mat[:3, 0] + (-1 * dy) * self.mat[:3, 1])
+        self.mat[:3, 3] += -1 * max(self.d, 20) * trans_v * diff_vec
 
     def rotate_mouse(self, dx, dy):
         """
@@ -144,7 +164,7 @@ class Visualization(object):
         rot_axis = np.cross(diff_vec, pt)
         rot_axis /= np.linalg.norm(rot_axis)
         # rotation matrix with min rotation angle
-        m = create_rotation_matrix_homogenous(max(self.d,20)*rot_v*(dx**2+dy**2)**0.5, rot_axis[0], rot_axis[1], rot_axis[2])
+        m = create_rotation_matrix_homogenous(max(self.d, 20)*rot_v*(dx**2+dy**2)**0.5, rot_axis[0], rot_axis[1], rot_axis[2])
         self.mat = m.dot(self.mat)
 
     def set_camera(self, width, height):
@@ -168,6 +188,12 @@ class Visualization(object):
         self.set_camera(width, height)
         gr3.drawimage(0, width, 0, height, width, height, gr3.GR3_Drawable.GR3_DRAWABLE_OPENGL)
 
+    def save_screenshot(self, file_name, width=3840, height=2160):
+        """
+        Save a screenshot in the given resolution.
+        """
+        gr3.export(file_name, width, height)
+
 
 class VisualizationSettings(object):
     """
@@ -185,9 +211,11 @@ class VisualizationSettings(object):
         `show_bounding_box`
 
     """
-    def __init__(self, domains=False, cavities=True, alt_cavities=False, atoms=True, bounding_box=True):
+    def __init__(self, domains=False, cavities=True, alt_cavities=False,
+                 atoms=True, bonds=True, bounding_box=True):
         self.show_domains = domains
         self.show_cavities = cavities
         self.show_alt_cavities = alt_cavities
         self.show_atoms = atoms
+        self.show_bonds = bonds
         self.show_bounding_box = bounding_box

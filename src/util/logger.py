@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
-
-__all__ = ["Logger"]
-
-
 import sys
 import os
 import inspect
 from datetime import datetime
+
+__all__ = ["Logger"]
+
 
 class Logger(object):
 
@@ -92,6 +91,3 @@ class Logger(object):
                     stream._logline(severity, line)
                 else:
                     print >>stream, line
-
-
-

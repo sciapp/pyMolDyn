@@ -66,7 +66,7 @@ class Control(object):
         if not os.path.isdir(config.Path.result_dir):
             os.mkdir(config.Path.result_dir)
         self._calculation = calculation.Calculation()
-        self._visualization = None # will be initialized when needed
+        self._visualization = None  # will be initialized when needed
         self.results = None
         self.calculationcallback = Control.defaultcallback
         self.lock = threading.Lock()

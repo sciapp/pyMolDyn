@@ -2,14 +2,13 @@
 import numpy as np
 import numpy.linalg as la
 from PySide import QtCore, QtGui, QtOpenGL
-import visualization
 from config.configuration import config
 from OpenGL.GL import glReadPixels, GL_FLOAT, GL_DEPTH_COMPONENT
 
 from util.gl_util import create_perspective_projection_matrix, create_look_at_matrix
 
-class UpdateGLEvent(QtCore.QEvent):
 
+class UpdateGLEvent(QtCore.QEvent):
     def __init__(self):
         t = QtCore.QEvent.registerEventType()
         QtCore.QEvent.__init__(self, QtCore.QEvent.Type(t))
@@ -17,11 +16,11 @@ class UpdateGLEvent(QtCore.QEvent):
 
 class GLWidget(QtOpenGL.QGLWidget):
     """
-        OpenGL widget to show the 3D-scene
+    OpenGL widget to show the 3D-scene
     """
 
     def __init__(self, parent):
-        QtOpenGL.QGLWidget.__init__(self, parent)
+        QtOpenGL.QGLWidget.__init__(self, QtOpenGL.QGLFormat(QtOpenGL.QGL.SampleBuffers), parent)
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.update_needed = False
         self.dataset_loaded = False
@@ -85,9 +84,8 @@ class GLWidget(QtOpenGL.QGLWidget):
             z = self.vis.proj_mat[2, 3] / (-z - self.vis.proj_mat[2, 2])
             x = -x*z/self.vis.proj_mat[0, 0]
             y = -y*z/self.vis.proj_mat[1, 1]
-            x, y, z, w  = np.dot(la.inv(self.vis.lookat_mat), np.array((x, y, z, 1)))
+            x, y, z, w = np.dot(la.inv(self.vis.lookat_mat), np.array((x, y, z, 1)))
             print(x, y, z, w)
-
 
     def customEvent(self, e):
         if self.update_needed:
@@ -101,7 +99,7 @@ class GLWidget(QtOpenGL.QGLWidget):
 
     def keyPressEvent(self, e):
         """
-            catches and processes key presses
+        Catches and processes key presses
         """
         rot_v_key = 15
         if e.key() == QtCore.Qt.Key_Right:
@@ -133,7 +131,6 @@ class GLWidget(QtOpenGL.QGLWidget):
 
     def paintGL(self):
         """
-            refresh scene
+        Refresh scene
         """
         self.vis.paint(self.geometry().width(), self.geometry().height())
-

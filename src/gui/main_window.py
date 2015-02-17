@@ -16,16 +16,16 @@ class MainWindow(QtGui.QMainWindow):
     def __init__(self, control):
         QtGui.QMainWindow.__init__(self, None)
 
-        self.control            = control
-        self.center             = CentralWidget(self)
-        self.file_dock          = FileTabDock(self)
-        self.view_dock          = ViewTabDock(self)
-        self.image_video_dock   = ImageVideoTabDock(self)
-        self.statistics_dock    = StatisticsTabDock(self)
+        self.control = control
+        self.center = CentralWidget(self)
+        self.file_dock = FileTabDock(self)
+        self.view_dock = ViewTabDock(self)
+        self.image_video_dock = ImageVideoTabDock(self)
+        self.statistics_dock = StatisticsTabDock(self)
 
         self.docks = []
 
-        self.shown_dataset      = None
+        self.shown_dataset = None
 
         self.setTabPosition(QtCore.Qt.RightDockWidgetArea, QtGui.QTabWidget.North)
 
@@ -33,10 +33,14 @@ class MainWindow(QtGui.QMainWindow):
             self.docks.append(dock)
 
         self.setCentralWidget(self.center)
-        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.file_dock, QtCore.Qt.Vertical)
-        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.view_dock, QtCore.Qt.Vertical)
-        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.image_video_dock, QtCore.Qt.Vertical)
-        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.statistics_dock, QtCore.Qt.Vertical)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea,
+                           self.file_dock, QtCore.Qt.Vertical)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea,
+                           self.view_dock, QtCore.Qt.Vertical)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea,
+                           self.image_video_dock, QtCore.Qt.Vertical)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea,
+                           self.statistics_dock, QtCore.Qt.Vertical)
 
         for dock in self.docks[1:]:
             self.tabifyDockWidget(self.file_dock, dock)
@@ -49,9 +53,8 @@ class MainWindow(QtGui.QMainWindow):
         self.file_dock.raise_()
 
         # another workaround to do the same
-        #tabbars = self.findChildren(QtGui.QTabBar)
-        #tabbars[0].setCurrentIndex(0)
-
+        # tabbars = self.findChildren(QtGui.QTabBar)
+        # tabbars[0].setCurrentIndex(0)
 
     def init_menu(self):
         open_action = QtGui.QAction('&Open dataset', self)
@@ -98,7 +101,7 @@ class MainWindow(QtGui.QMainWindow):
 #        if reply == QtGui.QMessageBox.Yes:
 #            event.accept()
 #        else:
-#            event.ignore() 
+#            event.ignore()
 
 
 class CentralWidget(QtGui.QWidget):
@@ -112,16 +115,16 @@ class CentralWidget(QtGui.QWidget):
                 "Radial Distribution",
                 "Cavity Histograms")
         self.init_gui()
- 
+
     def init_gui(self):
-        self.gl_stack  = GLStack(self)
+        self.gl_stack = GLStack(self)
         self.gl_widget = self.gl_stack.gl_widget
         combo = QtGui.QComboBox()
         for title in self.widget_titles:
             combo.addItem(title)
         combo.activated[str].connect(self.on_combo)
 
-        layout =  QtGui.QVBoxLayout()
+        layout = QtGui.QVBoxLayout()
         layout.addWidget(self.gl_stack)
         layout.addWidget(combo)
 
