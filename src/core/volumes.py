@@ -67,19 +67,29 @@ class HexagonalVolume(object):
         """
         True if ``point`` is inside of the volume, False otherwise.
         """
-        x, y, z = point
-        ax = abs(x)
-        ay = abs(y)
-        az = abs(z)
-        if az > self.c/2:
-            return False
-        if ax > sin(pi/3)*self.a:
-            return False
-        if ay > self.a:
-            return False
-        if ay > self.a/2 and ay > self.a - ax*cot(pi/3):
-            return False
-        return True
+        if isinstance(point, np.ndarray) and len(point.shape) > 1:
+            ap = np.abs(point)
+            result = ap[:, 2] <= self.c / 2
+            result = np.logical_and(result, ap[:, 0] <= sin(pi / 3) * self.a)
+            result = np.logical_and(result, ap[:, 1] <= self.a)
+            tmp = np.logical_or(ap[:, 1] <= self.a / 2,
+                                ap[:, 1] <= self.a - ap[:, 0] * cot(pi / 3))
+            result = np.logical_and(result, tmp)
+            return result
+        else:
+            x, y, z = point
+            ax = abs(x)
+            ay = abs(y)
+            az = abs(z)
+            if az > self.c/2:
+                return False
+            if ax > sin(pi/3)*self.a:
+                return False
+            if ay > self.a:
+                return False
+            if ay > self.a/2 and ay > self.a - ax*cot(pi/3):
+                return False
+            return True
 
     def get_equivalent_point(self, point):
         """
@@ -224,8 +234,12 @@ class TriclinicVolume(object):
         """
         Returns True if point is inside of the volume, False otherwise.
         """
-        fractional_point = self.M*np.matrix(point).T
-        return all((-0.5 < float(c) < 0.5 for c in fractional_point))
+        if isinstance(point, np.ndarray) and len(point.shape) > 1:
+            fp = np.asarray((self.M * point.T).T)
+            return np.all(np.abs(fp) < 0.5, axis=1)
+        else:
+            fractional_point = self.M*np.matrix(point).T
+            return all((-0.5 < float(c) < 0.5 for c in fractional_point))
 
     def get_equivalent_point(self, point):
         """
@@ -405,7 +419,7 @@ class Volume(object):
 
     volumes = {
         'HEX': (HexagonalVolume, 'ff'),
-        'MON':  (MonoclinicVolume, 'ffff'),
+        'MON': (MonoclinicVolume, 'ffff'),
         'TRI': (TriclinicVolume, 'ffffff'),
         'ORT': (OrthorhombicVolume, 'fff'),
         'TET': (TetragonalVolume, 'ff'),

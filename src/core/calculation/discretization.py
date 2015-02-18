@@ -127,12 +127,18 @@ class Discretization(object):
         else:
             # step 4
             self.grid = np.zeros(self.d, dtype=np.int8)
-            for p in itertools.product(*map(range, self.d)):
-                point = self.discrete_to_continuous(p)
-                if self.volume.is_inside(point):
-                    self.grid[p] = 0
-                else:
-                    self.grid[p] = 1
+            # create array similar to itertools.product
+            order = [i + 1 for i in range(dimension)] + [0]
+            points = np.indices(self.d).transpose(*order).reshape((-1, dimension))
+            # choose points that are not inside
+            inside = self.volume.is_inside(self.discrete_to_continuous(points))
+            points = points.compress(np.logical_not(inside), axis=0)
+            # convert to tuple of indices
+            indices = [points[:, i] for i in range(dimension)]
+            self.grid[indices] = 1
+            points = None
+            inside = None
+            indices = None
             if False:
                 # step 5
                 for p in itertools.product(*map(range, self.d)):
@@ -210,13 +216,21 @@ class Discretization(object):
         """
         Transforms a point from continuous to discrete coordinates.
         """
-        return tuple([int(floor((point[i] + self.s_tilde[i] / 2) / self.s_step + 0.5)) for i in dimensions])
+        if isinstance(point, np.ndarray) and len(point.shape) > 1:
+            s_tilde_bc = np.tile(self.s_tilde, (point.shape[0], 1))
+            return np.array(np.floor((point + s_tilde_bc / 2) / self.s_step + 0.5), dtype=np.int)
+        else:
+            return tuple([int(floor((point[i] + self.s_tilde[i] / 2) / self.s_step + 0.5)) for i in dimensions])
 
     def discrete_to_continuous(self, point):
         """
         Transforms a point from discrete to continuous coordinates.
         """
-        return tuple([point[k] * self.s_step - self.s_tilde[k] / 2 for k in dimensions])
+        if isinstance(point, np.ndarray) and len(point.shape) > 1:
+            s_tilde_bc = np.tile(self.s_tilde, (point.shape[0], 1))
+            return point * self.s_step - s_tilde_bc / 2
+        else:
+            return tuple([point[k] * self.s_step - self.s_tilde[k] / 2 for k in dimensions])
 
     def __repr__(self):
         return repr(self.volume) + " d_max=%d" % self.d_max
