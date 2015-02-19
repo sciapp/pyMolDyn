@@ -22,6 +22,11 @@ cot = lambda alpha: cos(alpha) / sin(alpha)
 import itertools
 import numpy as np
 import numpy.linalg as la
+try:
+    import numexpr as ne
+    NUMEXPR = True
+except ImportError:
+    NUMEXPR = False
 
 
 # TODO: check __str__ routines, make them use vectors
@@ -68,14 +73,27 @@ class HexagonalVolume(object):
         True if ``point`` is inside of the volume, False otherwise.
         """
         if isinstance(point, np.ndarray) and len(point.shape) > 1:
-            ap = np.abs(point)
-            result = ap[:, 2] <= self.c / 2
-            result = np.logical_and(result, ap[:, 0] <= sin(pi / 3) * self.a)
-            result = np.logical_and(result, ap[:, 1] <= self.a)
-            tmp = np.logical_or(ap[:, 1] <= self.a / 2,
-                                ap[:, 1] <= self.a - ap[:, 0] * cot(pi / 3))
-            result = np.logical_and(result, tmp)
-            return result
+            if NUMEXPR:
+                a = self.a
+                c = self.c
+                sinpi3 = sin(pi / 3)
+                cotpi3 = cot(pi / 3)
+                x = point[:, 0]
+                y = point[:, 1]
+                z = point[:, 2]
+                return ne.evaluate("(abs(z) <= c / 2) & \
+                                    (abs(x) <= sinpi3 * a) & \
+                                    (abs(y) <= a) & ((abs(y) <= a / 2) | \
+                                    (abs(y) <= a - abs(x) * cotpi3))")
+            else:
+                ap = np.abs(point)
+                result = ap[:, 2] <= self.c / 2
+                result = np.logical_and(result, ap[:, 0] <= sin(pi / 3) * self.a)
+                result = np.logical_and(result, ap[:, 1] <= self.a)
+                tmp = np.logical_or(ap[:, 1] <= self.a / 2,
+                                    ap[:, 1] <= self.a - ap[:, 0] * cot(pi / 3))
+                result = np.logical_and(result, tmp)
+                return result
         else:
             x, y, z = point
             ax = abs(x)

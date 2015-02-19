@@ -6,6 +6,12 @@ import numpy as np
 import h5py
 from util.message import print_message, progress, finish
 import algorithm
+try:
+    import numexpr as ne
+    NUMEXPR = True
+except ImportError:
+    NUMEXPR = False
+
 
 __all__ = ["DiscretizationCache",
            "AtomDiscretization"]
@@ -227,8 +233,13 @@ class Discretization(object):
         Transforms a point from discrete to continuous coordinates.
         """
         if isinstance(point, np.ndarray) and len(point.shape) > 1:
-            s_tilde_bc = np.tile(self.s_tilde, (point.shape[0], 1))
-            return point * self.s_step - s_tilde_bc / 2
+            if NUMEXPR:
+                s_tilde_bc = np.tile(self.s_tilde, (point.shape[0], 1))
+                s_step = self.s_step
+                return ne.evaluate("point * s_step - s_tilde_bc / 2")
+            else:
+                s_tilde_bc = np.tile(self.s_tilde, (point.shape[0], 1))
+                return point * self.s_step - s_tilde_bc / 2
         else:
             return tuple([point[k] * self.s_step - self.s_tilde[k] / 2 for k in dimensions])
 
