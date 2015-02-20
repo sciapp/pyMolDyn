@@ -11,8 +11,9 @@ from PySide import QtGui, QtCore
 
 class CalculationSettingsDialog(QtGui.QDialog):
 
-    FRAME_MIN = 32
-    FRAME_MAX = 1024
+    RES_MIN = 32
+    RES_MAX = 1024
+    RES_INTERVAL = 32
 
     def __init__(self, parent, filenames):
         QtGui.QDialog.__init__(self, parent)
@@ -20,7 +21,6 @@ class CalculationSettingsDialog(QtGui.QDialog):
         self.control = parent.control
         self.filenames = filenames
         self.basenames  = [os.path.basename(path) for path in filenames]
-        # TODO: last used resolution
         self.resolution = config.Computation.std_resolution
 
         self.init_gui()
@@ -34,8 +34,10 @@ class CalculationSettingsDialog(QtGui.QDialog):
         res_hbox        = QtGui.QHBoxLayout()
 
         self.res_slider = QtGui.QSlider(QtCore.Qt.Horizontal, self)
-        self.res_slider.setMinimum(self.FRAME_MIN)
-        self.res_slider.setMaximum(self.FRAME_MAX)
+        self.res_slider.setMinimum(0)
+        self.res_slider.setMaximum((self.RES_MAX - self.RES_MIN) / self.RES_INTERVAL)
+        # self.res_slider.setTickInterval(1)
+        # self.res_slider.setTickPosition(QtGui.QSlider.TicksBelow)
         self.res_slider.valueChanged[int].connect(self.slider_changing)
         self.res_slider.sliderReleased.connect(self.slider_released)
 
@@ -79,7 +81,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
                 self.frame_chooser.value_changed.connect(self.update_table)
         
         self.table_view = CalculationTable(self)
-        self.res_slider.setValue(self.resolution)
+        self.res_slider.setValue((self.resolution-self.RES_MIN)/self.RES_INTERVAL)
         self.update_table()
 
         self.surf_check = QtGui.QCheckBox('calculate surface based cavities', self)
@@ -138,11 +140,11 @@ class CalculationSettingsDialog(QtGui.QDialog):
             pass
             #print 'Enter a valid number'
 
-    def slider_changing(self, resolution):
-        self.lineedit.setText(str(resolution))
+    def slider_changing(self, value):
+        self.lineedit.setText(str(value * self.RES_INTERVAL + self.RES_MIN))
 
     def slider_released(self):
-        self.resolution = self.res_slider.value()
+        self.resolution = self.res_slider.value() * self.RES_INTERVAL + self.RES_MIN
         self.update_table()
         self.update_frame_chooser(self.resolution)
 
@@ -174,7 +176,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
         overwrite = self.overwrite_check.checkState() == QtCore.Qt.CheckState.Checked
         return calculation.CalculationSettings(self.filenames,
                                                frames,
-                                               self.res_slider.value(),
+                                               self.resolution,
                                                True,
                                                surface_based,
                                                center_based,
