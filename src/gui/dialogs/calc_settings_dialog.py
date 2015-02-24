@@ -172,8 +172,10 @@ class CalculationSettingsDialog(QtGui.QDialog):
         surface_based = self.surf_check.checkState() == QtCore.Qt.CheckState.Checked
         center_based = self.center_check.checkState() == QtCore.Qt.CheckState.Checked
         overwrite = self.overwrite_check.checkState() == QtCore.Qt.CheckState.Checked
-        return calculation.CalculationSettings(self.filenames,
-                                               frames,
+        datasets = dict()
+        for filename in self.filenames:
+            datasets[filename] = frames
+        return calculation.CalculationSettings(datasets,
                                                self.res_slider.value(),
                                                True,
                                                surface_based,
