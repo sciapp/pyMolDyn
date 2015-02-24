@@ -2,7 +2,6 @@
 
 
 from gui.dialogs.util.calc_table import CalculationTable, TableModel
-from gui.dialogs.util.framechooser import LabeledFrameChooser
 from core import calculation
 import os.path
 from config.configuration import config
@@ -15,17 +14,16 @@ class CalculationSettingsDialog(QtGui.QDialog):
     RES_MAX = 1024
     RES_INTERVAL = 32
 
-    def __init__(self, parent, filenames):
+    def __init__(self, parent, file_frame_dict):
         QtGui.QDialog.__init__(self, parent)
 
         self.control = parent.control
-        self.filenames = filenames
-        self.basenames  = [os.path.basename(path) for path in filenames]
         self.resolution = config.Computation.std_resolution
+        self.filenames = file_frame_dict.keys()
+        self.file_frame_dict = file_frame_dict
 
         self.init_gui()
         self.setWindowTitle("Calculation Settings")
-
     
     def init_gui(self):
 
@@ -72,14 +70,6 @@ class CalculationSettingsDialog(QtGui.QDialog):
         button_hbox.addWidget(cancel_button)
         button_hbox.addStretch()
 
-        if len(self.filenames) == 1:
-            timestamps = self.timestamps()[0]
-            self.n_frames = len(timestamps)
-            if not self.n_frames == 1:
-                calc_frames = [i for i, t in enumerate(timestamps) if t != "X"]
-                self.frame_chooser = LabeledFrameChooser(self, self.n_frames, calc_frames, 'Frame')
-                self.frame_chooser.value_changed.connect(self.update_table)
-        
         self.table_view = CalculationTable(self)
         self.res_slider.setValue((self.resolution-self.RES_MIN)/self.RES_INTERVAL)
         self.update_table()
@@ -95,47 +85,32 @@ class CalculationSettingsDialog(QtGui.QDialog):
         vbox.addWidget(self.center_check)
         vbox.addWidget(self.overwrite_check)
 
-        if len(self.filenames) == 1 and not self.n_frames == 1:
-            vbox.addWidget(self.frame_chooser)
         vbox.addLayout(button_hbox)
         self.setLayout(vbox)
 
     def update_table(self):
-        if len(self.filenames) == 1:
-            if not self.n_frames == 1:
-                sel = self.frame_chooser.value()
-            else:
-                sel = [0]
-        else:
-            sel = range(self.n_frames)
-        
         # get timestamps for selected frames for each file
-        surface_ts = [[ts[s] for s in sel] for ts in self.timestamps(center_based=False)]
-        center_ts = [[ts[s] for s in sel] for ts in self.timestamps(center_based=True)]
+        surface_ts = [[ts[s] for s in self.file_frame_dict[self.filenames[i]]] for i, ts in enumerate(self.timestamps(center_based=False))]
+        center_ts = [[ts[s] for s in self.file_frame_dict[self.filenames[i]]] for i, ts in enumerate(self.timestamps(center_based=True))]
         # reduce to a single value per file
         surface_ts = ["X" if "X" in ts else ts[0] for ts in surface_ts]
         center_ts = ["X" if "X" in ts else ts[0] for ts in center_ts]
+        basenames = [os.path.basename(path) for path in self.filenames]
+        frames = [str(self.file_frame_dict[f])[1:-1] if not self.file_frame_dict[f][0] == -1 else 'all' for f in self.filenames]
 
-        data_list = zip(self.basenames, surface_ts, center_ts)
+        data_list = zip(basenames, surface_ts, center_ts, frames)
 
-        header = ['dataset', 'surface based', 'center based']
+        header = ['dataset', 'surface based', 'center based', 'frames']
         table_model = TableModel(self, data_list, header)
         self.table_view.setModel(table_model)
         self.table_view.resizeColumnsToContents()
         self.table_view.resizeRowsToContents()
-
-    def update_frame_chooser(self, resolution):
-        if len(self.filenames) == 1 and self.n_frames != 1:
-            timestamps = self.timestamps()[0]
-            calc_frames = [i for i, t in enumerate(timestamps) if t != "X"]
-            self.frame_chooser.set_calculated_frames(calc_frames)
 
     def lineedit_return(self):
         try:
             self.resolution = int(self.lineedit.text())
             self.res_slider.setValue(self.resolution)
             self.update_table()
-            self.update_frame_chooser(self.resolution)
         except ValueError:
             pass
             #print 'Enter a valid number'
@@ -146,7 +121,6 @@ class CalculationSettingsDialog(QtGui.QDialog):
     def slider_released(self):
         self.resolution = self.res_slider.value() * self.RES_INTERVAL + self.RES_MIN
         self.update_table()
-        self.update_frame_chooser(self.resolution)
 
     def timestamps(self, center_based=False):
         return [self.control.calculation.calculatedframes(
@@ -165,20 +139,22 @@ class CalculationSettingsDialog(QtGui.QDialog):
 
     def calculation_settings(self):
         ok = self.exec_()
-        if len(self.filenames) > 1:
-            frames = [-1]
-        elif self.n_frames == 1:
-            frames = [0]
-        else:
-            frames = self.frame_chooser.value()
         surface_based = self.surf_check.checkState() == QtCore.Qt.CheckState.Checked
         center_based = self.center_check.checkState() == QtCore.Qt.CheckState.Checked
         overwrite = self.overwrite_check.checkState() == QtCore.Qt.CheckState.Checked
-        return calculation.CalculationSettings(self.filenames,
-                                               frames,
-                                               self.resolution,
-                                               True,
-                                               surface_based,
-                                               center_based,
-                                               overwrite), \
-                                               ok
+
+        print  self.file_frame_dict, \
+               self.resolution, \
+               True, \
+               surface_based, \
+               center_based, \
+               overwrite, \
+               ok
+
+#        return calculation.CalculationSettings(self.file_frame_dict,
+#                                               self.resolution,
+#                                               True,
+#                                               surface_based,
+#                                               center_based,
+#                                               overwrite), \
+#                                               ok

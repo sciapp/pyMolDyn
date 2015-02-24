@@ -2,7 +2,7 @@
 
 from PySide import QtCore, QtGui
 import os.path
-from core import calculation, volumes
+from core import calculation, volumes, file
 from gui.dialogs.calc_settings_dialog import CalculationSettingsDialog
 from gui.dialogs.progress_dialog import ProgressDialog
 from config.configuration import config
@@ -109,61 +109,16 @@ class FileTab(QtGui.QWidget):
         self.progress_dialog.exec_()
 
     def calculate(self):
-        filenames = map(str, self.file_list.get_selection())
-        if len(filenames) == 0:
+        file_frame_dict = self.file_list.get_selection()
+        if not file_frame_dict:
             QtGui.QMessageBox.information(self, 'Information', "Choose a dataset", QtGui.QMessageBox.Ok)
             return
-        dia = CalculationSettingsDialog(self, filenames)
+        dia = CalculationSettingsDialog(self, file_frame_dict)
         settings, ok = dia.calculation_settings()
-
-        if ok:
-            self.control.calculationcallback = self.calculationcallback
-            self.control.calculate(settings)
-
-
-class DragList(QtGui.QListWidget):
-    def __init__(self, parent):
-        super(DragList, self).__init__(parent)
-        self.setAcceptDrops(True)
-        self.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
-        self.setDragEnabled(True)
-        self.datalist = {}
-
-    def dragMoveEvent(self, event):
-        pass
-
-    def add_file(self, path):
-        bname = os.path.basename(path)
-        if bname not in self.datalist and path.endswith('.xyz'):
-            self.datalist[bname] = path
-            self.addItem(bname)
-            if path not in config.recent_files:
-                print path
-                config.add_recent_file(path)
-
-    def dragEnterEvent(self, e):
-        if e.mimeData().hasUrls():
-            if e.mimeData().urls()[0].scheme() == 'file':
-                e.accept()
-            else:
-                e.ignore()
-        else:
-            e.ignore()
-
-    def dropEvent(self, e):
-        for f in e.mimeData().urls():
-            if os.path.isfile(f.path()):
-                self.add_file(f.path())
-
-    def remove_selected_files(self):
-        for item in self.selectedItems():
-            row = self.row(item)
-            self.takeItem(row)
-            del self.datalist[item.text()]
-
-    def get_selection(self):
-        return [self.datalist[str(item.text())] for item in self.selectedItems()]
-
+# TODO
+#        if ok:
+#            self.control.calculationcallback = self.calculationcallback
+#            self.control.calculate(settings)
 
 class TreeList(QtGui.QTreeWidget):
 
@@ -176,25 +131,27 @@ class TreeList(QtGui.QTreeWidget):
 
         for root, sib in data.iteritems():
             self.append_item(root, sib)
+
         self.setHeaderHidden(True)
         self.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
+        self.setSelectionBehavior(QtGui.QAbstractItemView.SelectItems)
         #self.setDragDropMode(QtGui.QAbstractItemView.DragDrop)
         self.setAcceptDrops(True)
         self.setDragEnabled(True)
         self.setDropIndicatorShown(True)
         #self.setDefaultDropAction(QtCore.Qt.MoveAction)
         self.setMouseTracking(True)
-        self.itemClicked.connect(self.item_clicked)
-
-    def item_clicked(self, item, column):
-        #data = item.data(0, column)
-        self.get_selection(column)
-        #print data, self.selectedItems()
+        self.itemSelectionChanged.connect(self.selection_changed)
+        #self.itemSelectionChanged.connect(self.get_selection)
 
     def append_item(self, root, sib):
-        item = QtGui.QTreeWidgetItem(self, [root])
+        item = QtGui.QTreeWidgetItem(self)
+        item.setText(0, root)
         if sib:
-            item.addChildren([QtGui.QTreeWidgetItem(item, [s]) for s in sib])
+            for s in sib:
+                tmp = QtGui.QTreeWidgetItem(item)
+                tmp.setText(0, s)
+                item.addChild(tmp)
         self.addTopLevelItem(item)
 
     def mimeTypes(self):
@@ -202,7 +159,7 @@ class TreeList(QtGui.QTreeWidget):
         return ['text/uri-list', 'application/x-qabstractitemmodeldatalist']
 
     def supportedDropActions(self):
-        print('.', self.defaultDropAction())
+        print('supportedDropAction', self.defaultDropAction())
         return QtCore.Qt.MoveAction
 
     def dragEnterEvent(self, e):
@@ -220,26 +177,64 @@ class TreeList(QtGui.QTreeWidget):
         print('dropMimeData', args, kwargs)
 
     def dropEvent(self, e):
-        print 'DROP'
+        print 'dropEvent'
         for f in e.mimeData().urls():
             if os.path.isfile(f.path()):
                 self.add_file(f.path())
 
-    def get_selection(self, column):
-        
-        data = [item.data(0, column) for item in self.selectedItems()]
-        print data
+    def selection_changed(self):
+        for item in self.selectedItems():
+            # items representing the whole dataset
+            if (not item.data(0, 0).startswith('frame')):
+                # select the children of the selected dataset
+                 for i in range(item.childCount()):
+                     # TODO selecting not working
+                     c = item.child(i)
+                     c.setSelected(True)
+
+    def get_selection(self):
+        sel = {}
+        for item in self.selectedItems():
+            content = str(item.data(0, 0))
+            if not content.startswith('frame'):
+                sel[self.path_dict[content]] = [-1]
+            else:
+                parent_content = str(item.parent().data(0, 0))
+                if sel.has_key(self.path_dict[parent_content]):
+                    if not sel[self.path_dict[parent_content]][0] == -1:
+                        sel[self.path_dict[parent_content]].append(int(content[6:]))
+                else:
+                    sel[self.path_dict[parent_content]] = [int(content[6:])]
+        return sel
+
+    def remove_selected_files(self):
+        # delete childs
+        del_files = self.selectedItems()
+        for i, item in enumerate(del_files):
+            content = str(item.data(0, 0))
+            if content.startswith('frame'):
+                item.parent().takeChild(item.parent().indexOfChild(item))
+                self.removeItemWidget(item, 0)
+                del del_files[i]
+
+        # delete top level items
+        for item in self.selectedItems():
+            content = str(item.data(0, 0))
+            if not content.startswith('frame'):
+                self.takeTopLevelItem(self.indexOfTopLevelItem(item))
+                self.removeItemWidget(item, 0)
+                del self.path_dict[content]
 
     def add_file(self, path):
         bname = os.path.basename(path)
-        n_frames = calculation.count_frames(path)
+        f = file.File.open(path)
+        n_frames = f.info.num_frames
 
         if bname not in self.path_dict.keys() and path.endswith('.xyz'):
-            self.path_dict[bname] = path
+            self.path_dict[bname] = str(path)
             root = bname
             sib = ['frame {}'.format(i) for i in range(1, n_frames + 1)]
             self.append_item(root, sib)
 
             if path not in config.recent_files:
-                print path
                 config.add_recent_file(path)

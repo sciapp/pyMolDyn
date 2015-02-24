@@ -8,6 +8,7 @@
 *.o
 *.so
 *.swp
+*.swo
 src/results
 src/xyz
 doc/_build
@@ -23,3 +24,4 @@ src/.idea
 *.toc
 *.pdf
 *.synctex.gz
+results/*
