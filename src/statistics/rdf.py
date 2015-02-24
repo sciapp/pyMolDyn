@@ -388,8 +388,8 @@ class _TestRDF(object):
         #resolution = 256
         #frame = 0
         settings = calculation.CalculationSettings(
-                [filename],
-                [frame], resolution, True, False, False)
+                {filename : [frame]},
+                resolution, True, False, False)
         print "calculating..."
         res = calc.calculate(settings)[0][0]
         print "generating statistics..."

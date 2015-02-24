@@ -39,11 +39,10 @@ class CalculationSettings(object):
     Structure to store the parameters for one or more calculation.
 
     **Attributes:**
-        `filenames` :
-            list of names of input files, from which the atoms will be loaded
-        `frames` :
-            list of frame numbers which are used for every filename
-            in `filenames`. ``[-1]`` means 'all frames'.
+        `datasets` :
+            Dictionary, which contains filenames (Strings) as keys.
+            Each value is a list of Integers, which contains the frames.
+            The value ``[-1]`` means 'all frames'.
         `resolution` :
             resolution parameter for the discretization
         `domains` :
@@ -52,48 +51,61 @@ class CalculationSettings(object):
             calculate surface-based cavities
         `center_cavities` :
             calculate center-based cavities
+        `recalculate` :
+            results will be calculated even if cached results exists
+        `export` :
+            ``True`` if the results should be written into a file.
+            If ``False``, they are stored in the cache.
+        `exportfile` :
+            Path to the file where the results should be stored.
+            Only used, when `export` is ``True``. If `exportfile` is ``None``,
+            a standard filename will be used.
         `bonds` :
             calculate bonds
         `dihedral_angles` :
             calculate dihedral angles
-        `recalculate` :
-            results will be calculated even if cached results exists
     """
 
     def __init__(self,
-                 filenames,
-                 frames=[-1],
+                 datasets,
                  resolution=config.Computation.std_resolution,
                  domains=False,
                  surface_cavities=False,
                  center_cavities=False,
-                 recalculate=False):
+                 recalculate=False,
+                 export=False,
+                 exportfile=None):
         """
         """
-        self.filenames = list(filenames)
-        self.frames = frames
+        self.datasets = datasets
         self.resolution = resolution
         self.domains = domains
         self.surface_cavities = surface_cavities
         self.center_cavities = center_cavities
+        self.recalculate = recalculate
+        self.export = export
+        self.exportfile = exportfile
         self.bonds = False
         self.dihedral_angles = False
-        self.recalculate = recalculate
 
     def copy(self):
         """
         **Returns:**
             A deep copy of this object.
         """
-        filenames = [f for f in self.filenames]
-        frames = [f for f in self.frames]
-        return CalculationSettings(filenames,
-                                   frames,
-                                   self.resolution,
-                                   self.domains,
-                                   self.surface_cavities,
-                                   self.center_cavities,
-                                   self.recalculate)
+        datasets = dict()
+        for filename, frames in self.datasets.iteritems():
+            datasets[filename] = [f for f in frames]
+        dup = CalculationSettings(datasets, self.resolution)
+        dup.domains = self.domains
+        dup.surface_cavities = self.surface_cavities
+        dup.center_cavities = self.center_cavities
+        dup.recalculate = self.recalculate
+        dup.export = self.export
+        dup.exportfile = self.exportfile
+        dup.bonds = self.bonds
+        dup.dihedral_angles = self.dihedral_angles
+        return dup
 
 
 class Calculation(object):
@@ -301,14 +313,12 @@ class Calculation(object):
             `calcsettings.frames`.
         """
         allresults = []
-        for filename in calcsettings.filenames:
+        for filename, frames in calcsettings.datasets.iteritems():
             fileresults = []
             filepath = os.path.abspath(filename)
-            if calcsettings.frames[0] == -1:
+            if frames[0] == -1:
                 inputfile = File.open(filepath)
                 frames = range(inputfile.info.num_frames)
-            else:
-                frames = calcsettings.frames
             for frame in frames:
                 frameresult = self.calculateframe(
                     filepath,

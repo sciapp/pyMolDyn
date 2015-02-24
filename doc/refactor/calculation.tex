@@ -23,12 +23,14 @@ If results are cached, \texttt{getresults} returns them; if not, it returns a \t
 \noindent
 \begin{tikzpicture}
     \begin{class}[text width=\umlwidth]{CalculationSettings}{0, 0}
-        \attribute{+ filenames : List(String)}
-        \attribute{+ frames : List(Integer)}
+        \attribute{+ datasets : Dictionary(String $\rightarrow$ List(Integer))}
         \attribute{+ resolution : Integer}
         \attribute{+ domains : Boolean}
         \attribute{+ surface\_cavities : Boolean}
         \attribute{+ center\_cavities : Boolean}
+        \attribute{+ recalculate : Boolean}
+        \attribute{+ export : Boolean}
+        \attribute{+ exportfile : String}
         \attribute{+ bonds : Boolean}
         \attribute{+ dihedral\_angles : Boolean}
 
