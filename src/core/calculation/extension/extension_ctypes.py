@@ -64,7 +64,7 @@ lib.subgrid_create.argtypes = [
 
 lib.subgrid_destroy.restype = None
 lib.subgrid_destroy.argtypes = [
-    POINTER(subgrid_t)] # sg
+        POINTER(subgrid_t)] # sg
 
 lib.subgrid_add_atoms.restype = None
 lib.subgrid_add_atoms.argtypes = [
@@ -120,6 +120,14 @@ lib.cavity_intersections.argtypes = [
         c_int * 3,        # strides
         c_int,            # num_domains
         POINTER(c_int8)]  # intersection_table
+
+lib.mark_translation_vectors.restype = None
+lib.mark_translation_vectors.argtypes = [
+        POINTER(c_int8), # grid
+        c_int * 3,        # dimensions
+        c_int * 3,        # strides
+        c_int,            # ntranslations
+        POINTER(c_int)]   # translations
 
 
 def atomstogrid(grid, discrete_positions, radii_indices, discrete_radii, translation_vectors, discretization_grid):
@@ -301,3 +309,15 @@ def cavity_intersections(grid, num_domains):
     lib.cavity_intersections(grid_c, dimensions_c, strides_c, num_domains_c, intersection_table_c)
 
     return intersection_table
+
+
+def mark_translation_vectors(grid, translation_vectors):
+    dimensions_c = (c_int * 3)(*grid.shape)
+    strides_c = (c_int * 3)(*[s / grid.itemsize for s in grid.strides])
+    grid_c = grid.ctypes.data_as(POINTER(c_int8))
+
+    translation_vectors = np.ascontiguousarray(translation_vectors, dtype=int_type)
+    ntranslations_c = c_int(translation_vectors.shape[0])
+    translation_vectors_c = translation_vectors.ctypes.data_as(POINTER(c_int))
+
+    lib.mark_translation_vectors(grid_c, dimensions_c, strides_c, ntranslations_c, translation_vectors_c)

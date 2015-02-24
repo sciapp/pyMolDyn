@@ -540,3 +540,115 @@ void cavity_intersections(
     } /* for pos[0] */
 }
 #undef INDEXGRID
+
+
+#define INDEXGRID(i,j,k) ((int64_t)(i)*strides[0]+(j)*strides[1]+(k)*strides[2])
+/**
+ * Take a discretization grid, where cells inside the volume are 0
+ * and cells outside are 1. For each outside cell, find the translation
+ * vector that leads back inside the volume and set the cells value to
+ * -(index + 1). Also make sure that no cell
+ * inside has an equivalent (i.e. reachable through a translation vector)
+ * cell inside; and that every cell outside has an equivalent cell inside.
+ */
+void mark_translation_vectors(int8_t *grid,
+                              int dimensions[3],
+                              int strides[3],
+                              int ntranslations,
+                              int *translations)
+{
+    int pos[3];
+    int grid_index;
+    int grid_value;
+    int i, j;
+    int *trans_pos;
+    int *trans_valid;
+    int trans_index;
+    int center_dist, min_center_dist;
+
+    trans_pos = malloc(ntranslations * 3 * sizeof(int));
+    trans_valid = malloc(ntranslations * sizeof(int));
+
+    for (pos[0] = 0; pos[0] < dimensions[0]; pos[0]++) {
+        for (pos[1] = 0; pos[1] < dimensions[1]; pos[1]++) {
+            for (pos[2] = 0; pos[2] < dimensions[2]; pos[2]++) {
+                grid_index = INDEXGRID(pos[0], pos[1], pos[2]);
+                grid_value = grid[grid_index];
+                if (grid_value != 0) {
+                    continue;
+                }
+                for (i = 0; i < ntranslations; i++) {
+                    trans_valid[i] = 1;
+                    for (j = 0; j < 3; j++) {
+                        int tp = pos[j] + translations[i * 3 + j];
+                        trans_pos[i * 3 + j] = tp;
+                        trans_valid[i] &= tp >= 0 && tp < dimensions[j];
+                    }
+                    if (trans_valid[i]) {
+                        grid[INDEXGRID(trans_pos[i * 3 + 0],
+                                       trans_pos[i * 3 + 1],
+                                       trans_pos[i * 3 + 2])] = 1;
+                    }
+                }
+            }
+        }
+    }
+    for (pos[0] = 0; pos[0] < dimensions[0]; pos[0]++) {
+        for (pos[1] = 0; pos[1] < dimensions[1]; pos[1]++) {
+            for (pos[2] = 0; pos[2] < dimensions[2]; pos[2]++) {
+                grid_index = INDEXGRID(pos[0], pos[1], pos[2]);
+                grid_value = grid[grid_index];
+                if (grid_value != 1) {
+                    continue;
+                }
+                for (i = 0; i < ntranslations; i++) {
+                    trans_valid[i] = 1;
+                    for (j = 0; j < 3; j++) {
+                        int tp = pos[j] + translations[i * 3 + j];
+                        trans_pos[i * 3 + j] = tp;
+                        trans_valid[i] &= tp >= 0 && tp < dimensions[j];
+                    }
+                }
+                trans_index = -1;
+                for (i = 0; i < ntranslations; i++) {
+                    if (trans_valid[i]) {
+                        if (grid[INDEXGRID(trans_pos[i * 3 + 0],
+                                           trans_pos[i * 3 + 1],
+                                           trans_pos[i * 3 + 2])] == 0) {
+                            trans_index = i;
+                            break;
+                        }
+                    }
+                }
+                if (trans_index != -1) {
+                    grid[grid_index] = -trans_index - 1;
+                } else {
+                    min_center_dist = 0;
+                    for (j = 0; j < 3; j++) {
+                        min_center_dist += SQUARE(pos[j] - dimensions[j] / 2);
+                    }
+                    for (i = 0; i < ntranslations; i++) {
+                        center_dist = 0;
+                        for (j = 0; j < 3; j++) {
+                            center_dist += SQUARE(trans_pos[i * 3 + j] - dimensions[j] / 2);
+                        }
+                        if (center_dist < min_center_dist) {
+                            trans_index = i;
+                            min_center_dist = center_dist;
+                        }
+                    }
+                    if (trans_index != -1) {
+                        grid[INDEXGRID(trans_pos[trans_index * 3 + 0],
+                                       trans_pos[trans_index * 3 + 1],
+                                       trans_pos[trans_index * 3 + 2])] = 0;
+                    }
+                    /* trans_index == -1: grid[grid_index] = 0 */
+                    grid[grid_index] = -trans_index - 1;
+                }
+            }
+        }
+    }
+    free(trans_pos);
+    free(trans_valid);
+}
+#undef INDEXGRID
