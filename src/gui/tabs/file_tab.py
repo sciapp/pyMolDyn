@@ -188,7 +188,6 @@ class TreeList(QtGui.QTreeWidget):
             if (not item.data(0, 0).startswith('frame')):
                 # select the children of the selected dataset
                  for i in range(item.childCount()):
-                     # TODO selecting not working
                      c = item.child(i)
                      c.setSelected(True)
 

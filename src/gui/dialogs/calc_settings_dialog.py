@@ -104,7 +104,11 @@ class CalculationSettingsDialog(QtGui.QDialog):
         table_model = TableModel(self, data_list, header)
         self.table_view.setModel(table_model)
         self.table_view.resizeColumnsToContents()
-        self.table_view.resizeRowsToContents()
+        print self.table_view.model().columnCount(self.table_view)
+        width = (self.table_view.model().columnCount(self.table_view) - 1) + self.table_view.verticalHeader().width()
+        for i in range(self.table_view.model().columnCount(self.table_view)):
+            width += self.table_view.columnWidth(i)
+        self.table_view.setMinimumWidth(width)
 
     def lineedit_return(self):
         try:
@@ -143,18 +147,10 @@ class CalculationSettingsDialog(QtGui.QDialog):
         center_based = self.center_check.checkState() == QtCore.Qt.CheckState.Checked
         overwrite = self.overwrite_check.checkState() == QtCore.Qt.CheckState.Checked
 
-        print  self.file_frame_dict, \
-               self.resolution, \
-               True, \
-               surface_based, \
-               center_based, \
-               overwrite, \
-               ok
-
-#        return calculation.CalculationSettings(self.file_frame_dict,
-#                                               self.resolution,
-#                                               True,
-#                                               surface_based,
-#                                               center_based,
-#                                               overwrite), \
-#                                               ok
+        return calculation.CalculationSettings(self.file_frame_dict,
+                                               self.resolution,
+                                               True,
+                                               surface_based,
+                                               center_based,
+                                               overwrite), \
+                                               ok
