@@ -96,12 +96,12 @@ class CalculationSettings(object):
         datasets = dict()
         for filename, frames in self.datasets.iteritems():
             datasets[filename] = [f for f in frames]
-        dup = self.__class__(datasets, self.resolution)
-        dup.domains = self.domains,
-        dup.surface_cavities = self.surface_cavities,
-        dup.center_cavities = self.center_cavities,
-        dup.recalculate = self.recalculate,
-        dup.export = self.export,
+        dup = CalculationSettings(datasets, self.resolution)
+        dup.domains = self.domains
+        dup.surface_cavities = self.surface_cavities
+        dup.center_cavities = self.center_cavities
+        dup.recalculate = self.recalculate
+        dup.export = self.export
         dup.exportfile = self.exportfile
         dup.bonds = self.bonds
         dup.dihedral_angles = self.dihedral_angles
