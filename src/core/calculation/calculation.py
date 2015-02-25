@@ -191,11 +191,12 @@ class Calculation(object):
         """
         inputfile = File.open(filepath)
         # TODO: error handling
+        results = None
         if isinstance(inputfile, core.file.ResultFile):
             results = inputfile.getresults(frame, resolution)
         elif filepath in self.cache:
             results = self.cache[filepath].getresults(frame, resolution)
-        else:
+        if results is None:
             results = data.Results(filepath, frame, resolution, inputfile.getatoms(frame), None, None, None)
         return results
 
