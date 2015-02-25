@@ -30,6 +30,9 @@ class Visualization(object):
         self.far = 3 * self.d
         self.fov = 45.0
 
+        self.width = 0
+        self.height = 0
+
         self.results = None
         self.settings = VisualizationSettings()
 
@@ -47,6 +50,8 @@ class Visualization(object):
         self.max_side_lengths = max_side_lengths
         self.far = 6 * max_side_lengths
         self.create_scene()
+        if self.width != 0 and self.height != 0:
+            self.paint(self.width, self.height)
 
     def create_scene(self):
         """
@@ -185,6 +190,8 @@ class Visualization(object):
         """
         Refresh the OpenGL scene.
         """
+        self.width = width
+        self.height = height
         self.set_camera(width, height)
         gr3.drawimage(0, width, 0, height, width, height, gr3.GR3_Drawable.GR3_DRAWABLE_OPENGL)
 
