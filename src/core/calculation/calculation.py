@@ -39,11 +39,10 @@ class CalculationSettings(object):
     Structure to store the parameters for one or more calculation.
 
     **Attributes:**
-        `filenames` :
-            list of names of input files, from which the atoms will be loaded
-        `frames` :
-            list of frame numbers which are used for every filename
-            in `filenames`. ``[-1]`` means 'all frames'.
+        `datasets` :
+            Dictionary, which contains filenames (Strings) as keys.
+            Each value is a list of Integers, which contains the frames.
+            The value ``[-1]`` means 'all frames'.
         `resolution` :
             resolution parameter for the discretization
         `domains` :
@@ -52,48 +51,61 @@ class CalculationSettings(object):
             calculate surface-based cavities
         `center_cavities` :
             calculate center-based cavities
+        `recalculate` :
+            results will be calculated even if cached results exists
+        `export` :
+            ``True`` if the results should be written into a file.
+            If ``False``, they are stored in the cache.
+        `exportfiles` :
+            Dictionary which associates input file name and output file name.
+            Only used, when `export` is ``True``. If `exportfiles` is ``None``,
+            a standard filename will be used.
         `bonds` :
             calculate bonds
         `dihedral_angles` :
             calculate dihedral angles
-        `recalculate` :
-            results will be calculated even if cached results exists
     """
 
     def __init__(self,
-                 filenames,
-                 frames=[-1],
+                 datasets,
                  resolution=config.Computation.std_resolution,
                  domains=False,
                  surface_cavities=False,
                  center_cavities=False,
-                 recalculate=False):
+                 recalculate=False,
+                 export=False,
+                 exportfiles=None):
         """
         """
-        self.filenames = list(filenames)
-        self.frames = frames
+        self.datasets = datasets
         self.resolution = resolution
         self.domains = domains
         self.surface_cavities = surface_cavities
         self.center_cavities = center_cavities
+        self.recalculate = recalculate
+        self.export = export
+        self.exportfiles = exportfiles
         self.bonds = False
         self.dihedral_angles = False
-        self.recalculate = recalculate
 
     def copy(self):
         """
         **Returns:**
             A deep copy of this object.
         """
-        filenames = [f for f in self.filenames]
-        frames = [f for f in self.frames]
-        return CalculationSettings(filenames,
-                                   frames,
-                                   self.resolution,
-                                   self.domains,
-                                   self.surface_cavities,
-                                   self.center_cavities,
-                                   self.recalculate)
+        datasets = dict()
+        for filename, frames in self.datasets.iteritems():
+            datasets[filename] = [f for f in frames]
+        dup = self.__class__(datasets, self.resolution)
+        dup.domains = self.domains
+        dup.surface_cavities = self.surface_cavities
+        dup.center_cavities = self.center_cavities
+        dup.recalculate = self.recalculate
+        dup.export = self.export
+        dup.exportfiles = self.exportfiles
+        dup.bonds = self.bonds
+        dup.dihedral_angles = self.dihedral_angles
+        return dup
 
 
 class Calculation(object):
@@ -169,7 +181,7 @@ class Calculation(object):
         return not self.timestamp(filepath, frame,
                                   resolution, surface, center) is None
 
-    def getresults(self, filepath, frame, resolution, surface=False, center=False):
+    def getresults(self, filepath, frame, resolution=None, surface=False, center=False):
         """
         Get cached results for the given parameters.
 
@@ -191,12 +203,24 @@ class Calculation(object):
         """
         inputfile = File.open(filepath)
         # TODO: error handling
+        resultfile = None
         results = None
         if isinstance(inputfile, core.file.ResultFile):
-            results = inputfile.getresults(frame, resolution)
+            resultfile = inputfile
         elif filepath in self.cache:
-            results = self.cache[filepath].getresults(frame, resolution)
+            resultfile = self.cache[filepath]
+        if resultfile is not None:
+            if resolution is None:
+                resolutions = sorted(resultfile.info.resolutions())[::-1]
+                resolution = 64
+                for res in resolutions:
+                    if resultfile.info[res].domains[frame] is not None:
+                        resolution = res
+                        break
+            results = resultfile.getresults(frame, resolution)
         if results is None:
+            if resolution is None:
+                resolution = 64
             results = data.Results(filepath, frame, resolution, inputfile.getatoms(frame), None, None, None)
         return results
 
@@ -302,14 +326,24 @@ class Calculation(object):
             `calcsettings.frames`.
         """
         allresults = []
-        for filename in calcsettings.filenames:
-            fileresults = []
+        for filename, frames in calcsettings.datasets.iteritems():
             filepath = os.path.abspath(filename)
-            if calcsettings.frames[0] == -1:
+            if calcsettings.export:
+                if calcsettings.exportfiles is None or \
+                        filename not in calcsettings.exportfiles:
+                    efpath = ".".join(filename.split(".")[:-1]) + ".hdf5"
+                else:
+                    efpath = calcsettings.exportfiles[filename]
+                efpath = os.path.abspath(efpath)
+                # copy atoms into HDF5 file
+                exportfile = core.file.HDF5File.fromInputFile(efpath, filepath)
+                # use HDF5 file as input
+                filepath = efpath
+
+            fileresults = []
+            if frames[0] == -1:
                 inputfile = File.open(filepath)
                 frames = range(inputfile.info.num_frames)
-            else:
-                frames = calcsettings.frames
             for frame in frames:
                 frameresult = self.calculateframe(
                     filepath,
