@@ -116,27 +116,66 @@ def find_bond_chains(atoms, source_index, atom_bonds, length=3, previous_bond_ch
                 bond_chains.append(new_bond_chain)
     return bond_chains
 
+def export_bonds(filename, bond_target_index_arrays):
 
-def main():
-    file_name = sys.argv[1]
-    frame = int(sys.argv[2])
-    f = file.File.open(file_name)
-    atoms = f.getatoms(frame)
-    bond_target_index_arrays = get_bonds_with_constant_delta(atoms, 2.8)
-    #bond_target_index_arrays = get_bonds_with_radii(atoms, 1.15)
-    bond_angles, bond_chain_angles = calculate_bond_angles(atoms, bond_target_index_arrays)
-    with open("bonds.txt", 'w') as outfile:
+    with open(filename, "w") as outfile:
         for source_index, target_indices in enumerate(bond_target_index_arrays):
-            for target_index in target_indices:
+            for target_index in target_index:
                 outfile.write("{} {}\n".format(source_index, target_index))
-    with open("bond_angles.txt", 'w') as outfile:
+
+def export_bond_angles(filename, bond_angles):
+    with open(filename, "w") as outfile:
         for bond1, bond2 in bond_angles.keys():
             if bond1[0] > bond2[1]:
-                outfile.write("{} {} {} {}\n".format(bond1[0], bond1[1], bond2[1], bond_angles[bond1, bond2]))
-    with open("bond_dihedral_angles.txt", 'w') as outfile:
+                outfile.write("{} {} {} {}\n".format(bond1[0], bond1[1], bond_angles[bond1, bond2]))
+
+def export_bond_dihedral_angles(filename, bond_chain_angles):
+    with open(filename, "w") as outfile:
         for bond_chain, angle in bond_chain_angles.items():
             outfile.write("{} {} {} {}".format(*bond_chain))
             outfile.write(" {}\n".format(angle))
+
+def get_atoms():
+    file_name = sys.argv[1]
+    frame = int(sys.argv[2])
+    f = file.File.open(file_name)
+    return f.getatoms(frame)
+
+def get_bond_angles():
+    bond_angles, bond_chain_angles = calculate_bond_angles(get_atoms(), get_bonds_with_constant_delta(get_bond_angles(), 2.8))
+    return bond_angles
+
+def get_bond_chain_angles():
+    bond_angles, bond_chain_angles = calculate_bond_angles(get_atoms(), get_bonds_with_constant_delta(get_bond_angles(), 2.8))
+    return bond_chain_angles
+
+
+def main():
+    #file_name = sys.argv[1]
+    #frame = int(sys.argv[2])
+    #f = file.File.open(file_name)
+    #atoms = f.getatoms(frame)
+
+    #bond_target_index_arrays = get_bonds_with_constant_delta(get_atoms(), 2.8)
+    #bond_target_index_arrays = get_bonds_with_radii(atoms, 1.15)
+    #bond_angles, bond_chain_angles = calculate_bond_angles(get_atoms(), bond_target_index_arrays)
+
+    export_bonds("bonds.txt", get_bonds_with_constant_delta(get_atoms(), 2.8))
+    export_bond_angles("bond_angles.txt", get_bond_angles())
+    export_bond_dihedral_angles("bond_dihedral_angles.txt", get_bond_chain_angles())
+
+#    with open("bonds.txt", 'w') as outfile:
+#        for source_index, target_indices in enumerate(bond_target_index_arrays):
+#            for target_index in target_indices:
+#                outfile.write("{} {}\n".format(source_index, target_index))
+#    with open("bond_angles.txt", 'w') as outfile:
+#        for bond1, bond2 in bond_angles.keys():
+#            if bond1[0] > bond2[1]:
+#                outfile.write("{} {} {} {}\n".format(bond1[0], bond1[1], bond2[1], bond_angles[bond1, bond2]))
+#    with open("bond_dihedral_angles.txt", 'w') as outfile:
+#        for bond_chain, angle in bond_chain_angles.items():
+#            outfile.write("{} {} {} {}".format(*bond_chain))
+#            outfile.write(" {}\n".format(angle))
 
 if __name__ == '__main__':
     main()
