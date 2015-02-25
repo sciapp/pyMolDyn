@@ -231,6 +231,23 @@ class HDF5File(ResultFile):
     def __init__(self, path, sourcefilepath=None):
         super(HDF5File, self).__init__(path, sourcefilepath)
 
+    @classmethod
+    def fromInputFile(cls, filepath, sourcefilepath):
+        """
+        Create a new :class:`HDF5File`. Copy atoms from an
+        :class:`InputFile`. This is used to initially create a file
+        to export results to.
+        """
+        inputfile = File.open(sourcefilepath)
+        outputfile = cls(filepath, sourcefilepath)
+        for frame in range(inputfile.info.num_frames):
+            atoms = inputfile.getatoms(frame)
+            results = data.Results(filepath, frame, 64, atoms, None, None, None)
+            outputfile.writeresults(results)
+        outputfile.readinfo()
+        outputfile.writeinfo()
+        return outputfile
+
     def readatoms(self, frame):
         atoms = None
         if not os.path.isfile(self.path):
@@ -275,6 +292,9 @@ class HDF5File(ResultFile):
                 raise
             except Exception as e:
                 raise FileError("Cannot read file info.", e)
+
+        if not self.inforead:
+            raise RuntimeError("No File Info in this file and the source file.")
 
     def writeinfo(self):
         try:
@@ -325,8 +345,11 @@ class HDF5File(ResultFile):
                 group = f.require_group("atoms/frame{}".format(results.frame))
                 # TODO: is it OK to never overwrite atoms?
                 results.atoms.tohdf(group, overwrite=False)
-                group = f.require_group("results/frame{}/resolution{}".format(
-                                        results.frame, results.resolution))
+                if results.domains is not None or \
+                        results.surface_cavities is not None or\
+                        results.center_cavities is not None:
+                    group = f.require_group("results/frame{}/resolution{}".format(
+                                            results.frame, results.resolution))
                 if results.domains is not None:
                     subgroup = group.require_group("domains")
                     results.domains.tohdf(subgroup, overwrite=overwrite)
@@ -363,6 +386,8 @@ class File(object):
         **Returns:**
             A list of filenames which can be opened.
         """
+        if not directory:
+            directory = "."
         return [f for f in os.listdir(directory)
                 if os.path.isfile(os.path.join(directory, f))
                 and f.split(".")[-1] in cls.types]
@@ -403,4 +428,4 @@ class File(object):
         """
         name = os.path.basename(filepath)
         directory = os.path.dirname(filepath)
-        return name in cls.filelist(directory)
+        return name in cls.listdir(directory)

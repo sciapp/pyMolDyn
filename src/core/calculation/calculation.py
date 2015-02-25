@@ -96,7 +96,7 @@ class CalculationSettings(object):
         datasets = dict()
         for filename, frames in self.datasets.iteritems():
             datasets[filename] = [f for f in frames]
-        dup = CalculationSettings(datasets, self.resolution)
+        dup = self.__class__(datasets, self.resolution)
         dup.domains = self.domains
         dup.surface_cavities = self.surface_cavities
         dup.center_cavities = self.center_cavities
@@ -181,7 +181,7 @@ class Calculation(object):
         return not self.timestamp(filepath, frame,
                                   resolution, surface, center) is None
 
-    def getresults(self, filepath, frame, resolution, surface=False, center=False):
+    def getresults(self, filepath, frame, resolution=None, surface=False, center=False):
         """
         Get cached results for the given parameters.
 
@@ -203,12 +203,24 @@ class Calculation(object):
         """
         inputfile = File.open(filepath)
         # TODO: error handling
+        resultfile = None
         results = None
         if isinstance(inputfile, core.file.ResultFile):
-            results = inputfile.getresults(frame, resolution)
+            resultfile = inputfile
         elif filepath in self.cache:
-            results = self.cache[filepath].getresults(frame, resolution)
+            resultfile = self.cache[filepath]
+        if resultfile is not None:
+            if resolution is None:
+                resolutions = sorted(resultfile.info.resolutions())[::-1]
+                resolution = 64
+                for res in resolutions:
+                    if resultfile.info[res].domains[frame] is not None:
+                        resolution = res
+                        break
+            results = resultfile.getresults(frame, resolution)
         if results is None:
+            if resolution is None:
+                resolution = 64
             results = data.Results(filepath, frame, resolution, inputfile.getatoms(frame), None, None, None)
         return results
 
@@ -319,19 +331,14 @@ class Calculation(object):
             if calcsettings.export:
                 if calcsettings.exportfiles is None or \
                         filename not in calcsettings.exportfiles:
-                    fpath = ".".join(filename.split(".")[:-1]) + ".hdf5"
+                    efpath = ".".join(filename.split(".")[:-1]) + ".hdf5"
                 else:
-                    fpath = calcsettings.exportfiles[filename]
-                exportfile = core.file.HDF5File(os.path.abspath(fpath), filepath)
-# TODO: do this in file.py
-                # store input data in export file
-                inputfile = File.open(filepath)
-                for frame in range(inputfile.info.num_frames):
-                    atoms = inputfile.getatoms(frame)
-                    results = data.Results(filepath, frame, 64, atoms, None, None, None)
-                    exportfile.addresults(results)
-                # now use the export file an input file
-                filepath = os.path.abspath(fpath)
+                    efpath = calcsettings.exportfiles[filename]
+                efpath = os.path.abspath(efpath)
+                # copy atoms into HDF5 file
+                exportfile = core.file.HDF5File.fromInputFile(efpath, filepath)
+                # use HDF5 file as input
+                filepath = efpath
 
             fileresults = []
             if frames[0] == -1:

@@ -322,6 +322,9 @@ class ResultInfo(FileInfo):
         """
         return resolution in self.calculatedframes
 
+    def resolutions(self):
+        return self.calculatedframes.keys()
+
     def tohdf(self, h5group, overwrite=True):
         """
         Write the data to a hdf5 Group.

@@ -8,6 +8,7 @@ from gui.dialogs.progress_dialog import ProgressDialog
 from config.configuration import config
 from util.message import print_message, progress, finish
 from gui.gl_widget import GLWidget, UpdateGLEvent
+from core.file import File
 
 
 class FileTabDock(QtGui.QDockWidget):
@@ -236,7 +237,7 @@ class TreeList(QtGui.QTreeWidget):
         f = file.File.open(path)
         n_frames = f.info.num_frames
 
-        if bname not in self.path_dict.keys() and path.endswith('.xyz'):
+        if bname not in self.path_dict.keys() and File.exists(path):
             self.path_dict[bname] = str(path)
             root = bname
             sib = ['frame {}'.format(i) for i in range(1, n_frames + 1)]
