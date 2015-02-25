@@ -181,7 +181,7 @@ class Calculation(object):
         return not self.timestamp(filepath, frame,
                                   resolution, surface, center) is None
 
-    def getresults(self, filepath, frame, resolution, surface=False, center=False):
+    def getresults(self, filepath, frame, resolution=None, surface=False, center=False):
         """
         Get cached results for the given parameters.
 
@@ -203,12 +203,24 @@ class Calculation(object):
         """
         inputfile = File.open(filepath)
         # TODO: error handling
+        resultfile = None
         results = None
         if isinstance(inputfile, core.file.ResultFile):
-            results = inputfile.getresults(frame, resolution)
+            resultfile = inputfile
         elif filepath in self.cache:
-            results = self.cache[filepath].getresults(frame, resolution)
+            resultfile = self.cache[filepath]
+        if resultfile is not None:
+            if resolution is None:
+                resolutions = sorted(resultfile.info.resolutions())[::-1]
+                resolution = 64
+                for res in resolutions:
+                    if resultfile.info[res].domains[frame] is not None:
+                        resolution = res
+                        break
+            results = resultfile.getresults(frame, resolution)
         if results is None:
+            if resolution is None:
+                resolution = 64
             results = data.Results(filepath, frame, resolution, inputfile.getatoms(frame), None, None, None)
         return results
 

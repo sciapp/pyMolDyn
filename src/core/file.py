@@ -292,7 +292,8 @@ class HDF5File(ResultFile):
                 raise
             except Exception as e:
                 raise FileError("Cannot read file info.", e)
-        else:
+
+        if not self.inforead:
             raise RuntimeError("No File Info in this file and the source file.")
 
     def writeinfo(self):
