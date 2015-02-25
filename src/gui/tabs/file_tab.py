@@ -2,6 +2,7 @@
 
 from PySide import QtCore, QtGui
 import os.path
+from gui.gl_widget import GLWidget, UpdateGLEvent
 from core import calculation, volumes, file
 from gui.dialogs.calc_settings_dialog import CalculationSettingsDialog
 from gui.dialogs.progress_dialog import ProgressDialog
@@ -260,3 +261,9 @@ class TreeList(QtGui.QTreeWidget):
             return
 
         self.control.visualize(filename, frame)
+
+        # update GL scene
+        for widget in QtGui.QApplication.topLevelWidgets():
+            for gl_widget in widget.findChildren(GLWidget):
+                gl_widget.update_needed = True
+                QtGui.QApplication.postEvent(gl_widget, UpdateGLEvent())
