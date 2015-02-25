@@ -123,10 +123,10 @@ class FileTab(QtGui.QWidget):
             return
         dia = CalculationSettingsDialog(self, file_frame_dict)
         settings, ok = dia.calculation_settings()
-# TODO
-#        if ok:
-#            self.control.calculationcallback = self.calculationcallback
-#            self.control.calculate(settings)
+
+        if ok:
+            self.control.calculationcallback = self.calculationcallback
+            self.control.calculate(settings)
 
 class TreeList(QtGui.QTreeWidget):
 

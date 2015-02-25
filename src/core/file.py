@@ -327,8 +327,9 @@ class HDF5File(ResultFile):
                 results.atoms.tohdf(group, overwrite=False)
                 group = f.require_group("results/frame{}/resolution{}".format(
                                         results.frame, results.resolution))
-                subgroup = group.require_group("domains")
-                results.domains.tohdf(subgroup, overwrite=overwrite)
+                if results.domains is not None:
+                    subgroup = group.require_group("domains")
+                    results.domains.tohdf(subgroup, overwrite=overwrite)
                 if results.surface_cavities is not None:
                     subgroup = group.require_group("surface_cavities")
                     results.surface_cavities.tohdf(subgroup, overwrite=overwrite)

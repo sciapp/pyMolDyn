@@ -56,9 +56,9 @@ class CalculationSettings(object):
         `export` :
             ``True`` if the results should be written into a file.
             If ``False``, they are stored in the cache.
-        `exportfile` :
-            Path to the file where the results should be stored.
-            Only used, when `export` is ``True``. If `exportfile` is ``None``,
+        `exportfiles` :
+            Dictionary which associates input file name and output file name.
+            Only used, when `export` is ``True``. If `exportfiles` is ``None``,
             a standard filename will be used.
         `bonds` :
             calculate bonds
@@ -74,7 +74,7 @@ class CalculationSettings(object):
                  center_cavities=False,
                  recalculate=False,
                  export=False,
-                 exportfile=None):
+                 exportfiles=None):
         """
         """
         self.datasets = datasets
@@ -84,7 +84,7 @@ class CalculationSettings(object):
         self.center_cavities = center_cavities
         self.recalculate = recalculate
         self.export = export
-        self.exportfile = exportfile
+        self.exportfiles = exportfiles
         self.bonds = False
         self.dihedral_angles = False
 
@@ -102,7 +102,7 @@ class CalculationSettings(object):
         dup.center_cavities = self.center_cavities
         dup.recalculate = self.recalculate
         dup.export = self.export
-        dup.exportfile = self.exportfile
+        dup.exportfiles = self.exportfiles
         dup.bonds = self.bonds
         dup.dihedral_angles = self.dihedral_angles
         return dup
@@ -315,8 +315,25 @@ class Calculation(object):
         """
         allresults = []
         for filename, frames in calcsettings.datasets.iteritems():
-            fileresults = []
             filepath = os.path.abspath(filename)
+            if calcsettings.export:
+                if calcsettings.exportfiles is None or \
+                        filename not in calcsettings.exportfiles:
+                    fpath = ".".join(filename.split(".")[:-1]) + ".hdf5"
+                else:
+                    fpath = calcsettings.exportfiles[filename]
+                exportfile = core.file.HDF5File(os.path.abspath(fpath), filepath)
+# TODO: do this in file.py
+                # store input data in export file
+                inputfile = File.open(filepath)
+                for frame in range(inputfile.info.num_frames):
+                    atoms = inputfile.getatoms(frame)
+                    results = data.Results(filepath, frame, 64, atoms, None, None, None)
+                    exportfile.addresults(results)
+                # now use the export file an input file
+                filepath = os.path.abspath(fpath)
+
+            fileresults = []
             if frames[0] == -1:
                 inputfile = File.open(filepath)
                 frames = range(inputfile.info.num_frames)
