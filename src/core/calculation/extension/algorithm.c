@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <math.h>
+#include <stdint.h>
 #include <limits.h>
 #include <gr3.h>
 
