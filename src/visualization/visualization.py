@@ -49,8 +49,6 @@ class Visualization(object):
         self.max_side_lengths = max_side_lengths
         self.far = 6 * max_side_lengths
         self.create_scene()
-        print "setresults"
-        print results.filepath, results.resolution, results.domains, results.surface_cavities
         if self.width != 0 and self.height != 0:
             self.paint(self.width, self.height)
 

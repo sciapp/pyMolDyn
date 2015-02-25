@@ -134,6 +134,3 @@ class CentralWidget(QtGui.QWidget):
     def on_combo(self, string):
         index = self.widget_titles.index(string)
         self.gl_stack.setCurrentIndex(index)
-
-    def show_dataset(self, results):
-        self.gl_widget.show_dataset(results)

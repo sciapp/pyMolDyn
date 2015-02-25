@@ -270,6 +270,11 @@ class TreeList(QtGui.QTreeWidget):
 
         self.control.visualize(filename, frame)
 
+        widget = self
+        while not hasattr(widget, "updatestatus"):
+            widget = widget.parent()
+        widget.updatestatus()
+
         # update GL scene
         for widget in QtGui.QApplication.topLevelWidgets():
             for gl_widget in widget.findChildren(GLWidget):
