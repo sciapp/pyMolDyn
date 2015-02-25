@@ -13,7 +13,6 @@ import os
 from ctypes import c_int
 from util.gl_util import create_perspective_projection_matrix, create_look_at_matrix, create_rotation_matrix_homogenous, create_translation_matrix_homogenous
 
-
 class Visualization(object):
     """
     Visualize Atoms and Cavities with GR3
@@ -29,6 +28,9 @@ class Visualization(object):
         self.near = 0.1
         self.far = 3 * self.d
         self.fov = 45.0
+
+        self.width = 0
+        self.height = 0
 
         self.results = None
         self.settings = VisualizationSettings()
@@ -47,6 +49,8 @@ class Visualization(object):
         self.max_side_lengths = max_side_lengths
         self.far = 6 * max_side_lengths
         self.create_scene()
+        if self.width != 0 and self.height != 0:
+            self.paint(self.width, self.height)
 
     def create_scene(self):
         """
@@ -185,6 +189,8 @@ class Visualization(object):
         """
         Refresh the OpenGL scene.
         """
+        self.width = width
+        self.height = height
         self.set_camera(width, height)
         gr3.drawimage(0, width, 0, height, width, height, gr3.GR3_Drawable.GR3_DRAWABLE_OPENGL)
 
@@ -193,6 +199,24 @@ class Visualization(object):
         Save a screenshot in the given resolution.
         """
         gr3.export(file_name, width, height)
+
+    def get_object_at_position(self, x, y, z):
+        if self.results is None:
+            return None
+        if self.results.atoms is not None:
+            positions = self.results.atoms.positions
+            distances = la.norm(positions - (x, y, z), axis=1)
+            nearest_atom_index = np.argmin(distances)
+
+            # calculate atom radius
+            edges = self.results.atoms.volume.edges
+            edge_directions = [[edge[1][i]-edge[0][i] for i in range(3)] for edge in edges]
+            edge_lengths = [sum([c*c for c in edge])**0.5 for edge in edge_directions]
+            edge_radius = min(edge_lengths)/200
+            atom_radius = 4*edge_radius
+
+            if 0.95 < distances[nearest_atom_index]/atom_radius < 1.05:
+                print('atom', nearest_atom_index)
 
 
 class VisualizationSettings(object):

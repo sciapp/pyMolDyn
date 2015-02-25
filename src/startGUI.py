@@ -27,7 +27,8 @@ if __name__ == '__main__':
 #    filename = '../xyz/hexagonal.xyz'
 
     control = window.control
-    settings = core.calculation.CalculationSettings([filename], [0], 32,
+    settings = core.calculation.CalculationSettings({filename: [0]},
+                                                    32,
                                                     domains=False,
                                                     surface_cavities=False,
                                                     center_cavities=False)

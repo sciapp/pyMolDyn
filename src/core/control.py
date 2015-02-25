@@ -100,6 +100,16 @@ class Control(object):
             if len(self.results) > 0:
                 self.visualization.setresults(self.results[-1][-1])
 
+    def visualize(self, filename, frame, resolution=None):
+        """
+        Visualize the given frame. if the ``resolution`` parameter is not set,
+        this function uses the highest resolution available to show
+        calculation results.
+        """
+        results = self.calculation.getresults(filename, frame, resolution)
+        self.results = [[results]]
+        self.update()
+
     @staticmethod
     def defaultcallback(func, settings):
         func(settings)
