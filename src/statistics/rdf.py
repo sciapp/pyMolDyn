@@ -149,7 +149,7 @@ class RDF(object):
             A sorted sample.
         """
         if volume is None:
-            distance = lambda x, y: y-x
+            distance = lambda x, y: np.abs(y-x)
         else:
             distance = volume.get_distance
 

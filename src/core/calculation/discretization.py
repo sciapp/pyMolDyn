@@ -6,6 +6,13 @@ import numpy as np
 import h5py
 from util.message import print_message, progress, finish
 import algorithm
+from extension import mark_translation_vectors
+try:
+    import numexpr as ne
+    NUMEXPR = True
+except ImportError:
+    NUMEXPR = False
+
 
 __all__ = ["DiscretizationCache",
            "AtomDiscretization"]
@@ -117,6 +124,7 @@ class Discretization(object):
         # step 3
         self.translation_vectors = [[int(floor(c / self.s_step + 0.5)) for c in v] for v in
                                     self.volume.translation_vectors]
+        # TODO: remove unnecesary vectors in hexagonal volumes
         self.combined_translation_vectors = [
             [sum([v[0][j] * v[1] for v in zip(self.translation_vectors, i)]) for j in dimensions] for i in
             itertools.product((-1, 0, 1), repeat=dimension) if any(i)]
@@ -126,46 +134,21 @@ class Discretization(object):
         else:
             # step 4
             self.grid = np.zeros(self.d, dtype=np.int8)
-            for p in itertools.product(*map(range, self.d)):
-                point = self.discrete_to_continuous(p)
-                if self.volume.is_inside(point):
-                    self.grid[p] = 0
-                else:
-                    self.grid[p] = 1
-            if False:
-                # step 5
-                for p in itertools.product(*map(range, self.d)):
-                    equivalent_points = [[p[i] + v[i] for i in dimensions] for v in self.combined_translation_vectors]
-                    valid_equivalent_points = [tuple(point) for point in equivalent_points if
-                                               all([0 <= point[i] <= self.d[i] - 1 for i in dimensions])]
-                    if self.grid[p] == 0:
-                        equivalent_points_inside = [point for point in valid_equivalent_points if self.grid[point] == 0]
-                        for point in equivalent_points_inside:
-                            self.grid[point] = 1
-                # step 6 & 7
-                for p in itertools.product(*map(range, self.d)):
-                    equivalent_points = [([p[i] + v[i] for i in dimensions], vi) for vi, v in
-                                         enumerate(self.combined_translation_vectors)]
-                    valid_equivalent_points = [(tuple(point), vi) for point, vi in equivalent_points if
-                                               all([0 <= point[i] <= self.d[i] - 1 for i in dimensions])]
-                    if self.grid[p] == 1:
-                        equivalent_points_inside = [(point, vi) for point, vi in valid_equivalent_points if
-                                                    self.grid[point] == 0]
-                        if not equivalent_points_inside:
-                            nearest_to_center = p
-                            nearest_to_center_index = -1  # -1 -> -(-1+1) == 0
-                            min_d_center = sum([(p[i] - self.d[i] / 2) * (p[i] - self.d[i] / 2) for i in dimensions])
-                            for p2, vi in valid_equivalent_points:
-                                d_center = sum([(p2[i] - self.d[i] / 2) * (p2[i] - self.d[i] / 2) for i in dimensions])
-                                if d_center < min_d_center:
-                                    min_d_center = d_center
-                                    nearest_to_center = p2
-                                    nearest_to_center_index = vi
-                            self.grid[nearest_to_center] = 0
-                            self.grid[p] = -(nearest_to_center_index + 1)
-                        else:
-                            combined_translation_vector_index = equivalent_points_inside[0][1]
-                            self.grid[p] = -(combined_translation_vector_index + 1)
+            # create array similar to itertools.product
+            order = [i + 1 for i in range(dimension)] + [0]
+            points = np.indices(self.d).transpose(*order).reshape((-1, dimension))
+            # choose points that are not inside
+            inside = self.volume.is_inside(self.discrete_to_continuous(points))
+            outside_points = points.compress(np.logical_not(inside), axis=0)
+            del points
+            # convert to tuple of indices
+            indices = [outside_points[:, i] for i in range(dimension)]
+            self.grid[indices] = 1
+            del outside_points
+            del inside
+            del indices
+            # steps 5, 6, 7
+            mark_translation_vectors(self.grid, self.combined_translation_vectors)
         print_message("translation vectors", self.translation_vectors)
 
     def get_direct_neighbors(self, point):
@@ -209,13 +192,26 @@ class Discretization(object):
         """
         Transforms a point from continuous to discrete coordinates.
         """
-        return tuple([int(floor((point[i] + self.s_tilde[i] / 2) / self.s_step + 0.5)) for i in dimensions])
+        if isinstance(point, np.ndarray) and len(point.shape) > 1:
+            s_tilde_bc = np.tile(self.s_tilde, (point.shape[0], 1))
+            return np.array(np.floor((point + s_tilde_bc / 2) / self.s_step + 0.5), dtype=np.int)
+        else:
+            return tuple([int(floor((point[i] + self.s_tilde[i] / 2) / self.s_step + 0.5)) for i in dimensions])
 
     def discrete_to_continuous(self, point):
         """
         Transforms a point from discrete to continuous coordinates.
         """
-        return tuple([point[k] * self.s_step - self.s_tilde[k] / 2 for k in dimensions])
+        if isinstance(point, np.ndarray) and len(point.shape) > 1:
+            if NUMEXPR:
+                s_tilde_bc = np.tile(self.s_tilde, (point.shape[0], 1))
+                s_step = self.s_step
+                return ne.evaluate("point * s_step - s_tilde_bc / 2")
+            else:
+                s_tilde_bc = np.tile(self.s_tilde, (point.shape[0], 1))
+                return point * self.s_step - s_tilde_bc / 2
+        else:
+            return tuple([point[k] * self.s_step - self.s_tilde[k] / 2 for k in dimensions])
 
     def __repr__(self):
         return repr(self.volume) + " d_max=%d" % self.d_max

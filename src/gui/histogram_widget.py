@@ -7,7 +7,10 @@ from gr.pygr import *
 try:
     from PySide import shiboken
 except ImportError:
-    import shiboken
+    try:
+        import shiboken
+    except ImportError:
+        from Shiboken import shiboken
 
 from util.logger import Logger
 import sys

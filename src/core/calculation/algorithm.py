@@ -78,6 +78,7 @@ from computation.split_and_merge.pipeline import start_split_and_merge_pipeline
 import util.colored_exceptions
 import time
 from util.message import print_message, progress, finish
+from extension import atomstogrid, mark_cavities, cavity_triangles, cavity_intersections
 
 
 dimension = 3
@@ -91,8 +92,7 @@ class DomainCalculation:
         discretization and filled with zeros.
      2. For each atom, all points in the grid closer to this atom than the
         discrete cavity cutoff radius are set to a point indicating the atom
-        index (atom_index+1). This is done with a 'sphere grid', which can be
-        reused for atoms with the same discrete radius.
+        index (atom_index+1).
      3. At this point, every point in the grid which is inside of the volume
         and still has a value of zero is part of a cavity domain. To find these
         domains, an optimized split and merge algorithm is applied to the whole
@@ -109,28 +109,12 @@ class DomainCalculation:
         self.grid = np.zeros(self.discretization.d, dtype=np.int64)
 
         # step 2
-        last_radius_index = -1  # (for reuse of sphere grids)
-        atom_information = itertools.izip(range(len(self.atom_discretization.discrete_positions)),
-                                          self.atom_discretization.atoms.radii_as_indices,
-                                          self.atom_discretization.discrete_positions)
-        for atom_index, radius_index, real_discrete_position in atom_information:
-            discrete_radius = self.atom_discretization.sorted_discrete_radii[radius_index]
-            if radius_index != last_radius_index:
-                last_radius_index = radius_index
-                sphere_grid = np.zeros([discrete_radius * 2 + 1 for i in dimensions], dtype=np.bool)
-                for point in itertools.product(range(discrete_radius * 2 + 1), repeat=dimension):
-                    squared_distance_to_grid_center = sum(
-                        [(point[i] - discrete_radius) * (point[i] - discrete_radius) for i in dimensions])
-                    sphere_grid[point] = (squared_distance_to_grid_center <= discrete_radius * discrete_radius)
-            for v in self.discretization.combined_translation_vectors + [(0, 0, 0)]:
-                discrete_position = [real_discrete_position[i] + v[i] for i in dimensions]
-                for point in itertools.product(range(discrete_radius * 2 + 1), repeat=dimension):
-                    if sphere_grid[point]:
-                        p = [point[i] - discrete_radius + discrete_position[i] for i in dimensions]
-                        if all([0 <= p[i] <= self.discretization.d[i] - 1 for i in dimensions]):
-                            grid_value = self.discretization.grid[tuple(p)]
-                            if grid_value == 0:
-                                self.grid[tuple(p)] = atom_index + 1
+        atomstogrid(self.grid,
+                    self.atom_discretization.discrete_positions,
+                    self.atom_discretization.atoms.radii_as_indices,
+                    self.atom_discretization.sorted_discrete_radii,
+                    [(0, 0, 0)] + self.discretization.combined_translation_vectors,
+                    self.discretization.grid)
         # step 3
         self.centers, self.surface_point_list = start_split_and_merge_pipeline(self.grid, self.discretization.grid,
                                                                                self.atom_discretization.discrete_positions,
@@ -148,40 +132,23 @@ class DomainCalculation:
             return self.domain_triangles
         number_of_domains = len(self.centers)
         print_message(number_of_domains)
-        domain_triangles = []
-        domain_surface_areas = []
+        triangles = []
+        surface_areas = []
         step = (self.discretization.s_step,) * 3
         offset = self.discretization.discrete_to_continuous((0, 0, 0))
         for domain_index in range(number_of_domains):
             print_message("Calculating triangles for domain", domain_index)
-            grid_value = -(domain_index + 1)
-            grid = (self.grid == grid_value)
-            views = []
-            for x, y, z in itertools.product(*map(xrange, (3, 3, 3))):
-                view = grid[x:grid.shape[0] - 2 + x, y:grid.shape[1] - 2 + y, z:grid.shape[2] - 2 + z]
-                views.append(view)
-            grid = np.zeros(grid.shape, np.uint16)
-            grid[:, :, :] = 0
-            grid[1:-1, 1:-1, 1:-1] = sum(views) + 100
-            domain_triangles.append(triangulate(grid, step, offset, 101))
-            domain_surface_area = 0
-            for domain_triangle in domain_triangles[-1][0]:
-                any_outside = False
-                for vertex in domain_triangle:
-                    discrete_vertex = self.discretization.continuous_to_discrete(vertex)
-                    if self.discretization.grid[discrete_vertex] != 0:
-                        any_outside = True
-                        break
-                if not any_outside:
-                    v1, v2, v3 = domain_triangle
-                    a = v2 - v1
-                    b = v3 - v1
-                    triangle_surface_area = la.norm(np.cross(a, b)) * 0.5
-                    domain_surface_area += triangle_surface_area
-            domain_surface_areas.append(domain_surface_area)
-        self.domain_triangles = domain_triangles
-        self.domain_surface_areas = domain_surface_areas
-        return domain_triangles
+            vertices, normals, surface_area = cavity_triangles(
+                    self.grid,
+                    [domain_index],
+                    1, step, offset,
+                    self.discretization.grid)
+            triangles.append((vertices, normals))
+            surface_areas.append(surface_area)
+
+        self.domain_triangles = triangles
+        self.domain_surface_areas = surface_areas
+        return triangles
 
 
 class CavityCalculation:
@@ -229,76 +196,24 @@ class CavityCalculation:
             self.grid = self.domain_calculation.grid
             num_surface_points = sum(map(len, self.domain_calculation.surface_point_list))
             print_message("number of surface points:", num_surface_points)
+        else:
+            self.grid = None
 
-        # step 1
-        max_radius = self.domain_calculation.atom_discretization.sorted_discrete_radii[0]
-        self.sg_cube_size = max_radius
-        self.sgd = tuple(
-            [2 + int(ceil(1.0 * d / self.sg_cube_size)) + 2 for d in self.domain_calculation.discretization.d])
-        self.sg = []
-        for x in range(self.sgd[0]):
-            self.sg.append([])
-            for y in range(self.sgd[1]):
-                self.sg[x].append([])
-                for z in range(self.sgd[2]):
-                    self.sg[x][y].append([[], [], []])
-        # step 2
-        for atom_index, atom_position in enumerate(self.domain_calculation.atom_discretization.discrete_positions):
-            for v in self.domain_calculation.discretization.combined_translation_vectors + [(0, 0, 0)]:
-                real_atom_position = [atom_position[i] + v[i] for i in dimensions]
-                sgp = self.to_subgrid(real_atom_position)
-                self.sg[sgp[0]][sgp[1]][sgp[2]][0].append(real_atom_position)
-        # step 3
+        self.sg_cube_size = self.domain_calculation.atom_discretization.sorted_discrete_radii[0]
         if use_surface_points:
             domain_seed_point_lists = self.domain_calculation.surface_point_list
         else:
             domain_seed_point_lists = [[center] for center in self.domain_calculation.centers]
-        for domain_index, domain_seed_points in enumerate(domain_seed_point_lists):
-            for domain_seed_point in domain_seed_points:
-                for v in self.domain_calculation.discretization.combined_translation_vectors + [(0, 0, 0)]:
-                    real_domain_seed_point = [domain_seed_point[i] + v[i] for i in dimensions]
-                    sgp = self.to_subgrid(real_domain_seed_point)
-                    self.sg[sgp[0]][sgp[1]][sgp[2]][1].append(real_domain_seed_point)
-                    self.sg[sgp[0]][sgp[1]][sgp[2]][2].append(domain_index)
-        # step 4
-        self.grid3 = np.zeros(self.domain_calculation.discretization.d, dtype=np.int64)
-        for p in itertools.product(*map(range, self.domain_calculation.discretization.d)):
-            if use_surface_points:
-                grid_value = self.grid[p]
-                if grid_value == 0:  # outside the volume
-                    self.grid3[p] = 0
-                    possibly_in_cavity = False
-                elif grid_value < 0:  # cavity domain (stored as: -index-1), therefore guaranteed to be in a cavity
-                    self.grid3[p] = grid_value
-                    possibly_in_cavity = True
-                elif grid_value > 0:  # in radius of atom (stored as: index+1), therefore possibly in a cavity
-                    self.grid3[p] = 0
-                    possibly_in_cavity = True
-            else:
-                possibly_in_cavity = (self.domain_calculation.discretization.grid[p] == 0)
-            if possibly_in_cavity:
-                # step 5
-                min_squared_atom_distance = sys.maxint
-                sgp = self.to_subgrid(p)
-                for i in itertools.product((0, 1, -1), repeat=dimension):
-                    sgci = [sgp[j] + i[j] for j in dimensions]
-                    for atom_position in self.sg[sgci[0]][sgci[1]][sgci[2]][0]:
-                        squared_atom_distance = sum(
-                            [(atom_position[j] - p[j]) * (atom_position[j] - p[j]) for j in dimensions])
-                        min_squared_atom_distance = min(min_squared_atom_distance, squared_atom_distance)
-                for i in itertools.product((0, 1, -1), repeat=dimension):
-                    next = False
-                    sgci = [sgp[j] + i[j] for j in dimensions]
-                    for domain_index, domain_seed_point in zip(self.sg[sgci[0]][sgci[1]][sgci[2]][2],
-                                                               self.sg[sgci[0]][sgci[1]][sgci[2]][1]):
-                        squared_domain_seed_point_distance = sum(
-                            [(domain_seed_point[j] - p[j]) * (domain_seed_point[j] - p[j]) for j in dimensions])
-                        if squared_domain_seed_point_distance < min_squared_atom_distance:
-                            self.grid3[p] = -domain_index - 1
-                            next = True
-                            break
-                    if next:
-                        break
+
+        # steps 1 to 5
+        self.grid3 = mark_cavities(self.grid,
+                                   self.domain_calculation.discretization.grid,
+                                   self.domain_calculation.discretization.d,
+                                   self.sg_cube_size,
+                                   self.domain_calculation.atom_discretization.discrete_positions,
+                                   [(0, 0, 0)] + self.domain_calculation.discretization.combined_translation_vectors,
+                                   domain_seed_point_lists,
+                                   use_surface_points)
 
         num_domains = len(self.domain_calculation.centers)
         grid_volume = (self.domain_calculation.discretization.grid == 0).sum()
@@ -308,20 +223,7 @@ class CavityCalculation:
                 1.0 * (self.grid3 == -(domain_index + 1)).sum() * (self.domain_calculation.discretization.s_step ** 3))
 
         # step 6
-        intersection_table = np.zeros((num_domains, num_domains), dtype=np.int8)
-        directions = []
-        for dx, dy, dz in itertools.product((0, 1), repeat=3):
-            if any((dx > 0, dy > 0, dz > 0)):
-                directions.append((dx, dy, dz))
-        for p in itertools.product(*[range(x - 1) for x in self.domain_calculation.discretization.d]):
-            domain1 = -self.grid3[p] - 1
-            if domain1 != -1:
-                for direction in directions:
-                    p2 = tuple([p[i] + direction[i] for i in dimensions])
-                    domain2 = -self.grid3[p2] - 1
-                    if domain2 != -1:
-                        intersection_table[domain1][domain2] = 1
-                        intersection_table[domain2][domain1] = 1
+        intersection_table = cavity_intersections(self.grid3, num_domains)
         multicavities = []
         for domain in range(num_domains):
             neighbors = set([domain])
@@ -343,15 +245,6 @@ class CavityCalculation:
 
         self.triangles()
 
-    def to_subgrid(self, position):
-        sgp = [c / self.sg_cube_size + 2 for c in position]
-        for i in dimensions:
-            if sgp[i] < 0:
-                sgp[i] = 0
-            if sgp[i] >= self.sgd[i]:
-                sgp[i] = self.sgd[i] - 1
-        return tuple(sgp)
-
     def squared_distance(self, a, b):
         '''
         Calculates the squared distance between two points while taking the
@@ -365,40 +258,22 @@ class CavityCalculation:
     def triangles(self):
         if hasattr(self, "cavity_triangles"):
             return self.cavity_triangles
-        cavity_triangles = []
         step = (self.domain_calculation.discretization.s_step,) * 3
         offset = self.domain_calculation.discretization.discrete_to_continuous((0, 0, 0))
-        cavity_surface_areas = []
+        triangles = []
+        surface_areas = []
         for multicavity in self.multicavities:
             print_message(multicavity)
-            grid = np.zeros(self.grid3.shape, dtype=np.bool)
-            for cavity_index in multicavity:
-                grid = np.logical_or(grid, self.grid3 == -(cavity_index + 1))
-            views = []
-            for x, y, z in itertools.product(*map(xrange, (3, 3, 3))):
-                view = grid[x:grid.shape[0] - 2 + x, y:grid.shape[1] - 2 + y, z:grid.shape[2] - 2 + z]
-                views.append(view)
-            grid = np.zeros(grid.shape, np.uint16)
-            grid[:, :, :] = 0
-            grid[1:-1, 1:-1, 1:-1] = sum(views) + 100
-            cavity_triangles.append(triangulate(grid, step, offset, 100 + 4))
-            cavity_surface_area = 0
-            for cavity_triangle in cavity_triangles[-1][0]:
-                any_outside = False
-                for vertex in cavity_triangle:
-                    discrete_vertex = self.domain_calculation.discretization.continuous_to_discrete(vertex)
-                    if self.domain_calculation.discretization.grid[discrete_vertex] != 0:
-                        any_outside = True
-                        break
-                if not any_outside:
-                    v1, v2, v3 = cavity_triangle
-                    a = v2 - v1
-                    b = v3 - v1
-                    triangle_surface_area = la.norm(np.cross(a, b)) * 0.5
-                    cavity_surface_area += triangle_surface_area
-            cavity_surface_areas.append(cavity_surface_area)
-        self.cavity_triangles = cavity_triangles
-        self.cavity_surface_areas = cavity_surface_areas
+            vertices, normals, surface_area = cavity_triangles(
+                    self.grid3,
+                    multicavity,
+                    4, step, offset,
+                    self.domain_calculation.discretization.grid)
+            triangles.append((vertices, normals))
+            surface_areas.append(surface_area)
+
+        self.cavity_triangles = triangles
+        self.cavity_surface_areas = surface_areas
         return cavity_triangles
 
 
