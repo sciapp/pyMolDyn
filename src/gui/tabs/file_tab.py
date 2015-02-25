@@ -7,6 +7,7 @@ from gui.dialogs.calc_settings_dialog import CalculationSettingsDialog
 from gui.dialogs.progress_dialog import ProgressDialog
 from config.configuration import config
 from util.message import print_message, progress, finish
+from core.file import File
 
 
 class FileTabDock(QtGui.QDockWidget):
@@ -130,7 +131,7 @@ class DragList(QtGui.QListWidget):
 
     def add_file(self, path):
         bname = os.path.basename(path)
-        if bname not in self.datalist and path.endswith('.xyz'):
+        if bname not in self.datalist and File.exists(path):
             self.datalist[bname] = path
             self.addItem(bname)
             if path not in config.recent_files:

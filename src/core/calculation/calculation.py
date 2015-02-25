@@ -96,7 +96,7 @@ class CalculationSettings(object):
         datasets = dict()
         for filename, frames in self.datasets.iteritems():
             datasets[filename] = [f for f in frames]
-        dup = CalculationSettings(datasets, self.resolution)
+        dup = self.__class__(datasets, self.resolution)
         dup.domains = self.domains
         dup.surface_cavities = self.surface_cavities
         dup.center_cavities = self.center_cavities
@@ -318,19 +318,14 @@ class Calculation(object):
             if calcsettings.export:
                 if calcsettings.exportfiles is None or \
                         filename not in calcsettings.exportfiles:
-                    fpath = ".".join(filename.split(".")[:-1]) + ".hdf5"
+                    efpath = ".".join(filename.split(".")[:-1]) + ".hdf5"
                 else:
-                    fpath = calcsettings.exportfiles[filename]
-                exportfile = core.file.HDF5File(os.path.abspath(fpath), filepath)
-# TODO: do this in file.py
-                # store input data in export file
-                inputfile = File.open(filepath)
-                for frame in range(inputfile.info.num_frames):
-                    atoms = inputfile.getatoms(frame)
-                    results = data.Results(filepath, frame, 64, atoms, None, None, None)
-                    exportfile.addresults(results)
-                # now use the export file an input file
-                filepath = os.path.abspath(fpath)
+                    efpath = calcsettings.exportfiles[filename]
+                efpath = os.path.abspath(efpath)
+                # copy atoms into HDF5 file
+                exportfile = core.file.HDF5File.fromInputFile(efpath, filepath)
+                # use HDF5 file as input
+                filepath = efpath
 
             fileresults = []
             if frames[0] == -1:
