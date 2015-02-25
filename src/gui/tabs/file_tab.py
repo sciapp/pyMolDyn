@@ -2,12 +2,12 @@
 
 from PySide import QtCore, QtGui
 import os.path
-from gui.gl_widget import GLWidget, UpdateGLEvent
 from core import calculation, volumes, file
 from gui.dialogs.calc_settings_dialog import CalculationSettingsDialog
 from gui.dialogs.progress_dialog import ProgressDialog
 from config.configuration import config
 from util.message import print_message, progress, finish
+from gui.gl_widget import GLWidget, UpdateGLEvent
 
 
 class FileTabDock(QtGui.QDockWidget):
@@ -247,6 +247,11 @@ class TreeList(QtGui.QTreeWidget):
 
     def show_selected_frame(self):
         sel = self.get_selection()
+        if not sel:
+            QtGui.QMessageBox.information(self, 'Information',
+                                          "Choose a single frame to show",
+                                          QtGui.QMessageBox.Ok)
+            return
         filename = sel.keys()[0]
         frame = sel[filename][0]
 
@@ -257,7 +262,9 @@ class TreeList(QtGui.QTreeWidget):
                 frame = 0
 
         if len(sel.keys()) > 1 or len(sel.values()[0]) > 1 or frame == -2:
-            QtGui.QMessageBox.information(self, 'Information', "Choose a single frame to show", QtGui.QMessageBox.Ok)
+            QtGui.QMessageBox.information(self, 'Information',
+                                          "Choose a single frame to show",
+                                          QtGui.QMessageBox.Ok)
             return
 
         self.control.visualize(filename, frame)
