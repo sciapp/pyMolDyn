@@ -194,6 +194,24 @@ class Visualization(object):
         """
         gr3.export(file_name, width, height)
 
+    def get_object_at_position(self, x, y, z):
+        if self.results is None:
+            return None
+        if self.results.atoms is not None:
+            positions = self.results.atoms.positions
+            distances = la.norm(positions - (x, y, z), axis=1)
+            nearest_atom_index = np.argmin(distances)
+
+            # calculate atom radius
+            edges = self.results.atoms.volume.edges
+            edge_directions = [[edge[1][i]-edge[0][i] for i in range(3)] for edge in edges]
+            edge_lengths = [sum([c*c for c in edge])**0.5 for edge in edge_directions]
+            edge_radius = min(edge_lengths)/200
+            atom_radius = 4*edge_radius
+
+            if 0.95 < distances[nearest_atom_index]/atom_radius < 1.05:
+                print('atom', nearest_atom_index)
+
 
 class VisualizationSettings(object):
     """
