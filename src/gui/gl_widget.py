@@ -84,8 +84,9 @@ class GLWidget(QtOpenGL.QGLWidget):
             z = self.vis.proj_mat[2, 3] / (-z - self.vis.proj_mat[2, 2])
             x = -x*z/self.vis.proj_mat[0, 0]
             y = -y*z/self.vis.proj_mat[1, 1]
-            x, y, z, w = np.dot(la.inv(self.vis.lookat_mat), np.array((x, y, z, 1)))
-            print(x, y, z, w)
+            z += self.vis.d
+            x, y, z, w = np.dot(self.vis.mat, np.array((x, y, z, 1)))
+            self.vis.get_object_at_position(x, y, z)
 
     def customEvent(self, e):
         if self.update_needed:
