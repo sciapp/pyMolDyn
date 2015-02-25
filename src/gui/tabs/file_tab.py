@@ -71,6 +71,10 @@ class FileTab(QtGui.QWidget):
         self.calculate_button.clicked.connect(self.calculate)
         self.button_hbox.addWidget(self.calculate_button)
 
+        self.show_button = QtGui.QPushButton('Show', self)
+        self.show_button.clicked.connect(self.show_selected_frame)
+        self.button_hbox.addWidget(self.show_button)
+
         self.vbox.addLayout(self.button_hbox)
 
 #        self.file_list = DragList(self)
@@ -85,6 +89,9 @@ class FileTab(QtGui.QWidget):
         self.vbox.addWidget(self.file_list)
 
         self.setLayout(self.vbox)
+
+    def show_selected_frame(self):
+        self.file_list.show_selected_frame()
 
     def selection_changed(self):
         sel = self.file_list.get_selection()
@@ -142,7 +149,6 @@ class TreeList(QtGui.QTreeWidget):
         #self.setDefaultDropAction(QtCore.Qt.MoveAction)
         self.setMouseTracking(True)
         self.itemSelectionChanged.connect(self.selection_changed)
-        #self.itemSelectionChanged.connect(self.get_selection)
 
     def append_item(self, root, sib):
         item = QtGui.QTreeWidgetItem(self)
@@ -201,9 +207,9 @@ class TreeList(QtGui.QTreeWidget):
                 parent_content = str(item.parent().data(0, 0))
                 if sel.has_key(self.path_dict[parent_content]):
                     if not sel[self.path_dict[parent_content]][0] == -1:
-                        sel[self.path_dict[parent_content]].append(int(content[6:]))
+                        sel[self.path_dict[parent_content]].append(int(content[6:]) - 1)
                 else:
-                    sel[self.path_dict[parent_content]] = [int(content[6:])]
+                    sel[self.path_dict[parent_content]] = [int(content[6:]) - 1]
         return sel
 
     def remove_selected_files(self):
@@ -237,3 +243,20 @@ class TreeList(QtGui.QTreeWidget):
 
             if path not in config.recent_files:
                 config.add_recent_file(path)
+
+    def show_selected_frame(self):
+        sel = self.get_selection()
+        filename = sel.keys()[0]
+        frame = sel[filename][0]
+
+        if frame == -1:
+            if file.File.open(filename).info.num_frames > 1:
+                frame = -2
+            else:
+                frame = 0
+
+        if len(sel.keys()) > 1 or len(sel.values()[0]) > 1 or frame == -2:
+            QtGui.QMessageBox.information(self, 'Information', "Choose a single frame to show", QtGui.QMessageBox.Ok)
+            return
+
+        self.control.visualize(filename, frame)

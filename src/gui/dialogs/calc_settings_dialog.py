@@ -3,6 +3,7 @@
 
 from gui.dialogs.util.calc_table import CalculationTable, TableModel
 from core import calculation
+from core import file
 import os.path
 from config.configuration import config
 from PySide import QtGui, QtCore
@@ -90,25 +91,52 @@ class CalculationSettingsDialog(QtGui.QDialog):
 
     def update_table(self):
         # get timestamps for selected frames for each file
-        surface_ts = [[ts[s] for s in self.file_frame_dict[self.filenames[i]]] for i, ts in enumerate(self.timestamps(center_based=False))]
-        center_ts = [[ts[s] for s in self.file_frame_dict[self.filenames[i]]] for i, ts in enumerate(self.timestamps(center_based=True))]
+
+        # surface based
+        surface_ts = []
+        center_ts = []
+        for i, ts in enumerate(self.timestamps(center_based=False)):
+            frames = (range(file.File.open(self.filenames[i]).info.num_frames)
+                      if self.file_frame_dict[self.filenames[i]][0] == -1
+                      else self.file_frame_dict[self.filenames[i]])
+            surface_ts.append([])
+            for frame in frames:
+                surface_ts[i].append(ts[frame])
+
+        # center based timestamps for the given frames
+        center_ts = []
+        for i, ts in enumerate(self.timestamps(center_based=True)):
+            frames = (range(file.File.open(self.filenames[i]).info.num_frames) \
+                      if self.file_frame_dict[self.filenames[i]][0] == -1 \
+                      else self.file_frame_dict[self.filenames[i]])
+            center_ts.append([])
+            for frame in frames:
+                center_ts[i].append(ts[frame])
+
         # reduce to a single value per file
         surface_ts = ["X" if "X" in ts else ts[0] for ts in surface_ts]
         center_ts = ["X" if "X" in ts else ts[0] for ts in center_ts]
         basenames = [os.path.basename(path) for path in self.filenames]
-        frames = [str(self.file_frame_dict[f])[1:-1] if not self.file_frame_dict[f][0] == -1 else 'all' for f in self.filenames]
+        frames = [str([frame + 1 for frame in self.file_frame_dict[f]])[1:-1] if not self.file_frame_dict[f][0] == -1 else 'all' for f in self.filenames]
 
         data_list = zip(basenames, surface_ts, center_ts, frames)
 
+        # set table data
         header = ['dataset', 'surface based', 'center based', 'frames']
         table_model = TableModel(self, data_list, header)
         self.table_view.setModel(table_model)
         self.table_view.resizeColumnsToContents()
-        print self.table_view.model().columnCount(self.table_view)
+
+        # calculate table size to set its minimum size
         width = (self.table_view.model().columnCount(self.table_view) - 1) + self.table_view.verticalHeader().width()
         for i in range(self.table_view.model().columnCount(self.table_view)):
             width += self.table_view.columnWidth(i)
         self.table_view.setMinimumWidth(width)
+
+        height = (self.table_view.model().rowCount(self.table_view) - 1) + self.table_view.horizontalHeader().height()
+        for i in range(self.table_view.model().rowCount(self.table_view)):
+            height += self.table_view.rowHeight(i)
+        self.table_view.setMinimumHeight(height)
 
     def lineedit_return(self):
         try:

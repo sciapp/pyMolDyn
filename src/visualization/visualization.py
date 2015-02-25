@@ -13,7 +13,6 @@ import os
 from ctypes import c_int
 from util.gl_util import create_perspective_projection_matrix, create_look_at_matrix, create_rotation_matrix_homogenous, create_translation_matrix_homogenous
 
-
 class Visualization(object):
     """
     Visualize Atoms and Cavities with GR3
