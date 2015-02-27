@@ -9,8 +9,12 @@ from gui.tabs.statistics_tab import StatisticsTabDock
 from PySide import QtCore, QtGui
 from gui.dialogs.settings_dialog import SettingsDialog
 from util import message
-import core.bonds
 from gl_stack import GLStack
+
+import core.bonds
+import core.control
+#from core.data import Results
+import visualization.visualization
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -66,26 +70,29 @@ class MainWindow(QtGui.QMainWindow):
         settings_action.setShortcut('Ctrl+I')
         settings_action.triggered.connect(self.show_settings)
 
+        export_submenu = QtGui.QMenu("&Export", self)
+
         export_bonds_action = QtGui.QAction('Export &Bonds', self)
-        #export_bonds_action.setShortcut('Ctrl+E+1')
+        export_bonds_action.setShortcut('Ctrl+1')
         export_bonds_action.triggered.connect(self.wrapper_export_bonds)
 
         export_bond_angles_action = QtGui.QAction('Export Bond &Angles', self)
-        #export_bond_angles_action.setShortcut('Ctrl+E+2')
+        export_bond_angles_action.setShortcut('Ctrl+2')
         export_bond_angles_action.triggered.connect(self.wrapper_export_bond_angles)
 
         export_bond_dihedral_angles_action = QtGui.QAction('Export Bond &Dihedral Angles', self)
-        #export_bond_dihedral_angles_action.setShortcut('Ctrl+E+2')
+        export_bond_dihedral_angles_action.setShortcut('Ctrl+3')
         export_bond_dihedral_angles_action.triggered.connect(self.wrapper_export_bond_dihedral_angles)
 
         menubar = self.menuBar()
         file_menu = menubar.addMenu('&File')
         file_menu.addAction(open_action)
         file_menu.addAction(settings_action)
-        export_menu = menubar.addMenu('&Export ...')
-        export_menu.addAction(export_bonds_action)
-        export_menu.addAction(export_bond_angles_action)
-        export_menu.addAction(export_bond_dihedral_angles_action)
+        file_menu.addMenu(export_submenu)
+
+        export_submenu.addAction(export_bonds_action)
+        export_submenu.addAction(export_bond_angles_action)
+        export_submenu.addAction(export_bond_dihedral_angles_action)
 
     def show_settings(self):
         SettingsDialog()
@@ -95,20 +102,20 @@ class MainWindow(QtGui.QMainWindow):
         filename = QtGui.QFileDialog.getSaveFileName(self, "Export Bonds", "bonds.txt")
         if filename[0] != "":
             print filename[0]
-            #core.bonds.export_bonds(filename, core.bonds.get_bonds_with_constant_delta(core.bonds.get_atoms(), 2.8))
+            core.bonds.export_bonds(filename[0], self.control.visualization.results.atoms)
 
     def wrapper_export_bond_angles(self):
         filename = QtGui.QFileDialog.getSaveFileName(self, "Export Bond Angles", "bond_angles.txt")
         if filename[0] != "":
             print filename[0]
-            #core.bonds.export_bond_angles(filename[0], core.bonds.get_bond_angles())
+            core.bonds.export_bond_angles(filename[0], self.control.visualization.results.atoms)
 
 
     def wrapper_export_bond_dihedral_angles(self):
         filename = QtGui.QFileDialog.getSaveFileName(self, "Export Bond Dihedral Angles", "bond_dihedral_angles.txt")
         if filename[0] != "":
             print filename[0]
-            #core.bonds.export_bond_dihedral_angles(filename[0], core.bonds.get_bond_chain_angles())
+            core.bonds.export_bond_dihedral_angles(filename[0], self.control.visualization.results.atoms)
 
     def keyPressEvent(self, e):
         if e.key() == QtCore.Qt.Key_M:
