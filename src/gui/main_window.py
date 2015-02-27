@@ -101,21 +101,27 @@ class MainWindow(QtGui.QMainWindow):
     def wrapper_export_bonds(self):
         filename = QtGui.QFileDialog.getSaveFileName(self, "Export Bonds", "bonds.txt")
         if filename[0] != "":
-            print filename[0]
             core.bonds.export_bonds(filename[0], self.control.visualization.results.atoms)
+            msgBox = QtGui.QMessageBox()
+            msgBox.setText("Saved to filename: %s"%(filename[0]))
+            msgBox.exec_()
 
     def wrapper_export_bond_angles(self):
         filename = QtGui.QFileDialog.getSaveFileName(self, "Export Bond Angles", "bond_angles.txt")
         if filename[0] != "":
-            print filename[0]
             core.bonds.export_bond_angles(filename[0], self.control.visualization.results.atoms)
+            msgBox = QtGui.QMessageBox()
+            msgBox.setText("Saved to filename: %s"%(filename[0]))
+            msgBox.exec_()
 
 
     def wrapper_export_bond_dihedral_angles(self):
         filename = QtGui.QFileDialog.getSaveFileName(self, "Export Bond Dihedral Angles", "bond_dihedral_angles.txt")
         if filename[0] != "":
-            print filename[0]
             core.bonds.export_bond_dihedral_angles(filename[0], self.control.visualization.results.atoms)
+            msgBox = QtGui.QMessageBox()
+            msgBox.setText("Saved to filename: %s"%(filename[0]))
+            msgBox.exec_()
 
     def keyPressEvent(self, e):
         if e.key() == QtCore.Qt.Key_M:
