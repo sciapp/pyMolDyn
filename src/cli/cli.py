@@ -1,8 +1,15 @@
+# -*- coding: utf-8 -*-
+
+
+__all__ = ["CLI"]
+
+
 import optparse
 import os
 import thread
 import sys
 import logging
+from datetime import datetime
 from core.control import Control
 from core.calculation import Calculation, CalculationSettings
 
@@ -14,21 +21,68 @@ shell_colors = {'white_font':     "\033[37m",
                 'red_background': "\033[41m",
                 'default': "\033[0m"}
 
+
 get_progress_string = lambda progress: '[' + '='*int(20*progress) + ' '*(20-int(20*progress)) + ']' + ' %.2f' % (100*progress) + ' %'
 
+
+class FileList(object):
+    def __init__(self, global_resolution, global_atom_radius):
+        self.global_resolution = global_resolution
+        self.global_atom_radius = global_atom_radius
+        self.file_list = []
+
+    def append(self, filename, frames=None, resolution=None, atom_radius=None):
+        self.file_list.append((filename, frames, resolution, atom_radius))
+
+    def createCalculationSettings(self, default_settings):
+        settings_list = []
+        for filename, frames, resolution, atom_radius in self.file_list:
+            if frames is None:
+                frames = [-1]
+            if resolution is None or self.global_resolution is not None:
+                resolution = self.global_resolution
+            if atom_radius is None or self.global_atom_radius is not None:
+                atom_radius = self.global_atom_radius
+            settings = default_settings.copy()
+            settings.datasets = {filename: frames}
+            settings.resolution = resolution
+            settings_list.append(settings)
+        return settings_list
+
+    def __len__(self):
+        return len(self.file_list)
+
+    def __str__(self):
+        s = ""
+        for filename, frames, resolution, atom_radius in self.file_list:
+            s += "-> {}".format(filename)
+            if frames is not None and frames[0] != -1:
+                s += "; frames " + ", ".join([str(f + 1) for f in frames])
+            else:
+                s += "; all frames"
+            if self.global_resolution is not None:
+                s += "; resolution {}".format(self.global_resolution)
+            elif resolution is not None:
+                s += "; resolution {}".format(resolution)
+            if self.global_atom_radius is not None:
+                s += "; cutoff radius {}".format(self.global_atom_radius)
+            elif atom_radius is not None:
+                s += "; cutoff radius {}".format(atom_radius)
+            s += "\n"
+        return s
+
+
 class Cli(object):
-    def __init__(self, controller, command_line_params=None):
+    def __init__(self, control, command_line_params=None):
         if command_line_params is None:
             command_line_params = sys.argv[1:]
             
-        self.controller = controller
+        self.control = control
         self.options_list = [{"special_type": None,
                               "name": "quiet",
                               "short": "-q",
                               "long": "--quiet",
                               "action": "store_true",
-                              "attribute": None,
-                              "target": None,
                               "dest": "quiet",
                               "default": False,
                               "type": None,
@@ -38,85 +92,42 @@ class Cli(object):
                               "short": "-a",
                               "long": "--atomradius",
                               "action": "store",
-                              "attribute": Attributes.Settings.ATOM_RADIUS,
-                              "target": None,
                               "dest": "atom_radius",
-                              "default": self.controller.request_action(Actions.Settings.GET_ATOM_RADIUS, [True]),
+                              "default": None,
                               "type": "float",
                               "help": "cut off radius"},
                              {"special_type": "parameter",
-                              "name": "domain resolution",
-                              "short": "-d",
-                              "long": "--domainresolution",
+                              "name": "resolution",
+                              "short": "-r",
+                              "long": "--resolution",
                               "action": "store",
-                              "attribute": Attributes.Settings.VACANCY_RESOLUTION,
-                              "target": None,
-                              "dest": "domain_resolution",
-                              "default": self.controller.request_action(Actions.Settings.GET_VACANCY_RESOLUTION, [True]),
+                              "dest": "resolution",
+                              "default": None,
                               "type": "int",
-                              "help": "vacancy domain resolution"},
-                             {"special_type": "parameter",
-                              "name": "alternative cavity resolution",
-                              "short": "-c",
-                              "long": "--altcavityresolution",
-                              "action": "store",
-                              "attribute": Attributes.Settings.ALT_CAVITY_RESOLUTION,
-                              "target": None,
-                              "dest": "alt_cavity_resolution",
-                              "default": self.controller.request_action(Actions.Settings.GET_ALT_CAVITY_RESOLUTION, [True]),
-                              "type": "int",
-                              "help": "alternative cavity resolution"},
+                              "help": "vacancy resolution"},
                              {"special_type": "parameter",
                               "name": "bond delta",
                               "short": "-b",
                               "long": "--bonddelta",
                               "action": "store",
-                              "attribute": Attributes.Settings.BOND_DELTA,
-                              "target": None,
                               "dest": "bond_delta",
                               "default": None,
                               "type": "float",
                               "help": "constant bond delta (when no parameter is given, radii sum criterion (1.15) is used)"},
                              {"special_type": "disable_target",
-                              "name": "no domains",
-                              "short": "",
-                              "long": "--nodomains",
-                              "action": "store_true",
-                              "attribute": None,
-                              "target": Targets.VACANCY_MESH_TRANSFORMATION,
-                              "dest": "no_domains",
-                              "default": False,
-                              "type": None,
-                              "help": "No domain calculation is done. When cavity calculation is selected only needed domain information is computed."},
-                             {"special_type": "disable_target",
-                              "name": "no analytic cavities",
-                              "short": "",
-                              "long": "--noanalyticcavities",
-                              "action": "store_true",
-                              "attribute": None,
-                              "target": Targets.CAVITY_MESH_TRANSFORMATION,
-                              "dest": "no_analytic_cavities",
-                              "default": False,
-                              "type": None,
-                              "help": "Analytic cavities are not computed."},
-                             {"special_type": "disable_target",
                               "name": "no alternative cavities",
                               "short": "",
                               "long": "--noalternativecavities",
                               "action": "store_true",
-                              "attribute": None,
-                              "target": Targets.ALT_CAVITY_MESH_TRANSFORMATION,
                               "dest": "no_alternative_cavities",
                               "default": False,
                               "type": None,
-                              "help": "Alternative cavities are not calculated."},
+                              "help": "Alternative (center based) cavities are not calculated."},
                              {"special_type": "disable_target",
                               "name": "no bond information",
                               "short": "",
                               "long": "--nobondinfo",
                               "action": "store_true",
-                              "attribute": None,
-                              "target": Targets.BOND_INFO,
                               "dest": "no_bond_info",
                               "default": False,
                               "type": None,
@@ -126,8 +137,6 @@ class Cli(object):
                               "short": "-e",
                               "long": "--exportcentralpoints",
                               "action": "store",
-                              "attribute": None,
-                              "target": None,
                               "dest": "export_central_points",
                               "default": None,
                               "type": "string",
@@ -137,8 +146,6 @@ class Cli(object):
                               "short": "-n",
                               "long": "--exportdihedralangles",
                               "action": "store",
-                              "attribute": None,
-                              "target": None,
                               "dest": "export_dihedral_angles",
                               "default": None,
                               "type": "string",
@@ -154,57 +161,54 @@ class Cli(object):
         
         file_list = self.__get_file_list(filter(lambda entry: entry[0] != '-', self.left_args))
         
-        if len(file_list) > 0:
-            print _('processing files:')
-            for file_dict in file_list:
-                try:
-                    print _('-> %s (%d frames)' % (file_dict['name'], self.controller.request_action(Actions.Data.GET_BLOCK_COUNT, [file_dict['name']])))
-                except FileNotFoundException:
-                    pass
-            print _('parameters:')
-            
-            tmp_param_string=""
-            for i, opt_dict in enumerate(self.options_list):
-                tmp_param_string += opt_dict['name'] + ': ' + str(getattr(self.options, opt_dict['dest'])) + ', ' + ('\n' if i % 4 == 3 else '') 
-            if tmp_param_string[-1] == '\n':
-                tmp_param_string = tmp_param_string[:-3]
-            else: 
-                tmp_param_string = tmp_param_string[:-2]
-            
-            print tmp_param_string
-            print
-            print '='*100
-            
-            for opt_dict in self.options_list:
-                if opt_dict['special_type'] == 'parameter':
-                    self.controller.request_action(Attributes.get_action_setter_id(opt_dict['attribute']), [getattr(self.options, opt_dict['dest'])])   
-            
-            target_list = []
-            for opt_dict in self.options_list:
-                if opt_dict['special_type'] == "disable_target":
-                    if not getattr(self.options, opt_dict['dest']):
-                        target_list.append(opt_dict['target'])
-            
+        default_settings = CalculationSettings(dict())
+        default_settings.resolution = self.control.config.Computation.std_resolution
+        default_settings.domains = True
+        default_settings.surface_cavities = True
+        default_settings.center_cavities = not self.options.no_alternative_cavities
+        default_settings.recalculate = True
+        default_settings.export = True
+        default_settings.bonds = not self.options.no_bond_info
+        settings_list = file_list.createCalculationSettings(default_settings)
+
+        print 'processing files:'
+        print file_list
+        print 'parameters:'
+        tmp_param_string=""
+        for i, opt_dict in enumerate(self.options_list):
+            tmp_param_string += opt_dict['name'] + ': ' + str(getattr(self.options, opt_dict['dest'])) + ', ' + ('\n' if i % 4 == 3 else '') 
+        if tmp_param_string[-1] == '\n':
+            tmp_param_string = tmp_param_string[:-3]
+        else: 
+            tmp_param_string = tmp_param_string[:-2]
+        print tmp_param_string
+        print
+        print '='*80
+
+        if len(settings_list) > 0:
+            print "Started calculation: {}".format(datetime.now())
             started_computation = False
-            for file_dict in file_list:
-                try:
-                    self.controller.request_action(Actions.Data.OPEN_NEW_FILE, [file_dict['name']], [self])
-                    self.controller.request_action(Actions.Settings.SET_BOX_SIZE, [file_dict['box_size']])
-                    for block in range(self.controller.request_action(Actions.Data.GET_BLOCK_COUNT, [file_dict['name']])):
-                        self.controller.request_action(Actions.Data.PROCESS_DATA, [target_list, [], file_dict['name'], block])
-                        started_computation = True
-                except FileNotFoundException:
-                    pass
+            for settings in settings_list:
+                print "Calculating File:",
+                for filename, _ in settings.datasets.iteritems():
+                    print filename,
+                print "...",
+                sys.stdout.flush()
+                results = self.control.calculation.calculate(settings)
+                print "Done."
+            print "Finished calculation: {}".format(datetime.now())
+
+            #    started_computation = True
         
-            if started_computation:
-                #self.__handle_input()
-                try:
-                    self.controller.request_action(Actions.Computation.WAIT_UNTIL_FINISHED, [True])
-                except KeyboardInterrupt:
-                    try:
-                        self.cancel_callback()
-                    except task.IllegalTaskStateException:
-                        pass
+            #if started_computation:
+            #    #self.__handle_input()
+            #    try:
+            #        self.control.request_action(Actions.Computation.WAIT_UNTIL_FINISHED, [True])
+            #    except KeyboardInterrupt:
+            #        try:
+            #            self.cancel_callback()
+            #        except task.IllegalTaskStateException:
+            #            pass
                 
     
     # -------------------- private methods -------------------
@@ -225,7 +229,7 @@ class Cli(object):
         print
     
     def __parse_options(self, command_line_params):
-        parser = optparse.OptionParser(usage=_("Usage: %s [options] batch_file1 batch_file2 ...\n\nBatch files have the format:\n\nxyz-file-01\tbox-size (in angstrom units)\nxyz-file-02\tbox-size\n   .\n   .\n   .") % '%prog')
+        parser = optparse.OptionParser(usage="Usage: %s [options] batch_file1 batch_file2 ...\n\nBatch files have the format:\n\nRESOLUTION resolution\nATOM_RADIUS radius\n\nfile-01.xyz\nfile-02.xyz frame frame ...\n   .\n   .\n   .\n\nRESOLUTION and ATOM_RADIUS are optional and are overridden by the command line options.\nNOTE: Specifying the atom radius does not work yet." % '%prog')
         
         for opt_dict in self.options_list:
             parser.add_option(opt_dict["short"],
@@ -243,26 +247,32 @@ class Cli(object):
         return (options, left_args)
     
     def __get_file_list(self, input_file_list):
-        file_dict_keys = ['name', 'box_size']
-        key_types = {'name': str, 'box_size': float}
-        
-        result_file_list = []
-        
+        result_file_list = FileList(self.options.resolution,
+                                    self.options.atom_radius)
         for input_file in input_file_list:
             try:
                 with open(input_file) as f:
+                    resolution = None
+                    atom_radius = None
                     for line in f.readlines():
                         lstripped_line = line.lstrip()
                         if len(lstripped_line) > 0 and lstripped_line[0] != '#':
-                            line_parts = []
-                            for i, part in enumerate(line.split()):
-                                if file_dict_keys[i] == 'name':
-                                    line_parts.append(os.path.dirname(os.path.abspath(input_file)) + '/' + part)
-                                else:
-                                    line_parts.append(key_types[file_dict_keys[i]](part))
-                            result_file_list.append(dict(zip(file_dict_keys, line_parts)))
+                            line_parts = lstripped_line.split()
+                            if line_parts[0] == "RESOLUTION":
+                                resolution = int(line_parts[1])
+                                continue
+                            if line_parts[0] == "ATOM_RADIUS":
+                                atom_radius = float(line_parts[1])
+                                continue
+
+                            filepath = os.path.join(os.path.dirname(os.path.abspath(input_file)), line_parts[0])
+                            if len(line_parts) > 1:
+                                frames = [int(f) - 1 for f in line_parts[1:]]
+                            else:
+                                frames = None
+                            result_file_list.append(filepath, frames, resolution, atom_radius)
             except IOError:
-                print _('warning: batch file %s not accessable and skipped') % (os.path.abspath(input_file))
+                print 'warning: batch file %s not accessable and skipped' % (os.path.abspath(input_file))
                         
         return result_file_list
     
@@ -277,13 +287,13 @@ class Cli(object):
         # Wenn kein Fehler oder Abbruch aufgetreten ist....
         if status == task.FINISHED:
             def write_export_file(info_text, path, suffix, action, ext=None):
-                sys.stdout.write('\n-> %s ' % _(info_text))
+                sys.stdout.write('\n-> %s ' % info_text)
                 (base, file_ext) = os.path.splitext(os.path.basename(filename))
                 if ext is None:
                     ext = file_ext
                 name = path + (os.sep if path[-1] != os.sep else '') + base + suffix + ext
-                result = self.controller.request_action(action, [name, True, 'w' if block == 0 else 'a'] if action == Actions.Data.WRITE_VACANCY_CENTRAL_POINTS_AS_XYZ else [name, 'w' if block == 0 else 'a'])
-                sys.stdout.write(('%s' % _('done')) if result else ('%s' % _('failed')))
+                result = self.control.request_action(action, [name, True, 'w' if block == 0 else 'a'] if action == Actions.Data.WRITE_VACANCY_CENTRAL_POINTS_AS_XYZ else [name, 'w' if block == 0 else 'a'])
+                sys.stdout.write(('%s' % 'done') if result else ('%s' % 'failed'))
 
             if not self.options.no_domains and self.options.export_central_points is not None:
                 write_export_file('export cavity central points...', self.options.export_central_points, '_with_cavity_central_points', Actions.Data.WRITE_VACANCY_CENTRAL_POINTS_AS_XYZ)
@@ -302,8 +312,8 @@ class Cli(object):
     def set_attribute(self, attribute, parameter_list):
         
         if attribute == Attributes.Computation.STARTED_COMPUTATION:
-            print '\n-> %s' % (_('file: %s, frame: %d') % (str(parameter_list[0]), parameter_list[1]))
-            print '   %s' % (_('current box size: %f') % (self.controller.request_action(Actions.Settings.GET_BOX_SIZE)))
+            print '\n-> %s' % ('file: %s, frame: %d' % (str(parameter_list[0]), parameter_list[1]))
+            print '   %s' % ('current box size: %f' % (self.control.request_action(Actions.Settings.GET_BOX_SIZE)))
         elif attribute == Attributes.Computation.STATUS or attribute == Attributes.Recording.STATUS:
             if not self.options.quiet:
                 self.__delete_progress(self.previous_progress, get_progress_string)
