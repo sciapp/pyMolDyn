@@ -103,44 +103,54 @@ class XYZFile(InputFile):
 
     def readinfo(self):
         try:
-            f = pybel.readfile("xyz", self.path.encode("ascii"))
-            molecule = f.next()
-            self._info.volumestr = molecule.title
-            self._info.num_frames = sum(1 for _ in f) + 1
+            molecules = self.read()
+            self._info.volumestr = molecules[0][0]
+            self._info.num_frames = len(molecules)
             self.inforead = True
         except IOError:
             raise
         except Exception as e:
             raise FileError("Cannot read file info.", e)
-        finally:
-            f.close()
 
     def readatoms(self, frame):
         try:
-            f = pybel.readfile("xyz", self.path.encode("ascii"))
-            i = 0
-            molecule = f.next()
+            molecules = self.read()
             if not self.inforead:
-                self._info.volumestr = molecule.title
-            for m in f:
-                i += 1
-                if i == frame:
-                    molecule = m
-                    if self.inforead:
-                        break
-            if not self.inforead:
-                self._info.num_frames = i + 1
-                self.inforead = True
-            if i < frame:
+                self._info.volumestr = molecules[0][0]
+                self._info.num_frames = len(molecules)
+            if len(molecules) <= frame:
                 raise IndexError("Frame {} not found".format(frame))
+            molecule = molecules[frame]
+            return data.Atoms(molecule, self.info.volume)
         except (IOError, IndexError):
             raise
         except Exception as e:
             raise FileError("Cannot read atom data.", e)
-        finally:
-            f.close()
-        return data.Atoms(molecule, self.info.volume)
 
+    def read(self):
+        molecules = []
+        with open(self.path.encode("ascii"), 'r') as f:
+            lines = iter(f.readlines())
+            try:
+                while lines:
+                    symbols = []
+                    positions = []
+                    num_atoms = lines.next()
+                    if not num_atoms:
+                        break
+                    num_atoms = int(num_atoms)
+                    volume_info = lines.next()
+                    for i in range(num_atoms):
+                        line = lines.next()
+                        if line.strip():
+                            symbol, x, y, z = line.split()
+                            position = (float(x), float(y), float(z))
+                            symbols.append(symbol)
+                            positions.append(position)
+                    molecules.append((volume_info, symbols, positions))
+            except StopIteration:
+                pass
+        return molecules
 
 class ResultFile(InputFile):
     """
