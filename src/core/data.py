@@ -414,18 +414,6 @@ class Atoms(object):
             elements = map(lambda atom: core.elements.symbols[atom.atomicnum],
                            molecule)
             radii = None
-        elif isinstance(args[0], tuple):
-            molecule = args[0]
-            if len(args) > 1:
-                self.volume = args[1]
-                if isinstance(self.volume, str):
-                    self.volume = volumes.Volume.fromstring(self.volume)
-                func = lambda atom: self.volume.get_equivalent_point(atom)
-            else:
-                func = lambda atom: atom
-            positions = map(func, molecule[2])
-            elements = molecule[1]
-            radii = None
         else:
             positions = args[0]
             radii = args[1]

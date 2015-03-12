@@ -103,9 +103,23 @@ class XYZFile(InputFile):
 
     def readinfo(self):
         try:
-            molecules = self.read()
-            self._info.volumestr = molecules[0][0]
-            self._info.num_frames = len(molecules)
+            self._info.num_frames = 0
+            with open(self.path.encode("ascii"), 'r') as f:
+                lines = iter(f.readlines())
+                try:
+                    while lines:
+                        num_atoms = lines.next()
+                        if not num_atoms:
+                            break
+                        num_atoms = int(num_atoms)
+                        volume_info = lines.next()
+                        for i in range(num_atoms):
+                            lines.next()
+                        self._info.num_frames += 1
+                        if self._info.num_frames == 1:
+                            self._info.volumestr = volume_info
+                except StopIteration:
+                    pass
             self.inforead = True
         except IOError:
             raise
@@ -114,32 +128,28 @@ class XYZFile(InputFile):
 
     def readatoms(self, frame):
         try:
-            molecules = self.read()
-            if not self.inforead:
-                self._info.volumestr = molecules[0][0]
-                self._info.num_frames = len(molecules)
-            if len(molecules) <= frame:
+            if self.info.num_frames <= frame:
                 raise IndexError("Frame {} not found".format(frame))
-            molecule = molecules[frame]
-            return data.Atoms(molecule, self.info.volume)
-        except (IOError, IndexError):
-            raise
-        except Exception as e:
-            raise FileError("Cannot read atom data.", e)
-
-    def read(self):
-        molecules = []
-        with open(self.path.encode("ascii"), 'r') as f:
-            lines = iter(f.readlines())
-            try:
-                while lines:
+            with open(self.path.encode("ascii"), 'r') as f:
+                lines = iter(f.readlines())
+                try:
+                    # Skip the first (frame-1) molecules
+                    for i in range(frame-1):
+                        num_atoms = lines.next()
+                        if not num_atoms:
+                            break
+                        num_atoms = int(num_atoms)
+                        lines.next()
+                        for i in range(num_atoms):
+                            lines.next()
+                    # actually read the molecule
                     symbols = []
                     positions = []
                     num_atoms = lines.next()
                     if not num_atoms:
-                        break
+                        raise StopIteration
                     num_atoms = int(num_atoms)
-                    volume_info = lines.next()
+                    lines.next()
                     for i in range(num_atoms):
                         line = lines.next()
                         if line.strip():
@@ -147,10 +157,14 @@ class XYZFile(InputFile):
                             position = (float(x), float(y), float(z))
                             symbols.append(symbol)
                             positions.append(position)
-                    molecules.append((volume_info, symbols, positions))
-            except StopIteration:
-                pass
-        return molecules
+                except StopIteration:
+                    raise IndexError("Frame {} not found".format(frame))
+            return data.Atoms(positions, None, symbols, self.info.volume)
+        except (IOError, IndexError):
+            raise
+        except Exception as e:
+            raise FileError("Cannot read atom data.", e)
+
 
 class ResultFile(InputFile):
     """
