@@ -4,7 +4,6 @@ This module provides classes to handle pyMolDyn related files.
 """
 
 import os
-import pybel
 import h5py
 from datetime import datetime
 import data
@@ -133,8 +132,8 @@ class XYZFile(InputFile):
             with open(self.path.encode("ascii"), 'r') as f:
                 lines = iter(f.readlines())
                 try:
-                    # Skip the first (frame-1) molecules
-                    for i in range(frame-1):
+                    # Skip the first frames
+                    for i in range(frame):
                         num_atoms = lines.next()
                         if not num_atoms:
                             break
