@@ -104,16 +104,15 @@ class XYZFile(InputFile):
         try:
             self._info.num_frames = 0
             with open(self.path.encode("ascii"), 'r') as f:
-                lines = iter(f.readlines())
                 try:
-                    while lines:
-                        num_atoms = lines.next()
+                    while True:
+                        num_atoms = f.next()
                         if not num_atoms:
                             break
                         num_atoms = int(num_atoms)
-                        volume_info = lines.next()
+                        volume_info = f.next()
                         for i in range(num_atoms):
-                            lines.next()
+                            f.next()
                         self._info.num_frames += 1
                         if self._info.num_frames == 1:
                             self._info.volumestr = volume_info
@@ -130,27 +129,26 @@ class XYZFile(InputFile):
             if self.info.num_frames <= frame:
                 raise IndexError("Frame {} not found".format(frame))
             with open(self.path.encode("ascii"), 'r') as f:
-                lines = iter(f.readlines())
                 try:
                     # Skip the first frames
                     for i in range(frame):
-                        num_atoms = lines.next()
+                        num_atoms = f.next()
                         if not num_atoms:
                             break
                         num_atoms = int(num_atoms)
-                        lines.next()
+                        f.next()
                         for i in range(num_atoms):
-                            lines.next()
+                            f.next()
                     # actually read the molecule
                     symbols = []
                     positions = []
-                    num_atoms = lines.next()
+                    num_atoms = f.next()
                     if not num_atoms:
                         raise StopIteration
                     num_atoms = int(num_atoms)
-                    lines.next()
+                    f.next()
                     for i in range(num_atoms):
-                        line = lines.next()
+                        line = f.next()
                         if line.strip():
                             symbol, x, y, z = line.split()
                             position = (float(x), float(y), float(z))
