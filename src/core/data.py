@@ -411,7 +411,8 @@ class Atoms(object):
             else:
                 func = lambda atom: atom.coords
             positions = map(func, molecule)
-            elements = map(lambda atom: atom.type, molecule)
+            elements = map(lambda atom: core.elements.symbols[atom.atomicnum],
+                           molecule)
             radii = None
         else:
             positions = args[0]

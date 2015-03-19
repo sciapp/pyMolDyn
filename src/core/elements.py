@@ -609,3 +609,7 @@ numbers["CV"] = 119
 names[119] = 'Cavity center'
 colors[119] = (0, 0, 0)
 radii[119] = 1.600
+
+symbols = [None]*120
+for symbol, num in numbers.items():
+    symbols[num] = symbol
