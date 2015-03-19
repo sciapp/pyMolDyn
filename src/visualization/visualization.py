@@ -87,7 +87,8 @@ class Visualization(object):
             corners = list(set([tuple(edge[0]) for edge in edges] + [tuple(edge[1]) for edge in edges]))
             num_corners = len(corners)
             gr3.drawspheremesh(num_corners, corners,
-                               [(1, 1, 1)]*num_edges, [edge_radius]*num_edges)
+                               [config.Colors.bounding_box]*num_corners,
+                               [edge_radius]*num_corners)
 
         if self.settings.show_atoms and self.results.atoms is not None:
             gr3.drawspheremesh(self.results.atoms.number,
