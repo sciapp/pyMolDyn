@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+
+  <title>{{ title }}</title>
+  <meta name="description" content="{{ description }}" />
+</head>
+
+<body>
+
+<div id="content">
+  <h2>(icon) {{ atom }}</h2>
+
+  <table>
+    <tr>
+        <td>position: </td>
+        <td>( {{ "%.4f, %.4f, %.4f"|format(atom_positions[0], atom_positions[1], atom_positions[2]) }} )</td>
+    </tr>
+    <tr>
+        <td>atomic number: </td>
+        <td>{{ atom_number }}</td>
+    </tr>
+    <tr>
+        <td>covalent radius: </td>
+        <td>{{ "%.4f"|format(covalent_radius) }} &#x212b; </td>
+    </tr>
+    <tr>
+        <td>cavities: </td>
+        <td>todo</td>
+    </tr>
+    <tr>
+        <td>alt. cavities:</td>
+        <td>todo</td>
+    </tr>
+    <tr>
+        <td>domains: </td>
+        <td>todo</td>
+    </tr>
+    <tr>
+        <td> &nbsp; </td>
+        <td>Focus</td>
+    </tr>
+  </table>
+</div>
+
+</body>
+</html>

@@ -1,6 +1,6 @@
 from PySide import QtGui
 from gui.tabs.statistics.tree_list import TreeList
-from gui.tabs.statistics.html_view import HTMLWindow, load_html
+from gui.tabs.statistics.html_view import HTMLWindow#, render_html_atom_group, render_html_cavity_center_group, render_html_cavity_domain_group, render_html_cavity_surface_group
 
 class StatisticsTabDock(QtGui.QDockWidget):
     """
@@ -19,15 +19,25 @@ class StatisticsTabDock(QtGui.QDockWidget):
 
         self.setFeatures(QtGui.QDockWidget.DockWidgetMovable | QtGui.QDockWidget.DockWidgetFloatable)
 
+    def update_results(self, results):
+        self.statistics_tab.update_results(results)
+
+
 class StatisticsTab(QtGui.QWidget):
 
     def __init__(self, parent):
         QtGui.QWidget.__init__(self, parent)
+        self.control = None
         hbox = QtGui.QHBoxLayout()
-        tree_list = TreeList()
-        html = load_html()
-        html_view = HTMLWindow(html)
-        hbox.addWidget(tree_list)
-        hbox.addWidget(html_view)
+
+        self.html_view = HTMLWindow()
+        self.tree_list = TreeList(self.html_view)
+        hbox.addWidget(self.tree_list)
+        hbox.addWidget(self.html_view)
+        self.adjustSize()
         self.setLayout(hbox)
         self.show()
+
+    def update_results(self, results):
+        self.html_view.update_results(results)
+        self.tree_list.update_results(results)

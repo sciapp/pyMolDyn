@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+
+  <title>{{ title }}</title>
+  <meta name="description" content="{{ description }}" />
+</head>
+
+<body>
+
+<div id="content">
+  <h2>Domain Surface-based Cavity {{ cavity+1 }}</h2>
+
+  <table>
+    <tr>
+        <td>center: </td>
+        <td>    {% for domain in domains: %}
+                    ({{ "%.4f, %.4f, %.4f"|format(domain[0], domain[1], domain[2]) }}) <br />
+
+                {% endfor %}</td>
+    </tr>
+    <tr>
+        <td>volume: </td>
+        <td>{{ "%.4f"|format(volume) }} &#x212b; <sup>3</sup></td>
+    </tr>
+    <tr>
+        <td>volume fraction: </td>
+        <td>todo %</td>
+    </tr>
+    <tr>
+        <td>cavity count: </td>
+        <td>todo</td>
+    </tr>
+    <tr>
+        <td>atoms: </td>
+        <td>todo</td>
+    </tr>
+  </table>
+</div>
+
+</body>
+</html>

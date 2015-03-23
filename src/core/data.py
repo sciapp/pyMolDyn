@@ -199,6 +199,7 @@ class CalculatedFrames(object):
                 the hdf5 group in which the data will be written
 
             `overwrite` :
+
                 specifies if existing data should be overwritten
         """
         if self.hasdata():

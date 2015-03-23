@@ -73,6 +73,7 @@ class MainWindow(QtGui.QMainWindow):
     def show_settings(self):
         SettingsDialog()
         self.control.update()
+        self.statistics_dock.update_results(self.control.visualization.results)
 
     def keyPressEvent(self, e):
         if e.key() == QtCore.Qt.Key_M:
@@ -93,6 +94,7 @@ class MainWindow(QtGui.QMainWindow):
         self.shown_dataset = results
         status = str(results)
         self.statusBar().showMessage(status)
+        self.statistics_dock.update_results(self.control.visualization.results)
 
 #    def closeEvent(self, event):
 #        reply = QtGui.QMessageBox.question(self, 'Message',

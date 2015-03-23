@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+
+  <title>{{ title }}</title>
+  <meta name="description" content="{{ description }}" />
+</head>
+
+<body>
+
+<div id="content">
+  <h2>Summary of Cavity Domains</h2>
+  <table>
+    <tr>
+        <td><strong>sum of surfaces: </strong></td>
+        <td> {{ surface_area }} &#x212b; <sup>2</sup></td>
+    </tr>
+    <tr>
+        <td><strong>sum of volumes: </strong></td>
+        <td>{{ surface_volumes }} &#x212b; <sup>3</sup></td>
+    </tr>
+    <tr>
+        <td><strong>sum of volume fractions: </strong></td>
+        <td>{{ surface_volumes_fractions }}%</td>
+    </tr>
+  </table>
+</div>
+
+</body>
+</html>
