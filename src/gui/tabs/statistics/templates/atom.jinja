@@ -10,9 +10,9 @@
 <body>
 
 <div id="content">
-  <h2>(icon) {{ atom }}</h2>
+ <div class="rect_icon" style="background-color: rgb({{atom_color_rgb[0]}}, {{atom_color_rgb[1]}}, {{atom_color_rgb[2]}} )"></div>  <div class="headline headline_atom"> {{ atom }} </div>
 
-  <table>
+  <table class="table_margins">
     <tr>
         <td>position: </td>
         <td>( {{ "%.4f, %.4f, %.4f"|format(atom_positions[0], atom_positions[1], atom_positions[2]) }} )</td>

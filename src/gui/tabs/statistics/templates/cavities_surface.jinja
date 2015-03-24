@@ -10,15 +10,15 @@
 <body>
 
 <div id="content">
-  <h2>Summary of Domain Surface-based Cavities</h2>
-  <table>
+  <div class="headline">Summary of Domain Surface-based Cavities</div>
+  <table class="table_margins">
     <tr>
         <td><strong>sum of volumes: </strong></td>
-        <td>{{ surface_volumes }} &#x212b; <sup>3</sup></td>
+        <td>{{ "%.4f"|format(surface_volumes) }} &#x212b; <sup>3</sup></td>
     </tr>
     <tr>
         <td><strong>sum of volume fractions: </strong></td>
-        <td>{{ surface_volumes_fractions }}%</td>
+        <td>{{ "%.4f"|format(volume_fraction) }}%</td>
     </tr>
   </table>
 </div>

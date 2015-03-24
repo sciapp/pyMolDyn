@@ -22,7 +22,7 @@ def render_html_atom_group(atom_number, atom_elements):
 
     return template.render(template_vars)
 
-def render_html_atom(atom, atom_positions, atom_number, covalent_radius):
+def render_html_atom(atom, atom_positions, atom_number, covalent_radius, atom_color_rgb):
     template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
     template_env = jinja2.Environment(loader=template_loader)
 
@@ -36,11 +36,12 @@ def render_html_atom(atom, atom_positions, atom_number, covalent_radius):
                     "atom_positions": atom_positions,
                     "atom_number": atom_number,
                     "covalent_radius": covalent_radius,
+                    "atom_color_rgb": atom_color_rgb,
     }
 
     return template.render(template_vars)
 
-def render_html_cavity_center_group(surface_area, surface_volumes, surface_volumes_fraction):
+def render_html_cavity_center_group(surface_area, surface_volumes, volume_fraction):
     template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
     template_env = jinja2.Environment(loader=template_loader)
 
@@ -52,30 +53,31 @@ def render_html_cavity_center_group(surface_area, surface_volumes, surface_volum
                     "description": "a summury of all calculated center bases cavities",
                     "surface_area": surface_area,
                     "surface_volumes": surface_volumes,
-                    "surface_volumes_fraction": surface_volumes_fraction,
+                    "volume_fraction": volume_fraction,
     }
 
     return template.render(template_vars)
 
-def render_html_cavity_center(cavity, surface, volume, domains):
+def render_html_cavity_center(index, surface, volume, domains, cavity_count, volume_fraction):
     template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
     template_env = jinja2.Environment(loader=template_loader)
 
     TEMPLATE_FILE = 'cavity_center.jinja'
     template = template_env.get_template( TEMPLATE_FILE )
 
-    #FAVORITES = ["chocolates", "lunar eclipses", "rabbits"]
     template_vars = { "title": "Summary of one cavity",
                     "description": "a summury of one calculated center bases cavity",
-                    "cavity": cavity,
+                    "index": index,
                     "surface": surface,
                     "volume": volume,
                     "domains": domains,
+                    "cavity_count": cavity_count,
+                    "volume_fraction": volume_fraction,
     }
 
     return template.render(template_vars)
 
-def render_html_cavity_surface_group(surface_volumes, surface_volumes_fractions):
+def render_html_cavity_surface_group(surface_volumes, volume_fraction):
     template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
     template_env = jinja2.Environment(loader=template_loader)
 
@@ -86,12 +88,12 @@ def render_html_cavity_surface_group(surface_volumes, surface_volumes_fractions)
     template_vars = { "title": "Summary of atoms",
                     "description": "a summury of all calculated surface based cavities",
                     "surface_volumes": surface_volumes,
-                    "surface_volumes_fractions": surface_volumes_fractions,
+                    "volume_fraction": volume_fraction,
     }
 
     return template.render(template_vars)
 
-def render_html_cavity_surface(cavity, volume, domains):
+def render_html_cavity_surface(index, volume, domains, cavity_count, volume_fraction):
     template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
     template_env = jinja2.Environment(loader=template_loader)
 
@@ -101,9 +103,11 @@ def render_html_cavity_surface(cavity, volume, domains):
     #FAVORITES = ["chocolates", "lunar eclipses", "rabbits"]
     template_vars = { "title": "Summary of atoms",
                     "description": "a summury of all calculated surface based cavities",
-                    "cavity": cavity,
+                    "index": index,
                     "volume": volume,
                     "domains": domains,
+                    "cavity_count": cavity_count,
+                    "volume_fraction": volume_fraction,
     }
 
     return template.render(template_vars)
@@ -125,17 +129,21 @@ def render_html_cavity_domain_group(surface_area, surface_volumes, surface_volum
 
     return template.render(template_vars)
 
-def render_html_cavity_domain(domain):
+def render_html_cavity_domain(index, domain_center, surface, volume, volume_fraction):
     template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
     template_env = jinja2.Environment(loader=template_loader)
 
-    TEMPLATE_FILE = 'domains.jinja'
+    TEMPLATE_FILE = 'domain.jinja'
     template = template_env.get_template( TEMPLATE_FILE )
 
     #FAVORITES = ["chocolates", "lunar eclipses", "rabbits"]
-    template_vars = { "title": "Summary of atoms",
-                    "description": "a summury of all calculated domains",
-                    "atoms": domain
+    template_vars = { "title": "Summary of one domain",
+                    "description": "a summury of one calculated domain",
+                    "index": index,
+                    "domain_center": domain_center,
+                    "surface": surface,
+                    "volume": volume,
+                    "volume_fraction": volume_fraction,
     }
 
     return template.render(template_vars)
@@ -175,31 +183,37 @@ class HTMLWindow(QtGui.QWidget):
 
     def show_atom(self, index):
         atom_name = self.atoms.elements[index]           # atom name from periodic systen
-        atom = core.elements.names[core.elements.numbers[atom_name.upper()]]        # get full atom name
+
+        atom = core.elements.names[core.elements.numbers[atom_name.upper()]]                # get full atom name
+        atom_color_rgb = core.elements.colors[core.elements.numbers[atom_name.upper()]]
         atom_positions = self.atoms.positions[index]
         atom_number = core.elements.numbers[atom_name.upper()]
         covalent_radius = self.atoms.covalence_radii[index]
-        #cavities = []
-        #cavities_alt = []
-        #domains = []
-        #print dir(self.atoms)
-        #print self.domains.volumes
-        #print self.cavities_center.multicavities
-        #print self.cavities_surface.multicavities
 
-        self.webview.setHtml(render_html_atom(atom, atom_positions, atom_number, covalent_radius))
+        print dir(self.domains[0])
+
+        self.webview.setHtml(render_html_atom(atom, atom_positions, atom_number, covalent_radius, atom_color_rgb))
 
     def show_center_cavity_group(self):
         #todo real values
-        surface_area = 0.0
-        surface_volumes = 0.0
-        surface_volumes_fractions = 0.0
+        surface = 0.0
+        volumes = 0.0
+        volume_fraction = 0.0
+        if self.cavities_center is not None:
+            for sf in self.cavities_center.surface_areas:
+                surface += sf
+            for vl in self.cavities_center.volumes:
+                volumes += vl
 
-        self.webview.setHtml(render_html_cavity_center_group(surface_area, surface_volumes, surface_volumes_fractions))
+        if self.atoms.volume is not None:
+            volume_fraction = (volumes/self.atoms.volume.volume)*100
+
+        self.webview.setHtml(render_html_cavity_center_group(surface, volumes, volume_fraction))
 
     def show_center_cavity(self, index):
         #print self.cavities_center.number # anzahl cavites
 
+        volume_fraction = 0.0
         cavities = self.cavities_center.multicavities[index]
         domains = []
         for cavity in cavities:
@@ -208,37 +222,68 @@ class HTMLWindow(QtGui.QWidget):
 
         surface = self.cavities_center.surface_areas[index]
         volume = self.cavities_center.volumes[index]
-        self.webview.setHtml(render_html_cavity_center(index, surface, volume, domains))
+        cavity_count = len(cavities)
+
+        if self.atoms.volume is not None:
+            volume_fraction = (volume/self.atoms.volume.volume)*100
+
+        self.webview.setHtml(render_html_cavity_center(index, surface, volume, domains, cavity_count, volume_fraction))
 
     def show_surface_cavity_group(self):
-        #todo real values
-        surface_volumes = 0.0
-        surface_volumes_fractions = 0.0
+        volumes = 0.0
+        volume_fraction = 0.0
+        if self.cavities_center is not None:
+            for vl in self.cavities_center.volumes:
+                volumes += vl
 
-        self.webview.setHtml(render_html_cavity_surface_group(surface_volumes, surface_volumes_fractions))
+        if self.atoms.volume is not None:
+            volume_fraction = (volumes/self.atoms.volume.volume)*100
+
+        self.webview.setHtml(render_html_cavity_surface_group(volumes, volume_fraction))
 
     def show_surface_cavity(self, index):
+        volume_fraction = 0.0
         cavities = self.cavities_surface.multicavities[index]
         domains = []
 
+        volume = self.cavities_surface.volumes[index]
         for cavity in cavities:
             domains.append(self.discretization.discrete_to_continuous(self.domains.centers[cavity]))
-        volume = self.cavities_surface.volumes[index]
-        self.webview.setHtml(render_html_cavity_surface(index, volume, domains))
+        cavity_count = len(cavities)
+
+        if self.atoms.volume is not None:
+            volume_fraction = (volume/self.atoms.volume.volume)*100
+
+        self.webview.setHtml(render_html_cavity_surface(index, volume, domains, cavity_count, volume_fraction))
 
     def show_domain_group(self):
-        #todo real values
-        surface_area = 0.0
-        surface_volumes = 0.0
-        surface_volumes_fractions = 0.0
+        surface = 0.0
+        volumes = 0.0
+        volume_fraction = 0.0
 
-        self.webview.setHtml(render_html_cavity_domain_group(surface_area, surface_volumes, surface_volumes_fractions))
+        if self.domains is not None:
+            for sf in self.domains.surface_areas:
+                surface += sf
+            for vl in self.domains.volumes:
+                volumes += vl
+
+        if self.atoms.volume is not None:
+            volume_fraction = (volumes/self.atoms.volume.volume)*100
+
+        self.webview.setHtml(render_html_cavity_domain_group(surface, volumes, volume_fraction))
 
     def show_domain(self, index):
-        domain = self.domains.centers[index]
-        print domain[0], domain[1], domain[2]
-        #domain_position = self.domains.position[index]
+        domain = self.discretization.discrete_to_continuous(self.domains.centers[index])
+        surface = self.domains.surface_areas[index]
+        volume = self.domains.volumes[index]
+        volume_fraction = 0.0
 
-        self.webview.setHtml(render_html_cavity_domain(index))
+        if self.atoms.volume is not None:
+            volume_fraction = (volume/self.atoms.volume.volume)*100
+
+        #print dir(self.domains)
+        #print len(self.domains.triangles)   # 96 == self.domains.number
+
+        self.webview.setHtml(render_html_cavity_domain(index, domain, surface, volume, volume_fraction))
 
 

@@ -10,9 +10,9 @@
 <body>
 
 <div id="content">
-  <h2>Domain Center-based Cavity {{ cavity+1 }} </h2>
+  <div class="headline">Domain Center-based Cavity {{ index+1 }} </div>
 
-  <table>
+  <table class="table_margins">
     <tr>
         <td>center: </td>
         <td>    {% for domain in domains: %}
@@ -30,11 +30,11 @@
     </tr>
     <tr>
         <td>volume fraction: </td>
-        <td>todo %</td>
+        <td>{{ "%.4f"|format(volume_fraction) }}%</td>
     </tr>
     <tr>
         <td>cavity count: </td>
-        <td>todo</td>
+        <td>{{ cavity_count }}</td>
     </tr>
     <tr>
         <td>atoms: </td>

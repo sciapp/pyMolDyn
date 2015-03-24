@@ -5,3 +5,30 @@ body {
     font-family: "Myriad Set Pro", "Helvetica", sans-serif;
     font-size: 12px;
 }
+
+.headline {
+    display: inline;
+    font-size: 20px;
+    margin-bottom: 20px;
+}
+
+.rect_icon {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+}
+
+.headline_atom {
+    position: absolute;
+    top: 10px;
+    left: 40px;
+}
+
+.table_margins {
+    margin-top: 20px;
+}
+
+.p_margins {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}

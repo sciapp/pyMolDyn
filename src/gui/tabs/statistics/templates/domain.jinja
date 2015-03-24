@@ -10,24 +10,24 @@
 <body>
 
 <div id="content">
-  <h2>Cavity Domain todo</h2>
+  <div class="headline">Cavity Domain {{ index+1 }}</div>
 
-  <table>
+  <table class="table_margins">
     <tr>
         <td>center: </td>
-        <td>({{ "%s, %s, %s"|format("todo", "todo", "todo") }})</td>
+        <td>({{ "%.4f, %.4f, %.4f"|format(domain_center[0], domain_center[1], domain_center[2]) }})</td>
     </tr>
      <tr>
         <td>surface: </td>
-        <td> todo &#x212b;&msub2;</td>
+        <td>{{ "%.4f"|format(surface) }} &#x212b;<sup>2</sup></td>
     </tr>
     <tr>
         <td>volume: </td>
-        <td>todo &#x212b;&msub3;</td>
+        <td>{{ "%.4f"|format(volume) }} &#x212b;<sup>3</sup></td>
     </tr>
     <tr>
         <td>volume fraction: </td>
-        <td>todo %</td>
+        <td>{{ "%.4f"|format(volume_fraction) }}%</td>
     </tr>
     <tr>
         <td>atoms: </td>

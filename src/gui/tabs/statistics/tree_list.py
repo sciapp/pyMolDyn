@@ -38,6 +38,9 @@ class TreeList(QtGui.QTreeWidget):
         self.itemClicked.connect(self.item_clicked)
 
     def item_clicked(self, item, column):
+        '''
+            This method decides which element in the tree_list was clicked and calls the specific show method.
+        '''
         data = item.data(0, column)
         if data == 'Atoms':
             self.html_view.show_atom_group()
