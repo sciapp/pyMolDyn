@@ -129,7 +129,7 @@ def render_html_cavity_domain_group(surface_area, surface_volumes, surface_volum
 
     return template.render(template_vars)
 
-def render_html_cavity_domain(index, domain_center, surface, volume, volume_fraction):
+def render_html_cavity_domain(index, domain_center, surface, volume, volume_fraction, cavities, alt_cavities):
     template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
     template_env = jinja2.Environment(loader=template_loader)
 
@@ -144,6 +144,9 @@ def render_html_cavity_domain(index, domain_center, surface, volume, volume_frac
                     "surface": surface,
                     "volume": volume,
                     "volume_fraction": volume_fraction,
+                    "cavities": cavities,
+                    "alt_cavities": alt_cavities
+
     }
 
     return template.render(template_vars)
@@ -182,6 +185,7 @@ class HTMLWindow(QtGui.QWidget):
         self.webview.setHtml(render_html_atom_group(atom_number, atom_elements))
 
     def show_atom(self, index):
+        print dir(self.atoms)
         atom_name = self.atoms.elements[index]           # atom name from periodic systen
 
         atom = core.elements.names[core.elements.numbers[atom_name.upper()]]                # get full atom name
@@ -190,7 +194,7 @@ class HTMLWindow(QtGui.QWidget):
         atom_number = core.elements.numbers[atom_name.upper()]
         covalent_radius = self.atoms.covalence_radii[index]
 
-        print dir(self.domains[0])
+        #print dir(self.domains[0])
 
         self.webview.setHtml(render_html_atom(atom, atom_positions, atom_number, covalent_radius, atom_color_rgb))
 
@@ -277,13 +281,26 @@ class HTMLWindow(QtGui.QWidget):
         surface = self.domains.surface_areas[index]
         volume = self.domains.volumes[index]
         volume_fraction = 0.0
+        cavities = []
+        alt_cavities = []
 
         if self.atoms.volume is not None:
             volume_fraction = (volume/self.atoms.volume.volume)*100
+        if self.domains is not None and self.cavities_center is not None and self.cavities_surface is not None:
+            for cav in range(len(self.cavities_surface.multicavities)):
+                for dom in self.cavities_surface.multicavities[cav]:
+                    if dom == index:
+                        cavities.append(cav+1)
+            for cav in range(len(self.cavities_center.multicavities)):
+                for dom in self.cavities_center.multicavities[cav]:
+                    if dom == index:
+                        alt_cavities.append(cav+1)
+
+
 
         #print dir(self.domains)
         #print len(self.domains.triangles)   # 96 == self.domains.number
 
-        self.webview.setHtml(render_html_cavity_domain(index, domain, surface, volume, volume_fraction))
+        self.webview.setHtml(render_html_cavity_domain(index, domain, surface, volume, volume_fraction, cavities, alt_cavities))
 
 

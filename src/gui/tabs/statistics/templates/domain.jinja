@@ -35,11 +35,19 @@
     </tr>
     <tr>
         <td>cavities:</td>
-        <td>todo</td>
+        <td>
+        {% for cavity in cavities: %}
+            {{ "Cavity %3d"|format(cavity) }}
+        {% endfor %}
+        </td>
     </tr>
     <tr>
         <td>alt. cavities: </td>
-        <td>todo</td>
+        <td>
+        {% for cavity in alt_cavities: %}
+            {{ "Cavity %3d"|format(cavity) }}
+        {% endfor %}
+        </td>
     </tr>
     <tr>
         <td> &nbsp; </td>
