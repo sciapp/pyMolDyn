@@ -141,7 +141,8 @@ class CalculationSettingsDialog(QtGui.QDialog):
     def lineedit_return(self):
         try:
             self.resolution = int(self.lineedit.text())
-            self.res_slider.setValue(self.resolution)
+            value = (self.resolution - self.RES_MIN) / self.RES_INTERVAL
+            self.res_slider.setValue(value)
             self.update_table()
         except ValueError:
             pass
