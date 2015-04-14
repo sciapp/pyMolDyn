@@ -12,7 +12,7 @@ def render_html_atom_group(atom_number, atom_elements):
     template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
     template_env = jinja2.Environment(loader=template_loader)
 
-    TEMPLATE_FILE = 'atoms.jinja'
+    TEMPLATE_FILE = 'atoms.html'
     template = template_env.get_template( TEMPLATE_FILE )
 
     template_vars = { "title": "Summary of atoms",
@@ -27,7 +27,7 @@ def render_html_atom(atom, atom_positions, atom_number, covalent_radius, atom_co
     template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
     template_env = jinja2.Environment(loader=template_loader)
 
-    TEMPLATE_FILE = 'atom.jinja'
+    TEMPLATE_FILE = 'atom.html'
     template = template_env.get_template( TEMPLATE_FILE )
 
     #FAVORITES = ["chocolates", "lunar eclipses", "rabbits"]
@@ -46,7 +46,7 @@ def render_html_cavity_center_group(surface_area, surface_volumes, volume_fracti
     template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
     template_env = jinja2.Environment(loader=template_loader)
 
-    TEMPLATE_FILE = 'cavities_center.jinja'
+    TEMPLATE_FILE = 'cavities_center.html'
     template = template_env.get_template( TEMPLATE_FILE )
 
     #FAVORITES = ["chocolates", "lunar eclipses", "rabbits"]
@@ -63,7 +63,7 @@ def render_html_cavity_center(index, surface, volume, domains, cavity_count, vol
     template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
     template_env = jinja2.Environment(loader=template_loader)
 
-    TEMPLATE_FILE = 'cavity_center.jinja'
+    TEMPLATE_FILE = 'cavity_center.html'
     template = template_env.get_template( TEMPLATE_FILE )
 
     template_vars = { "title": "Summary of one cavity",
@@ -82,7 +82,7 @@ def render_html_cavity_surface_group(surface_volumes, volume_fraction):
     template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
     template_env = jinja2.Environment(loader=template_loader)
 
-    TEMPLATE_FILE = 'cavities_surface.jinja'
+    TEMPLATE_FILE = 'cavities_surface.html'
     template = template_env.get_template( TEMPLATE_FILE )
 
     #FAVORITES = ["chocolates", "lunar eclipses", "rabbits"]
@@ -98,7 +98,7 @@ def render_html_cavity_surface(index, volume, domains, cavity_count, volume_frac
     template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
     template_env = jinja2.Environment(loader=template_loader)
 
-    TEMPLATE_FILE = 'cavity_surface.jinja'
+    TEMPLATE_FILE = 'cavity_surface.html'
     template = template_env.get_template( TEMPLATE_FILE )
 
     #FAVORITES = ["chocolates", "lunar eclipses", "rabbits"]
@@ -117,7 +117,7 @@ def render_html_cavity_domain_group(surface_area, surface_volumes, surface_volum
     template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
     template_env = jinja2.Environment(loader=template_loader)
 
-    TEMPLATE_FILE = 'domains.jinja'
+    TEMPLATE_FILE = 'domains.html'
     template = template_env.get_template( TEMPLATE_FILE )
 
     #FAVORITES = ["chocolates", "lunar eclipses", "rabbits"]
@@ -134,7 +134,7 @@ def render_html_cavity_domain(index, domain_center, surface, volume, volume_frac
     template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
     template_env = jinja2.Environment(loader=template_loader)
 
-    TEMPLATE_FILE = 'domain.jinja'
+    TEMPLATE_FILE = 'domain.html'
     template = template_env.get_template( TEMPLATE_FILE )
 
     #FAVORITES = ["chocolates", "lunar eclipses", "rabbits"]
