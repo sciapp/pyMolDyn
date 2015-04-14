@@ -4,6 +4,7 @@ import os.path
 import core.elements
 from collections import Counter
 from core.calculation.discretization import Discretization
+from gui.tabs.statistics.tree_list import TreeList
 
 
 
@@ -145,7 +146,8 @@ def render_html_cavity_domain(index, domain_center, surface, volume, volume_frac
                     "volume": volume,
                     "volume_fraction": volume_fraction,
                     "cavities": cavities,
-                    "alt_cavities": alt_cavities
+                    "alt_cavities": alt_cavities,
+
 
     }
 

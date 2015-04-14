@@ -1,6 +1,6 @@
 from PySide import QtGui
 from gui.tabs.statistics.tree_list import TreeList
-from gui.tabs.statistics.html_view import HTMLWindow#, render_html_atom_group, render_html_cavity_center_group, render_html_cavity_domain_group, render_html_cavity_surface_group
+from gui.tabs.statistics.html_view import HTMLWindow
 
 class StatisticsTabDock(QtGui.QDockWidget):
     """

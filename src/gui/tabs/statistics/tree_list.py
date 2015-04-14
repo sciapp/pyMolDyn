@@ -41,6 +41,7 @@ class TreeList(QtGui.QTreeWidget):
         '''
             This method decides which element in the tree_list was clicked and calls the specific show method.
         '''
+        print item.data(0, column)
         data = item.data(0, column)
         if data == 'Atoms':
             self.html_view.show_atom_group()
