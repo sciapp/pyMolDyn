@@ -37,7 +37,7 @@
         <td>cavities:</td>
         <td>
         {% for cavity in cavities: %}
-            {{ "Cavity %3d, "|format(cavity) }}
+            <a href="cavity:{{cavity}}">{{ "Cavity %3d, "|format(cavity) }}</a>
         {% endfor %}
         </td>
     </tr>
@@ -45,13 +45,13 @@
         <td>alt. cavities: </td>
         <td>
         {% for cavity in alt_cavities: %}
-            {{ "Cavity %3d, "|format(cavity) }}
+            <a href="altcavity:{{cavity}}">{{ "Cavity %3d, "|format(cavity) }}</a>
         {% endfor %}
         </td>
     </tr>
     <tr>
         <td> &nbsp; </td>
-        <td>Focus</td>
+        <td><a href="focus:{{domain_center}}">Focus</a></td>
     </tr>
   </table>
 </div>

@@ -161,17 +161,35 @@ class HTMLWindow(QtGui.QWidget):
         QtGui.QWidget.__init__(self)
         box = QtGui.QVBoxLayout()
         self.webview = QtWebKit.QWebView()
+
         self.atoms = None
         self.cavities_center = None
         self.cavities_surface = None
         self.domains = None
         self.discretization = None
+
         self.webview.setHtml(None)
+        self.webview.page().setLinkDelegationPolicy(QtWebKit.QWebPage.DelegateAllLinks)
+        self.webview.linkClicked.connect(self.link_clicked)
         path = os.path.dirname(__file__)       # get dir from this file and add it to stylesheet path
         self.webview.settings().setUserStyleSheetUrl(QtCore.QUrl.fromLocalFile(path + '/templates/style.css'))
+
         box.addWidget(self.webview)
         self.setLayout(box)
         self.show()
+
+    def link_clicked(self, data):
+        value = data.toString()
+        value = value.split(":")
+        if value[0] == "cavity":
+            self.show_surface_cavity(int(value[1])-1)
+        elif value[0] == "altcavity":
+            self.show_center_cavity(int(value[1])-1)
+        elif value[0] == "domain":
+            self.show_domain(int(value[1])-1)
+        elif value[0] == "focus":
+            print "todo, focusing: ", value[1]
+            #continuous_point = self.discretization.continuous_to_discrete(value[1])
 
     def update_results(self, results):
         self.atoms = results.atoms
