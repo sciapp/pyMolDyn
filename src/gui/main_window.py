@@ -14,7 +14,6 @@ from gl_stack import GLStack
 import core.bonds
 import core.control
 #from core.data import Results
-import visualization.visualization
 
 
 class MainWindow(QtGui.QMainWindow):
