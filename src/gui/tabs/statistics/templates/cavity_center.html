@@ -1,46 +1,48 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+    <meta charset="UTF-8"/>
 
-  <title>{{ title }}</title>
-  <meta name="description" content="{{ description }}" />
+    <title>{{ title }}</title>
+    <meta name="description" content="{{ description }}"/>
 </head>
 
 <body>
 
 <div id="content">
-  <div class="headline">Domain Center-based Cavity {{ index+1 }} </div>
+    <div class="headline">Domain Center-based Cavity {{ index+1 }}</div>
 
-  <table class="table_margins">
-    <tr>
-        <td>center: </td>
-        <td>    {% for domain in domains: %}
-                    <a href="domain:{{loop.index}}">({{ "%.4f, %.4f, %.4f"|format(domain[0], domain[1], domain[2]) }})</a> <br />
+    <table class="table_margin_upper_table">
+        <tr>
+            <td>center:</td>
+            <td> {% for domain in domains: %}
+                <a href="domain:{{loop.index}}">({{ "%.4f, %.4f, %.4f"|format(domain[0], domain[1], domain[2]) }})</a>
+                <br/>
 
-                {% endfor %}</td>
-    </tr>
-    <tr>
-        <td>surface: </td>
-        <td>{{ "%.4f"|format(surface) }} &#x212b;<sup>2</sup></td>
-    </tr>
-    <tr>
-        <td>volume: </td>
-        <td>{{ "%.4f"|format(volume) }} &#x212b;<sup>3</sup></td>
-    </tr>
-    <tr>
-        <td>volume fraction: </td>
-        <td>{{ "%.4f"|format(volume_fraction) }}%</td>
-    </tr>
-    <tr>
-        <td>cavity count: </td>
-        <td>{{ cavity_count }}</td>
-    </tr>
-    <tr>
-        <td>atoms: </td>
-        <td>todo</td>
-    </tr>
-  </table>
+                {% endfor %}
+            </td>
+        </tr>
+        <tr>
+            <td>surface:</td>
+            <td>{{ "%.4f"|format(surface) }} &#x212b;<sup>2</sup></td>
+        </tr>
+        <tr>
+            <td>volume:</td>
+            <td>{{ "%.4f"|format(volume) }} &#x212b;<sup>3</sup></td>
+        </tr>
+        <tr>
+            <td>volume fraction:</td>
+            <td>{{ "%.4f"|format(volume_fraction) }}%</td>
+        </tr>
+        <tr>
+            <td>cavity count:</td>
+            <td>{{ cavity_count }}</td>
+        </tr>
+        <!--<tr>
+            <td>atoms: </td>
+            <td>todo</td>
+        </tr>-->
+    </table>
 </div>
 </body>
 </html>

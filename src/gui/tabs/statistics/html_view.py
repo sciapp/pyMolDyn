@@ -23,7 +23,7 @@ def render_html_atom_group(atom_number, atom_elements):
 
     return template.render(template_vars)
 
-def render_html_atom(atom, atom_positions, atom_number, covalent_radius, atom_color_rgb):
+def render_html_atom(atom, atom_positions, atom_number, covalent_radius, atom_color_rgb, bonds):
     template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
     template_env = jinja2.Environment(loader=template_loader)
 
@@ -38,6 +38,7 @@ def render_html_atom(atom, atom_positions, atom_number, covalent_radius, atom_co
                     "atom_number": atom_number,
                     "covalent_radius": covalent_radius,
                     "atom_color_rgb": atom_color_rgb,
+                    "bonds": bonds,
     }
 
     return template.render(template_vars)
@@ -179,6 +180,11 @@ class HTMLWindow(QtGui.QWidget):
         self.show()
 
     def link_clicked(self, data):
+        '''
+        examines the data of the given link by *data* an calls the specific method to render the new HTML page
+        :param data: Value of the link clicked in Webview
+        :return: None
+        '''
         value = data.toString()
         value = value.split(":")
         if value[0] == "cavity":
@@ -188,8 +194,11 @@ class HTMLWindow(QtGui.QWidget):
         elif value[0] == "domain":
             self.show_domain(int(value[1])-1)
         elif value[0] == "focus":
-            print "todo, focusing: ", value[1]
-            #continuous_point = self.discretization.continuous_to_discrete(value[1])
+            position = [float(value[1]),float(value[2]),float(value[3])]
+            continuous_position = self.discretization.continuous_to_discrete(position)
+            print continuous_position, position
+        elif value[0] == "atom":
+            self.show_atom(int(value[1]))
 
     def update_results(self, results):
         self.atoms = results.atoms
@@ -204,19 +213,25 @@ class HTMLWindow(QtGui.QWidget):
 
         self.webview.setHtml(render_html_atom_group(atom_number, atom_elements))
 
+
     def show_atom(self, index):
         print dir(self.atoms)
-        atom_name = self.atoms.elements[index]           # atom name from periodic systen
 
+        #for bond in bonds:
+        #    if index not in self.atoms.bonds[bond]:
+        #        self.atoms.bonds[bond].append(index)
+
+        atom_name = self.atoms.elements[index]           # atom name from periodic systen
         atom = core.elements.names[core.elements.numbers[atom_name.upper()]]                # get full atom name
         atom_color_rgb = core.elements.colors[core.elements.numbers[atom_name.upper()]]
         atom_positions = self.atoms.positions[index]
         atom_number = core.elements.numbers[atom_name.upper()]
         covalent_radius = self.atoms.covalence_radii[index]
+        bonds = self.atoms.bonds[index]
 
         #print dir(self.domains[0])
 
-        self.webview.setHtml(render_html_atom(atom, atom_positions, atom_number, covalent_radius, atom_color_rgb))
+        self.webview.setHtml(render_html_atom(atom, atom_positions, atom_number, covalent_radius, atom_color_rgb, bonds))
 
     def show_center_cavity_group(self):
         #todo real values

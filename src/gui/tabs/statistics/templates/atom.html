@@ -1,47 +1,98 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+    <meta charset="UTF-8"/>
 
-  <title>{{ title }}</title>
-  <meta name="description" content="{{ description }}" />
+    <title>{{ title }}</title>
+    <meta name="description" content="{{ description }}"/>
 </head>
 
 <body>
 
 <div id="content">
- <div class="rect_icon" style="background-color: rgb({{atom_color_rgb[0]}}, {{atom_color_rgb[1]}}, {{atom_color_rgb[2]}} )"></div>  <div class="headline headline_atom"> {{ atom }} </div>
+    <div class="rect_icon"
+         style="background-color: rgb({{atom_color_rgb[0]}}, {{atom_color_rgb[1]}}, {{atom_color_rgb[2]}} )"></div>
+    <div class="headline headline_atom"> {{ atom }}</div>
 
-  <table class="table_margins">
-    <tr>
-        <td>position: </td>
-        <td>( {{ "%.4f, %.4f, %.4f"|format(atom_positions[0], atom_positions[1], atom_positions[2]) }} )</td>
-    </tr>
-    <tr>
-        <td>atomic number: </td>
-        <td>{{ atom_number }}</td>
-    </tr>
-    <tr>
-        <td>covalent radius: </td>
-        <td>{{ "%.4f"|format(covalent_radius) }} &#x212b; </td>
-    </tr>
-    <tr>
-        <td>cavities: </td>
-        <td>todo</td>
-    </tr>
-    <tr>
-        <td>alt. cavities:</td>
-        <td>todo</td>
-    </tr>
-    <tr>
-        <td>domains: </td>
-        <td>todo</td>
-    </tr>
-    <tr>
-        <td> &nbsp; </td>
-        <td>Focus</td>
-    </tr>
-  </table>
+    <table class="table_margin_upper_table">
+        <tr>
+            <td>position:</td>
+            <td>( {{ "%.4f, %.4f, %.4f"|format(atom_positions[0], atom_positions[1], atom_positions[2]) }} )</td>
+        </tr>
+        <tr>
+            <td>atomic number:</td>
+            <td>{{ atom_number }}</td>
+        </tr>
+        <tr>
+            <td>covalent radius:</td>
+            <td>{{ "%.4f"|format(covalent_radius) }} &#x212b; </td>
+        </tr>
+        <!--<tr>
+            <td>cavities: </td>
+            <td>todo</td>
+        </tr>
+        <tr>
+            <td>alt. cavities:</td>
+            <td>todo</td>
+        </tr>
+        <tr>
+            <td>domains: </td>
+            <td>todo</td>
+        </tr>-->
+        <tr>
+            <td><strong>Bonding Information:</strong></td>
+            <td> &nbsp; </td>
+        </tr>
+        <tr>
+            <td>Bond criterion:</td>
+            <td>Radii sum</td>
+        </tr>
+        <tr>
+            <td>Radii sum factor:</td>
+            <td>todo</td>
+        </tr>
+        <tr>
+            <td> &nbsp;</td>
+            <td> &nbsp;</td>
+        </tr>
+        <tr>
+            <td> &nbsp; </td>
+            <td><a href="focus:{{atom_positions[0]}}:{{atom_positions[1]}}:{{atom_positions[2]}}">Focus</a></td>
+        </tr>
+        <tr>
+            <td> &nbsp;</td>
+            <td> &nbsp;</td>
+        </tr>
+    </table>
+
+    <table>
+        <tr>
+            <strong>
+                <td>bonded atoms</td>
+                <td>covalence</td>
+                <td>bond length</td>
+            </strong>
+        </tr>
+        {% for bond in bonds %}
+        <tr>
+            <td><a href="atom:{{bond}}">Atom {{ bond+1 }}</a></td>
+            <td>todo</td>
+            <td>todo</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <p>bond angles:</p>
+    <table>
+        <tr>
+            <td><strong>Atom</strong></td>
+            <td>todo</td>
+        </tr>
+        <tr>
+            <td>todo</td>
+            <td>todo</td>
+        </tr>
+    </table>
 </div>
 
 </body>

@@ -474,6 +474,7 @@ class Atoms(object):
     def bonds(self):
         if self._bonds is None:
             self._bonds = core.bonds.get_bonds_with_radii(self, 1.15)
+            self._bonds = core.bonds.get_bonds_symetric_indicies(self._bonds)
         return self._bonds
 
     @property

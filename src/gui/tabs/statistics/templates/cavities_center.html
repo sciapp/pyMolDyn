@@ -1,30 +1,30 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+    <meta charset="UTF-8"/>
 
-  <title>{{ title }}</title>
-  <meta name="description" content="{{ description }}" />
+    <title>{{ title }}</title>
+    <meta name="description" content="{{ description }}"/>
 </head>
 
 <body>
 
 <div id="content">
-  <div class="headline">Summary of Domain Center-based Cavities</div>
-  <table class="table_margins">
-    <tr>
-        <td><strong>sum of surface area: </strong></td>
-        <td>{{ "%.4f"|format(surface_area) }} &#x212b; <sup>2</sup></td>
-    </tr>
-    <tr>
-        <td><strong>sum of volumes: </strong></td>
-        <td>{{ "%.4f"|format(surface_volumes) }} &#x212b; <sup>3</sup></td>
-    </tr>
-    <tr>
-        <td><strong>sum of volume fractions: </strong></td>
-        <td>{{ "%.4f"|format(volume_fraction) }} %</td>
-    </tr>
-  </table>
+    <div class="headline">Summary of Domain Center-based Cavities</div>
+    <table class="table_margin_upper_table">
+        <tr>
+            <td><strong>sum of surface area: </strong></td>
+            <td>{{ "%.4f"|format(surface_area) }} &#x212b; <sup>2</sup></td>
+        </tr>
+        <tr>
+            <td><strong>sum of volumes: </strong></td>
+            <td>{{ "%.4f"|format(surface_volumes) }} &#x212b; <sup>3</sup></td>
+        </tr>
+        <tr>
+            <td><strong>sum of volume fractions: </strong></td>
+            <td>{{ "%.4f"|format(volume_fraction) }} %</td>
+        </tr>
+    </table>
 </div>
 
 </body>

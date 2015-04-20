@@ -4,6 +4,7 @@ body {
     text-align: left;
     font-family: "Myriad Set Pro", "Helvetica", sans-serif;
     font-size: 12px;
+    margin-left: 10px
 }
 
 .headline {
@@ -24,11 +25,15 @@ body {
     left: 40px;
 }
 
-.table_margins {
+.table_margin_upper_table {
     margin-top: 20px;
+    margin-left: -3px;
 }
 
 .p_margins {
     margin-top: 20px;
     margin-bottom: 20px;
+
 }
+
+
