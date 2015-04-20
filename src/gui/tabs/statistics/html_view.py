@@ -2,6 +2,7 @@ import jinja2
 from PySide import QtWebKit, QtGui, QtCore
 import os.path
 import core.elements
+import core.bonds
 from collections import Counter
 from core.calculation.discretization import Discretization
 from gui.tabs.statistics.tree_list import TreeList
@@ -207,6 +208,7 @@ class HTMLWindow(QtGui.QWidget):
         self.domains = results.domains
         self.discretization = Discretization(results.atoms.volume, results.resolution, True)
 
+
     def show_atom_group(self):
         atom_number = self.atoms.number
         atom_elements = Counter(self.atoms.elements)
@@ -217,21 +219,24 @@ class HTMLWindow(QtGui.QWidget):
     def show_atom(self, index):
         print dir(self.atoms)
 
+
+
         #for bond in bonds:
         #    if index not in self.atoms.bonds[bond]:
         #        self.atoms.bonds[bond].append(index)
 
         atom_name = self.atoms.elements[index]           # atom name from periodic systen
-        atom = core.elements.names[core.elements.numbers[atom_name.upper()]]                # get full atom name
+        atom_fullname = core.elements.names[core.elements.numbers[atom_name.upper()]]                # get full atom name
         atom_color_rgb = core.elements.colors[core.elements.numbers[atom_name.upper()]]
         atom_positions = self.atoms.positions[index]
         atom_number = core.elements.numbers[atom_name.upper()]
         covalent_radius = self.atoms.covalence_radii[index]
         bonds = self.atoms.bonds[index]
 
+
         #print dir(self.domains[0])
 
-        self.webview.setHtml(render_html_atom(atom, atom_positions, atom_number, covalent_radius, atom_color_rgb, bonds))
+        self.webview.setHtml(render_html_atom(atom_fullname, atom_positions, atom_number, covalent_radius, atom_color_rgb, bonds))
 
     def show_center_cavity_group(self):
         #todo real values

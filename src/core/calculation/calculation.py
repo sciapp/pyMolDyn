@@ -72,6 +72,7 @@ class CalculationSettings(object):
                  domains=False,
                  surface_cavities=False,
                  center_cavities=False,
+                 calculate_bonds=False,
                  recalculate=False,
                  export=False,
                  exportfiles=None):
@@ -82,6 +83,7 @@ class CalculationSettings(object):
         self.domains = domains
         self.surface_cavities = surface_cavities
         self.center_cavities = center_cavities
+        self.calculate_bonds = calculate_bonds
         self.recalculate = recalculate
         self.export = export
         self.exportfiles = exportfiles

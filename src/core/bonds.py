@@ -105,8 +105,9 @@ def calculate_bond_angles(atoms, bond_target_index_arrays):
         if np.dot(nvec2, np.cross(nvec1, axis)) < 0:
             angle = -angle
         bond_chain_angles[tuple(bond_chain)] = angle
-    return bond_angles, bond_chain_angles
 
+    print "bond_anglges", bond_angles[0]
+    return bond_angles, bond_chain_angles
 
 def normalized(vec):
     """ Return the normalized version of a numpy array """
