@@ -78,14 +78,12 @@ class CalculationSettingsDialog(QtGui.QDialog):
         self.surf_check = QtGui.QCheckBox('calculate surface based cavities', self)
         self.surf_check.setCheckState(QtCore.Qt.CheckState.Checked)
         self.center_check = QtGui.QCheckBox('calculate center based cavities', self)
-        self.bonds_check = QtGui.QCheckBox('calculate bond angles and bond dihedral angles', self)
         self.overwrite_check = QtGui.QCheckBox('overwrite existing results', self)
 
         vbox.addLayout(res_hbox)
         vbox.addWidget(self.table_view)
         vbox.addWidget(self.surf_check)
         vbox.addWidget(self.center_check)
-        vbox.addWidget(self.bonds_check)
         vbox.addWidget(self.overwrite_check)
 
         vbox.addLayout(button_hbox)
@@ -176,7 +174,6 @@ class CalculationSettingsDialog(QtGui.QDialog):
         ok = self.exec_()
         surface_based = self.surf_check.checkState() == QtCore.Qt.CheckState.Checked
         center_based = self.center_check.checkState() == QtCore.Qt.CheckState.Checked
-        calc_bonds = self.bonds_check.checkState() == QtCore.Qt.CheckState.Checked
         overwrite = self.overwrite_check.checkState() == QtCore.Qt.CheckState.Checked
 
         return calculation.CalculationSettings(self.file_frame_dict,
@@ -184,6 +181,5 @@ class CalculationSettingsDialog(QtGui.QDialog):
                                                True,
                                                surface_based,
                                                center_based,
-                                               calc_bonds,
                                                overwrite), \
                                                ok

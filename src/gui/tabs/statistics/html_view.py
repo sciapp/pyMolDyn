@@ -24,7 +24,7 @@ def render_html_atom_group(atom_number, atom_elements):
 
     return template.render(template_vars)
 
-def render_html_atom(atom, atom_positions, atom_number, covalent_radius, atom_color_rgb, bonds):
+def render_html_atom(index, atom_fullname, atom_positions, atom_number, covalent_radius, atom_color_rgb, bonds):
     template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
     template_env = jinja2.Environment(loader=template_loader)
 
@@ -34,7 +34,8 @@ def render_html_atom(atom, atom_positions, atom_number, covalent_radius, atom_co
     #FAVORITES = ["chocolates", "lunar eclipses", "rabbits"]
     template_vars = { "title": "Summary of atoms",
                     "description": "a summury of one atom",
-                    "atom": atom,
+                    "index": index,
+                    "atom_fullname": atom_fullname,
                     "atom_positions": atom_positions,
                     "atom_number": atom_number,
                     "covalent_radius": covalent_radius,
@@ -236,7 +237,7 @@ class HTMLWindow(QtGui.QWidget):
 
         #print dir(self.domains[0])
 
-        self.webview.setHtml(render_html_atom(atom_fullname, atom_positions, atom_number, covalent_radius, atom_color_rgb, bonds))
+        self.webview.setHtml(render_html_atom(index, atom_fullname, atom_positions, atom_number, covalent_radius, atom_color_rgb, bonds))
 
     def show_center_cavity_group(self):
         #todo real values

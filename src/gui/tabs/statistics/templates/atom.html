@@ -12,7 +12,7 @@
 <div id="content">
     <div class="rect_icon"
          style="background-color: rgb({{atom_color_rgb[0]}}, {{atom_color_rgb[1]}}, {{atom_color_rgb[2]}} )"></div>
-    <div class="headline headline_atom"> {{ atom }}</div>
+    <div class="headline headline_atom"> {{ atom_fullname }}</div>
 
     <table class="table_margin_upper_table">
         <tr>
@@ -40,6 +40,18 @@
             <td>todo</td>
         </tr>-->
         <tr>
+            <td> &nbsp; </td>
+            <td><a href="focus:{{atom_positions[0]}}:{{atom_positions[1]}}:{{atom_positions[2]}}">Focus</a></td>
+        </tr>
+        <tr>
+            <td> &nbsp; </td>
+            <td> &nbsp; </td>
+        </tr>
+    </table>
+
+    <table>
+
+        <tr>
             <td><strong>Bonding Information:</strong></td>
             <td> &nbsp; </td>
         </tr>
@@ -52,19 +64,11 @@
             <td>todo</td>
         </tr>
         <tr>
-            <td> &nbsp;</td>
-            <td> &nbsp;</td>
-        </tr>
-        <tr>
             <td> &nbsp; </td>
-            <td><a href="focus:{{atom_positions[0]}}:{{atom_positions[1]}}:{{atom_positions[2]}}">Focus</a></td>
-        </tr>
-        <tr>
-            <td> &nbsp;</td>
-            <td> &nbsp;</td>
+            <td> &nbsp; </td>
         </tr>
     </table>
-
+    {% if bonds: %}
     <table>
         <tr>
             <strong>
@@ -80,19 +84,42 @@
             <td>todo</td>
         </tr>
         {% endfor %}
+        <tr>
+            <td> &nbsp; </td>
+            <td> &nbsp; </td>
+            <td> &nbsp; </td>
+        </tr>
     </table>
 
     <p>bond angles:</p>
-    <table>
+    <table style="text-align: center;">
+        {% set bond_list = [index] + bonds %}
+
         <tr>
             <td><strong>Atom</strong></td>
-            <td>todo</td>
+            {% for atom in bond_list %}
+                <td>{{atom+1}}</td>
+            {% endfor %}
         </tr>
-        <tr>
-            <td>todo</td>
-            <td>todo</td>
+        {% for ar in bond_list: %}
+            <tr>
+            {% for ac in bond_list: %}
+                {% if loop.index == 1: %}
+                    <td>{{ ar+1 }}</td>
+                {% endif %}
+
+                {% if ac == ar: %}
+                    <td>–</td>
+                {% else: %}
+                    <td>todo</td>
+                {% endif %}
+            {% endfor %}
+            </tr>
+        {% endfor %}
         </tr>
     </table>
+    {% endif %}
+
 </div>
 
 </body>

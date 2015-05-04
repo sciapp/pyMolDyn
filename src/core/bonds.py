@@ -106,7 +106,7 @@ def calculate_bond_angles(atoms, bond_target_index_arrays):
             angle = -angle
         bond_chain_angles[tuple(bond_chain)] = angle
 
-    print "bond_anglges", bond_angles[0]
+    #print "bond_anglges", bond_angles[0]
     return bond_angles, bond_chain_angles
 
 def normalized(vec):
