@@ -11,12 +11,18 @@ import os
 from datetime import datetime
 import dateutil.parser
 import h5py
-import pybel
 import volumes
 from config.configuration import config
 from util.logger import Logger
 import core.elements
 import core.bonds
+try:
+    import pybel
+    USE_PYBEL = True
+    PYBEL_MOLECULE_TYPE = pybel.Molecule
+except ImportError:
+    USE_PYBEL = False
+    PYBEL_MOLECULE_TYPE = None
 
 
 logger = Logger("core.data")
@@ -380,7 +386,7 @@ class Atoms(object):
         - ``Atoms(positions, radii, elements, volume)`` :
             create the object using the given data
 
-        - ``Atoms(molecule)`` :
+        - ``Atoms(molecule, volume)`` :
             read the data from this :class:`pybel.Molecule` object
 
         - ``Atoms(hdf5group)`` :
@@ -400,28 +406,31 @@ class Atoms(object):
                 volume = h5group.attrs["volume"]
             else:
                 volume = h5group.parent.attrs["volume"]
-            self.volume = volumes.Volume.fromstring(str(volume))
-        elif isinstance(args[0], pybel.Molecule):
-            molecule = args[0]
-            if len(args) > 1:
-                self.volume = args[1]
-                if isinstance(self.volume, str):
-                    self.volume = volumes.Volume.fromstring(self.volume)
-                func = lambda a: self.volume.get_equivalent_point(a.coords)
-            else:
-                func = lambda atom: atom.coords
-            positions = map(func, molecule)
-            elements = map(lambda atom: core.elements.symbols[atom.atomicnum],
-                           molecule)
-            radii = None
+            volume = volumes.Volume.fromstring(str(volume))
         else:
-            positions = args[0]
-            radii = args[1]
-            elements = args[2]
-            self.volume = args[3]
-            if isinstance(self.volume, str):
-                self.volume = volumes.Volume.fromstring(self.volume)
+            # in these two cases atom positions may be outside of the volume
+            if USE_PYBEL and isinstance(args[0], PYBEL_MOLECULE_TYPE):
+                molecule = args[0]
+                if len(args) > 1:
+                    volume = args[1]
+                else:
+                    volume = None
+                positions = map(lambda atom: atom.coords, molecule)
+                elements = map(lambda atom: core.elements.symbols[atom.atomicnum],
+                               molecule)
+                radii = None
+            else:
+                positions = args[0]
+                radii = args[1]
+                elements = args[2]
+                volume = args[3]
 
+            if isinstance(volume, str):
+                volume = volumes.Volume.fromstring(volume)
+            if volume is not None:
+                positions = map(lambda pos: volume.get_equivalent_point(pos),
+                                positions)
+        self.volume = volume
         self.positions = np.array(positions, dtype=np.float, copy=False)
         self.number = self.positions.shape[0]
         if radii is not None:

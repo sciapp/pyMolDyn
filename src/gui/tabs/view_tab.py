@@ -43,8 +43,8 @@ class ViewTab(QtGui.QWidget):
         self.atom_check = QtGui.QCheckBox('show atoms', self)
         self.bonds_check = QtGui.QCheckBox('show bonds', self)
         self.domain_check = QtGui.QCheckBox('show domains', self)
-        self.cavity_check = QtGui.QCheckBox('show cavities', self)
-        self.alt_cav_check = QtGui.QCheckBox('show alt. cavities', self)
+        self.cavity_check = QtGui.QCheckBox('show cavities (surface method)', self)
+        self.alt_cav_check = QtGui.QCheckBox('show cavities (center method)', self)
 
         # TODO synch with dataset
         # self.box_check.setCheckState(self.vis_settings.show_bounding_box)

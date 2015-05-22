@@ -4,7 +4,6 @@ This module provides classes to handle pyMolDyn related files.
 """
 
 import os
-import pybel
 import h5py
 from datetime import datetime
 import data
@@ -105,43 +104,65 @@ class XYZFile(InputFile):
 
     def readinfo(self):
         try:
-            f = pybel.readfile("xyz", self.path.encode("ascii"))
-            molecule = f.next()
-            self._info.volumestr = molecule.title
-            self._info.num_frames = sum(1 for _ in f) + 1
+            self._info.num_frames = 0
+            with open(self.path.encode("ascii"), 'r') as f:
+                try:
+                    while True:
+                        num_atoms = f.next()
+                        if not num_atoms:
+                            break
+                        num_atoms = int(num_atoms)
+                        volume_info = f.next()
+                        for i in range(num_atoms):
+                            f.next()
+                        self._info.num_frames += 1
+                        if self._info.num_frames == 1:
+                            self._info.volumestr = volume_info
+                except StopIteration:
+                    pass
             self.inforead = True
         except IOError:
             raise
         except Exception as e:
             raise FileError("Cannot read file info.", e)
-        finally:
-            f.close()
 
     def readatoms(self, frame):
         try:
-            f = pybel.readfile("xyz", self.path.encode("ascii"))
-            i = 0
-            molecule = f.next()
-            if not self.inforead:
-                self._info.volumestr = molecule.title
-            for m in f:
-                i += 1
-                if i == frame:
-                    molecule = m
-                    if self.inforead:
-                        break
-            if not self.inforead:
-                self._info.num_frames = i + 1
-                self.inforead = True
-            if i < frame:
+            if self.info.num_frames <= frame:
                 raise IndexError("Frame {} not found".format(frame))
+            with open(self.path.encode("ascii"), 'r') as f:
+                try:
+                    # Skip the first frames
+                    for i in range(frame):
+                        num_atoms = f.next()
+                        if not num_atoms:
+                            break
+                        num_atoms = int(num_atoms)
+                        f.next()
+                        for i in range(num_atoms):
+                            f.next()
+                    # actually read the molecule
+                    symbols = []
+                    positions = []
+                    num_atoms = f.next()
+                    if not num_atoms:
+                        raise StopIteration
+                    num_atoms = int(num_atoms)
+                    f.next()
+                    for i in range(num_atoms):
+                        line = f.next()
+                        if line.strip():
+                            symbol, x, y, z = line.split()
+                            position = (float(x), float(y), float(z))
+                            symbols.append(symbol)
+                            positions.append(position)
+                except StopIteration:
+                    raise IndexError("Frame {} not found".format(frame))
+            return data.Atoms(positions, None, symbols, self.info.volume)
         except (IOError, IndexError):
             raise
         except Exception as e:
             raise FileError("Cannot read atom data.", e)
-        finally:
-            f.close()
-        return data.Atoms(molecule, self.info.volume)
 
 
 class ResultFile(InputFile):
