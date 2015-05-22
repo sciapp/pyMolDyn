@@ -103,7 +103,7 @@ class MassScreenshotDialog(QtGui.QDialog):
         current_frame = self.frames_to_write.pop(0)
         file_name, frame_number = current_frame
         width, height = 1920, 1080
-        image_file_name = os.path.join(self.dir_name, "{}.{:06d}.png".format(os.path.basename(file_name), frame_number))
+        image_file_name = os.path.join(self.dir_name, "{}.{:06d}.png".format(os.path.basename(file_name), frame_number+1))
         self.control.visualize(file_name, frame_number)
         self.control.visualization.create_scene()
         gr3.export(image_file_name, width, height)
