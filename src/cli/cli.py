@@ -106,14 +106,23 @@ class Cli(object):
                               "type": "int",
                               "help": "vacancy resolution"},
                              {"special_type": "parameter",
-                              "name": "bond delta",
-                              "short": "-b",
-                              "long": "--bonddelta",
+                              "name": "output directory",
+                              "short": "-o",
+                              "long": "--output_directory",
                               "action": "store",
-                              "dest": "bond_delta",
+                              "dest": "output_directory",
                               "default": None,
-                              "type": "float",
-                              "help": "constant bond delta (when no parameter is given, radii sum criterion (1.15) is used)"},
+                              "type": "str",
+                              "help": "directory to store the results in"},
+#                             {"special_type": "parameter",
+#                              "name": "bond delta",
+#                              "short": "-b",
+#                              "long": "--bonddelta",
+#                              "action": "store",
+#                              "dest": "bond_delta",
+#                              "default": None,
+#                              "type": "float",
+#                              "help": "constant bond delta (when no parameter is given, radii sum criterion (1.15) is used)"},
                              {"special_type": "disable_target",
                               "name": "no alternative cavities",
                               "short": "",
@@ -124,32 +133,23 @@ class Cli(object):
                               "type": None,
                               "help": "Alternative (center based) cavities are not calculated."},
                              {"special_type": "disable_target",
-                              "name": "no bond information",
+                              "name": "no hdf5 export",
                               "short": "",
-                              "long": "--nobondinfo",
+                              "long": "--nohdf5export",
                               "action": "store_true",
-                              "dest": "no_bond_info",
+                              "dest": "no_hdf5_export",
                               "default": False,
                               "type": None,
-                              "help": "No pieces of bond information are calculated."},
-                             {"special_type": "extra_option",
-                              "name": "export of vacancy central points",
-                              "short": "-e",
-                              "long": "--exportcentralpoints",
-                              "action": "store",
-                              "dest": "export_central_points",
-                              "default": None,
-                              "type": "string",
-                              "help": "Export calculated vacancy central points to the given path."},
-                             {"special_type": "extra_option",
-                              "name": "export of dihedral angles",
-                              "short": "-n",
-                              "long": "--exportdihedralangles",
-                              "action": "store",
-                              "dest": "export_dihedral_angles",
-                              "default": None,
-                              "type": "string",
-                              "help": "Export dihedral angles to the given path."}]
+                              "help": "No HDF5 files with results are created"},
+                             {"special_type": "disable_target",
+                              "name": "no text export",
+                              "short": "",
+                              "long": "--notextexport",
+                              "action": "store_true",
+                              "dest": "no_text_export",
+                              "default": False,
+                              "type": None,
+                              "help": "No text files with results are created"}]
         
         (self.options, self.left_args) = self.__parse_options(command_line_params)
         self.previous_progress = None
@@ -167,8 +167,11 @@ class Cli(object):
         default_settings.surface_cavities = True
         default_settings.center_cavities = not self.options.no_alternative_cavities
         default_settings.recalculate = True
-        default_settings.export = True
-        default_settings.bonds = not self.options.no_bond_info
+        default_settings.exporthdf5 = not self.options.no_hdf5_export
+        default_settings.exporttext = not self.options.no_text_export
+        default_settings.exportdir = self.options.output_directory
+        default_settings.bonds = True
+        default_settings.dihedral_angles = True
         settings_list = file_list.createCalculationSettings(default_settings)
 
         print 'processing files:'
@@ -229,7 +232,7 @@ class Cli(object):
         print
     
     def __parse_options(self, command_line_params):
-        parser = optparse.OptionParser(usage="Usage: %s [options] batch_file1 batch_file2 ...\n\nBatch files have the format:\n\nRESOLUTION resolution\nATOM_RADIUS radius\n\nfile-01.xyz\nfile-02.xyz frame frame ...\n   .\n   .\n   .\n\nRESOLUTION and ATOM_RADIUS are optional and are overridden by the command line options.\nNOTE: Specifying the atom radius does not work yet." % '%prog')
+        parser = optparse.OptionParser(usage="Usage: %s [options] batch_file1 batch_file2 ...\n\nBatch files have the format:\n\nRESOLUTION resolution\nATOM_RADIUS radius\n\nfile-01.xyz\nfile-02.xyz frame frame ...\n   .\n   .\n   .\n\nRESOLUTION and ATOM_RADIUS are optional and are overridden by the command line options." % '%prog')
         
         for opt_dict in self.options_list:
             parser.add_option(opt_dict["short"],
@@ -275,81 +278,4 @@ class Cli(object):
                 print 'warning: batch file %s not accessable and skipped' % (os.path.abspath(input_file))
                         
         return result_file_list
-    
-    def __delete_progress(self, progress, progress_func):
-        if progress is not None:
-            char_count = len(progress_func(progress))
-            sys.stdout.write('\b' * char_count)
-            sys.stdout.write(' ' * char_count)
-            sys.stdout.write('\b' * char_count)
-            
-    def __finished_targets(self, status, filename, block, mds_save, finished_job_queue):
-        # Wenn kein Fehler oder Abbruch aufgetreten ist....
-        if status == task.FINISHED:
-            def write_export_file(info_text, path, suffix, action, ext=None):
-                sys.stdout.write('\n-> %s ' % info_text)
-                (base, file_ext) = os.path.splitext(os.path.basename(filename))
-                if ext is None:
-                    ext = file_ext
-                name = path + (os.sep if path[-1] != os.sep else '') + base + suffix + ext
-                result = self.control.request_action(action, [name, True, 'w' if block == 0 else 'a'] if action == Actions.Data.WRITE_VACANCY_CENTRAL_POINTS_AS_XYZ else [name, 'w' if block == 0 else 'a'])
-                sys.stdout.write(('%s' % 'done') if result else ('%s' % 'failed'))
 
-            if not self.options.no_domains and self.options.export_central_points is not None:
-                write_export_file('export cavity central points...', self.options.export_central_points, '_with_cavity_central_points', Actions.Data.WRITE_VACANCY_CENTRAL_POINTS_AS_XYZ)
-            if not self.options.no_bond_info and self.options.export_dihedral_angles is not None:
-                write_export_file('export dihedral angles...', self.options.export_dihedral_angles, '_dihedral_angles', Actions.Data.WRITE_DIHEDRAL_ANGLES, '.ang')
-
-        self.cancel_callback = lambda : None
-        print
-        print
-        if finished_job_queue:
-            pass
-            # sys.stdin.close()                 # Zwinge Einlesethread zum Beenden der Einleseroutine
-    
-    # -------------------- interface methods -----------------
-    
-    def set_attribute(self, attribute, parameter_list):
-        
-        if attribute == Attributes.Computation.STARTED_COMPUTATION:
-            print '\n-> %s' % ('file: %s, frame: %d' % (str(parameter_list[0]), parameter_list[1]))
-            print '   %s' % ('current box size: %f' % (self.control.request_action(Actions.Settings.GET_BOX_SIZE)))
-        elif attribute == Attributes.Computation.STATUS or attribute == Attributes.Recording.STATUS:
-            if not self.options.quiet:
-                self.__delete_progress(self.previous_progress, get_progress_string)
-                self.previous_progress = None
-                sys.stdout.write('\n---> ' + parameter_list[0] + ' ')
-                sys.stdout.flush()
-        elif attribute == Attributes.Computation.PROGRESS or attribute == Attributes.Recording.PROGRESS:
-            if not self.options.quiet:
-                self.__delete_progress(self.previous_progress, get_progress_string)
-                if parameter_list[0] is not None:    
-                    sys.stdout.write(get_progress_string(parameter_list[0]))
-                    sys.stdout.flush()
-                self.previous_progress = parameter_list[0]
-        elif attribute == Attributes.Computation.FINISHED_TARGETS:
-            self.__finished_targets(*parameter_list)
-        elif attribute == Attributes.Computation.CANCEL_CALLBACK:
-            self.cancel_callback = parameter_list[0]
-        elif attribute == Attributes.Consistency.WRITABLE_MDS_DIR or attribute == Attributes.Consistency.ACCESSIBLE_MDS_DIR:
-            if not parameter_list[0]:
-                sys.stderr.write('%spyMoldyn will quit because computations cannot be performed.%s\n\n' % (('%s%s') % (shell_colors['red_font'], shell_colors['bold_font']), shell_colors['default']))
-                sys.exit(1)
-                
-        elif attribute == Attributes.Settings.LOGGING_ENABLED:
-            if parameter_list[0]:
-                logging.disable(logging.NOTSET)
-            else:
-                logging.disable(logging.INFO)
-        elif attribute == Attributes.Error.ERRORLOG:
-            do_shutdown = parameter_list[-1]
-            sys.stderr.write("\n\n")
-            for error in parameter_list[:-1]:
-                (title, static, dyn) = error
-                sys.stderr.write('%s%s%s\n' %('%s%s' % (shell_colors['red_font'], shell_colors['bold_font']), title, shell_colors['default']))
-                sys.stderr.write('%s%s%s\n' %('%s' % (shell_colors['red_font']), static, shell_colors['default']))
-                for t in dyn:
-                    sys.stderr.write(' - %s%s%s\n' %('%s' % (shell_colors['red_font']), t, shell_colors['default']))
-                sys.stderr.write('\n')
-            if do_shutdown:
-                thread.interrupt_main()

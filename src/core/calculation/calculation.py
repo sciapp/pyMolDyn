@@ -17,6 +17,7 @@ from hashlib import sha256
 from config.configuration import config
 from util.logger import Logger
 import sys
+import numpy as np
 
 __all__ = ["Calculation",
            "CalculationCache",
@@ -53,13 +54,15 @@ class CalculationSettings(object):
             calculate center-based cavities
         `recalculate` :
             results will be calculated even if cached results exists
-        `export` :
-            ``True`` if the results should be written into a file.
+        `exporthdf` :
+            ``True`` if the results should be written into a hdf5 file.
             If ``False``, they are stored in the cache.
-        `exportfiles` :
-            Dictionary which associates input file name and output file name.
-            Only used, when `export` is ``True``. If `exportfiles` is ``None``,
-            a standard filename will be used.
+        `exporttext` :
+            ``True`` if the results should be written into text files.
+        `exportdir` :
+            Directory for the exports. Only used, when at least one of
+            the export parameters is ``True``. If `exportdir` is ``None``,
+            the directory of the input file is used.
         `bonds` :
             calculate bonds
         `dihedral_angles` :
@@ -73,8 +76,9 @@ class CalculationSettings(object):
                  surface_cavities=False,
                  center_cavities=False,
                  recalculate=False,
-                 export=False,
-                 exportfiles=None):
+                 exporthdf5=False,
+                 exporttext=False,
+                 exportdir=None):
         """
         """
         self.datasets = datasets
@@ -83,8 +87,9 @@ class CalculationSettings(object):
         self.surface_cavities = surface_cavities
         self.center_cavities = center_cavities
         self.recalculate = recalculate
-        self.export = export
-        self.exportfiles = exportfiles
+        self.exporthdf5 = exporthdf5
+        self.exporttext = exporttext
+        self.exportdir = exportdir
         self.bonds = False
         self.dihedral_angles = False
 
@@ -101,8 +106,9 @@ class CalculationSettings(object):
         dup.surface_cavities = self.surface_cavities
         dup.center_cavities = self.center_cavities
         dup.recalculate = self.recalculate
-        dup.export = self.export
-        dup.exportfiles = self.exportfiles
+        dup.exporthdf5 = self.exporthdf5
+        dup.exporttext = self.exporttext
+        dup.exportdir = self.exportdir
         dup.bonds = self.bonds
         dup.dihedral_angles = self.dihedral_angles
         return dup
@@ -328,12 +334,17 @@ class Calculation(object):
         allresults = []
         for filename, frames in calcsettings.datasets.iteritems():
             filepath = os.path.abspath(filename)
-            if calcsettings.export:
-                if calcsettings.exportfiles is None or \
-                        filename not in calcsettings.exportfiles:
-                    efpath = ".".join(filename.split(".")[:-1]) + ".hdf5"
-                else:
-                    efpath = calcsettings.exportfiles[filename]
+            fileprefix = os.path.basename(filename).rsplit(".", 1)[0]
+            if calcsettings.exportdir is not None:
+                exportdir = os.path.abspath(calcsettings.exportdir)
+                if (calcsettings.exporthdf5 or calcsettings.exporttext) \
+                        and not os.path.exists(exportdir):
+                    os.makedirs(exportdir)
+            else:
+                exportdir = os.path.dirname(filepath)
+            exportformat = os.path.join(exportdir, fileprefix) + "_%s_%06d.txt"
+            if calcsettings.exporthdf5:
+                efpath = os.path.join(exportdir, fileprefix + ".hdf5")
                 efpath = os.path.abspath(efpath)
                 # copy atoms into HDF5 file
                 exportfile = core.file.HDF5File.fromInputFile(efpath, filepath)
@@ -353,6 +364,17 @@ class Calculation(object):
                     surface=calcsettings.surface_cavities,
                     center=calcsettings.center_cavities,
                     recalculate=calcsettings.recalculate)
+                if calcsettings.exporttext:
+                    centerfile = exportformat % ("centers", frame + 1)
+                    bondfile = exportformat % ("bonds", frame + 1)
+                    # TODO: write data here
+                    #np.savetxt(centerfile, frameresult.domains.centers)
+                    #with open(bondfile, "w") as f:
+                    #    for i, b in enumerate(frameresult.atoms.bonds):
+                    #        l = "%6d" % (i + 1)
+                    #        for x in b:
+                    #            l += " %6d" % (x + 1)
+                    #        print >>f, l
                 fileresults.append(frameresult)
             allresults.append(fileresults)
         return allresults
