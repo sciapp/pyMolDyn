@@ -58,6 +58,7 @@ class Configuration(ConfigNode):
         def __init__(self):
             self.cache_dir = os.path.join(CONFIG_DIRECTORY, 'cache')
             self.ffmpeg = '/usr/local/bin/ffmpeg'
+            self.result_dir = os.path.join(CONFIG_DIRECTORY, 'results')
 
     def __init__(self):
         # standard configuration

@@ -79,12 +79,22 @@ class CalculationSettingsDialog(QtGui.QDialog):
         self.surf_check.setCheckState(QtCore.Qt.CheckState.Checked)
         self.center_check = QtGui.QCheckBox('calculate center based cavities', self)
         self.overwrite_check = QtGui.QCheckBox('overwrite existing results', self)
+        self.exporthdf5_check = QtGui.QCheckBox('export results as HDF5 files', self)
+        self.exporttext_check = QtGui.QCheckBox('export results as text files', self)
+        self.exportdir_radio_input = QtGui.QRadioButton('export to the directory of the input files', self)
+        self.exportdir_radio_config = QtGui.QRadioButton('export to %s' % config.Path.result_dir, self)
+
+        self.exportdir_radio_input.setChecked(True)
 
         vbox.addLayout(res_hbox)
         vbox.addWidget(self.table_view)
         vbox.addWidget(self.surf_check)
         vbox.addWidget(self.center_check)
         vbox.addWidget(self.overwrite_check)
+        vbox.addWidget(self.exporthdf5_check)
+        vbox.addWidget(self.exporttext_check)
+        vbox.addWidget(self.exportdir_radio_input)
+        vbox.addWidget(self.exportdir_radio_config)
 
         vbox.addLayout(button_hbox)
         self.setLayout(vbox)
@@ -172,14 +182,23 @@ class CalculationSettingsDialog(QtGui.QDialog):
 
     def calculation_settings(self):
         ok = self.exec_()
-        surface_based = self.surf_check.checkState() == QtCore.Qt.CheckState.Checked
-        center_based = self.center_check.checkState() == QtCore.Qt.CheckState.Checked
-        overwrite = self.overwrite_check.checkState() == QtCore.Qt.CheckState.Checked
+        surface_based = self.surf_check.isChecked()
+        center_based = self.center_check.isChecked()
+        overwrite = self.overwrite_check.isChecked()
+        exporthdf5 = self.exporthdf5_check.isChecked()
+        exporttext = self.exporttext_check.isChecked()
+        if self.exportdir_radio_config.isChecked():
+            exportdir = config.Path.result_dir
+        else:
+            exportdir = None
 
-        return calculation.CalculationSettings(self.file_frame_dict,
-                                               self.resolution,
-                                               True,
-                                               surface_based,
-                                               center_based,
-                                               overwrite), \
-                                               ok
+        return (calculation.CalculationSettings(datasets=self.file_frame_dict,
+                                                resolution=self.resolution,
+                                                domains=True,
+                                                surface_cavities=surface_based,
+                                                center_cavities=center_based,
+                                                recalculate=overwrite,
+                                                exporthdf5=exporthdf5,
+                                                exporttext=exporttext,
+                                                exportdir=exportdir),
+                ok)
