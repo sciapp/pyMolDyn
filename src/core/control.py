@@ -63,8 +63,8 @@ class Control(object):
 
     def __init__(self):
         self.config = config
-        if not os.path.isdir(config.Path.result_dir):
-            os.mkdir(config.Path.result_dir)
+        if not os.path.isdir(config.Path.cache_dir):
+            os.makedirs(config.Path.cache_dir)
         self._calculation = calculation.Calculation()
         self._visualization = None  # will be initialized when needed
         self.results = None

@@ -129,7 +129,7 @@ class Calculation(object):
                 a default one is used
         """
         if cachedir is None:
-            cachedir = config.Path.result_dir
+            cachedir = config.Path.cache_dir
         self.cachedir = cachedir
         self.cache = CalculationCache(cachedir)
 
@@ -287,7 +287,7 @@ class Calculation(object):
                 or (center and results.center_cavities is None)):
             message.print_message("Reusing results")
         else:
-            cachepath = os.path.join(self.cachedir, 'cache.hdf5')
+            cachepath = os.path.join(self.cachedir, 'discretization_cache.hdf5')
             discretization_cache = DiscretizationCache(cachepath)
             discretization = discretization_cache.get_discretization(volume, resolution)
             atom_discretization = AtomDiscretization(atoms, discretization)
