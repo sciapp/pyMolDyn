@@ -1,16 +1,9 @@
 # -*- coding: utf-8 -*-
 
-
 from PySide import QtCore, QtGui
+import gr
+from qtgr import GRWidget
 import os
-from gr.pygr import *
-try:
-    from PySide import shiboken
-except ImportError:
-    try:
-        import shiboken
-    except ImportError:
-        from Shiboken import shiboken
 
 from util.logger import Logger
 import sys
@@ -23,19 +16,13 @@ logger = Logger("gui.histogram_widget")
 logger.setstream("default", sys.stdout, Logger.DEBUG)
 
 
-class GrHistogramWidget(QtGui.QWidget):
-    def __init__(self, *args):
-        QtGui.QWidget.__init__(self)
+class GrHistogramWidget(GRWidget):
+    def __init__(self, *args, **kwargs):
+        super(GrHistogramWidget, self).__init__(*args, **kwargs)
+        self._draw(clear=True)
 
         self.init_gui(self)
 
-        os.environ["GKS_WSTYPE"] = "381"
-        os.environ["GKS_DOUBLE_BUF"] = "True"
-
-        self.w = 500
-        self.h = 500
-        self.sizex = 1
-        self.sizey = 1
         self.xvalues = None
         self.yvalues = None
         self.title = None
@@ -51,9 +38,7 @@ class GrHistogramWidget(QtGui.QWidget):
         self.widths = widths
         self.title = title
 
-    def draw(self):
-        self.setStyleSheet("background-color:white;")
-
+    def draw(self, clear=False, update=True):
         if self.xvalues is not None and self.widths is not None:
             maxidx = np.argmax(self.xvalues)
             rangex = (self.xvalues.min(),
@@ -65,10 +50,9 @@ class GrHistogramWidget(QtGui.QWidget):
         else:
             rangey = (0.0, 8.0)
 
-        gr.clearws()
-        mwidth = self.w * 2.54 / self.logicalDpiX() / 100
-        mheight = self.h * 2.54 / self.logicalDpiY() / 100
-        gr.setwsviewport(0, mwidth, 0, mheight)
+        if clear:
+            gr.clearws()
+        gr.setwsviewport(0, self.mwidth, 0, self.mheight)
         gr.setwswindow(0, self.sizex, 0, self.sizey)
         gr.setviewport(0.075 * self.sizex, 0.95 * self.sizex,
                        0.075 * self.sizey, 0.95 * self.sizey)
@@ -99,27 +83,6 @@ class GrHistogramWidget(QtGui.QWidget):
         if self.title is not None:
             gr.text(0.8 * self.sizex, 0.9 * self.sizey, self.title)
         self.update()
-
-    def resizeEvent(self, event):
-        self.w = event.size().width()
-        self.h = event.size().height()
-        if self.w > self.h:
-            self.sizex = 1
-            self.sizey = float(self.h)/self.w
-        else:
-            self.sizex = float(self.w)/self.h
-            self.sizey = 1
-        self.draw()
-
-    def paintEvent(self, ev):
-        self.painter = QtGui.QPainter()
-        self.painter.begin(self)
-        self_pointer = long(shiboken.getCppPointer(self)[0])
-        painter_pointer = long(shiboken.getCppPointer(self.painter)[0])
-        os.environ['GKSconid'] = "%x!%x" % (self_pointer, painter_pointer)
-        self.draw()
-        gr.updatews()
-        self.painter.end()
 
 
 class HistogramWidget(QtGui.QWidget):

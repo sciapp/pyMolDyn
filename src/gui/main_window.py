@@ -16,7 +16,6 @@ from _version import __version__
 import core.bonds
 import core.control
 #from core.data import Results
-import visualization.visualization
 
 
 class MainWindow(QtGui.QMainWindow):
