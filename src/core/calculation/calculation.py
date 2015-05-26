@@ -466,7 +466,7 @@ class CalculationCache(object):
                 if filepath is not None \
                         and filename == self.cachefile(filepath):
                     self.index[filepath] = filename
-            except (IOError, AttributeError):
+            except (IOError, AttributeError, RuntimeError):
                 pass
 
     def writeindex(self):
