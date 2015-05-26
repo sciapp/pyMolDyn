@@ -130,6 +130,7 @@ class Calculation(object):
         """
         if cachedir is None:
             cachedir = config.Path.result_dir
+        self.cachedir = cachedir
         self.cache = CalculationCache(cachedir)
 
     def calculatedframes(self, filepath, resolution, surface=False, center=False):
@@ -286,8 +287,8 @@ class Calculation(object):
                 or (center and results.center_cavities is None)):
             message.print_message("Reusing results")
         else:
-            # TODO: cache directory from config
-            discretization_cache = DiscretizationCache('cache.hdf5')
+            cachepath = os.path.join(self.cachedir, 'cache.hdf5')
+            discretization_cache = DiscretizationCache(cachepath)
             discretization = discretization_cache.get_discretization(volume, resolution)
             atom_discretization = AtomDiscretization(atoms, discretization)
             message.progress(10)

@@ -56,7 +56,7 @@ class Configuration(ConfigNode):
     class Path(ConfigNode):
 
         def __init__(self):
-            self.result_dir = '../results/'
+            self.result_dir = os.path.join(CONFIG_DIRECTORY, 'results')
             self.ffmpeg = '/usr/local/bin/ffmpeg'
 
     def __init__(self):
