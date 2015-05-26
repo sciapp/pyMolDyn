@@ -18,6 +18,7 @@ from config.configuration import config
 from util.logger import Logger
 import sys
 import numpy as np
+import core.bonds
 
 __all__ = ["Calculation",
            "CalculationCache",
@@ -337,12 +338,16 @@ class Calculation(object):
             fileprefix = os.path.basename(filename).rsplit(".", 1)[0]
             if calcsettings.exportdir is not None:
                 exportdir = os.path.abspath(calcsettings.exportdir)
+                # replace asterisks with directories
+                dirlist = os.path.dirname(filepath).split("/")
+                while "*" in exportdir:
+                    i = exportdir.rindex("*")
+                    exportdir = os.path.join(exportdir[:i], dirlist.pop() + exportdir[i+1:])
                 if (calcsettings.exporthdf5 or calcsettings.exporttext) \
                         and not os.path.exists(exportdir):
                     os.makedirs(exportdir)
             else:
                 exportdir = os.path.dirname(filepath)
-            exportformat = os.path.join(exportdir, fileprefix) + "_%s_%06d.txt"
             if calcsettings.exporthdf5:
                 efpath = os.path.join(exportdir, fileprefix + ".hdf5")
                 efpath = os.path.abspath(efpath)
@@ -356,6 +361,7 @@ class Calculation(object):
                 inputfile = File.open(filepath)
                 frames = range(inputfile.info.num_frames)
             for frame in frames:
+                # calculate single frame
                 frameresult = self.calculateframe(
                     filepath,
                     frame,
@@ -364,17 +370,18 @@ class Calculation(object):
                     surface=calcsettings.surface_cavities,
                     center=calcsettings.center_cavities,
                     recalculate=calcsettings.recalculate)
+                # export to text file
                 if calcsettings.exporttext:
-                    centerfile = exportformat % ("centers", frame + 1)
-                    bondfile = exportformat % ("bonds", frame + 1)
+                    fmt = os.path.join(exportdir, fileprefix) + "-%s-%06d.txt"
                     # TODO: write data here
-                    #np.savetxt(centerfile, frameresult.domains.centers)
-                    #with open(bondfile, "w") as f:
-                    #    for i, b in enumerate(frameresult.atoms.bonds):
-                    #        l = "%6d" % (i + 1)
-                    #        for x in b:
-                    #            l += " %6d" % (x + 1)
-                    #        print >>f, l
+                    # TODO: try/except
+                    bondfile = fmt % ("bonds", frame + 1)
+                    core.bonds.export_bonds(bondfile, frameresult.atoms)
+                    anglefile = fmt % ("bond_angles", frame + 1)
+                    core.bonds.export_bond_angles(anglefile, frameresult.atoms)
+                    dihedralfile = fmt % ("bond_dihedral_angles", frame + 1)
+                    core.bonds.export_bond_dihedral_angles(dihedralfile, frameresult.atoms)
+                # gather results
                 fileresults.append(frameresult)
             allresults.append(fileresults)
         return allresults
