@@ -4,13 +4,6 @@ from PySide import QtCore, QtGui
 import gr
 from qtgr import GRWidget
 import os
-try:
-    from PySide import shiboken
-except ImportError:
-    try:
-        import shiboken
-    except ImportError:
-        from Shiboken import shiboken
 
 from util.logger import Logger
 import sys
@@ -89,6 +82,7 @@ class GrHistogramWidget(GRWidget):
 
         if self.title is not None:
             gr.text(0.8 * self.sizex, 0.9 * self.sizey, self.title)
+        self.update()
 
 
 class HistogramWidget(QtGui.QWidget):

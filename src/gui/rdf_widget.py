@@ -2,15 +2,9 @@
 
 
 from PySide import QtCore, QtGui
+import gr
+from qtgr import GRWidget
 import os
-from gr.pygr import *
-try:
-    from PySide import shiboken
-except ImportError:
-    try:
-        import shiboken
-    except ImportError:
-        from Shiboken import shiboken
 
 from util.logger import Logger
 import sys
@@ -23,21 +17,13 @@ logger = Logger("gui.rdf_widget")
 logger.setstream("default", sys.stdout, Logger.DEBUG)
 
 
-class GrPlotWidget(QtGui.QWidget):
-    def __init__(self, *args):
-        QtGui.QWidget.__init__(self)
+class GrPlotWidget(GRWidget):
+    def __init__(self, *args, **kwargs):
+        super(GrPlotWidget, self).__init__(*args, **kwargs)
+        self._draw(clear=True)
 
         self.init_gui(self)
 
-        os.environ["GKS_WSTYPE"] = "381"
-        os.environ["GKS_DOUBLE_BUF"] = "True"
-
-        # self.connect(self.DrawButton, QtCore.SIGNAL("clicked()"), self.draw)
-        # self.connect(self.QuitButton, QtCore.SIGNAL("clicked()"), self.quit)
-        self.w = 500
-        self.h = 500
-        self.sizex = 1
-        self.sizey = 1
         self.xvalues = None
         self.yvalues = None
         self.title = None
@@ -45,17 +31,6 @@ class GrPlotWidget(QtGui.QWidget):
 
     def init_gui(self, form):
         form.resize(QtCore.QSize(500, 500).expandedTo(form.minimumSizeHint()))
-
-        # self.DrawButton = QtGui.QPushButton(form)
-        # self.DrawButton.setText("Draw")
-        # self.DrawButton.setGeometry(QtCore.QRect(290, 5, 100, 25))
-        # self.DrawButton.setObjectName("draw")
-
-        # self.QuitButton = QtGui.QPushButton(form)
-        # self.QuitButton.setText("Quit")
-        # self.QuitButton.setGeometry(QtCore.QRect(395, 5, 100, 25))
-        # self.QuitButton.setObjectName("quit")
-
         QtCore.QMetaObject.connectSlotsByName(form)
 
     def quit(self):
@@ -68,16 +43,7 @@ class GrPlotWidget(QtGui.QWidget):
         self.title = title
         self.datapoints = datapoints
 
-    def draw(self):
-        self.setStyleSheet("background-color:white;")
-
-        # x = range(0, 128)
-        # y = range(0, 128)
-        # z = readfile(os.path.join(os.path.dirname(os.path.realpath(__file__)),
-        #                           "kws.dat"), separator='$')
-        # zrange = max(z) - min(z)
-        # h = [min(z) + i * 0.025 * zrange for i in range(0, 40)]
-
+    def draw(self, clear=False, update=True):
         if self.xvalues is not None:
             rangex = (self.xvalues.min(), self.xvalues.max())
         else:
@@ -87,10 +53,9 @@ class GrPlotWidget(QtGui.QWidget):
         else:
             rangey = (0, 4)
 
-        gr.clearws()
-        mwidth = self.w * 2.54 / self.logicalDpiX() / 100
-        mheight = self.h * 2.54 / self.logicalDpiY() / 100
-        gr.setwsviewport(0, mwidth, 0, mheight)
+        if clear:
+            gr.clearws()
+        gr.setwsviewport(0, self.mwidth, 0, self.mheight)
         gr.setwswindow(0, self.sizex, 0, self.sizey)
         gr.setviewport(0.075 * self.sizex, 0.95 * self.sizex,
                        0.075 * self.sizey, 0.95 * self.sizey)
@@ -107,13 +72,6 @@ class GrPlotWidget(QtGui.QWidget):
         else:
             gr.text(0.4 * self.sizex, 0.5 * self.sizey, "no elements selected")
 
-        # rug plot
-        # if not self.datapoints is None:
-        #     gr.setmarkertype(gr.MARKERTYPE_SOLID_TRI_UP)
-        #     gr.setmarkercolorind(2)
-        #     gr.setmarkersize(1.0)
-        #     gr.polymarker(self.datapoints, np.zeros_like(self.datapoints))
-
         gr.setlinecolorind(1)
         gr.axes(0.2, 0.2, rangex[0], rangey[0], 5, 5, 0.0075)
         gr.axes(0.2, 0.2, rangex[1], rangey[1], -5, -5, -0.0075)
@@ -121,27 +79,6 @@ class GrPlotWidget(QtGui.QWidget):
         if self.title is not None:
             gr.text(0.8 * self.sizex, 0.9 * self.sizey, self.title)
         self.update()
-
-    def resizeEvent(self, event):
-        self.w = event.size().width()
-        self.h = event.size().height()
-        if self.w > self.h:
-            self.sizex = 1
-            self.sizey = float(self.h)/self.w
-        else:
-            self.sizex = float(self.w)/self.h
-            self.sizey = 1
-        self.draw()
-
-    def paintEvent(self, ev):
-        self.painter = QtGui.QPainter()
-        self.painter.begin(self)
-        self_pointer = long(shiboken.getCppPointer(self)[0])
-        painter_pointer = long(shiboken.getCppPointer(self.painter)[0])
-        os.environ['GKSconid'] = "%x!%x" % (self_pointer, painter_pointer)
-        self.draw()
-        gr.updatews()
-        self.painter.end()
 
 
 class RDFWidget(QtGui.QWidget):
