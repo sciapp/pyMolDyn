@@ -59,7 +59,9 @@ class FileTab(QtGui.QWidget):
 
     def init_gui(self):
         self.vbox = QtGui.QVBoxLayout()
+        self.vbox.setSpacing(0)
         self.button_hbox = QtGui.QHBoxLayout()
+        self.button_hbox.setSpacing(10)
 
         self.file_button = QtGui.QPushButton('Open', self)
         self.file_button.clicked.connect(self.open_file_dialog)
@@ -79,6 +81,19 @@ class FileTab(QtGui.QWidget):
 
         self.vbox.addLayout(self.button_hbox)
 
+        self.button2_hbox = QtGui.QHBoxLayout()
+        self.button2_hbox.setSpacing(10)
+
+        self.select_all_button = QtGui.QPushButton('Select all frames', self)
+        self.select_all_button.clicked.connect(self.select_all)
+        self.button2_hbox.addWidget(self.select_all_button)
+
+        self.select_nth_button = QtGui.QPushButton('Select every nth frame...', self)
+        self.select_nth_button.clicked.connect(self.select_nth)
+        self.button2_hbox.addWidget(self.select_nth_button)
+
+        self.vbox.addLayout(self.button2_hbox)
+
 #        self.file_list = DragList(self)
 #        self.file_list.itemDoubleClicked.connect(self.calculate)
 #        self.file_list.itemSelectionChanged.connect(self.selection_changed)
@@ -88,9 +103,18 @@ class FileTab(QtGui.QWidget):
 #            self.file_list.add_file(path)
 
         self.file_list = TreeList(self)
+        self.vbox.addSpacing(10)
         self.vbox.addWidget(self.file_list)
 
         self.setLayout(self.vbox)
+
+    def select_all(self):
+        self.file_list.select_all()
+
+    def select_nth(self):
+        n, okay = QtGui.QInputDialog.getInt(self, "Set n", "", 1, 1)
+        if okay:
+            self.file_list.select_nth(n)
 
     def show_selected_frame(self):
         self.file_list.show_selected_frame()
@@ -280,3 +304,20 @@ class TreeList(QtGui.QTreeWidget):
             for gl_widget in widget.findChildren(GLWidget):
                 gl_widget.update_needed = True
                 QtGui.QApplication.postEvent(gl_widget, UpdateGLEvent())
+
+    def select_all(self):
+        self.select_nth(1)
+
+    def select_nth(self, n):
+        assert int(n) == n and n > 0
+        for file_index in range(self.topLevelItemCount()):
+            item = self.topLevelItem(file_index)
+            if n == 1:
+                item.setSelected(True)
+            else:
+                item.setSelected(False)
+                item.setExpanded(True)
+            # select every nth child and unselect the others
+            for frame_index in range(item.childCount()):
+                c = item.child(frame_index)
+                c.setSelected(frame_index % n == 0)

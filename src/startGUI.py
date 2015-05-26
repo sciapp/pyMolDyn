@@ -2,7 +2,8 @@
 
 import util.colored_exceptions
 from gui import main_window
-from core import volumes, control
+from core import volumes
+from core.control import Control
 from PySide import QtGui
 from PySide import QtCore
 import signal
@@ -10,9 +11,10 @@ import sys
 import os
 import core.calculation
 
-if __name__ == '__main__':
+
+def main():
     app = QtGui.QApplication(sys.argv)
-    control = control.Control()
+    control = Control()
     window = main_window.MainWindow(control)
 
     app.setOrganizationName("Forschungszentrum Jülich GmbH")
@@ -44,3 +46,7 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, lambda *args: app.quit())
 
     sys.exit(app.exec_())
+
+
+if __name__ == '__main__':
+    main()

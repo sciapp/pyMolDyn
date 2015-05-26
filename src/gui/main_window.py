@@ -8,8 +8,10 @@ from gui.tabs.image_video_tab import ImageVideoTabDock
 from gui.tabs.statistics_tab import StatisticsTabDock
 from PySide import QtCore, QtGui
 from gui.dialogs.settings_dialog import SettingsDialog
+from gui.dialogs.about_dialog import AboutDialog
 from util import message
 from gl_stack import GLStack
+from _version import __version__
 
 import core.bonds
 import core.control
@@ -52,6 +54,9 @@ class MainWindow(QtGui.QMainWindow):
 
         self.init_menu()
 
+        self.setWindowTitle('pyMolDyn v%s' % __version__)
+        self.setWindowIcon(QtGui.QIcon('icon.png'))
+
         self.show()
         # get Dock Widgets TabBar and set the first one to current
         self.file_dock.show()
@@ -84,6 +89,9 @@ class MainWindow(QtGui.QMainWindow):
         export_bond_dihedral_angles_action.setShortcut('Ctrl+3')
         export_bond_dihedral_angles_action.triggered.connect(self.wrapper_export_bond_dihedral_angles)
 
+        about_action = QtGui.QAction('&About', self)
+        about_action.triggered.connect(self.show_about_box)
+
         menubar = self.menuBar()
         file_menu = menubar.addMenu('&File')
         file_menu.addAction(open_action)
@@ -94,9 +102,18 @@ class MainWindow(QtGui.QMainWindow):
         export_submenu.addAction(export_bond_angles_action)
         export_submenu.addAction(export_bond_dihedral_angles_action)
 
+        help_menu = menubar.addMenu('&Help')
+        help_menu.addAction(about_action)
+
     def show_settings(self):
         SettingsDialog()
         self.control.update()
+
+    def show_about_box(self):
+        AboutDialog(self, 'pyMolDyn is a molecule viewer which can compute molecular cavities.', (('Florian Rhiem', 'f.rhiem@fz-juelich.de'),
+                                                                                                  ('Fabian Beule', 'f.beule@fz-juelich.de'),
+                                                                                                  ('David Knodt', 'd.knodt@fz-juelich.de'),
+                                                                                                  ('Ingo Heimbach', 'i.heimbach@fz-juelich.de'))).show()
 
     def wrapper_export_bonds(self):
         filename = QtGui.QFileDialog.getSaveFileName(self, "Export Bonds", "bonds.txt")
