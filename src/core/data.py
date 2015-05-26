@@ -504,6 +504,25 @@ class Atoms(object):
         else:
             writedataset(h5group, "elements", self.elements, overwrite)
 
+    def totxt(self, fmt):
+        bond_file_name = fmt.format(property="bonds")
+        bond_angle_file_name = fmt.format(property="bond_angles")
+        bond_chain_angle_file_name = fmt.format(property="bond_dihedral_angles")
+
+        bond_angles, bond_chain_angles = core.bonds.calculate_bond_angles(self, self.bonds)
+
+        with open(bond_file_name, 'w') as outfile:
+            for source_index, target_indices in enumerate(self.bonds):
+                for target_index in target_indices:
+                    outfile.write("{} {}\n".format(source_index+1, target_index+1))
+        with open(bond_angle_file_name, 'w') as outfile:
+            for bond1, bond2 in bond_angles.keys():
+                if bond1[0] > bond2[1]:
+                    outfile.write("{} {} {} {}\n".format(bond1[0]+1, bond1[1]+1, bond2[1]+1, bond_angles[bond1, bond2]))
+        with open(bond_chain_angle_file_name, 'w') as outfile:
+            for bond_chain, angle in bond_chain_angles.items():
+                outfile.write("{} {} {} {}".format(*[index+1 for index in bond_chain]))
+                outfile.write(" {}\n".format(angle))
 
 class CavitiesBase(object):
     """
@@ -616,6 +635,20 @@ class Domains(CavitiesBase):
         super(Domains, self).tohdf(h5group, overwrite)
         writedataset(h5group, "centers", self.centers, overwrite)
 
+    def totxt(self, fmt):
+        domain_center_file_name = fmt.format(property="centers")
+        domain_surface_file_name = fmt.format(property="surface_areas")
+        domain_volume_file_name = fmt.format(property="volumes")
+
+        with open(domain_center_file_name, 'w') as outfile:
+            for index, center in enumerate(self.centers, start=1):
+                outfile.write("{} {} {} {}\n".format(index, center[0], center[1], center[2]))
+        with open(domain_surface_file_name, 'w') as outfile:
+            for index, surface_area in enumerate(self.surface_areas, start=1):
+                outfile.write("{} {}\n".format(index, surface_area))
+        with open(domain_volume_file_name, 'w') as outfile:
+            for index, volume in enumerate(self.volumes, start=1):
+                outfile.write("{} {}\n".format(index, volume))
 
 class Cavities(CavitiesBase):
     """
@@ -681,6 +714,23 @@ class Cavities(CavitiesBase):
             writedataset(h5group, "multicavities{}".format(index),
                          cavities, overwrite)
 
+    def totxt(self, fmt):
+        cavity_surface_file_name = fmt.format(property="surface_areas")
+        cavity_volume_file_name = fmt.format(property="volumes")
+        cavity_domains_file_name = fmt.format(property="domain_indices")
+
+        with open(cavity_domains_file_name, 'w') as outfile:
+            for index, multicavity in enumerate(self.multicavities, start=1):
+                outfile.write("{}".format(index))
+                for domain_index in multicavity:
+                    outfile.write(" {}".format(domain_index+1))
+                outfile.write("\n".format(index))
+        with open(cavity_surface_file_name, 'w') as outfile:
+            for index, surface_area in enumerate(self.surface_areas, start=1):
+                outfile.write("{} {}\n".format(index, surface_area))
+        with open(cavity_volume_file_name, 'w') as outfile:
+            for index, volume in enumerate(self.volumes, start=1):
+                outfile.write("{} {}\n".format(index, volume))
 
 class Results(object):
     """

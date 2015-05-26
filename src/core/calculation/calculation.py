@@ -372,15 +372,16 @@ class Calculation(object):
                     recalculate=calcsettings.recalculate)
                 # export to text file
                 if calcsettings.exporttext:
-                    fmt = os.path.join(exportdir, fileprefix) + "-%s-%06d.txt"
-                    # TODO: write data here
+                    fmt = os.path.join(exportdir, fileprefix) + "-{property}-{frame:06d}.txt"
+                    if frameresult.atoms is not None:
+                        frameresult.atoms.totxt(fmt.format(property='{property}', frame=frame+1))
+                    if frameresult.domains is not None:
+                        frameresult.domains.totxt(fmt.format(property='domain_{property}', frame=frame+1))
+                    if frameresult.surface_cavities is not None:
+                        frameresult.surface_cavities.totxt(fmt.format(property='surface_cavities_{property}', frame=frame+1))
+                    if frameresult.center_cavities is not None:
+                        frameresult.center_cavities.totxt(fmt.format(property='center_cavities_{property}', frame=frame+1))
                     # TODO: try/except
-                    bondfile = fmt % ("bonds", frame + 1)
-                    core.bonds.export_bonds(bondfile, frameresult.atoms)
-                    anglefile = fmt % ("bond_angles", frame + 1)
-                    core.bonds.export_bond_angles(anglefile, frameresult.atoms)
-                    dihedralfile = fmt % ("bond_dihedral_angles", frame + 1)
-                    core.bonds.export_bond_dihedral_angles(dihedralfile, frameresult.atoms)
                 # gather results
                 fileresults.append(frameresult)
             allresults.append(fileresults)
