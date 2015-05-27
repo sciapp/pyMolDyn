@@ -79,6 +79,8 @@ class ImageVideoTab(QtGui.QWidget):
 
     def save_video_for_all_selected_frames(self):
         frames_to_write = self.get_selected_frames()
+        if not frames_to_write:
+            return
         file_name, okay = QtGui.QFileDialog.getSaveFileName(self,
             'Save video...', filter='QuickTime Movie (*.mov)')
         if okay and file_name:
@@ -88,6 +90,8 @@ class ImageVideoTab(QtGui.QWidget):
 
     def save_screenshot_for_all_selected_frames(self):
         frames_to_write = self.get_selected_frames()
+        if not frames_to_write:
+            return
         dir_name = QtGui.QFileDialog.getExistingDirectory(self, 'Save screenshots to folder...')
         if dir_name:
             dialog = MassScreenshotAndVideoDialog(self, frames_to_write, dir_name)
