@@ -97,7 +97,7 @@ class Control(object):
         event handler of the GUI.
         """
         with self.lock:
-            if len(self.results) > 0:
+            if self.results:
                 self.visualization.setresults(self.results[-1][-1])
 
     def visualize(self, filename, frame, resolution=None):
