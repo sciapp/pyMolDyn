@@ -152,25 +152,26 @@ class Visualization(object):
         Translate the model.
         """
         trans_v = 1./1000
-        diff_vec = (dx * self.mat[:3, 0] + (-1 * dy) * self.mat[:3, 1])
-        self.mat[:3, 3] += -1 * max(self.d, 20) * trans_v * diff_vec
+        trans_factor = trans_v * max(self.d, 20)
+        m = create_translation_matrix_homogenous(-dx * trans_factor,
+                                                  dy * trans_factor, 0)
+        self.mat = self.mat.dot(m)
 
     def rotate_mouse(self, dx, dy):
         """
         Rotate the model according to a mouse movement (dx, dy) on the screen.
         """
-        rightt = self.mat[:3, 0]
-        upt = self.mat[:3, 1]
-        pt = self.mat[:3, 2] * self.d
         rot_v = 1./13000
-        diff_vec = (dx*rightt + (-1*dy)*upt)
-        if all(diff_vec == np.zeros(3)):
+        if dx == 0 and dy == 0:
             return
-        rot_axis = np.cross(diff_vec, pt)
-        rot_axis /= np.linalg.norm(rot_axis)
+        rot_axis = np.array((-dy, -dx, 0.0))
+        rot_factor = max(self.d, 20) * rot_v * la.norm(rot_axis)
         # rotation matrix with min rotation angle
-        m = create_rotation_matrix_homogenous(max(self.d, 20)*rot_v*(dx**2+dy**2)**0.5, rot_axis[0], rot_axis[1], rot_axis[2])
-        self.mat = m.dot(self.mat)
+        m = create_rotation_matrix_homogenous(rot_factor, rot_axis[0], rot_axis[1], rot_axis[2])
+        self.mat = self.mat.dot(m)
+
+    def reset_view(self):
+        self.mat = np.eye(4)
 
     def set_camera(self, width, height):
         """

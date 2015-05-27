@@ -126,6 +126,8 @@ class GLWidget(QtOpenGL.QGLWidget):
             self.vis.settings.show_cavities = False
             self.vis.settings.show_alt_cavities = True
             self.vis.create_scene()
+        if e.key() == QtCore.Qt.Key_R:
+            self.vis.reset_view()
         else:
             e.ignore()
         self.updateGL()
