@@ -32,7 +32,7 @@ class GRVideoOutput(object):
         gr.setwswindow(0, xmax, 0, ymax)
         gr.setviewport(0, xmax, 0, ymax)
         gr.setwindow(0, xmax, 0, ymax)
-        gr.drawimage(0, xmax, ymax, 0, width*device_pixel_ratio, height*device_pixel_ratio, image.view('uint32'))
+        gr.drawimage(0, xmax, 0, ymax, width*device_pixel_ratio, height*device_pixel_ratio, image.view('uint32'))
         gr.updatews()
 
     def end(self):
