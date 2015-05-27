@@ -103,6 +103,7 @@ class PathSettingsPage(QtGui.QWidget):
         self._config = cfg
         self.path = {
             'cache_dir': 'Cache directory',
+            'result_dir': 'Result directory',
             'ffmpeg': 'ffmpeg path'
         }
 
