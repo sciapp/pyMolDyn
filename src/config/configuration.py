@@ -37,7 +37,6 @@ class Configuration(ConfigNode):
             self.alt_cavity = [0.9, 0.4, 0.2]
             self.background = [0.0, 0.0, 0.0]
             self.bounding_box = [1.0, 1.0, 1.0]
-            self.atoms = [1.0, 1.0, 1.0]
             self.bonds = [0.8, 0.8, 0.8]
 
     class OpenGL(ConfigNode):

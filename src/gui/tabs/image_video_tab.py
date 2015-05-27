@@ -42,14 +42,17 @@ class ImageVideoTab(QtGui.QWidget):
         self.vbox = QtGui.QVBoxLayout()
 
         screenshot_button = QtGui.QPushButton('Save screenshot for this frame', self)
-        screenshot_button.clicked.connect(self.save_screenshot)
-        self.vbox.addWidget(screenshot_button)
-        mass_screenshot_button = QtGui.QPushButton('Save screenshot for all selected frames', self)
-        mass_screenshot_button.clicked.connect(self.save_screenshot_for_all_selected_frames)
-        self.vbox.addWidget(mass_screenshot_button)
         video_button = QtGui.QPushButton('Save video for all selected frames', self)
+        mass_screenshot_button = QtGui.QPushButton('Save screenshot for all selected frames', self)
+
+        screenshot_button.clicked.connect(self.save_screenshot)
+        mass_screenshot_button.clicked.connect(self.save_screenshot_for_all_selected_frames)
         video_button.clicked.connect(self.save_video_for_all_selected_frames)
+
+        self.vbox.addWidget(screenshot_button)
+        self.vbox.addWidget(mass_screenshot_button)
         self.vbox.addWidget(video_button)
+        self.vbox.addStretch()
         self.setLayout(self.vbox)
 
     def save_screenshot(self):
