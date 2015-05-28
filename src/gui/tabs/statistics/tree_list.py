@@ -1,5 +1,5 @@
 from PySide import QtGui, QtCore
-from collections import Counter
+from collections import Counter, OrderedDict
 
 class TreeList(QtGui.QTreeWidget):
     def __init__(self, html_view):
@@ -35,9 +35,26 @@ class TreeList(QtGui.QTreeWidget):
         self.resizeColumnToContents(0)
         self.addTopLevelItems(self.items)
         self.setHeaderHidden(True)
-        self.itemClicked.connect(self.item_clicked)
+        self.itemSelectionChanged.connect(self.item_selection_changed)
 
-    def item_clicked(self, item, column):
+    def item_selection_changed(self):
+        if self.selectedItems():
+            selected_item = self.selectedItems()[0]
+            self.item_selected(selected_item, 0)
+
+    def select_atom(self, index):
+        self.setCurrentItem(self.items[0].child(index))
+
+    def select_center_cavity(self, index):
+        self.setCurrentItem(self.items[1].child(index))
+
+    def select_surface_cavity(self, index):
+        self.setCurrentItem(self.items[2].child(index))
+
+    def select_domain(self, index):
+        self.setCurrentItem(self.items[3].child(index))
+
+    def item_selected(self, item, column):
         '''
             This method decides which element in the tree_list was clicked and calls the specific show method.
         '''
@@ -94,10 +111,11 @@ class TreeList(QtGui.QTreeWidget):
     def update_tree_view(self):
         for index in reversed(range(self.topLevelItemCount())):
             self.takeTopLevelItem(index)
-        src = {'Atoms': self.atom_list,
-               'Cavities (center)': self.caveties_center_list,
-               'Cavities (surface)': self.caveties_surface_list,
-               'Cavity Domains': self.domains_list}
+        src = OrderedDict([
+            ('Atoms', self.atom_list),
+            ('Cavities (center)', self.caveties_center_list),
+            ('Cavities (surface)', self.caveties_surface_list),
+            ('Cavity Domains', self.domains_list)])
 
         self.items = []
         for root, sib in src.iteritems():

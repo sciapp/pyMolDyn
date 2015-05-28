@@ -171,6 +171,7 @@ class HTMLWindow(QtGui.QWidget):
         self.domains = None
         self.discretization = None
 
+        self.tree_list = None
         self.webview.setHtml(None)
         self.webview.page().setLinkDelegationPolicy(QtWebKit.QWebPage.DelegateAllLinks)
         self.webview.linkClicked.connect(self.link_clicked)
@@ -211,18 +212,15 @@ class HTMLWindow(QtGui.QWidget):
         self.domains = results.domains
         self.discretization = Discretization(results.atoms.volume, results.resolution, True)
 
-
     def show_atom_group(self):
         atom_number = self.atoms.number
         atom_elements = Counter(self.atoms.elements)
 
         self.webview.setHtml(render_html_atom_group(atom_number, atom_elements))
 
-
     def show_atom(self, index):
-        print dir(self.atoms)
-
-
+        if self.tree_list is not None:
+            self.tree_list.select_atom(index)
 
         #for bond in bonds:
         #    if index not in self.atoms.bonds[bond]:
@@ -258,6 +256,8 @@ class HTMLWindow(QtGui.QWidget):
         self.webview.setHtml(render_html_cavity_center_group(surface, volumes, volume_fraction))
 
     def show_center_cavity(self, index):
+        if self.tree_list is not None:
+            self.tree_list.select_center_cavity(index)
         #print self.cavities_center.number # anzahl cavites
 
         volume_fraction = 0.0
@@ -289,6 +289,8 @@ class HTMLWindow(QtGui.QWidget):
         self.webview.setHtml(render_html_cavity_surface_group(volumes, volume_fraction))
 
     def show_surface_cavity(self, index):
+        if self.tree_list is not None:
+            self.tree_list.select_surface_cavity(index)
         volume_fraction = 0.0
         cavities = self.cavities_surface.multicavities[index]
         domains = []
@@ -320,6 +322,8 @@ class HTMLWindow(QtGui.QWidget):
         self.webview.setHtml(render_html_cavity_domain_group(surface, volumes, volume_fraction))
 
     def show_domain(self, index):
+        if self.tree_list is not None:
+            self.tree_list.select_domain(index)
         domain = self.discretization.discrete_to_continuous(self.domains.centers[index])
         surface = self.domains.surface_areas[index]
         volume = self.domains.volumes[index]
