@@ -157,6 +157,9 @@ class Visualization(object):
                                                   dy * trans_factor, 0)
         self.mat = self.mat.dot(m)
 
+    def set_focus_on(self, x, y, z):
+        self.mat[:3, 3] = (x, y, z)
+
     def rotate_mouse(self, dx, dy):
         """
         Rotate the model according to a mouse movement (dx, dy) on the screen.

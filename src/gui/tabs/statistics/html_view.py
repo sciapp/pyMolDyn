@@ -197,8 +197,10 @@ class HTMLWindow(QtGui.QWidget):
             self.show_domain(int(value[1])-1)
         elif value[0] == "focus":
             position = [float(value[1]),float(value[2]),float(value[3])]
-            continuous_position = self.discretization.continuous_to_discrete(position)
-            print continuous_position, position
+            self.window().control.visualization.set_focus_on(*position)
+            self.window().center.gl_widget.update()
+            self.window().center.combo.setCurrentIndex(0)
+            self.window().center.gl_stack.setCurrentIndex(0)
         elif value[0] == "atom":
             self.show_atom(int(value[1]))
 

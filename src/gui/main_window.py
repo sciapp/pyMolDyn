@@ -187,14 +187,14 @@ class CentralWidget(QtGui.QWidget):
     def init_gui(self):
         self.gl_stack = GLStack(self)
         self.gl_widget = self.gl_stack.gl_widget
-        combo = QtGui.QComboBox()
+        self.combo = QtGui.QComboBox()
         for title in self.widget_titles:
-            combo.addItem(title)
-        combo.activated[str].connect(self.on_combo)
+            self.combo.addItem(title)
+        self.combo.activated[str].connect(self.on_combo)
 
         layout = QtGui.QVBoxLayout()
         layout.addWidget(self.gl_stack)
-        layout.addWidget(combo)
+        layout.addWidget(self.combo)
 
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setLayout(layout)
