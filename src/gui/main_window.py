@@ -27,7 +27,7 @@ class MainWindow(QtGui.QMainWindow):
         self.file_dock = FileTabDock(self)
         self.view_dock = ViewTabDock(self)
         self.image_video_dock = ImageVideoTabDock(self)
-        #self.statistics_dock = StatisticsTabDock(self)
+        self.statistics_dock = StatisticsTabDock(self)
 
         self.docks = []
 
@@ -35,7 +35,7 @@ class MainWindow(QtGui.QMainWindow):
 
         self.setTabPosition(QtCore.Qt.RightDockWidgetArea, QtGui.QTabWidget.North)
 
-        for dock in (self.file_dock, self.view_dock, self.image_video_dock):#, self.statistics_dock):
+        for dock in (self.file_dock, self.view_dock, self.image_video_dock, self.statistics_dock):
             self.docks.append(dock)
 
         self.setCentralWidget(self.center)
@@ -45,10 +45,8 @@ class MainWindow(QtGui.QMainWindow):
                            self.view_dock, QtCore.Qt.Vertical)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea,
                            self.image_video_dock, QtCore.Qt.Vertical)
-        """
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea,
                            self.statistics_dock, QtCore.Qt.Vertical)
-        """
 
         for dock in self.docks[1:]:
             if not dock == self.image_video_dock:
