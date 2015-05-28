@@ -221,7 +221,7 @@ class Visualization(object):
             atom_radius = 4*edge_radius
 
             if 0.95 < distances[nearest_atom_index]/atom_radius < 1.05:
-                print('atom', nearest_atom_index)
+                return ('atom', nearest_atom_index)
 
 
 class VisualizationSettings(object):
