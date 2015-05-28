@@ -62,7 +62,7 @@ def render_html_cavity_center_group(surface_area, surface_volumes, volume_fracti
 
     return template.render(template_vars)
 
-def render_html_cavity_center(index, surface, volume, domains, cavity_count, volume_fraction):
+def render_html_cavity_center(index, surface, volume, domains, volume_fraction):
     template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
     template_env = jinja2.Environment(loader=template_loader)
 
@@ -75,7 +75,6 @@ def render_html_cavity_center(index, surface, volume, domains, cavity_count, vol
                     "surface": surface,
                     "volume": volume,
                     "domains": domains,
-                    "cavity_count": cavity_count,
                     "volume_fraction": volume_fraction,
     }
 
@@ -97,7 +96,7 @@ def render_html_cavity_surface_group(surface_volumes, volume_fraction):
 
     return template.render(template_vars)
 
-def render_html_cavity_surface(index, volume, domains, cavity_count, volume_fraction):
+def render_html_cavity_surface(index, volume, domains, volume_fraction):
     template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
     template_env = jinja2.Environment(loader=template_loader)
 
@@ -110,7 +109,6 @@ def render_html_cavity_surface(index, volume, domains, cavity_count, volume_frac
                     "index": index,
                     "volume": volume,
                     "domains": domains,
-                    "cavity_count": cavity_count,
                     "volume_fraction": volume_fraction,
     }
 
@@ -269,12 +267,11 @@ class HTMLWindow(QtGui.QWidget):
 
         surface = self.cavities_center.surface_areas[index]
         volume = self.cavities_center.volumes[index]
-        cavity_count = len(cavities)
 
         if self.atoms.volume is not None:
             volume_fraction = (volume/self.atoms.volume.volume)*100
 
-        self.webview.setHtml(render_html_cavity_center(index, surface, volume, domains, cavity_count, volume_fraction))
+        self.webview.setHtml(render_html_cavity_center(index, surface, volume, domains, volume_fraction))
 
     def show_surface_cavity_group(self):
         volumes = 0.0
@@ -298,12 +295,11 @@ class HTMLWindow(QtGui.QWidget):
         volume = self.cavities_surface.volumes[index]
         for cavity in cavities:
             domains.append((cavity+1, self.discretization.discrete_to_continuous(self.domains.centers[cavity])))
-        cavity_count = len(cavities)
 
         if self.atoms.volume is not None:
             volume_fraction = (volume/self.atoms.volume.volume)*100
 
-        self.webview.setHtml(render_html_cavity_surface(index, volume, domains, cavity_count, volume_fraction))
+        self.webview.setHtml(render_html_cavity_surface(index, volume, domains, volume_fraction))
 
     def show_domain_group(self):
         surface = 0.0
