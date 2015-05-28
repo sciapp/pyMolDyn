@@ -68,7 +68,7 @@ class Configuration(ConfigNode):
 
         self.window_position = [-1, -1]
         self.recent_files = ['']
-        self.max_files = 5
+        self.max_files = 10
 
         self._file = ConfigFile(self)
 
@@ -76,12 +76,12 @@ class Configuration(ConfigNode):
         if len(self.recent_files) == 1 and not self.recent_files[0]:
             self.recent_files[0] = filename
         elif len(self.recent_files) == self.max_files:
-            for i in range(self.max_files - 1):
-                self.recent_files[i] = self.recent_files[i + 1]
-            self.recent_files[self.max_files - 1] = filename
+            self.recent_files.pop(-1)
+            self.recent_files.insert(0,filename)
         else:
-            self.recent_files.append(filename)
+            self.recent_files.insert(0, filename)
         self.save()
+        print "conf:recent_files:", self.recent_files
 
     def save(self):
         """

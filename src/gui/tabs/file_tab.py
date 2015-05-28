@@ -271,6 +271,11 @@ class TreeList(QtGui.QTreeWidget):
 
             if path not in config.recent_files:
                 config.add_recent_file(path)
+            else:
+                index = config.recent_files.index(path)
+                config.recent_files.pop(index)
+                config.add_recent_file(path)
+
 
     def show_selected_frame(self):
         sel = self.get_selection()

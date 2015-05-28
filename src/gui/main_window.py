@@ -14,6 +14,7 @@ from gl_stack import GLStack
 from _version import __version__
 import functools
 import os.path
+from config.configuration import config
 
 import core.bonds
 import core.control
@@ -139,7 +140,7 @@ class MainWindow(QtGui.QMainWindow):
                                                                                                   ('David Knodt', 'd.knodt@fz-juelich.de'),
                                                                                                   ('Ingo Heimbach', 'i.heimbach@fz-juelich.de'))).show()
     def update_recent_files(self):
-        return ["/Users/macherey/Home/institut/md/xyz/structure_c.xyz", "~/temp", "/tmp/bla", "/tmp/blub"] #TODO
+        return config.recent_files
 
     def wrapper_recent_files(self, f):
         if f:
@@ -185,12 +186,12 @@ class MainWindow(QtGui.QMainWindow):
         message.set_output_callbacks(progress_func, print_func, finish_func)
 
     def updatestatus(self):
+        self.update_recent_files()
         results = self.control.results[-1][-1]
         self.shown_dataset = results
         status = str(results)
         self.statusBar().showMessage(status)
         self.statistics_dock.update_results(self.control.visualization.results)
-        self.update_recent_files()
 
 #    def closeEvent(self, event):
 #        reply = QtGui.QMessageBox.question(self, 'Message',
