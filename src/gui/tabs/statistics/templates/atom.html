@@ -49,7 +49,7 @@
         </tr>
     </table>
 
-    <table>
+    <!--<table>
 
         <tr>
             <td><strong>Bonding Information:</strong></td>
@@ -67,21 +67,21 @@
             <td> &nbsp; </td>
             <td> &nbsp; </td>
         </tr>
-    </table>
+    </table>-->
     {% if bonds: %}
     <table>
         <tr>
             <strong>
                 <td>bonded atoms</td>
-                <td>covalence</td>
-                <td>bond length</td>
+                <!--<td>covalence</td>
+                <td>bond length</td>-->
             </strong>
         </tr>
         {% for bond in bonds %}
         <tr>
             <td><a href="atom:{{bond}}">Atom {{ bond+1 }}</a></td>
-            <td>todo</td>
-            <td>todo</td>
+            <!--<td>todo</td>
+            <td>todo</td>-->
         </tr>
         {% endfor %}
         <tr>
@@ -91,7 +91,7 @@
         </tr>
     </table>
 
-    <p>bond angles:</p>
+    <!--<p>bond angles:</p>
     <table style="text-align: center;">
         {% set bond_list = [index] + bonds %}
 
@@ -117,7 +117,7 @@
             </tr>
         {% endfor %}
         </tr>
-    </table>
+    </table>-->
     {% endif %}
 
 </div>
