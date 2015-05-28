@@ -25,6 +25,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.update_needed = False
         self.dataset_loaded = False
         self.control = parent.control
+        self.setDisabled(True)
 
     @property
     def vis(self):
@@ -90,6 +91,7 @@ class GLWidget(QtOpenGL.QGLWidget):
 
     def customEvent(self, e):
         if self.update_needed:
+            self.setDisabled(False)
             self.updateGL()
             self.update_needed = False
 
