@@ -16,7 +16,7 @@
         <tr>
             <td>center:</td>
             <td> {% for domain in domains: %}
-                <a href="domain:{{loop.index}}">({{ "%.4f, %.4f, %.4f"|format(domain[0], domain[1], domain[2]) }})</a>
+                <a href="domain:{{domain[0]}}">({{ "%.4f, %.4f, %.4f"|format(domain[1][0], domain[1][1], domain[1][2]) }})</a>
                 <br/>
 
                 {% endfor %}

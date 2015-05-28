@@ -264,7 +264,7 @@ class HTMLWindow(QtGui.QWidget):
         cavities = self.cavities_center.multicavities[index]
         domains = []
         for cavity in cavities:
-            domains.append(self.discretization.discrete_to_continuous(self.domains.centers[cavity]))
+            domains.append((cavity, self.discretization.discrete_to_continuous(self.domains.centers[cavity])))
         #print self.cavities_center.triangles
 
         surface = self.cavities_center.surface_areas[index]
@@ -295,7 +295,7 @@ class HTMLWindow(QtGui.QWidget):
 
         volume = self.cavities_surface.volumes[index]
         for cavity in cavities:
-            domains.append(self.discretization.discrete_to_continuous(self.domains.centers[cavity]))
+            domains.append((cavity, self.discretization.discrete_to_continuous(self.domains.centers[cavity])))
         cavity_count = len(cavities)
 
         if self.atoms.volume is not None:
