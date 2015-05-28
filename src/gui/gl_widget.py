@@ -87,7 +87,12 @@ class GLWidget(QtOpenGL.QGLWidget):
             y = -y*z/self.vis.proj_mat[1, 1]
             z += self.vis.d
             x, y, z, w = np.dot(self.vis.mat, np.array((x, y, z, 1)))
-            self.vis.get_object_at_position(x, y, z)
+            obj = self.vis.get_object_at_position(x, y, z)
+            if obj is not None:
+                object_type, object_index = obj
+                if object_type is 'atom':
+                    self.window().statistics_dock.statistics_tab.html_view.show_atom(object_index)
+                    self.window().statistics_dock.raise_()
 
     def customEvent(self, e):
         if self.update_needed:

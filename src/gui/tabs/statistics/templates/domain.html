@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+
+    <title>{{ title }}</title>
+    <meta name="description" content="{{ description }}"/>
+</head>
+
+<body>
+
+<div id="content">
+    <div class="headline">Cavity Domain {{ index+1 }}</div>
+
+    <table class="table_margin_upper_table">
+        <tr>
+            <td>center:</td>
+            <td>({{ "%.4f, %.4f, %.4f"|format(domain_center[0], domain_center[1], domain_center[2]) }})</td>
+        </tr>
+        <tr>
+            <td>surface:</td>
+            <td>{{ "%.4f"|format(surface) }} &#x212b;<sup>2</sup></td>
+        </tr>
+        <tr>
+            <td>volume:</td>
+            <td>{{ "%.4f"|format(volume) }} &#x212b;<sup>3</sup></td>
+        </tr>
+        <tr>
+            <td>volume fraction:</td>
+            <td>{{ "%.4f"|format(volume_fraction) }}%</td>
+        </tr>
+        <!--<tr>
+            <td>atoms: </td>
+            <td>todo</td>
+        </tr>-->
+        {% if surface_cavity_index is not none %}
+        <tr>
+            <td>surface cavity:</td>
+            <td>
+                <a href="surface_cavity:{{surface_cavity_index}}">{{ "Cavity %3d"|format(surface_cavity_index) }}</a>
+            </td>
+        </tr>
+        {%endif %}
+        {% if center_cavity_index is not none %}
+        <tr>
+            <td>center cavity:</td>
+            <td>
+                <a href="center_cavity:{{center_cavity_index}}">{{ "Cavity %3d"|format(center_cavity_index) }}</a>
+            </td>
+        </tr>
+        {%endif %}
+        <tr>
+            <td> &nbsp; </td>
+            <td><a href="focus:{{domain_center[0]}}:{{domain_center[1]}}:{{domain_center[2]}}">Focus</a></td>
+        </tr>
+    </table>
+</div>
+
+</body>
+</html>

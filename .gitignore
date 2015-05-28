@@ -3,7 +3,6 @@
 *.pyc
 *.pyo
 *.npy
-*.html
 *.data
 *.o
 *.so

@@ -39,6 +39,20 @@ def get_bonds_with_radii(atoms, radii_sum_factor):
         bond_target_index_arrays.append(bond_target_indices)
     return bond_target_index_arrays
 
+def get_bonds_symetric_indicies(bond_target_index_arrays):
+    """
+    inserts all symetric bonds into the of bonds for each atom
+    :param bond_target_index_arrays: list with all symetric bond indices
+    :return:
+    """
+    bond_target_index_arrays = [bond_target_index_array.tolist() for bond_target_index_array in bond_target_index_arrays]
+    for index, bond_target_index_array in enumerate(bond_target_index_arrays):
+        for bond_target_index in bond_target_index_array:
+            if bond_target_index > index:
+                bond_target_index_arrays[bond_target_index].append(index)
+
+    bond_target_index_arrays = np.array(bond_target_index_arrays)
+    return bond_target_index_arrays
 
 def calculate_bond_angles(atoms, bond_target_index_arrays):
     # Build dict: atom index -> bonded atom indices
@@ -91,8 +105,9 @@ def calculate_bond_angles(atoms, bond_target_index_arrays):
         if np.dot(nvec2, np.cross(nvec1, axis)) < 0:
             angle = -angle
         bond_chain_angles[tuple(bond_chain)] = angle
-    return bond_angles, bond_chain_angles
 
+    #print "bond_anglges", bond_angles[0]
+    return bond_angles, bond_chain_angles
 
 def normalized(vec):
     """ Return the normalized version of a numpy array """
