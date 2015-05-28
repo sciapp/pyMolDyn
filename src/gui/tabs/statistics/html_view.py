@@ -133,7 +133,7 @@ def render_html_cavity_domain_group(surface_area, surface_volumes, surface_volum
 
     return template.render(template_vars)
 
-def render_html_cavity_domain(index, domain_center, surface, volume, volume_fraction, cavities, alt_cavities):
+def render_html_cavity_domain(index, domain_center, surface, volume, volume_fraction, surface_cavity_index, center_cavity_index):
     template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
     template_env = jinja2.Environment(loader=template_loader)
 
@@ -148,8 +148,8 @@ def render_html_cavity_domain(index, domain_center, surface, volume, volume_frac
                     "surface": surface,
                     "volume": volume,
                     "volume_fraction": volume_fraction,
-                    "cavities": cavities,
-                    "alt_cavities": alt_cavities,
+                    "surface_cavity_index": surface_cavity_index,
+                    "center_cavity_index": center_cavity_index,
 
 
     }
@@ -189,9 +189,9 @@ class HTMLWindow(QtGui.QWidget):
         '''
         value = data.toString()
         value = value.split(":")
-        if value[0] == "cavity":
+        if value[0] == "surface_cavity":
             self.show_surface_cavity(int(value[1])-1)
-        elif value[0] == "altcavity":
+        elif value[0] == "center_cavity":
             self.show_center_cavity(int(value[1])-1)
         elif value[0] == "domain":
             self.show_domain(int(value[1])-1)
@@ -264,7 +264,7 @@ class HTMLWindow(QtGui.QWidget):
         cavities = self.cavities_center.multicavities[index]
         domains = []
         for cavity in cavities:
-            domains.append((cavity, self.discretization.discrete_to_continuous(self.domains.centers[cavity])))
+            domains.append((cavity+1, self.discretization.discrete_to_continuous(self.domains.centers[cavity])))
         #print self.cavities_center.triangles
 
         surface = self.cavities_center.surface_areas[index]
@@ -295,7 +295,7 @@ class HTMLWindow(QtGui.QWidget):
 
         volume = self.cavities_surface.volumes[index]
         for cavity in cavities:
-            domains.append((cavity, self.discretization.discrete_to_continuous(self.domains.centers[cavity])))
+            domains.append((cavity+1, self.discretization.discrete_to_continuous(self.domains.centers[cavity])))
         cavity_count = len(cavities)
 
         if self.atoms.volume is not None:
@@ -324,26 +324,22 @@ class HTMLWindow(QtGui.QWidget):
         surface = self.domains.surface_areas[index]
         volume = self.domains.volumes[index]
         volume_fraction = 0.0
-        cavities = []
-        alt_cavities = []
+        surface_cavity_index = None
+        center_cavity_index = None
 
         if self.atoms.volume is not None:
             volume_fraction = (volume/self.atoms.volume.volume)*100
-        if self.domains is not None and self.cavities_center is not None and self.cavities_surface is not None:
-            for cav in range(len(self.cavities_surface.multicavities)):
-                for dom in self.cavities_surface.multicavities[cav]:
-                    if dom == index:
-                        cavities.append(cav+1)
-            for cav in range(len(self.cavities_center.multicavities)):
-                for dom in self.cavities_center.multicavities[cav]:
-                    if dom == index:
-                        alt_cavities.append(cav+1)
+        if self.domains is not None and self.cavities_surface is not None:
+            for i in range(len(self.cavities_surface.multicavities)):
+                if index in self.cavities_surface.multicavities[i]:
+                    surface_cavity_index = i+1
+                    break
+        if self.domains is not None and self.cavities_center is not None:
+            for i in range(len(self.cavities_center.multicavities)):
+                if index in self.cavities_center.multicavities[i]:
+                    center_cavity_index = i+1
+                    break
 
-
-
-        #print dir(self.domains)
-        #print len(self.domains.triangles)   # 96 == self.domains.number
-
-        self.webview.setHtml(render_html_cavity_domain(index, domain, surface, volume, volume_fraction, cavities, alt_cavities))
+        self.webview.setHtml(render_html_cavity_domain(index, domain, surface, volume, volume_fraction, surface_cavity_index, center_cavity_index))
 
 
