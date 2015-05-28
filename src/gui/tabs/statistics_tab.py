@@ -20,6 +20,7 @@ class StatisticsTabDock(QtGui.QDockWidget):
 
         self.setFeatures(QtGui.QDockWidget.DockWidgetMovable | QtGui.QDockWidget.DockWidgetFloatable)
         QTimer.singleShot(0, lambda *args: self.setVisible(False))
+        self.setMinimumWidth(350)
 
     def update_results(self, results):
         self.setVisible(True)
@@ -41,6 +42,7 @@ class StatisticsTab(QtGui.QWidget):
         hbox.addWidget(self.html_view)
         self.adjustSize()
         self.setLayout(hbox)
+        hbox.setContentsMargins(0, 0, 0, 0)
         self.show()
 
     def update_results(self, results):

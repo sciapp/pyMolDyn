@@ -178,6 +178,7 @@ class HTMLWindow(QtGui.QWidget):
 
         box.addWidget(self.webview)
         self.setLayout(box)
+        box.setContentsMargins(5, 0, 0, 0)
         self.show()
 
     def link_clicked(self, data):
