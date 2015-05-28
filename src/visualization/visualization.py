@@ -157,6 +157,9 @@ class Visualization(object):
                                                   dy * trans_factor, 0)
         self.mat = self.mat.dot(m)
 
+    def set_focus_on(self, x, y, z):
+        self.mat[:3, 3] = (x, y, z)
+
     def rotate_mouse(self, dx, dy):
         """
         Rotate the model according to a mouse movement (dx, dy) on the screen.
@@ -218,7 +221,7 @@ class Visualization(object):
             atom_radius = 4*edge_radius
 
             if 0.95 < distances[nearest_atom_index]/atom_radius < 1.05:
-                print('atom', nearest_atom_index)
+                return ('atom', nearest_atom_index)
 
 
 class VisualizationSettings(object):
