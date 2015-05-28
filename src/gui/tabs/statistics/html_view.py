@@ -205,11 +205,12 @@ class HTMLWindow(QtGui.QWidget):
             self.show_atom(int(value[1]))
 
     def update_results(self, results):
-        self.atoms = results.atoms
-        self.cavities_center = results.center_cavities
-        self.cavities_surface = results.surface_cavities
-        self.domains = results.domains
-        self.discretization = Discretization(results.atoms.volume, results.resolution, True)
+        if results:
+            self.atoms = results.atoms
+            self.cavities_center = results.center_cavities
+            self.cavities_surface = results.surface_cavities
+            self.domains = results.domains
+            self.discretization = Discretization(results.atoms.volume, results.resolution, True)
 
     def show_atom_group(self):
         atom_number = self.atoms.number

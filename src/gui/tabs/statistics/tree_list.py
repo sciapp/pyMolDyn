@@ -83,30 +83,23 @@ class TreeList(QtGui.QTreeWidget):
                 self.html_view.show_domain(index)
 
     def update_results(self, results):
-        self.atoms = results.atoms
-        self.atom_number = self.atoms.number
-        self.atom_elements = Counter(self.atoms.elements)
-        self.cavities_center = results.center_cavities
-        self.cavities_surface = results.surface_cavities
-        self.domains = results.domains
+        if results:
+            self.atoms = results.atoms
+            self.atom_number = self.atoms.number
+            self.atom_elements = Counter(self.atoms.elements)
+            self.cavities_center = results.center_cavities
+            self.cavities_surface = results.surface_cavities
+            self.domains = results.domains
 
-        self.atom_list = ["Atom %d" % (i+1) for i in range(self.atoms.number)]
-        if self.cavities_center is not None:
-            self.cavities_center_list = ["Cavity %d" % (i+1) for i in range(len(self.cavities_center.multicavities))]
-        if self.cavities_surface is not None:
-            self.cavities_surface_list = ["Cavity %d" % (i+1) for i in range(len(self.cavities_surface.multicavities))]
-        if self.domains is not None:
-            self.domains_list = ["Domain %d" % (i+1) for i in range(self.domains.number)]
-        #print dir(atoms)
-        #print atoms.positions
-        #print atoms.elements
-        #print atoms.sorted_positions
-        #print atoms.radii_as_indices
-        #print atoms.sorted_radii
-        #print atoms.volume
+            self.atom_list = ["Atom %d" % (i+1) for i in range(self.atoms.number)]
+            if self.cavities_center is not None:
+                self.cavities_center_list = ["Cavity %d" % (i+1) for i in range(len(self.cavities_center.multicavities))]
+            if self.cavities_surface is not None:
+                self.cavities_surface_list = ["Cavity %d" % (i+1) for i in range(len(self.cavities_surface.multicavities))]
+            if self.domains is not None:
+                self.domains_list = ["Domain %d" % (i+1) for i in range(self.domains.number)]
 
-
-        self.update_tree_view()
+            self.update_tree_view()
 
     def update_tree_view(self):
         for index in reversed(range(self.topLevelItemCount())):
