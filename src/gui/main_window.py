@@ -12,6 +12,8 @@ from gui.dialogs.about_dialog import AboutDialog
 from util import message
 from gl_stack import GLStack
 from _version import __version__
+import functools
+import os.path
 
 import core.bonds
 import core.control
@@ -52,6 +54,9 @@ class MainWindow(QtGui.QMainWindow):
             if not dock == self.image_video_dock:
                 self.tabifyDockWidget(self.file_dock, dock)
 
+        self.file_dock.file_tab.most_recent_path = "~"     # this variable is used to open the FileDialog in the propper path
+        self.recent_files = self.update_recent_files()
+
         self.init_menu()
 
         self.setWindowTitle('pyMolDyn v%s' % __version__)
@@ -89,6 +94,23 @@ class MainWindow(QtGui.QMainWindow):
         export_bond_dihedral_angles_action.setShortcut('Ctrl+3')
         export_bond_dihedral_angles_action.triggered.connect(self.wrapper_export_bond_dihedral_angles)
 
+        recent_files_submenu = QtGui.QMenu("&Recent files", self)
+        if (self.recent_files is None) or (self.recent_files == []):
+            self.file_dock.file_tab.most_recent_path = "~"     # this variable is used to open the FileDialog in the propper path
+
+            f_action = QtGui.QAction("no recent files", self)
+            f_action.triggered.connect(functools.partial(self.wrapper_recent_files, None))
+            recent_files_submenu.addAction(f_action)
+        else:
+            for i,f in enumerate(self.recent_files):
+                f_action = QtGui.QAction(f, self)
+                if i == 0:
+                    f_action.setShortcut('Alt+1')
+                f_action.triggered.connect(functools.partial(self.wrapper_recent_files, f))
+                recent_files_submenu.addAction(f_action)
+            self.update_recent_files()
+            self.file_dock.file_tab.most_recent_path = os.path.dirname(self.recent_files[0])
+
         about_action = QtGui.QAction('&About', self)
         about_action.triggered.connect(self.show_about_box)
 
@@ -97,6 +119,7 @@ class MainWindow(QtGui.QMainWindow):
         file_menu.addAction(open_action)
         file_menu.addAction(settings_action)
         file_menu.addMenu(export_submenu)
+        file_menu.addMenu(recent_files_submenu)
 
         export_submenu.addAction(export_bonds_action)
         export_submenu.addAction(export_bond_angles_action)
@@ -115,6 +138,12 @@ class MainWindow(QtGui.QMainWindow):
                                                                                                   ('Fabian Beule', 'f.beule@fz-juelich.de'),
                                                                                                   ('David Knodt', 'd.knodt@fz-juelich.de'),
                                                                                                   ('Ingo Heimbach', 'i.heimbach@fz-juelich.de'))).show()
+    def update_recent_files(self):
+        return ["/Users/macherey/Home/institut/md/xyz/structure_c.xyz", "~/temp", "/tmp/bla", "/tmp/blub"] #TODO
+
+    def wrapper_recent_files(self, f):
+        if f:
+            self.file_dock.file_tab.file_list.add_file(f)
 
     def wrapper_export_bonds(self):
         filename = QtGui.QFileDialog.getSaveFileName(self, "Export Bonds", "bonds.txt")
@@ -161,6 +190,7 @@ class MainWindow(QtGui.QMainWindow):
         status = str(results)
         self.statusBar().showMessage(status)
         self.statistics_dock.update_results(self.control.visualization.results)
+        self.update_recent_files()
 
 #    def closeEvent(self, event):
 #        reply = QtGui.QMessageBox.question(self, 'Message',

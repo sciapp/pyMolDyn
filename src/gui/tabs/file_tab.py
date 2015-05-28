@@ -50,6 +50,7 @@ class FileTab(QtGui.QWidget):
         QtGui.QWidget.__init__(self, parent)
         self.main_window = main_window
         self.progress_dialog = ProgressDialog(self)
+        self.most_recent_path = "~"
 
         p = self.progress_dialog
         self.main_window.set_output_callbacks(p.progress, p.print_step, p.calculation_finished)
@@ -128,7 +129,8 @@ class FileTab(QtGui.QWidget):
         self.file_list.remove_selected_files()
 
     def open_file_dialog(self):
-        filenames, _ = QtGui.QFileDialog.getOpenFileNames(self, 'Open dataset', '~')
+
+        filenames, _ = QtGui.QFileDialog.getOpenFileNames(self, 'Open dataset', self.most_recent_path)
 
         for fn in filenames:
             if fn:
