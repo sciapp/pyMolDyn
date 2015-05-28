@@ -12,13 +12,13 @@ class TreeList(QtGui.QTreeWidget):
         self.atoms = None
         self.atom_number = None
         self.atom_elements = {}
-        self.caveties_center = None
-        self.caveties_surface = None
+        self.cavities_center = None
+        self.cavities_surface = None
         self.domains = None
 
         self.atom_list = []
-        self.caveties_center_list = []
-        self.caveties_surface_list = []
+        self.cavities_center_list = []
+        self.cavities_surface_list = []
         self.domains_list  = []
 
         self.html_view = html_view
@@ -86,15 +86,15 @@ class TreeList(QtGui.QTreeWidget):
         self.atoms = results.atoms
         self.atom_number = self.atoms.number
         self.atom_elements = Counter(self.atoms.elements)
-        self.caveties_center = results.center_cavities
-        self.caveties_surface = results.surface_cavities
+        self.cavities_center = results.center_cavities
+        self.cavities_surface = results.surface_cavities
         self.domains = results.domains
 
         self.atom_list = ["Atom %d" % (i+1) for i in range(self.atoms.number)]
-        if self.caveties_center is not None:
-            self.caveties_center_list = ["Cavity %d" % (i+1) for i in range(len(self.caveties_center.multicavities))]
-        if self.caveties_surface is not None:
-            self.caveties_surface_list = ["Cavity %d" % (i+1) for i in range(len(self.caveties_surface.multicavities))]
+        if self.cavities_center is not None:
+            self.cavities_center_list = ["Cavity %d" % (i+1) for i in range(len(self.cavities_center.multicavities))]
+        if self.cavities_surface is not None:
+            self.cavities_surface_list = ["Cavity %d" % (i+1) for i in range(len(self.cavities_surface.multicavities))]
         if self.domains is not None:
             self.domains_list = ["Domain %d" % (i+1) for i in range(self.domains.number)]
         #print dir(atoms)
@@ -113,8 +113,8 @@ class TreeList(QtGui.QTreeWidget):
             self.takeTopLevelItem(index)
         src = OrderedDict([
             ('Atoms', self.atom_list),
-            ('Cavities (center)', self.caveties_center_list),
-            ('Cavities (surface)', self.caveties_surface_list),
+            ('Cavities (center)', self.cavities_center_list),
+            ('Cavities (surface)', self.cavities_surface_list),
             ('Cavity Domains', self.domains_list)])
 
         self.items = []
