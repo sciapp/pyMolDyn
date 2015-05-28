@@ -11,14 +11,14 @@ class ProgressDialog(QtGui.QDialog):
         hbox = QtGui.QVBoxLayout()
         self.label = QtGui.QLabel('starting calculation', self)
         self.progressbar = QtGui.QProgressBar(self)
-        self.cancel_btn = QtGui.QPushButton('Cancel', self)
-        self.cancel_btn.clicked.connect(self.cancel)
-        self.setMinimumSize(300,150)
+        # self.cancel_btn = QtGui.QPushButton('Cancel', self)
+        # self.cancel_btn.clicked.connect(self.cancel)
+        self.setMinimumSize(300,100)
 
         vbox = QtGui.QHBoxLayout()
 
         vbox.addStretch()
-        vbox.addWidget(self.cancel_btn)
+        # vbox.addWidget(self.cancel_btn)
         vbox.addStretch()
 
         hbox.addWidget(self.label)
@@ -29,11 +29,12 @@ class ProgressDialog(QtGui.QDialog):
 
     def calculation_finished(self):
         self.finished = True
-        #self.close_dialog()
+        QtCore.QMetaObject.invokeMethod(self, "close_dialog", QtCore.Qt.QueuedConnection)
 
     def progress(self, value):
         self.progressbar.setValue(value)
 
+    @QtCore.Slot()
     def close_dialog(self):
         if self.finished:
             self.done(QtGui.QDialog.Accepted)
@@ -50,3 +51,4 @@ class ProgressDialog(QtGui.QDialog):
     def cancel(self):
         print 'canceled calculation'
         self.close_dialog()
+

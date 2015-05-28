@@ -63,8 +63,8 @@ class Control(object):
 
     def __init__(self):
         self.config = config
-        if not os.path.isdir(config.Path.result_dir):
-            os.mkdir(config.Path.result_dir)
+        if not os.path.isdir(config.Path.cache_dir):
+            os.makedirs(config.Path.cache_dir)
         self._calculation = calculation.Calculation()
         self._visualization = None  # will be initialized when needed
         self.results = None
@@ -97,7 +97,7 @@ class Control(object):
         event handler of the GUI.
         """
         with self.lock:
-            if len(self.results) > 0:
+            if self.results:
                 self.visualization.setresults(self.results[-1][-1])
 
     def visualize(self, filename, frame, resolution=None):

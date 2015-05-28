@@ -17,6 +17,8 @@ from hashlib import sha256
 from config.configuration import config
 from util.logger import Logger
 import sys
+import numpy as np
+import core.bonds
 
 __all__ = ["Calculation",
            "CalculationCache",
@@ -53,13 +55,19 @@ class CalculationSettings(object):
             calculate center-based cavities
         `recalculate` :
             results will be calculated even if cached results exists
-        `export` :
-            ``True`` if the results should be written into a file.
+        `exporthdf` :
+            ``True`` if the results should be written into a hdf5 file.
             If ``False``, they are stored in the cache.
-        `exportfiles` :
-            Dictionary which associates input file name and output file name.
-            Only used, when `export` is ``True``. If `exportfiles` is ``None``,
-            a standard filename will be used.
+        `exporttext` :
+            ``True`` if the results should be written into text files.
+        `exportdir` :
+            Directory for the exports. Only used, when at least one of
+            the export parameters is ``True``. If `exportdir` is ``None``,
+            the directory of the input file is used.
+        `bonds` :
+            calculate bonds
+        `dihedral_angles` :
+            calculate dihedral angles
     """
 
     def __init__(self,
@@ -69,8 +77,9 @@ class CalculationSettings(object):
                  surface_cavities=False,
                  center_cavities=False,
                  recalculate=False,
-                 export=False,
-                 exportfiles=None):
+                 exporthdf5=False,
+                 exporttext=False,
+                 exportdir=None):
         """
         """
         self.datasets = datasets
@@ -79,8 +88,9 @@ class CalculationSettings(object):
         self.surface_cavities = surface_cavities
         self.center_cavities = center_cavities
         self.recalculate = recalculate
-        self.export = export
-        self.exportfiles = exportfiles
+        self.exporthdf5 = exporthdf5
+        self.exporttext = exporttext
+        self.exportdir = exportdir
         self.bonds = False
         self.dihedral_angles = False
 
@@ -97,8 +107,9 @@ class CalculationSettings(object):
         dup.surface_cavities = self.surface_cavities
         dup.center_cavities = self.center_cavities
         dup.recalculate = self.recalculate
-        dup.export = self.export
-        dup.exportfiles = self.exportfiles
+        dup.exporthdf5 = self.exporthdf5
+        dup.exporttext = self.exporttext
+        dup.exportdir = self.exportdir
         dup.bonds = self.bonds
         dup.dihedral_angles = self.dihedral_angles
         return dup
@@ -118,7 +129,8 @@ class Calculation(object):
                 a default one is used
         """
         if cachedir is None:
-            cachedir = config.Path.result_dir
+            cachedir = config.Path.cache_dir
+        self.cachedir = cachedir
         self.cache = CalculationCache(cachedir)
 
     def calculatedframes(self, filepath, resolution, surface=False, center=False):
@@ -275,8 +287,8 @@ class Calculation(object):
                 or (center and results.center_cavities is None)):
             message.print_message("Reusing results")
         else:
-            # TODO: cache directory from config
-            discretization_cache = DiscretizationCache('cache.hdf5')
+            cachepath = os.path.join(self.cachedir, 'discretization_cache.hdf5')
+            discretization_cache = DiscretizationCache(cachepath)
             discretization = discretization_cache.get_discretization(volume, resolution)
             atom_discretization = AtomDiscretization(atoms, discretization)
             message.progress(10)
@@ -324,12 +336,21 @@ class Calculation(object):
         allresults = []
         for filename, frames in calcsettings.datasets.iteritems():
             filepath = os.path.abspath(filename)
-            if calcsettings.export:
-                if calcsettings.exportfiles is None or \
-                        filename not in calcsettings.exportfiles:
-                    efpath = ".".join(filename.split(".")[:-1]) + ".hdf5"
-                else:
-                    efpath = calcsettings.exportfiles[filename]
+            fileprefix = os.path.basename(filename).rsplit(".", 1)[0]
+            if calcsettings.exportdir is not None:
+                exportdir = os.path.abspath(calcsettings.exportdir)
+                # replace asterisks with directories
+                dirlist = os.path.dirname(filepath).split("/")
+                while "*" in exportdir:
+                    i = exportdir.rindex("*")
+                    exportdir = os.path.join(exportdir[:i], dirlist.pop() + exportdir[i+1:])
+                if (calcsettings.exporthdf5 or calcsettings.exporttext) \
+                        and not os.path.exists(exportdir):
+                    os.makedirs(exportdir)
+            else:
+                exportdir = os.path.dirname(filepath)
+            if calcsettings.exporthdf5:
+                efpath = os.path.join(exportdir, fileprefix + ".hdf5")
                 efpath = os.path.abspath(efpath)
                 # copy atoms into HDF5 file
                 exportfile = core.file.HDF5File.fromInputFile(efpath, filepath)
@@ -341,6 +362,7 @@ class Calculation(object):
                 inputfile = File.open(filepath)
                 frames = range(inputfile.info.num_frames)
             for frame in frames:
+                # calculate single frame
                 frameresult = self.calculateframe(
                     filepath,
                     frame,
@@ -349,6 +371,19 @@ class Calculation(object):
                     surface=calcsettings.surface_cavities,
                     center=calcsettings.center_cavities,
                     recalculate=calcsettings.recalculate)
+                # export to text file
+                if calcsettings.exporttext:
+                    fmt = os.path.join(exportdir, fileprefix) + "-{property}-{frame:06d}.txt"
+                    if frameresult.atoms is not None:
+                        frameresult.atoms.totxt(fmt.format(property='{property}', frame=frame+1))
+                    if frameresult.domains is not None:
+                        frameresult.domains.totxt(fmt.format(property='domain_{property}', frame=frame+1))
+                    if frameresult.surface_cavities is not None:
+                        frameresult.surface_cavities.totxt(fmt.format(property='surface_cavities_{property}', frame=frame+1))
+                    if frameresult.center_cavities is not None:
+                        frameresult.center_cavities.totxt(fmt.format(property='center_cavities_{property}', frame=frame+1))
+                    # TODO: try/except
+                # gather results
                 fileresults.append(frameresult)
             allresults.append(fileresults)
         return allresults
@@ -431,7 +466,7 @@ class CalculationCache(object):
                 if filepath is not None \
                         and filename == self.cachefile(filepath):
                     self.index[filepath] = filename
-            except (IOError, AttributeError):
+            except (IOError, AttributeError, RuntimeError):
                 pass
 
     def writeindex(self):

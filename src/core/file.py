@@ -99,6 +99,8 @@ class XYZFile(InputFile):
     """
     def __init__(self, path):
         super(XYZFile, self).__init__(path)
+        f = open(self.path, "r")
+        f.close()
 
     def readinfo(self):
         try:

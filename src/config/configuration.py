@@ -1,10 +1,12 @@
 import configobj
 import validate
+import os
 import os.path
 import inspect
 
-CONFIG_FILE = 'config/config.cfg'
-CONFIG_SPEC_FILE = 'config/config.spec'
+CONFIG_DIRECTORY = os.path.abspath(os.path.expanduser('~/.pymoldyn/'))
+CONFIG_FILE = '%s/config.cfg' % CONFIG_DIRECTORY
+CONFIG_SPEC_FILE = '%s/config.spec' % CONFIG_DIRECTORY
 
 # second string is the list type name
 type_dict = {
@@ -35,7 +37,6 @@ class Configuration(ConfigNode):
             self.alt_cavity = [0.9, 0.4, 0.2]
             self.background = [0.0, 0.0, 0.0]
             self.bounding_box = [1.0, 1.0, 1.0]
-            self.atoms = [1.0, 1.0, 1.0]
             self.bonds = [0.8, 0.8, 0.8]
 
     class OpenGL(ConfigNode):
@@ -54,8 +55,9 @@ class Configuration(ConfigNode):
     class Path(ConfigNode):
 
         def __init__(self):
-            self.result_dir = '../results/'
+            self.cache_dir = os.path.join(CONFIG_DIRECTORY, 'cache')
             self.ffmpeg = '/usr/local/bin/ffmpeg'
+            self.result_dir = os.path.join(CONFIG_DIRECTORY, 'results')
 
     def __init__(self):
         # standard configuration
@@ -104,6 +106,12 @@ class ConfigFile(object):
     def __init__(self, cfg):
         self.config = cfg
 
+    @staticmethod
+    def _create_needed_parent_directories(filename):
+        dirname = os.path.dirname(filename)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+
     def generate_configspec(self):
         """
         generates the type specification for the configuration data
@@ -112,6 +120,7 @@ class ConfigFile(object):
         self.generate_spec_for_section(self.file, spec_file)
         # TODO: better error handling
         try:
+            self._create_needed_parent_directories(CONFIG_SPEC_FILE)
             spec_file.write()
         except IOError as e:
             print "IOError in ConfigFile.generate_configspec"
@@ -137,6 +146,7 @@ class ConfigFile(object):
 
         # TODO: better error handling
         try:
+            self._create_needed_parent_directories(CONFIG_FILE)
             self.file.write()
             self.generate_configspec()
             self.file.write()

@@ -1,0 +1,4 @@
+RESOLUTION 256
+OUTPUT_DIRECTORY ../out
+snap_1100.xyz 1
+snap_1300.xyz
