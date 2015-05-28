@@ -1,4 +1,5 @@
 from PySide import QtGui
+from PySide.QtCore import QTimer
 from gui.tabs.statistics.tree_list import TreeList
 from gui.tabs.statistics.html_view import HTMLWindow
 
@@ -18,8 +19,10 @@ class StatisticsTabDock(QtGui.QDockWidget):
         self.widget().setLayout(self.layout)
 
         self.setFeatures(QtGui.QDockWidget.DockWidgetMovable | QtGui.QDockWidget.DockWidgetFloatable)
+        QTimer.singleShot(0, lambda *args: self.setVisible(False))
 
     def update_results(self, results):
+        self.setVisible(True)
         self.statistics_tab.update_results(results)
 
 
