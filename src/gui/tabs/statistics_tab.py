@@ -32,6 +32,7 @@ class StatisticsTab(QtGui.QWidget):
 
         self.html_view = HTMLWindow()
         self.tree_list = TreeList(self.html_view)
+        self.tree_list.setMinimumWidth(150)
         hbox.addWidget(self.tree_list)
         hbox.addWidget(self.html_view)
         self.adjustSize()
