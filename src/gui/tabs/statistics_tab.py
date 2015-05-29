@@ -23,8 +23,9 @@ class StatisticsTabDock(QtGui.QDockWidget):
         self.setMinimumWidth(350)
 
     def update_results(self, results):
-        self.setVisible(True)
-        self.statistics_tab.update_results(results)
+        if results is not None:
+            self.setVisible(True)
+            self.statistics_tab.update_results(results)
 
 
 class StatisticsTab(QtGui.QWidget):

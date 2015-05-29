@@ -13,6 +13,7 @@ import core.calculation
 
 
 def main():
+    os.chdir(os.path.abspath(os.path.dirname(__file__)))
     app = QtGui.QApplication(sys.argv)
     control = Control()
     window = main_window.MainWindow(control)

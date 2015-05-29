@@ -20,6 +20,7 @@ import core.bonds
 import core.control
 #from core.data import Results
 
+WEBSITE_URL = 'https://pgi-jcns.fz-juelich.de/portal/pages/pymoldyn-gui.html'
 
 class MainWindow(QtGui.QMainWindow):
     def __init__(self, control):
@@ -99,7 +100,9 @@ class MainWindow(QtGui.QMainWindow):
         export_bond_dihedral_angles_action.setShortcut('Ctrl+3')
         export_bond_dihedral_angles_action.triggered.connect(self.wrapper_export_bond_dihedral_angles)
 
-
+        website_action = QtGui.QAction('&pyMolDyn website', self)
+        website_action.setShortcut('F1')
+        website_action.triggered.connect(self.show_website)
 
         about_action = QtGui.QAction('&About', self)
         about_action.triggered.connect(self.show_about_box)
@@ -118,7 +121,10 @@ class MainWindow(QtGui.QMainWindow):
         export_submenu.addAction(export_bond_angles_action)
         export_submenu.addAction(export_bond_dihedral_angles_action)
 
+
         help_menu = self.menubar.addMenu('&Help')
+        help_menu.addAction(website_action)
+        help_menu.addSeparator()
         help_menu.addAction(about_action)
 
     def show_settings(self):
@@ -126,15 +132,19 @@ class MainWindow(QtGui.QMainWindow):
         self.control.update()
         self.statistics_dock.update_results(self.control.visualization.results)
 
+    def show_website(self):
+        url = QtCore.QUrl(WEBSITE_URL)
+        QtGui.QDesktopServices.openUrl(url)
+
     def show_about_box(self):
-        AboutDialog(self, 'pyMolDyn is a molecule viewer which can compute molecular cavities.', (('Florian Rhiem', 'f.rhiem@fz-juelich.de'),
-                                                                                                  ('Fabian Beule', 'f.beule@fz-juelich.de'),
-                                                                                                  ('David Knodt', 'd.knodt@fz-juelich.de'),
-                                                                                                  ('Ingo Heimbach', 'i.heimbach@fz-juelich.de'))).show()
+        AboutDialog(self, 'pyMolDyn is a molecule viewer which is capable of computing molecular cavities.',
+                    (('Florian Rhiem', 'f.rhiem@fz-juelich.de'),
+                     ('Fabian Beule', 'f.beule@fz-juelich.de'),
+                     ('David Knodt', 'd.knodt@fz-juelich.de'),
+                     ('Ingo Heimbach', 'i.heimbach@fz-juelich.de'))).show()
 
     def init_submenu_recent_files(self):
         self.recent_files_submenu = QtGui.QMenu("&Recent files", self)
-        print "if: ", self.recent_files
         if (self.recent_files is None) or (self.recent_files == ['']) or (self.recent_files == []):
             self.file_dock.file_tab.most_recent_path = "~"     # this variable is used to open the FileDialog in the propper path
 
