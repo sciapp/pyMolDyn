@@ -122,10 +122,11 @@ class MainWindow(QtGui.QMainWindow):
         QtGui.QDesktopServices.openUrl(url)
 
     def show_about_box(self):
-        AboutDialog(self, 'pyMolDyn is a molecule viewer which can compute molecular cavities.', (('Florian Rhiem', 'f.rhiem@fz-juelich.de'),
-                                                                                                  ('Fabian Beule', 'f.beule@fz-juelich.de'),
-                                                                                                  ('David Knodt', 'd.knodt@fz-juelich.de'),
-                                                                                                  ('Ingo Heimbach', 'i.heimbach@fz-juelich.de'))).show()
+        AboutDialog(self, 'pyMolDyn is a molecule viewer which is capable of computing molecular cavities.',
+                    (('Florian Rhiem', 'f.rhiem@fz-juelich.de'),
+                     ('Fabian Beule', 'f.beule@fz-juelich.de'),
+                     ('David Knodt', 'd.knodt@fz-juelich.de'),
+                     ('Ingo Heimbach', 'i.heimbach@fz-juelich.de'))).show()
 
     def wrapper_export_bonds(self):
         filename = QtGui.QFileDialog.getSaveFileName(self, "Export Bonds", "bonds.txt")
