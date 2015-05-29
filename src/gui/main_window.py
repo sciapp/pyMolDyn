@@ -56,8 +56,12 @@ class MainWindow(QtGui.QMainWindow):
                 self.tabifyDockWidget(self.file_dock, dock)
 
         self.file_dock.file_tab.most_recent_path = "~"     # this variable is used to open the FileDialog in the propper path
-        self.recent_files = self.update_recent_files()
+        self.recent_files = None
+        self.update_recent_files()
 
+        self.menubar = None
+        self.file_menu = None
+        self.recent_files_submenu = None
         self.init_menu()
 
         self.setWindowTitle('pyMolDyn v%s' % __version__)
@@ -95,38 +99,26 @@ class MainWindow(QtGui.QMainWindow):
         export_bond_dihedral_angles_action.setShortcut('Ctrl+3')
         export_bond_dihedral_angles_action.triggered.connect(self.wrapper_export_bond_dihedral_angles)
 
-        recent_files_submenu = QtGui.QMenu("&Recent files", self)
-        if (self.recent_files is None) or (self.recent_files == []):
-            self.file_dock.file_tab.most_recent_path = "~"     # this variable is used to open the FileDialog in the propper path
 
-            f_action = QtGui.QAction("no recent files", self)
-            f_action.triggered.connect(functools.partial(self.wrapper_recent_files, None))
-            recent_files_submenu.addAction(f_action)
-        else:
-            for i,f in enumerate(self.recent_files):
-                f_action = QtGui.QAction(f, self)
-                if i == 0:
-                    f_action.setShortcut('Alt+1')
-                f_action.triggered.connect(functools.partial(self.wrapper_recent_files, f))
-                recent_files_submenu.addAction(f_action)
-            self.update_recent_files()
-            self.file_dock.file_tab.most_recent_path = os.path.dirname(self.recent_files[0])
 
         about_action = QtGui.QAction('&About', self)
         about_action.triggered.connect(self.show_about_box)
 
-        menubar = self.menuBar()
-        file_menu = menubar.addMenu('&File')
-        file_menu.addAction(open_action)
-        file_menu.addAction(settings_action)
-        file_menu.addMenu(export_submenu)
-        file_menu.addMenu(recent_files_submenu)
+        self.menubar = self.menuBar()
+        self.file_menu = self.menubar.addMenu('&File')
+        self.file_menu.addAction(open_action)
+        self.file_menu.addAction(settings_action)
+        self.file_menu.addMenu(export_submenu)
+
+        self.init_submenu_recent_files()
+        self.update_recent_files()
+        self.file_menu.addMenu(self.recent_files_submenu)
 
         export_submenu.addAction(export_bonds_action)
         export_submenu.addAction(export_bond_angles_action)
         export_submenu.addAction(export_bond_dihedral_angles_action)
 
-        help_menu = menubar.addMenu('&Help')
+        help_menu = self.menubar.addMenu('&Help')
         help_menu.addAction(about_action)
 
     def show_settings(self):
@@ -139,8 +131,58 @@ class MainWindow(QtGui.QMainWindow):
                                                                                                   ('Fabian Beule', 'f.beule@fz-juelich.de'),
                                                                                                   ('David Knodt', 'd.knodt@fz-juelich.de'),
                                                                                                   ('Ingo Heimbach', 'i.heimbach@fz-juelich.de'))).show()
+
+    def init_submenu_recent_files(self):
+        self.recent_files_submenu = QtGui.QMenu("&Recent files", self)
+        print "if: ", self.recent_files
+        if (self.recent_files is None) or (self.recent_files == ['']) or (self.recent_files == []):
+            self.file_dock.file_tab.most_recent_path = "~"     # this variable is used to open the FileDialog in the propper path
+
+            f_action = QtGui.QAction("no recent files", self)
+            f_action.triggered.connect(lambda: self.wrapper_recent_files(None))
+            self.recent_files_submenu.addAction(f_action)
+        else:
+            for f in self.recent_files:
+                f_action = QtGui.QAction(f, self)
+                f_action.triggered.connect(lambda arg=f: self.wrapper_recent_files(arg))
+                self.recent_files_submenu.addAction(f_action)
+
+            self.file_dock.file_tab.most_recent_path = os.path.dirname(self.recent_files[0])
+            self.submenu_add_shortcut_for_first_item()
+
+    def update_submenu_recent_files(self, str_action):
+        self.update_recent_files()
+        new_action = QtGui.QAction(str_action, self)
+        actions_in_menu = self.recent_files_submenu.actions()
+
+        new_action.setShortcut('Alt+1')
+        new_action.triggered.connect(lambda arg=str_action: self.wrapper_recent_files(arg))
+        self.recent_files_submenu.insertAction(actions_in_menu[0], new_action)
+        for action in actions_in_menu:
+            # remove label for no recent files and double actions
+            if action.text() == "no recent files":
+                self.recent_files_submenu.removeAction(action)
+            elif action.text() == new_action.text():
+                self.recent_files_submenu.removeAction(action)
+                self.recent_files_submenu.insertAction(actions_in_menu[0], new_action)
+            elif action.text() not in self.recent_files:
+                self.recent_files_submenu.removeAction(action)
+
+        print len(self.recent_files), config.max_files, self.recent_files
+
+        self.file_dock.file_tab.most_recent_path = os.path.dirname(self.recent_files[0])
+        self.submenu_add_shortcut_for_first_item()
+
+    def submenu_add_shortcut_for_first_item(self):
+        actions_in_menu = self.recent_files_submenu.actions()
+        actions_in_menu[0].setShortcut('Alt+1')
+        for action in actions_in_menu[1:]:
+            action.setShortcut('')
+        self.recent_files_submenu.update()
+
+
     def update_recent_files(self):
-        return config.recent_files
+        self.recent_files = config.recent_files
 
     def wrapper_recent_files(self, f):
         if f:
@@ -186,7 +228,6 @@ class MainWindow(QtGui.QMainWindow):
         message.set_output_callbacks(progress_func, print_func, finish_func)
 
     def updatestatus(self):
-        self.update_recent_files()
         results = self.control.results[-1][-1]
         self.shown_dataset = results
         status = str(results)

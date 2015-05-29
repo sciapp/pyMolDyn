@@ -81,7 +81,6 @@ class Configuration(ConfigNode):
         else:
             self.recent_files.insert(0, filename)
         self.save()
-        print "conf:recent_files:", self.recent_files
 
     def save(self):
         """

@@ -131,10 +131,11 @@ class FileTab(QtGui.QWidget):
     def open_file_dialog(self):
 
         filenames, _ = QtGui.QFileDialog.getOpenFileNames(self, 'Open dataset', self.most_recent_path)
-
         for fn in filenames:
             if fn:
                 self.file_list.add_file(fn)
+                self.main_window.update_recent_files()
+                self.main_window.update_submenu_recent_files(fn)
 
     def calculationcallback(self, func, settings):
         thread = CalculationThread(self, func, settings)
