@@ -68,7 +68,7 @@ class Configuration(ConfigNode):
 
         self.window_position = [-1, -1]
         self.recent_files = ['']
-        self.max_files = 10
+        self.max_files = 5
 
         self._file = ConfigFile(self)
 

@@ -135,7 +135,6 @@ class FileTab(QtGui.QWidget):
             if fn:
                 self.file_list.add_file(fn)
                 self.main_window.update_recent_files()
-                self.main_window.update_submenu_recent_files(fn)
 
     def calculationcallback(self, func, settings):
         thread = CalculationThread(self, func, settings)
