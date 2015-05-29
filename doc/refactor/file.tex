@@ -1,0 +1,53 @@
+\section{File handling}
+
+\subsection{Abstract file classes}
+\begin{tikzpicture}
+    \begin{abstractclass}[text width=\umlwidth]{InputFile}{0, 0}
+        \attribute{+ path : String}
+        \attribute{+ info : FileInfo}
+        \attribute{\# inforead : Boolean}
+
+        \operation{+ InputFile(path : String)}
+        \operation{+ getatoms(frame : Integer)}
+        \operation[0]{+ readinfo() : FileInfo}
+        \operation[0]{+ readatoms(frame : Integer) : Atoms}
+    \end{abstractclass}
+
+    \begin{abstractclass}[text width=\umlwidth]{ResultFile}{0, -6}
+        \inherit{InputFile}
+
+        \attribute{+ info : ResultInfo}
+
+        \operation{+ ResultFile(path : String, sourcefilepath : String)}
+        \operation{+ getresults(frame : Integer, resolution : Integer)}
+        \operation{+ addresults(results : Results, overwrite : Boolean)}
+        \operation[0]{+ readinfo() : ResultInfo}
+        \operation[0]{+ writeinfo()}
+        \operation[0]{+ readresults(frame : Integer, resolution : Integer) : Results}
+        \operation[0]{+ writeresults(results : Results, overwrite : Boolean)}
+    \end{abstractclass}
+\end{tikzpicture}
+
+\todo{\texttt{ResultFile.writeresults} should take an \texttt{overwrite} parameter.}
+
+\noindent
+The implementation of \texttt{InputFile} is \texttt{XYZFile}, which reads a pybel xyz file. \texttt{HDF5File} implements \texttt{ResultFile} and handles a HDF5 file with input and result data, which can be used for caching.
+
+
+\subsection{Filesystem access}
+\begin{tikzpicture}
+    \begin{class}[text width=\umlwidth]{File}{0, 0}
+        \attribute{+ $<<$static$>>$ types : Dictionary(String $\rightarrow$ Class)}
+        
+        \operation{+ $<<$static$>>$ listdir() : List(String)}
+        \operation{+ $<<$static$>>$ open(filepath : String) : InputFile}
+        \operation{+ $<<$static$>>$ exists(filepath : String) : Boolean}
+    \end{class}
+\end{tikzpicture}
+
+The \texttt{types} dictionary is used to associate filename extensions (e.\,g.\ xyz) with implementations of \texttt{InputFile}.
+\texttt{open} looks up which class to use and instanciates it.
+
+\todo{Overrideable \texttt{detectfiletype} method (flexibility),\\
+unfiltered file list}
+

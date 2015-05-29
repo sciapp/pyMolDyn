@@ -1,0 +1,104 @@
+\section{Cavity and domain calculation}
+\subsection{Calculation and cache lookup}
+The interface to get calculation Results:\\
+\begin{tikzpicture}
+    \begin{class}[text width=\umlwidth]{Calculation}{0, 0}
+        \attribute{\# cache : CalculationCache}
+        
+        \operation{+ Calculation()}
+        \operation{+ Calculation(cachedir : String)}
+        \operation{+ calculatedframes(filepath : String, resolution : Integer, surface : Boolean, center : Boolean) : List(Timestamp)}
+        \operation{+ timestamp(filepath : String, frame : Integer, resolution : Integer, surface : Boolean, center : Boolean) : Timestamp}
+        \operation{+ iscalculated(filepath : String, frame : Integer, resolution : Integer, surface : Boolean, center : Boolean) : Boolean}
+        \operation{+ getresults(filepath : String, frame : Integer, resolution : Integer, surface : Boolean, center : Boolean) : Results}
+        \operation{+ calculateframe(filepath : String, frame : Integer, resolution : Integer, domains : Boolean, surface : Boolean, center : Boolean, recalculate : Boolean) : Results}
+        \operation{+ calculate(calcsettings : CalculationSettings): List(List(Results))}
+    \end{class}
+\end{tikzpicture}
+\\
+If results are cached, \texttt{getresults} returns them; if not, it returns a \texttt{Results} object with only \texttt{Atoms}.
+\texttt{calculateframes} either loads results from cache or calculates them.
+\texttt{calculate} returns a list with an entry for each selected file. This entry itself is a list with a \texttt{Result} for each selcted frame.
+
+\noindent
+\begin{tikzpicture}
+    \begin{class}[text width=\umlwidth]{CalculationSettings}{0, 0}
+        \attribute{+ datasets : Dictionary(String $\rightarrow$ List(Integer))}
+        \attribute{+ resolution : Integer}
+        \attribute{+ domains : Boolean}
+        \attribute{+ surface\_cavities : Boolean}
+        \attribute{+ center\_cavities : Boolean}
+        \attribute{+ recalculate : Boolean}
+        \attribute{+ exporthdf5 : Boolean}
+        \attribute{+ exporttext : Boolean}
+        \attribute{+ exportdir : String}
+        \attribute{+ bonds : Boolean}
+        \attribute{+ dihedral\_angles : Boolean}
+
+        \operation{+ CalculationSettings()}
+        \operation{+ copy() : CalculationSettings}
+    \end{class}
+\end{tikzpicture}
+
+\noindent
+The internal mechanism of caching and creating an index file:\\
+\begin{tikzpicture}
+    \begin{class}[text width=\umlwidth]{CalculationCache}{0, 0}
+        \attribute{\# index : Dictionary(String $\rightarrow$ String)}
+        \attribute{+ indexfilepath : String}
+        
+        \operation{+ CalculationCache(directory : String)}
+        \operation{+ \_\_contains\_\_(filepath : String) : Boolean}
+        \operation{+ \_\_getitem\_\_(filepath : String) : ResultFile}
+    \end{class}
+\end{tikzpicture}
+
+\subsection{Algorithm}
+\todo{This part has not been refactored yet.}
+\begin{tikzpicture}
+    \begin{class}[text width=\umlwidth]{DomainCalculation}{0, 0}
+        \attribute{+ discretization : Discretization}
+        \attribute{+ atom\_discretization : AtomDiscretization}
+        \attribute{+ grid : Array(Integer)}
+        \attribute{+ domain\_volumes : List(Float)}
+        \attribute{+ domain\_surface\_areas : Array(Float)}
+        \attribute{+ domain\_triangles : List(Array(Float))}
+        \attribute{+ centers : Array(Float)}
+        \attribute{+ surface\_point\_list : \textbf{FIXME}}
+        
+        \operation{+ DomainCalculation(discretization : Discretization, atom\_discretization : AtomDiscretization)}
+    \end{class}
+\end{tikzpicture}
+
+\noindent
+\begin{tikzpicture}
+    \begin{class}[text width=\umlwidth]{CavityCalculation}{0, 0}
+        \attribute{+ domain\_calculation : DomainCalculation}
+        \attribute{+ grid : Array(Integer)}
+        \attribute{+ sg\_cube\_size : Float}
+        \attribute{+ sgd : List(Integer)}
+        \attribute{+ sg : List(List\ldots)}
+        \attribute{+ grid3 : Array(Integer)}
+        \attribute{+ cavity\_volumes : List(Float)}
+        \attribute{+ multicavities : List(Set(Integer))}
+        \attribute{+ multicavity\_volumes : List(Float)}
+        \attribute{+ cavity\_triangles : List(Array(Float))}
+        \attribute{+ cavity\_surface\_areas : Array(Float)}
+        
+        \operation{+ CavityCalculation(domain\_calculation : DomainCalculation, use\_surface\_points : Boolean)}
+    \end{class}
+\end{tikzpicture}
+\\\todo{Check what data types the code really produces}
+
+\noindent
+\begin{tikzpicture}
+    \begin{class}[text width=\umlwidth]{FakeDomainCalculation}{0, 0}
+        \attribute{+ discretization : Discretization}
+        \attribute{+ atom\_discretization : AtomDiscretization}
+        \attribute{+ centers : Array(Float)}
+
+        \operation{+ FakeDomainCalculation(discretization : Discretization, atom\_discretization : AtomDiscretization, results : CalculationResults)}
+    \end{class}
+\end{tikzpicture}
+\\\todo{\texttt{FakeDomainCalculation} uses the deprecated \texttt{CalculationResults}}
+

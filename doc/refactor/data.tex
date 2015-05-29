@@ -1,0 +1,182 @@
+\section{Data}
+
+\subsection{Input data}
+\begin{tikzpicture}
+    \begin{class}[text width=\umlwidth]{Atoms}{0, 0}
+        \attribute{+ volume : Volume}
+        \attribute{+ number : Integer}
+        \attribute{+ positions : Array(Float)}
+        \attribute{+ radii : Array(Float)}
+        \attribute{+ elements : Array(String)}
+        \attribute{+ sorted\_positions : Array(Float)}
+        \attribute{+ sorted\_radii : Array(Float)}
+        \attribute{+ radii\_as\_indices: Array(Integer)}
+
+        \operation{+ Atoms(positions : Array(Float), radii : Array(Float), elements : Array(String), volume : Volume)}
+        \operation{+ Atoms(h5group : HDF5Group)}
+        \operation{+ Atoms(molecule : PybelMolecule, volume : Volume)}
+        \operation{+ tohdf(h5group : HDF5Group, overwrite : Boolean)}
+    \end{class}
+\end{tikzpicture}
+
+\noindent
+\begin{tikzpicture}
+    \begin{class}[text width=0.9\umlwidth]{Volume}{-1, 0}
+        \attribute{+ volume : Float}
+		\attribute{+ translation\_vectors : Array(Float)}
+        \attribute{+ side\_lengths : List(Float)}
+		\attribute{+ edges : Array(Points)}
+
+        \operation{+ $<<$static$>>$ fromstring(s : String) : Volume}
+		\operation{+ is\_inside(point : Array(Float))} : Boolean
+		\operation{+ get\_equivalent\_point(point : Array(Float))} : Array(Float)
+        \operation{+ \_\_str\_\_() : String}
+    \end{class}
+
+    \begin{class}[text width=0.7\umlwidth]{HexagonalVolume}{-3, -5}\
+   		\inherit{Volume}
+
+        \attribute{+ a : Float}
+		\attribute{+ c : Array(Float)}
+
+		\operation{+ HexagonalVolume(a : Float, c : Float)}
+    \end{class}
+    
+    \begin{class}[text width=0.8\umlwidth]{TriclinicVolume}{0, -8}\
+   		\inherit{Volume}
+
+        \attribute{+ a : Float}
+        \attribute{+ b : Float}
+        \attribute{+ c : Float}
+        \attribute{+ alpha : Float}
+        \attribute{+ beta : Float}
+        \attribute{+ gamma : Float}
+        \attribute{+ M : Matrix(Float)}
+
+		\operation{+ TriclinicVolume(a : Float, b : Float, c : Float, alpha : Float, beta : Float, gamma : Float)}
+        \operation{+ TriclinicVolume(v1 : Array(Float), v2 : Array(Float), v3 : Array(Float))}
+    \end{class}
+        
+	\begin{class}[text width=0.5\umlwidth]{OrthorhombicVolume}{-5, -15}\
+        \inherit{TriclinicVolume}
+
+		\operation{+ OrthorhombicVolume(a : Float, b : Float, c : Float)}
+    \end{class}    
+
+	\begin{class}[text width=0.5\umlwidth]{TetragonalVolume}{-5, -17.5}\
+   		\inherit{TriclinicVolume}
+
+		\operation{+ TetragonalVolume(a : Float, c : Float)}
+    \end{class}
+    
+    	\begin{class}[text width=0.5\umlwidth]{MonoclinicVolume}{-2.5, -19.5}\
+    	\inherit{TriclinicVolume}
+
+		\operation{+ MonoclinicVolume(a : Float, b : Float, c : Float, beta : Float)}
+    \end{class}
+
+    	\begin{class}[text width=0.5\umlwidth]{RhombohedralVolume}{3, -15}
+    	\inherit{TriclinicVolume}
+		
+        \operation{+ RhombohedralVolume(a : Float, alpha : Float)}
+    \end{class}
+
+    	\begin{class}[text width=0.5\umlwidth]{CubicVolume}{3, -17.5}\
+    	\inherit{TriclinicVolume}
+
+		\operation{+ CubicVolume(a : Float)}
+    \end{class}
+\end{tikzpicture}
+
+
+\subsection{Calculation results}
+\begin{tikzpicture}
+    \begin{abstractclass}[text width=\umlwidth]{CavitiesBase}{0, 0}
+        \attribute{+ timestamp : Timestamp}
+        \attribute{+ number : Integer}
+        \attribute{+ volumes : Array(Float)}
+        \attribute{+ surface\_areas : Array(Float)}
+        \attribute{+ triangles : List(Array(Float))}
+
+        \operation{+ CavitiesBase(timestamp : Timestamp, volumes : Array(Float), surface\_areas : Array(Float), triangles : List(Array(Float)))}
+        \operation{+ CavitiesBase(h5group : HDF5Group)}
+        \operation{+ tohdf(h5group : HDF5Group, overwrite : Boolean)}
+    \end{abstractclass}
+
+    \begin{class}[text width=0.8\umlwidth]{Domains}{-1, -8}
+        \inherit{CavitiesBase}
+        
+        \attribute{+ centers : Array(Integer)}
+
+        \operation{+ Domains(timestamp : Timestamp, volumes : Array(Float), surface\_areas : Array(Float), triangles : List(Array(Float)), centers : Array(Integer))}
+        \operation{+ Domains(h5group : HDF5Group)}
+        \operation{+ tohdf(h5group : HDF5Group, overwrite : Boolean)}
+    \end{class}
+
+    \begin{class}[text width=0.8\umlwidth]{Cavities}{1, -13}
+        \inherit{CavitiesBase}
+
+        \attribute{+ multicavities : List(Array(Integer))}
+
+        \operation{+ Cavities(timestamp : Timestamp, volumes : Array(Float), surface\_areas : Array(Float), triangles : List(Array(Float)), multicavities : List(Array(Integer)))}
+        \operation{+ Cavities(h5group : HDF5Group)}
+        \operation{+ tohdf(h5group : HDF5Group, overwrite : Boolean)}
+    \end{class}
+\end{tikzpicture}
+
+\noindent
+\begin{tikzpicture}
+    \begin{class}[text width=\umlwidth]{Results}{0, 0}
+        \attribute{+ filepath : String}
+        \attribute{+ frame : Integer}
+        \attribute{+ resolution : Integer}
+        \attribute{+ atoms : Atoms}
+        \attribute{+ domains : Domains}
+        \attribute{+ surface\_cavities : Cavities}
+        \attribute{+ center\_cavities : Cavities}
+
+        \operation{+ Results(filepath : String, frame : Integer, resolution : Integer, atoms : Atoms, domains : Domains, surface\_cavities : Cavities, center\_cavities : Cavities)}
+    \end{class}
+\end{tikzpicture}
+
+
+\subsection{Meta data}
+\begin{tikzpicture}
+    \begin{class}[text width=\umlwidth]{FileInfo}{0, 0}
+        \attribute{+ num\_frames : Integer}
+        \attribute{+ volumestr : String}
+        \attribute{+ volume : Volume}
+
+        \operation{+ FileInfo()}
+    \end{class}
+
+    \begin{class}[text width=\umlwidth]{ResultInfo}{0, -3}
+        \inherit{FileInfo}
+
+        \attribute{+ sourcefilepath : String}
+        \attribute{\# calculatedframes : Dictionary(Integer $\rightarrow$ CalculatedFrames)}
+
+        \operation{+ ResultInfo()}
+        \operation{+ ResultInfo(h5group : HDF5Group)}
+        \operation{+ \_\_contains\_\_(resolution : Integer) : Boolean}
+        \operation{+ \_\_getitem\_\_(resolution : Integer) : CalculatedFrames}
+        \operation{+ tohdf(h5group : HDF5Group, overwrite : Boolean)}
+    \end{class}
+\end{tikzpicture}
+
+\vspace*{\baselineskip}
+\noindent
+\begin{tikzpicture}
+    \begin{class}[text width=\umlwidth]{CalculatedFrames}{0, 0}
+        \attribute{+ num\_frames : Integer}
+        \attribute{+ domains : List(Timestamp)}
+        \attribute{+ surface\_cavities : List(Timestamp)}
+        \attribute{+ center\_cavities : List(Timestamp)}
+
+        \operation{+ CalculatedFrames(num\_frames : Integer)}
+        \operation{+ CalculatedFrames(h5group : HDF5Group)}
+        \operation{hasdata() : Boolean}
+        \operation{+ tohdf(h5group : HDF5Group, overwrite : Boolean)}
+    \end{class}
+\end{tikzpicture}
+

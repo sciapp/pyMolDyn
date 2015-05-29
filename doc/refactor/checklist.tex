@@ -1,0 +1,80 @@
+\documentclass[final, oneside, a4paper, 11pt, pdftex, english]{scrreprt}
+
+\usepackage{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+\usepackage{tikz}
+\usepackage{pgf-umlcd}
+
+\usepackage[hidelinks]{hyperref}
+
+%\pagestyle{headings}
+%\graphicspath{images}
+%\raggedbottom
+
+\newlength{\umlwidth}
+\setlength{\umlwidth}{12cm}
+
+\newcommand{\todo}[1]{\noindent\framebox[\linewidth]{\parbox{\linewidth}{\textbf{TODO:}\\#1}}}
+
+\begin{document}
+\chapter*{pyMolDyn Refactoring Overview}
+\section*{Class Revisions}
+
+\begin{tabular}{|l|c|c|c|c|c|}
+    \hline
+    \textbf{Class Names} & \textbf{Planned} & \textbf{Implemented} & \textbf{Integrated} \\
+    \hline
+    Atoms & 2014-10-21 & same & same \\
+    \hline
+    Volume & 2014-10-28 & same & same \\
+    \hline
+    Cavities, Domains & 2014-10-07 & same & same \\
+    \hline
+    Results & 2014-10-07 & same & same \\
+    \hline
+    FileInfo, ResultFileInfo & 2014-10-21 & same & same \\
+    \hline
+    InputFile & 2014-10-21 & same & same\\
+    \hline
+    ResultFile & 2014-10-21 & same & same\\
+    \hline
+    File & 2014-10-28 & same & same\\
+    \hline
+    Calculation, Cache & 2014-11-18 & same & same\\
+    \hline
+    Calculation Algorithm & --- & old & old \\
+    \hline
+    Control & 2014-11-11 & same & same \\
+    \hline
+    Configuration & --- & old & old \\
+    \hline
+    CalculationSettings & 2014-11-04 & same & same \\
+    \hline
+    VisualizationSettings & 2014-10-22 & same & same\\
+    \hline
+    File Format & 2014-10-21 & same & same \\
+    \hline
+    & & & \\
+    \hline
+\end{tabular}
+
+
+\section*{TODO}
+\subsection*{Software design}
+\begin{itemize}\itemsep0pt
+    \item Pass around the \texttt{Control} object
+    \item Logging system (debuglevel etc.)
+    \item Analyze and improve module dependencies
+\end{itemize}
+
+
+\subsection*{Documentation}
+\begin{itemize}\itemsep0pt
+    \item Uses/used-by relations
+    \item Module tree (with classes)
+\end{itemize}
+
+\end{document}

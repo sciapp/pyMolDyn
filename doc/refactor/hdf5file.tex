@@ -1,0 +1,112 @@
+\section{HDF5 File}
+\usetikzlibrary{trees}
+\tikzstyle{every node}=[draw=black,thick,anchor=west]
+\tikzstyle{dataset}=[fill=gray!30]
+\tikzstyle{attribute}=[dashed,fill=gray!30]
+
+The data classes (e.\,g.\ Atoms) are mapped to Groups in an HDF5 file.\\
+\begin{tikzpicture}[%
+        grow via three points={one child at (0.5,-0.7) and
+        two children at (0.5,-0.7) and (0.5,-1.4)},
+        edge from parent path={(\tikzparentnode.south) |- (\tikzchildnode.west)}]
+    \node{File}
+    child{node{info}
+        child{node[attribute]{num\_frames : Integer}}
+        child{node[attribute]{volume : String}}
+        child{node{resolution64\ldots}
+            child{node[dataset]{domains : Timestamp [num\_frames]}}
+            child{node[dataset]{surface\_cavities : Timestamp [num\_frames]}}
+            child{node[dataset]{center\_cavities : Timestamp [num\_frames]}}
+        }
+        child[missing]{}
+        child[missing]{}
+        child[missing]{}
+    }
+    child[missing]{}
+    child[missing]{}
+    child[missing]{}
+    child[missing]{}
+    child[missing]{}
+    child[missing]{}
+    child{node{atoms}
+        child{node[attribute]{volume : String}}
+        child{node{frame0\ldots{}num\_frames}
+            child{node[dataset]{positions : Float [n, 3]}}
+            child{node[dataset]{radii : Float [n, 3]}}
+            child{node[dataset]{elements : String [n]}}
+        }
+        child[missing]{}
+        child[missing]{}
+        child[missing]{}
+    }
+    child[missing]{}
+    child[missing]{}
+    child[missing]{}
+    child[missing]{}
+    child[missing]{}
+    child{node{results}
+        child{node{frame0\ldots{}num\_frames}
+            child{node{resolution64\ldots}
+                child{node[dashed]{\textit{see below}}}
+            }
+            child[missing]{}
+        }
+        child[missing]{}
+        child[missing]{}
+    }
+    child[missing]{}
+    child[missing]{}
+    child[missing]{}
+    child[missing]{}
+    ;
+\end{tikzpicture}
+
+\noindent
+\begin{tikzpicture}[%
+        grow via three points={one child at (0.5,-0.7) and
+        two children at (0.5,-0.7) and (0.5,-1.4)},
+        edge from parent path={(\tikzparentnode.south) |- (\tikzchildnode.west)}]
+        \node{results/resolution64\ldots}
+        child{node{domains}
+            child{node[dataset]{surface\_areas : Float [n]}}
+            child{node[dataset]{volumes : Float [n]}}
+            child{node[dataset]{centers : Float [n, 3]}}
+            child{node[dataset]{triangles0\ldots{}n : Float [2, m, 3, 3]}}
+        }
+        child[missing]{}
+        child[missing]{}
+        child[missing]{}
+        child[missing]{}
+        child{node{surface\_cavities}
+            child{node[dataset]{surface\_areas : Float [n]}}
+            child{node[dataset]{volumes : Float [n]}}
+            child{node[dataset]{triangles0\ldots{}n : Float [2, m, 3, 3]}}
+            child{node[dataset]{multicavities0\ldots{}n : Integer [m]}}
+        }
+        child[missing]{}
+        child[missing]{}
+        child[missing]{}
+        child[missing]{}
+        child{node{center\_cavities}
+            child{node[dataset]{surface\_areas : Float [n]}}
+            child{node[dataset]{volumes : Float [n]}}
+            child{node[dataset]{triangles0\ldots{}n : Float [2, m, 3, 3]}}
+            child{node[dataset]{multicavities0\ldots{}n : Integer [m]}}
+        }
+    child[missing]{}
+    child[missing]{}
+    child[missing]{}
+    child[missing]{}
+    child[missing]{}
+    child[missing]{}
+    ;
+\end{tikzpicture}
+
+\noindent\textbf{Explanation:}\\
+\begin{tikzpicture}
+    \path
+    (0, 0) node{Group}
+    (2, 0) node[dataset]{Dataset}
+    (4, 0) node[attribute]{Attribute};
+\end{tikzpicture}
+

@@ -1,0 +1,33 @@
+\section{Calculation Process}
+\begin{sequencediagram}
+    \newinst{ui}{:UserInterface}
+    \newinst[3.5]{thread}{:CalculationThread}
+    \newinst[2.5]{calc}{:Calculation}
+
+    \begin{call}{ui}{CalculationThread(CalculationSettings)}{thread}{CalculationThread}
+    \end{call}
+    \begin{messcall}{ui}{start()}{thread}
+        \begin{call}{thread}{calculate(CalculationSettings)}{calc}{Results}
+        \end{call}
+    \end{messcall}
+    \begin{call}{ui}{wait()}{thread}{}
+    \end{call}
+    \begin{call}{ui}{getresults()}{thread}{Results}
+    \end{call}
+\end{sequencediagram}
+
+\vspace{2\baselineskip}
+\begin{sequencediagram}
+    \newinst{calc}{:Calculation}
+    \newinst[2]{cache}{:CalculationCache}
+    \newinst[2]{algo}{:Algorithm}
+
+    \begin{sdblock}{for each filename, frame}{}
+        \begin{call}{calc}{getresults(filename, \ldots)}{cache}{Results / None}
+        \end{call}
+        \begin{call}{calc}{DomainCalculation(atoms, \ldots)}{algo}{DomainCalculation}
+        \end{call}
+        \begin{call}{calc}{CavityCalculation(atoms, \ldots)}{algo}{CavityCalculation}
+        \end{call}
+    \end{sdblock}
+\end{sequencediagram}
