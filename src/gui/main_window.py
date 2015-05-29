@@ -17,6 +17,7 @@ import core.bonds
 import core.control
 #from core.data import Results
 
+WEBSITE_URL = 'https://pgi-jcns.fz-juelich.de/portal/pages/pymoldyn-gui.html'
 
 class MainWindow(QtGui.QMainWindow):
     def __init__(self, control):
@@ -89,6 +90,10 @@ class MainWindow(QtGui.QMainWindow):
         export_bond_dihedral_angles_action.setShortcut('Ctrl+3')
         export_bond_dihedral_angles_action.triggered.connect(self.wrapper_export_bond_dihedral_angles)
 
+        website_action = QtGui.QAction('&pyMolDyn website', self)
+        website_action.setShortcut('F1')
+        website_action.triggered.connect(self.show_website)
+
         about_action = QtGui.QAction('&About', self)
         about_action.triggered.connect(self.show_about_box)
 
@@ -103,12 +108,18 @@ class MainWindow(QtGui.QMainWindow):
         export_submenu.addAction(export_bond_dihedral_angles_action)
 
         help_menu = menubar.addMenu('&Help')
+        help_menu.addAction(website_action)
+        help_menu.addSeparator()
         help_menu.addAction(about_action)
 
     def show_settings(self):
         SettingsDialog()
         self.control.update()
         self.statistics_dock.update_results(self.control.visualization.results)
+
+    def show_website(self):
+        url = QtCore.QUrl(WEBSITE_URL)
+        QtGui.QDesktopServices.openUrl(url)
 
     def show_about_box(self):
         AboutDialog(self, 'pyMolDyn is a molecule viewer which can compute molecular cavities.', (('Florian Rhiem', 'f.rhiem@fz-juelich.de'),
