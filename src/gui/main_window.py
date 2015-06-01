@@ -63,7 +63,6 @@ class MainWindow(QtGui.QMainWindow):
         self.file_menu = None
         self.recent_files_submenu = None
         self.init_menu()
-        self.update_recent_files()
 
         self.setWindowTitle('pyMolDyn v%s' % __version__)
         self.setWindowIcon(QtGui.QIcon('icon.png'))
@@ -114,7 +113,6 @@ class MainWindow(QtGui.QMainWindow):
         self.file_menu.addMenu(export_submenu)
 
         self.init_submenu_recent_files()
-        self.update_recent_files()
         self.file_menu.addMenu(self.recent_files_submenu)
 
         export_submenu.addAction(export_bonds_action)
@@ -155,16 +153,16 @@ class MainWindow(QtGui.QMainWindow):
                 self.recent_files_submenu.addAction(f_action)
 
             self.file_dock.file_tab.most_recent_path = os.path.dirname(config.recent_files[0])
-            self.submenu_add_shortcut_for_first_item()
+            self._submenu_add_shortcut_for_first_item()
 
-    def _update_submenu_recent_files(self):
+    def update_submenu_recent_files(self):
         if not config.recent_files:
             return
 
         most_recent_file = config.recent_files[0]
         if not most_recent_file:
             return
-        
+
         actions_in_menu = self.recent_files_submenu.actions()
         actions_in_menu_str = [s.text() for s in actions_in_menu]
 
@@ -184,28 +182,26 @@ class MainWindow(QtGui.QMainWindow):
                 self.recent_files_submenu.addAction(new_action)
             else:
                 self.recent_files_submenu.insertAction(actions_in_menu[0], new_action)
+                self.recent_files_submenu.actions()[0].setDisabled(True)
+
                 if len(actions_in_menu) == 5:
                     self.recent_files_submenu.removeAction(actions_in_menu[4])
 
-        self.recent_files_submenu.update()
         self.file_dock.file_tab.most_recent_path = os.path.dirname(most_recent_file)
-        self.submenu_add_shortcut_for_first_item()
+        self._submenu_add_shortcut_for_first_item()
+        self.recent_files_submenu.update()
 
-    def submenu_add_shortcut_for_first_item(self):
+    def _submenu_add_shortcut_for_first_item(self):
         actions_in_menu = self.recent_files_submenu.actions()
         actions_in_menu[0].setShortcut('Alt+1')
         for action in actions_in_menu[1:]:
             action.setShortcut('')
         self.recent_files_submenu.update()
 
-
-    def update_recent_files(self):
-        self._update_submenu_recent_files()
-
     def wrapper_recent_files(self, f):
         if f:
-            self.file_dock.file_tab.file_list.add_file(f)
-            self.update_recent_files()
+            self.file_dock.file_tab.disable_files_in_menu_and_open(f)
+            self.update_submenu_recent_files()
 
     def wrapper_export_bonds(self):
         filename = QtGui.QFileDialog.getSaveFileName(self, "Export Bonds", "bonds.txt")
