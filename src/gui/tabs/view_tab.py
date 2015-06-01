@@ -73,6 +73,8 @@ class ViewTab(QtGui.QWidget):
         self.alt_cav_check.stateChanged.connect(partial(self.on_checkbox,
                                                         self.alt_cav_check))
 
+        self.update_cavity_buttons()
+
         view_box.addWidget(self.box_check)
         view_box.addWidget(self.atom_check)
         view_box.addWidget(self.bonds_check)
@@ -85,6 +87,17 @@ class ViewTab(QtGui.QWidget):
         vbox.addStretch()
         self.setLayout(vbox)
         self.show()
+
+    def update_cavity_buttons(self):
+        if self.cavity_check.isChecked() and not self.alt_cav_check.isChecked():
+            self.cavity_check.setEnabled(True)
+            self.alt_cav_check.setDisabled(True)
+        elif self.alt_cav_check.isChecked() and not self.cavity_check.isChecked():
+            self.cavity_check.setDisabled(True)
+            self.alt_cav_check.setEnabled(True)
+        elif not (self.cavity_check.isChecked() and self.alt_cav_check.isChecked()):
+            self.cavity_check.setEnabled(True)
+            self.alt_cav_check.setEnabled(True)
 
     def on_checkbox(self, check_box, check_state):
         settings = self.gl_widget.vis.settings
@@ -102,6 +115,9 @@ class ViewTab(QtGui.QWidget):
                     self.bonds_check.setChecked(False)
         if self.bonds_check.isEnabled():
             settings.show_bonds = self.bonds_check.isChecked()
+
+        self.update_cavity_buttons()
+
         settings.show_domains = self.domain_check.isChecked()
         settings.show_cavities = self.cavity_check.isChecked()
         settings.show_alt_cavities = self.alt_cav_check.isChecked()
