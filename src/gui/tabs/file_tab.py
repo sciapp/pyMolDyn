@@ -50,6 +50,7 @@ class FileTab(QtGui.QWidget):
         QtGui.QWidget.__init__(self, parent)
         self.main_window = main_window
         self.progress_dialog = ProgressDialog(self)
+        self.most_recent_path = "~"
 
         p = self.progress_dialog
         self.main_window.set_output_callbacks(p.progress, p.print_step, p.calculation_finished)
@@ -125,14 +126,55 @@ class FileTab(QtGui.QWidget):
             return
 
     def remove_selected_files(self):
+        self.enable_files_in_menu()
         self.file_list.remove_selected_files()
 
-    def open_file_dialog(self):
-        filenames, _ = QtGui.QFileDialog.getOpenFileNames(self, 'Open dataset', '~')
+    def enable_files_in_menu(self):
+        actions = self.main_window.recent_files_submenu.actions()
+        selected = self.file_list.selectedItems()
+        text = None
+        subitem = selected[0]
+        item = subitem.parent()
+        if not selected:
+            return
 
-        for fn in filenames:
-            if fn:
-                self.file_list.add_file(fn)
+        # if sheet contains only one frame and this is deleted, the parent will be also deleted
+        if subitem.text(0).startswith("frame") and ((item.childCount() == 1) or (item.childCount() == len(selected))):
+            text = item.text(0)
+            for action in actions:
+                if action.text().endswith(text):
+                    action.setEnabled(True)
+                    item.takeChild(item.indexOfChild(subitem))
+                    self.file_list.removeItemWidget(subitem, 0)
+                    self.file_list.takeTopLevelItem(self.file_list.indexOfTopLevelItem(item))
+                    self.file_list.removeItemWidget(item, 0)
+                    del self.file_list.path_dict[text]
+        else:
+            for sel in selected:
+                # tree_list elements get only reenabled in menu if the whole sheet is removed from file_list
+                if sel.text(0).startswith("frame"):
+                    continue
+
+                for action in actions:
+                    if action.text() == self.file_list.path_dict[sel.text(0)]:
+                        action.setEnabled(True)
+
+    def disable_files_in_menu_and_open(self, path):
+        for action in self.main_window.recent_files_submenu.actions():
+            if action.text() == path:
+                action.setDisabled(True)
+        self.file_list.add_file(path)
+
+    def open_file_dialog(self):
+        filenames, _ = QtGui.QFileDialog.getOpenFileNames(self, 'Open dataset', self.most_recent_path)
+        for path in filenames:
+            if path:
+                #print path
+
+                #print self.main_window.recent_files_submenu.actions()
+                self.disable_files_in_menu_and_open(path)
+                self.main_window.update_submenu_recent_files()
+
 
     def calculationcallback(self, func, settings):
         thread = CalculationThread(self, func, settings)
@@ -269,6 +311,11 @@ class TreeList(QtGui.QTreeWidget):
 
             if path not in config.recent_files:
                 config.add_recent_file(path)
+            else:
+                index = config.recent_files.index(path)
+                config.recent_files.pop(index)
+                config.add_recent_file(path)
+
 
     def show_selected_frame(self):
         sel = self.get_selection()
