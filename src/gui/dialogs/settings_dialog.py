@@ -3,6 +3,7 @@ import sys
 import functools
 from config.configuration import config, Configuration
 from gui.gl_widget import UpdateGLEvent, GLWidget
+from collections import OrderedDict
 
 
 class ColorSettingsPage(QtGui.QWidget):
@@ -11,19 +12,17 @@ class ColorSettingsPage(QtGui.QWidget):
         QtGui.QWidget.__init__(self, parent)
 
         self._config = cfg
-        self.colors = {
-            'background': 'Background',
-            'bounding_box': 'Bounding Box',
-            'cavity': 'Cavity',
-            'domain': 'Domain',
-            'alt_cavity': 'Alt. Cavity',
-            'bonds': 'Bonds'
-        }
+        self.colors = OrderedDict((('background', 'Background'),
+                                  ('bounding_box', 'Bounding Box'),
+                                  ('cavity', 'Cavity'),
+                                  ('domain', 'Domain'),
+                                  ('alt_cavity', 'Alt. Cavity'),
+                                  ('bonds', 'Bonds')))
 
         self.button_dict = {}
-        vbox = QtGui.QVBoxLayout()
-        vbox.setSpacing(5)
-        for attr_str, btn_str in self.colors.iteritems():
+        layout = QtGui.QGridLayout()
+        layout.setSpacing(5)
+        for index, (attr_str, btn_str) in enumerate(self.colors.iteritems()):
 
             pix = QtGui.QPixmap(50, 50)
             cfg_clr = getattr(self._config, 'Colors')
@@ -31,17 +30,16 @@ class ColorSettingsPage(QtGui.QWidget):
             current_color = QtGui.QColor(*tmp)
             pix.fill(current_color)
 
-            b = QtGui.QPushButton(btn_str, self)
+            b = QtGui.QPushButton(None, self)
+            b.setFixedSize(50, 50)
             self.button_dict[attr_str] = b
-            self.connect(b, QtCore.SIGNAL("clicked()"), functools.partial(self.show_color_dialog, attr_str, current_color))
+            b.clicked.connect(lambda arg1=attr_str, arg2=current_color : self.show_color_dialog(arg1, arg2))
             b.setIcon(QtGui.QIcon(pix))
 
-            tmp_hbox = QtGui.QHBoxLayout()
-            tmp_hbox.addWidget(b)
-            tmp_hbox.addStretch()
-            vbox.addLayout(tmp_hbox)
+            layout.addWidget(b, index, 0)
+            layout.addWidget(QtGui.QLabel(btn_str, self), index, 1)
 
-        self.setLayout(vbox)
+        self.setLayout(layout)
         self.show()
 
     def show_color_dialog(self, s, previous_color):

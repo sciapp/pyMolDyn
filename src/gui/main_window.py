@@ -139,7 +139,8 @@ class MainWindow(QtGui.QMainWindow):
                     (('Florian Rhiem', 'f.rhiem@fz-juelich.de'),
                      ('Fabian Beule', 'f.beule@fz-juelich.de'),
                      ('David Knodt', 'd.knodt@fz-juelich.de'),
-                     ('Ingo Heimbach', 'i.heimbach@fz-juelich.de'))).show()
+                     ('Ingo Heimbach', 'i.heimbach@fz-juelich.de'),
+                     ('Florian Macherey', 'f.macherey@fz-juelich.de'))).show()
 
     def init_submenu_recent_files(self):
         self.recent_files_submenu = QtGui.QMenu("&Recent files", self)
