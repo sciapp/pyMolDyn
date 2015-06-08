@@ -14,10 +14,10 @@ class ColorSettingsPage(QtGui.QWidget):
         self._config = cfg
         self.colors = OrderedDict((('background', 'Background'),
                                   ('bounding_box', 'Bounding Box'),
-                                  ('cavity', 'Cavity'),
+                                  ('bonds', 'Bonds'),
                                   ('domain', 'Domain'),
-                                  ('alt_cavity', 'Alt. Cavity'),
-                                  ('bonds', 'Bonds')))
+                                  ('cavity', 'Cavity (surface method)'),
+                                  ('alt_cavity', 'Cavity (Center method)')))
 
         self.button_dict = {}
         layout = QtGui.QGridLayout()
