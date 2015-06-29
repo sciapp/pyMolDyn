@@ -5,7 +5,7 @@ ifeq ($(UNAME), Darwin)
 	INCLUDES = -I/usr/local/include/python2.7 -I/usr/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages/numpy/core/include 
 	LIBS = -L/usr/local/Library/Frameworks/Python.framework/Versions/2.7/lib/ -lpython2.7
 else
-	INCLUDES = -I/usr/include/python2.7
+	INCLUDES = -I/usr/local/include/python2.7 -I/usr/local/lib/python2.7/site-packages/numpy/core/include
         LIBS = -lpython2.7
 endif
 
