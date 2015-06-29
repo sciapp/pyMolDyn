@@ -249,7 +249,8 @@ class MainWindow(QtGui.QMainWindow):
         status = str(results)
         self.statusBar().showMessage(status)
         self.statistics_dock.update_results(self.control.visualization.results)
-        self.view_dock.view_tab.update_cavity_buttons()
+        self.view_dock.view_tab.update_cavity_buttons(self.control.visualization.results, None)
+
 
 #    def closeEvent(self, event):
 #        reply = QtGui.QMessageBox.question(self, 'Message',
