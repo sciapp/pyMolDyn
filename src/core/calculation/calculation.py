@@ -232,7 +232,7 @@ class Calculation(object):
             results = data.Results(filepath, frame, resolution, inputfile.getatoms(frame), None, None, None)
         return results
 
-    def calculateframe(self, filepath, frame, resolution, domains=False, surface=False, center=False, atoms=None, recalculate=False):
+    def calculateframe(self, filepath, frame, resolution, domains=False, surface=False, center=False, atoms=None, recalculate=False, last_frame=True):
         """
         Get results for the given parameters. They are either loaded from the
         cache or calculated.
@@ -314,7 +314,8 @@ class Calculation(object):
 
         message.progress(100)
         message.print_message('calculation finished')
-        message.finish()
+        if last_frame:
+            message.finish()
         return results
 
     def calculate(self, calcsettings):
@@ -359,8 +360,11 @@ class Calculation(object):
             if frames[0] == -1:
                 inputfile = File.open(filepath)
                 frames = range(inputfile.info.num_frames)
+            last_frame = False
             for frame in frames:
                 # calculate single frame
+                if frame is frames[-1]:
+                    last_frame = True
                 frameresult = self.calculateframe(
                     filepath,
                     frame,
@@ -368,7 +372,8 @@ class Calculation(object):
                     domains=calcsettings.domains,
                     surface=calcsettings.surface_cavities,
                     center=calcsettings.center_cavities,
-                    recalculate=calcsettings.recalculate)
+                    recalculate=calcsettings.recalculate,
+                    last_frame=last_frame)
                 # export to text file
                 if calcsettings.exporttext:
                     fmt = os.path.join(exportdir, fileprefix) + "-{property}-{frame:06d}.txt"
@@ -473,75 +478,5 @@ class CalculationCache(object):
                                               key=lambda x: x[0]):
                 print >>f, filepath + "; " + cachefile
 
-
-# TODO: remove deprecated operations below
-
-
 calculation = Calculation()
 
-
-def calculated(filename, frame_nr, resolution, use_center_points):
-    logger.warn("use of deprecated function")
-    filepath = os.path.abspath(filename)
-    frame = frame_nr - 1
-    return calculation.iscalculated(filepath, frame, resolution, not use_center_points, use_center_points)
-
-
-def count_frames(filename):
-    logger.warn("use of deprecated function")
-    f = core.file.XYZFile(filename)
-    return f.info.num_frames
-
-
-def calculated_frames(filename, resolution):
-    logger.warn("use of deprecated function")
-    filepath = os.path.abspath(filename)
-    timestamps = calculation.calculatedframes(filepath, resolution, True, False)
-    cf = [i + 1 for i, ts in enumerate(timestamps) if ts is not None]
-    return cf
-
-
-def getresults(filename, frame_nr, volume, resolution):
-    logger.warn("use of deprecated function")
-    filepath = os.path.abspath(filename)
-    frame = frame_nr - 1
-    return calculation.getresults(filepath, frame, resolution, True, True)
-
-
-def calculate_cavities(filename, frame_nr, volume, resolution, use_center_points=False):
-    logger.warn("use of deprecated function")
-    filepath = os.path.abspath(filename)
-    frame = frame_nr - 1
-    message.print_message("Cavity calculation...")
-    results = calculation.calculateframe(filepath, frame, resolution, True, not use_center_points, use_center_points)
-    message.print_message('calculation finished')
-    message.finish()
-    return results
-
-
-def delete_center_cavity_information(*args):
-    logger.warn("use of deprecated function")
-    pass
-
-
-def timestamp(filename, resolution, center_based, frames):
-    logger.warn("use of deprecated function")
-    filepath = os.path.abspath(filename)
-    ts = calculation.calculatedframes(filepath, resolution, not center_based, center_based)
-    if frames[0] != -1:
-        ts = [ts[f - 1] for f in frames]
-
-    def fmt(t):
-        if t is None:
-            return "X"
-        else:
-            t.strftime("%d.%m.%Y %H:%M:%S")
-
-    ts = map(fmt, ts)
-    return ts
-
-
-def calculate(settings):
-    logger.warn("use of deprecated function")
-    settings.frames = [f - 1 for f in settings.frames]
-    return calculation.calculate(settings)

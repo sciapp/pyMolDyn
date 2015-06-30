@@ -132,11 +132,11 @@ class FileTab(QtGui.QWidget):
     def enable_files_in_menu(self):
         actions = self.main_window.recent_files_submenu.actions()
         selected = self.file_list.selectedItems()
+        if not selected:
+            return
         text = None
         subitem = selected[0]
         item = subitem.parent()
-        if not selected:
-            return
 
         # if sheet contains only one frame and this is deleted, the parent will be also deleted
         if subitem.text(0).startswith("frame") and ((item.childCount() == 1) or (item.childCount() == len(selected))):
@@ -315,7 +315,6 @@ class TreeList(QtGui.QTreeWidget):
                 index = config.recent_files.index(path)
                 config.recent_files.pop(index)
                 config.add_recent_file(path)
-
 
     def show_selected_frame(self):
         sel = self.get_selection()
