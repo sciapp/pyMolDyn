@@ -139,7 +139,8 @@ class MainWindow(QtGui.QMainWindow):
                     (('Florian Rhiem', 'f.rhiem@fz-juelich.de'),
                      ('Fabian Beule', 'f.beule@fz-juelich.de'),
                      ('David Knodt', 'd.knodt@fz-juelich.de'),
-                     ('Ingo Heimbach', 'i.heimbach@fz-juelich.de'))).show()
+                     ('Ingo Heimbach', 'i.heimbach@fz-juelich.de'),
+                     ('Florian Macherey', 'f.macherey@fz-juelich.de'))).show()
 
     def init_submenu_recent_files(self):
         self.recent_files_submenu = QtGui.QMenu("&Recent files", self)
@@ -248,7 +249,8 @@ class MainWindow(QtGui.QMainWindow):
         status = str(results)
         self.statusBar().showMessage(status)
         self.statistics_dock.update_results(self.control.visualization.results)
-        self.view_dock.view_tab.update_cavity_buttons()
+        self.view_dock.view_tab.update_cavity_buttons(self.control.visualization.results, None)
+
 
 #    def closeEvent(self, event):
 #        reply = QtGui.QMessageBox.question(self, 'Message',

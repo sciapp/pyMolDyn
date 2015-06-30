@@ -32,6 +32,7 @@ class ViewTab(QtGui.QWidget):
         QtGui.QWidget.__init__(self, parent)
         self.gl_widget = main_window.center.gl_widget
         #self.vis_settings = self.gl_widget.vis.settings
+        self.results = None
         self.init_gui()
 
     def init_gui(self):
@@ -43,8 +44,8 @@ class ViewTab(QtGui.QWidget):
         self.atom_check = QtGui.QCheckBox('show atoms', self)
         self.bonds_check = QtGui.QCheckBox('show bonds', self)
         self.domain_check = QtGui.QCheckBox('show domains', self)
-        self.cavity_check = QtGui.QCheckBox('show cavities (surface method)', self)
-        self.alt_cav_check = QtGui.QCheckBox('show cavities (center method)', self)
+        self.surface_cavity_check = QtGui.QCheckBox('show cavities (surface method)', self)
+        self.center_cavity_check = QtGui.QCheckBox('show cavities (center method)', self)
 
         # TODO synch with dataset
         # self.box_check.setCheckState(self.vis_settings.show_bounding_box)
@@ -57,8 +58,8 @@ class ViewTab(QtGui.QWidget):
         self.atom_check.setChecked(True)
         self.bonds_check.setChecked(True)
         self.domain_check.setChecked(False)
-        self.cavity_check.setChecked(True)
-        self.alt_cav_check.setChecked(False)
+        self.surface_cavity_check.setChecked(True)
+        self.center_cavity_check.setChecked(False)
 
         self.box_check.stateChanged.connect(partial(self.on_checkbox,
                                                     self.box_check))
@@ -67,20 +68,23 @@ class ViewTab(QtGui.QWidget):
         self.bonds_check.stateChanged.connect(partial(self.on_checkbox,
                                                       self.bonds_check))
         self.domain_check.stateChanged.connect(partial(self.on_checkbox,
-                                                       self.domain_check))
-        self.cavity_check.stateChanged.connect(partial(self.on_checkbox,
-                                                       self.cavity_check))
-        self.alt_cav_check.stateChanged.connect(partial(self.on_checkbox,
-                                                        self.alt_cav_check))
+                                                       self.domain_check, clicked_box="domain"))
+        self.surface_cavity_check.stateChanged.connect(partial(self.on_checkbox,
+                                                       self.surface_cavity_check, clicked_box="surface_cavity"))
+        self.center_cavity_check.stateChanged.connect(partial(self.on_checkbox,
+                                                        self.center_cavity_check, clicked_box="center_cavity"))
 
-        self.update_cavity_buttons()
+        self.domain_check.setDisabled(True)
+        self.surface_cavity_check.setDisabled(True)
+        self.center_cavity_check.setDisabled(True)
+        self.update_cavity_buttons(self.results, None)
 
         view_box.addWidget(self.box_check)
         view_box.addWidget(self.atom_check)
         view_box.addWidget(self.bonds_check)
         view_box.addWidget(self.domain_check)
-        view_box.addWidget(self.cavity_check)
-        view_box.addWidget(self.alt_cav_check)
+        view_box.addWidget(self.surface_cavity_check)
+        view_box.addWidget(self.center_cavity_check)
         group_box.setLayout(view_box)
 
         vbox.addWidget(group_box)
@@ -88,18 +92,36 @@ class ViewTab(QtGui.QWidget):
         self.setLayout(vbox)
         self.show()
 
-    def update_cavity_buttons(self):
-        if self.cavity_check.isChecked() and not self.alt_cav_check.isChecked():
-            self.cavity_check.setEnabled(True)
-            self.alt_cav_check.setDisabled(True)
-        elif self.alt_cav_check.isChecked() and not self.cavity_check.isChecked():
-            self.cavity_check.setDisabled(True)
-            self.alt_cav_check.setEnabled(True)
-        elif not (self.cavity_check.isChecked() and self.alt_cav_check.isChecked()):
-            self.cavity_check.setEnabled(True)
-            self.alt_cav_check.setEnabled(True)
+    def update_cavity_buttons(self, results, clicked_box=None):
+        self.results = results
 
-    def on_checkbox(self, check_box, check_state):
+        if self.results is None:
+            return
+
+        if self.results.domains is None:
+            self.domain_check.setDisabled(True)
+            self.surface_cavity_check.setDisabled(True)
+            self.center_cavity_check.setDisabled(True)
+            return
+        else:
+            self.domain_check.setEnabled(True)
+
+        # enable elements depending on, if they are computed
+        self.center_cavity_check.setEnabled(self.results.center_cavities is not None)
+        self.surface_cavity_check.setEnabled(self.results.surface_cavities is not None)
+
+        # un- / check elements depending on current selection
+        if clicked_box is None:
+            return
+
+        if clicked_box == "surface_cavity" and self.surface_cavity_check.isChecked():
+            self.domain_check.setChecked(False)
+            self.center_cavity_check.setChecked(False)
+        elif ((clicked_box == "center_cavity" and self.center_cavity_check.isChecked())
+                or (clicked_box == "domain" and self.domain_check.isChecked())):
+            self.surface_cavity_check.setChecked(False)
+
+    def on_checkbox(self, check_box, check_state, clicked_box=None):
         settings = self.gl_widget.vis.settings
         settings.show_bounding_box = self.box_check.isChecked()
         settings.show_atoms = self.atom_check.isChecked()
@@ -116,10 +138,15 @@ class ViewTab(QtGui.QWidget):
         if self.bonds_check.isEnabled():
             settings.show_bonds = self.bonds_check.isChecked()
 
-        self.update_cavity_buttons()
+        #self.domain_check.setDisabled(True)
+        #self.cavity_check.setDisabled(True)
+        #self.alt_cav_check.setDisabled(True)
+        #print "bla2"
+        self.update_cavity_buttons(self.results, clicked_box)
+
 
         settings.show_domains = self.domain_check.isChecked()
-        settings.show_cavities = self.cavity_check.isChecked()
-        settings.show_alt_cavities = self.alt_cav_check.isChecked()
+        settings.show_cavities = self.surface_cavity_check.isChecked()
+        settings.show_alt_cavities = self.center_cavity_check.isChecked()
 
         self.gl_widget.create_scene()

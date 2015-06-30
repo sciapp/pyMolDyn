@@ -277,10 +277,8 @@ class Calculation(object):
 
         if recalculate:
             results.domains = None
-            if surface:
-                results.surface_cavities = None
-            if center:
-                results.center_cavities = None
+            results.surface_cavities = None
+            results.center_cavities = None
 
         if not ((domains and results.domains is None)
                 or (surface and results.surface_cavities is None)
