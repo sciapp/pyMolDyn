@@ -103,19 +103,17 @@ class ViewTab(QtGui.QWidget):
             self.surface_cavity_check.setDisabled(True)
             self.center_cavity_check.setDisabled(True)
             return
+        else:
+            self.domain_check.setEnabled(True)
 
         # enable elements depending on, if they are computed
-        if self.results.domains is not None:
-            self.domain_check.setEnabled(True)
-        if self.results.center_cavities is not None:
-            self.center_cavity_check.setEnabled(True)
-        if self.results.surface_cavities is not None:
-            self.surface_cavity_check.setEnabled(True)
+        self.center_cavity_check.setEnabled(self.results.center_cavities is not None)
+        self.surface_cavity_check.setEnabled(self.results.surface_cavities is not None)
 
+        # un- / check elements depending on current selection
         if clicked_box is None:
             return
 
-        # un- / check elements depending on current selection
         if clicked_box == "surface_cavity" and self.surface_cavity_check.isChecked():
             self.domain_check.setChecked(False)
             self.center_cavity_check.setChecked(False)
