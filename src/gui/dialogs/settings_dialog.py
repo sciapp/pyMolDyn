@@ -58,9 +58,7 @@ class ComputationSettingsPage(QtGui.QWidget):
     def __init__(self, parent, cfg):
         QtGui.QWidget.__init__(self, parent)
         self._config = cfg
-        self.values = {
-            'atom_radius': 'atom radius'
-        }
+        self.values = OrderedDict((('atom_radius', 'atom radius'), ))
 
         self.lineedit_dict = {}
         box  = QtGui.QVBoxLayout()
@@ -98,11 +96,9 @@ class PathSettingsPage(QtGui.QWidget):
         QtGui.QWidget.__init__(self, parent)
 
         self._config = cfg
-        self.path = {
-            'cache_dir': 'Cache directory',
-            'result_dir': 'Result directory',
-            'ffmpeg': 'ffmpeg path'
-        }
+        self.path = OrderedDict((('cache_dir', 'Cache directory'),
+                                ('result_dir', 'Result directory'),
+                                ('ffmpeg', 'ffmpeg path')))
 
         self.lineedit_dict = {}
         box  = QtGui.QVBoxLayout()

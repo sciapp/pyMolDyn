@@ -32,7 +32,7 @@ class ProgressDialog(QtGui.QDialog):
         QtCore.QMetaObject.invokeMethod(self, "close_dialog", QtCore.Qt.QueuedConnection)
 
     def progress(self, value):
-        self.progressbar.setValue(value)
+        QtCore.QMetaObject.invokeMethod(self.progressbar, "setValue", QtCore.Qt.QueuedConnection, QtCore.QGenericArgument('int', value))
 
     @QtCore.Slot()
     def close_dialog(self):
