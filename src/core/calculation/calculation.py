@@ -129,7 +129,7 @@ class Calculation(object):
                 a default one is used
         """
         if cachedir is None:
-            cachedir = config.Path.cache_dir
+            cachedir = os.path.expanduser(config.Path.cache_dir)
         self.cachedir = cachedir
         self.cache = CalculationCache(cachedir)
 

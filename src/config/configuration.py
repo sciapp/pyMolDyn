@@ -4,9 +4,9 @@ import os
 import os.path
 import inspect
 
-CONFIG_DIRECTORY = os.path.abspath(os.path.expanduser('~/.pymoldyn/'))
-CONFIG_FILE = '%s/config.cfg' % CONFIG_DIRECTORY
-CONFIG_SPEC_FILE = '%s/config.spec' % CONFIG_DIRECTORY
+CONFIG_DIRECTORY = '~/.pymoldyn/'   # MUST be written with ~ to save a path in the config file that is relative to the user's home directory
+CONFIG_FILE = os.path.expanduser('%s/config.cfg' % CONFIG_DIRECTORY)
+CONFIG_SPEC_FILE = os.path.expanduser('%s/config.spec' % CONFIG_DIRECTORY)
 
 # second string is the list type name
 type_dict = {
