@@ -1,4 +1,4 @@
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 import gl_widget
 import main_window
 ignore_list = [QtCore.QEvent.Type.HideToParent,

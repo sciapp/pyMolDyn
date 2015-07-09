@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import numpy.linalg as la
-from PySide import QtCore, QtGui, QtOpenGL
+from PyQt4 import QtCore, QtGui, QtOpenGL
 from config.configuration import config
 from OpenGL.GL import glReadPixels, GL_FLOAT, GL_DEPTH_COMPONENT
 
@@ -55,11 +55,11 @@ class GLWidget(QtOpenGL.QGLWidget):
     def wheelEvent(self, e):
         self.update_needed = True
         if e.modifiers() != QtCore.Qt.ShiftModifier:
-            if e.orientation() == QtCore.Qt.Orientation.Vertical:
+            if e.orientation() == QtCore.Qt.Vertical:
                 self.vis.zoom(e.delta())
         else:
             rot_v = 0.1
-            if e.orientation() == QtCore.Qt.Orientation.Horizontal:
+            if e.orientation() == QtCore.Qt.Horizontal:
                 self.vis.rotate_mouse(e.delta() * rot_v, 0)
             else:
                 self.vis.rotate_mouse(0, e.delta() * rot_v)

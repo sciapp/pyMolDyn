@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 import os.path
 from core import calculation, volumes, file
 from gui.dialogs.calc_settings_dialog import CalculationSettingsDialog
@@ -166,7 +166,7 @@ class FileTab(QtGui.QWidget):
         self.file_list.add_file(path)
 
     def open_file_dialog(self):
-        filenames, _ = QtGui.QFileDialog.getOpenFileNames(self, 'Open dataset', self.most_recent_path)
+        filenames = QtGui.QFileDialog.getOpenFileNames(self, 'Open dataset', self.most_recent_path)
         for path in filenames:
             if path:
                 #print path

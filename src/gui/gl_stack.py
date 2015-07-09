@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from PySide import QtGui
+from PyQt4 import QtGui
 from gui.gl_widget import GLWidget
 from gui.rdf_widget import RDFWidget
 from gui.histogram_widget import HistogramWidget

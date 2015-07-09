@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from PySide import QtGui
-from PySide.QtCore import QTimer, QProcess
+from PyQt4 import QtGui
+from PyQt4.QtCore import QTimer, QProcess
 from gui.gl_widget import GLWidget
 from core import file
 import gr3
@@ -56,9 +56,9 @@ class ImageVideoTab(QtGui.QWidget):
         self.setLayout(self.vbox)
 
     def save_screenshot(self):
-        file_name, okay = QtGui.QFileDialog.getSaveFileName(self,
+        file_name = QtGui.QFileDialog.getSaveFileName(self,
             'Save screenshot...', filter='Portable Network Graphics (*.png)')
-        if okay and file_name:
+        if file_name:
             for widget in QtGui.QApplication.topLevelWidgets():
                 for gl_widget in widget.findChildren(GLWidget):
                     gl_widget.vis.save_screenshot(file_name)
@@ -84,9 +84,9 @@ class ImageVideoTab(QtGui.QWidget):
         frames_to_write = self.get_selected_frames()
         if not frames_to_write:
             return
-        file_name, okay = QtGui.QFileDialog.getSaveFileName(self,
+        file_name = QtGui.QFileDialog.getSaveFileName(self,
             'Save video...', filter='QuickTime Movie (*.mov)')
-        if okay and file_name:
+        if file_name:
             dialog = MassScreenshotAndVideoDialog(self, frames_to_write, should_save_video=True, video_file_name=file_name)
             dialog.show()
             return

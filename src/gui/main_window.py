@@ -6,7 +6,7 @@ from gui.tabs.file_tab import FileTabDock
 from gui.tabs.view_tab import ViewTabDock
 from gui.tabs.image_video_tab import ImageVideoTabDock
 from gui.tabs.statistics_tab import StatisticsTabDock
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 from gui.dialogs.settings_dialog import SettingsDialog
 from gui.dialogs.about_dialog import AboutDialog
 from gui.gl_widget import UpdateGLEvent
@@ -207,27 +207,27 @@ class MainWindow(QtGui.QMainWindow):
 
     def wrapper_export_bonds(self):
         filename = QtGui.QFileDialog.getSaveFileName(self, "Export Bonds", "bonds.txt")
-        if filename[0] != "":
-            core.bonds.export_bonds(filename[0], self.control.visualization.results.atoms)
+        if filename:
+            core.bonds.export_bonds(filename, self.control.visualization.results.atoms)
             msgBox = QtGui.QMessageBox()
-            msgBox.setText("Saved to filename: %s"%(filename[0]))
+            msgBox.setText("Saved to filename: %s"%(filename))
             msgBox.exec_()
 
     def wrapper_export_bond_angles(self):
         filename = QtGui.QFileDialog.getSaveFileName(self, "Export Bond Angles", "bond_angles.txt")
-        if filename[0] != "":
-            core.bonds.export_bond_angles(filename[0], self.control.visualization.results.atoms)
+        if filename:
+            core.bonds.export_bond_angles(filename, self.control.visualization.results.atoms)
             msgBox = QtGui.QMessageBox()
-            msgBox.setText("Saved to filename: %s"%(filename[0]))
+            msgBox.setText("Saved to filename: %s"%(filename))
             msgBox.exec_()
 
 
     def wrapper_export_bond_dihedral_angles(self):
         filename = QtGui.QFileDialog.getSaveFileName(self, "Export Bond Dihedral Angles", "bond_dihedral_angles.txt")
-        if filename[0] != "":
-            core.bonds.export_bond_dihedral_angles(filename[0], self.control.visualization.results.atoms)
+        if filename:
+            core.bonds.export_bond_dihedral_angles(filename, self.control.visualization.results.atoms)
             msgBox = QtGui.QMessageBox()
-            msgBox.setText("Saved to filename: %s"%(filename[0]))
+            msgBox.setText("Saved to filename: %s"%(filename))
             msgBox.exec_()
 
     def keyPressEvent(self, e):

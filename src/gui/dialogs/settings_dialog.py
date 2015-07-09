@@ -1,4 +1,4 @@
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 import sys
 import functools
 from config.configuration import config, Configuration
@@ -33,7 +33,7 @@ class ColorSettingsPage(QtGui.QWidget):
             b = QtGui.QPushButton(None, self)
             b.setFixedSize(50, 50)
             self.button_dict[attr_str] = b
-            b.clicked.connect(lambda arg1=attr_str, arg2=current_color : self.show_color_dialog(arg1, arg2))
+            b.clicked.connect(lambda _, arg1=attr_str, arg2=current_color : self.show_color_dialog(arg1, arg2))
             b.setIcon(QtGui.QIcon(pix))
 
             layout.addWidget(b, index, 0)

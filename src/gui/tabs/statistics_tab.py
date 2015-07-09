@@ -1,5 +1,5 @@
-from PySide import QtGui
-from PySide.QtCore import QTimer
+from PyQt4 import QtGui
+from PyQt4.QtCore import QTimer
 from gui.tabs.statistics.tree_list import TreeList
 from gui.tabs.statistics.html_view import HTMLWindow
 
