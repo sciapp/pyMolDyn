@@ -105,7 +105,7 @@ class XYZFile(InputFile):
     def readinfo(self):
         try:
             self._info.num_frames = 0
-            with open(self.path.encode("ascii"), 'r') as f:
+            with open(self.path.encode("utf-8"), 'r') as f:
                 try:
                     while True:
                         num_atoms = f.next()
@@ -130,7 +130,7 @@ class XYZFile(InputFile):
         try:
             if self.info.num_frames <= frame:
                 raise IndexError("Frame {} not found".format(frame))
-            with open(self.path.encode("ascii"), 'r') as f:
+            with open(self.path.encode("utf-8"), 'r') as f:
                 try:
                     # Skip the first frames
                     for i in range(frame):
