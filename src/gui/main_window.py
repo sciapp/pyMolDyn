@@ -151,7 +151,7 @@ class MainWindow(QtGui.QMainWindow):
             self.recent_files_submenu.setEnabled(True)
             for f in config.recent_files:
                 f_action = QtGui.QAction(f, self)
-                f_action.triggered.connect(lambda arg=f: self.wrapper_recent_files(arg))
+                f_action.triggered.connect(functools.partial(self.wrapper_recent_files, f))
                 self.recent_files_submenu.addAction(f_action)
 
             self.file_dock.file_tab.most_recent_path = os.path.dirname(config.recent_files[0])
@@ -177,7 +177,7 @@ class MainWindow(QtGui.QMainWindow):
             self.recent_files_submenu.insertAction(actions_in_menu[0], actions_in_menu[index])
         else:
             new_action = QtGui.QAction(most_recent_file, self)
-            new_action.triggered.connect(lambda arg=most_recent_file: self.wrapper_recent_files(arg))
+            new_action.triggered.connect(functools.partial(self.wrapper_recent_files, most_recent_file))
 
             if not actions_in_menu:
                 self.recent_files_submenu.setEnabled(True)
