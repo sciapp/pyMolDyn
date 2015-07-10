@@ -163,7 +163,11 @@ class FileTab(QtGui.QWidget):
         for action in self.main_window.recent_files_submenu.actions():
             if action.text() == path:
                 action.setDisabled(True)
-        self.file_list.add_file(path)
+        try:
+            self.file_list.add_file(path)
+        except ValueError as e:
+            QtGui.QMessageBox.information(self, 'Information', e.message, QtGui.QMessageBox.Ok)
+            return
 
     def open_file_dialog(self):
         filenames = QtGui.QFileDialog.getOpenFileNames(self, 'Open dataset', self.most_recent_path)
