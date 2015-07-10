@@ -76,23 +76,31 @@ class GLWidget(QtOpenGL.QGLWidget):
             x = e.x()
             y = self.height() - e.y()
             z = glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT)
-            x /= 1.0*self.width()
-            y /= 1.0*self.height()
-            x = x * 2 - 1
-            y = y * 2 - 1
-            z = z[0][0]
-            z = 2 * z - 1
-            z = self.vis.proj_mat[2, 3] / (-z - self.vis.proj_mat[2, 2])
-            x = -x*z/self.vis.proj_mat[0, 0]
-            y = -y*z/self.vis.proj_mat[1, 1]
-            z += self.vis.d
-            x, y, z, w = np.dot(self.vis.mat, np.array((x, y, z, 1)))
-            obj = self.vis.get_object_at_position(x, y, z)
+            obj = self.vis.get_object_at_2dposition(x, y)
+            if obj is None:
+                x /= 1.0*self.width()
+                y /= 1.0*self.height()
+                x = x * 2 - 1
+                y = y * 2 - 1
+                z = z[0][0]
+                z = 2 * z - 1
+                z = self.vis.proj_mat[2, 3] / (-z - self.vis.proj_mat[2, 2])
+                x = -x*z/self.vis.proj_mat[0, 0]
+                y = -y*z/self.vis.proj_mat[1, 1]
+                z += self.vis.d
+                x, y, z, w = np.dot(self.vis.mat, np.array((x, y, z, 1)))
+                obj = self.vis.get_object_at_3dposition(x, y, z)
             if obj is not None:
                 object_type, object_index = obj
-                if object_type is 'atom':
+                if object_type == 'atom':
                     self.window().statistics_dock.statistics_tab.html_view.show_atom(object_index)
-                    self.window().statistics_dock.raise_()
+                elif object_type == 'domain':
+                    self.window().statistics_dock.statistics_tab.html_view.show_domain(object_index)
+                elif object_type == 'surface cavity':
+                    self.window().statistics_dock.statistics_tab.html_view.show_surface_cavity(object_index)
+                elif object_type == 'center cavity':
+                    self.window().statistics_dock.statistics_tab.html_view.show_center_cavity(object_index)
+                self.window().statistics_dock.raise_()
 
     def customEvent(self, e):
         if self.update_needed:
