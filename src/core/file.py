@@ -396,7 +396,7 @@ class File(object):
     """
     types = {"xyz": XYZFile,
              "hdf5": HDF5File}
-
+    
     @classmethod
     def listdir(cls, directory):
         """
@@ -412,8 +412,7 @@ class File(object):
         if not directory:
             directory = "."
         return [f for f in os.listdir(directory)
-                if os.path.isfile(os.path.join(directory, f))
-                and f.split(".")[-1] in cls.types]
+                if cls.exists(f)] 
 
     @classmethod
     def open(cls, filepath):
@@ -450,5 +449,4 @@ class File(object):
             associated with the filename ending.
         """
         name = os.path.basename(filepath)
-        directory = os.path.dirname(filepath)
-        return name in cls.listdir(directory)
+        return os.path.isfile(filepath) and name.split(".")[-1] in cls.types
