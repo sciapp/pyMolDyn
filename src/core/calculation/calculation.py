@@ -380,7 +380,11 @@ class Calculation(object):
                     if frameresult.atoms is not None:
                         frameresult.atoms.totxt(fmt.format(property='{property}', frame=frame+1))
                     if frameresult.domains is not None:
-                        frameresult.domains.totxt(fmt.format(property='domain_{property}', frame=frame+1))
+                        try:
+                            frameresult.domains.totxt(fmt.format(property='domain_{property}', frame=frame+1))
+                        except ValueError as e:
+                            logger.warn(e.message)
+                            logger.warn('The export of domain information could not be finished.')
                     if frameresult.surface_cavities is not None:
                         frameresult.surface_cavities.totxt(fmt.format(property='surface_cavities_{property}', frame=frame+1))
                     if frameresult.center_cavities is not None:

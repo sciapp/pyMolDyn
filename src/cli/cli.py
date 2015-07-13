@@ -164,9 +164,6 @@ class Cli(object):
     
     # -------------------- public methods --------------------
     def start(self):
-        
-        print sys.argv
-        print self.left_args
         file_list = self.__get_file_list(filter(lambda entry: entry[0] != '-', self.left_args))
         
         default_settings = CalculationSettings(dict())
