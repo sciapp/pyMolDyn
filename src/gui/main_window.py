@@ -244,7 +244,7 @@ class MainWindow(QtGui.QMainWindow):
     def set_output_callbacks(self, progress_func, print_func, finish_func, error_func):
         message.set_output_callbacks(progress_func, print_func, finish_func, error_func)
 
-    def updatestatus(self, was_successful):
+    def updatestatus(self, was_successful=lambda : True):
         if was_successful and self.control.results is not None:
             results = self.control.results[-1][-1]
             self.shown_dataset = results
