@@ -2,6 +2,7 @@
 
 
 import os
+import sys
 from gui.tabs.file_tab import FileTabDock
 from gui.tabs.view_tab import ViewTabDock
 from gui.tabs.image_video_tab import ImageVideoTabDock
@@ -69,6 +70,8 @@ class MainWindow(QtGui.QMainWindow):
         self.setWindowIcon(QtGui.QIcon('icon.png'))
 
         self.show()
+        if 'darwin' in sys.platform:
+            self.raise_()
         # get Dock Widgets TabBar and set the first one to current
         self.file_dock.show()
         self.file_dock.raise_()
