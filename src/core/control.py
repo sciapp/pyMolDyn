@@ -90,14 +90,14 @@ class Control(object):
         # TODO: only call when something is calculated
         self.calculationcallback(self._calculate, settings.copy())
 
-    def update(self):
+    def update(self, was_successful):
         """
         Visualize previously calculated results. It has to be called from
         the same thread which uses the OpenGL context, usually the
         event handler of the GUI.
         """
         with self.lock:
-            if self.results:
+            if was_successful and self.results is not None:
                 self.visualization.setresults(self.results[-1][-1])
 
     def visualize(self, filename, frame, resolution=None):

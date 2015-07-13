@@ -241,19 +241,20 @@ class MainWindow(QtGui.QMainWindow):
                     dock.show()
                 self.showNormal()
 
-    def set_output_callbacks(self, progress_func, print_func, finish_func):
-        message.set_output_callbacks(progress_func, print_func, finish_func)
+    def set_output_callbacks(self, progress_func, print_func, finish_func, error_func):
+        message.set_output_callbacks(progress_func, print_func, finish_func, error_func)
 
-    def updatestatus(self):
-        results = self.control.results[-1][-1]
-        self.shown_dataset = results
-        status = str(results)
-        self.statusBar().showMessage(status)
-        self.statistics_dock.update_results(self.control.visualization.results)
-        self.view_dock.view_tab.update_cavity_buttons(self.control.visualization.results, None)
-        # update GL scene
-        self.center.gl_stack.gl_widget.update_needed = True
-        QtGui.QApplication.postEvent(self.center.gl_stack.gl_widget, UpdateGLEvent())
+    def updatestatus(self, was_successful):
+        if was_successful and self.control.results is not None:
+            results = self.control.results[-1][-1]
+            self.shown_dataset = results
+            status = str(results)
+            self.statusBar().showMessage(status)
+            self.statistics_dock.update_results(self.control.visualization.results)
+            self.view_dock.view_tab.update_cavity_buttons(self.control.visualization.results, None)
+            # update GL scene
+            self.center.gl_stack.gl_widget.update_needed = True
+            QtGui.QApplication.postEvent(self.center.gl_stack.gl_widget, UpdateGLEvent())
 
 #    def closeEvent(self, event):
 #        reply = QtGui.QMessageBox.question(self, 'Message',
