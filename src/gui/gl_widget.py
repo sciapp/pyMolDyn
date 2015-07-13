@@ -101,6 +101,7 @@ class GLWidget(QtOpenGL.QGLWidget):
                 elif object_type == 'center cavity':
                     self.window().statistics_dock.statistics_tab.html_view.show_center_cavity(object_index)
                 self.window().statistics_dock.raise_()
+            self.updateGL()
 
     def customEvent(self, e):
         if self.update_needed:
