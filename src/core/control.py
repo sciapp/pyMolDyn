@@ -90,7 +90,7 @@ class Control(object):
         # TODO: only call when something is calculated
         self.calculationcallback(self._calculate, settings.copy())
 
-    def update(self, was_successful):
+    def update(self, was_successful=lambda : True):
         """
         Visualize previously calculated results. It has to be called from
         the same thread which uses the OpenGL context, usually the
