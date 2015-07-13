@@ -313,7 +313,7 @@ class Calculation(object):
             resultfile.addresults(results, overwrite=recalculate)
 
         message.progress(100)
-        message.print_message('calculation finished')
+        message.print_message("Calculation finished")
         if last_frame:
             message.finish()
         return results
