@@ -123,12 +123,12 @@ class GLWidget(QtOpenGL.QGLWidget):
             self.vis.settings.show_cavities = False
             self.vis.settings.show_alt_cavities = False
             self.vis.create_scene()
-        elif e.key() == QtCore.Qt.Key_C:            # Cavities
+        elif e.key() == QtCore.Qt.Key_S:            # Cavities
             self.vis.settings.show_domains = False
             self.vis.settings.show_cavities = True
             self.vis.settings.show_alt_cavities = False
             self.vis.create_scene()
-        elif e.key() == QtCore.Qt.Key_F:            # center based cavities
+        elif e.key() == QtCore.Qt.Key_C:            # center based cavities
             self.vis.settings.show_domains = False
             self.vis.settings.show_cavities = False
             self.vis.settings.show_alt_cavities = True
