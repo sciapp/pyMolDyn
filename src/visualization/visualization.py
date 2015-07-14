@@ -34,6 +34,7 @@ class Visualization(object):
 
         self.results = None
         self.settings = VisualizationSettings()
+        self.objectids = [None]
 
     def setresults(self, results):
         """
@@ -74,6 +75,7 @@ class Visualization(object):
         elif show_surface_cavities and self.results.surface_cavities is not None:
             show_domains = False
 
+        self.objectids = [None]
         edges = self.results.atoms.volume.edges
         num_edges = len(edges)
         edge_positions = [edge[0] for edge in edges]
@@ -116,16 +118,19 @@ class Visualization(object):
         if self.results is None:
             return
         if show_domains and self.results.domains is not None:
-            self.draw_cavities(self.results.domains, config.Colors.domain)
+            self.draw_cavities(self.results.domains,
+                               config.Colors.domain, 'domain')
         if show_surface_cavities and self.results.surface_cavities is not None:
             self.draw_cavities(self.results.surface_cavities,
-                               config.Colors.cavity)
+                               config.Colors.cavity, 'surface cavity')
         if show_center_cavities and self.results.center_cavities is not None:
             self.draw_cavities(self.results.center_cavities,
-                               config.Colors.alt_cavity)
+                               config.Colors.alt_cavity, 'center cavity')
 
-    def draw_cavities(self, cavities, color):
-        for triangles in cavities.triangles:
+    def draw_cavities(self, cavities, color, cavity_type):
+        for index, triangles in enumerate(cavities.triangles):
+            gr3._gr3.gr3_setobjectid(gr3.c_int(len(self.objectids)))
+            self.objectids.append((cavity_type, index))
             mesh = gr3.createmesh(triangles.shape[1] * 3,
                                   triangles[0, :, :, :],
                                   triangles[1, :, :, :],
@@ -133,6 +138,7 @@ class Visualization(object):
             gr3.drawmesh(mesh, 1, (0, 0, 0), (0, 0, 1), (0, 1, 0),
                          (1, 1, 1), (1, 1, 1))
             gr3.deletemesh(c_int(mesh.value))
+        gr3._gr3.gr3_setobjectid(gr3.c_int(0))
 
     def zoom(self, delta):
         """
@@ -205,7 +211,12 @@ class Visualization(object):
         """
         gr3.export(file_name, width, height)
 
-    def get_object_at_position(self, x, y, z):
+    def get_object_at_2dposition(self, x, y):
+        oid = gr3.c_int(0)
+        gr3._gr3.gr3_selectid(gr3.c_int(x), gr3.c_int(y), gr3.c_int(self.width), gr3.c_int(self.height), gr3.byref(oid))
+        return self.objectids[oid.value]
+
+    def get_object_at_3dposition(self, x, y, z):
         if self.results is None:
             return None
         if self.results.atoms is not None:
@@ -222,7 +233,6 @@ class Visualization(object):
 
             if 0.95 < distances[nearest_atom_index]/atom_radius < 1.05:
                 return ('atom', nearest_atom_index)
-
 
 class VisualizationSettings(object):
     """

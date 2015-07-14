@@ -1,4 +1,4 @@
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 import sys
 import functools
 from config.configuration import config, Configuration
@@ -33,7 +33,7 @@ class ColorSettingsPage(QtGui.QWidget):
             b = QtGui.QPushButton(None, self)
             b.setFixedSize(50, 50)
             self.button_dict[attr_str] = b
-            b.clicked.connect(lambda arg1=attr_str, arg2=current_color : self.show_color_dialog(arg1, arg2))
+            b.clicked.connect(lambda _, arg1=attr_str, arg2=current_color : self.show_color_dialog(arg1, arg2))
             b.setIcon(QtGui.QIcon(pix))
 
             layout.addWidget(b, index, 0)
@@ -58,9 +58,7 @@ class ComputationSettingsPage(QtGui.QWidget):
     def __init__(self, parent, cfg):
         QtGui.QWidget.__init__(self, parent)
         self._config = cfg
-        self.values = {
-            'atom_radius': 'atom radius'
-        }
+        self.values = OrderedDict((('atom_radius', 'atom radius'), ))
 
         self.lineedit_dict = {}
         box  = QtGui.QVBoxLayout()
@@ -98,11 +96,9 @@ class PathSettingsPage(QtGui.QWidget):
         QtGui.QWidget.__init__(self, parent)
 
         self._config = cfg
-        self.path = {
-            'cache_dir': 'Cache directory',
-            'result_dir': 'Result directory',
-            'ffmpeg': 'ffmpeg path'
-        }
+        self.path = OrderedDict((('cache_dir', 'Cache directory'),
+                                ('result_dir', 'Result directory'),
+                                ('ffmpeg', 'ffmpeg path')))
 
         self.lineedit_dict = {}
         box  = QtGui.QVBoxLayout()

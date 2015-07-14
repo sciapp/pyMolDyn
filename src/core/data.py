@@ -615,6 +615,7 @@ class Domains(CavitiesBase):
             surface_areas = calculation.domain_surface_areas
             triangles = calculation.domain_triangles
             centers = calculation.centers
+            discretization = calculation.discretization
             super(Domains, self).__init__(timestamp, volumes,
                                           surface_areas, triangles)
         else:
@@ -622,6 +623,9 @@ class Domains(CavitiesBase):
             centers = args[4]
 
         self.centers = np.array(centers, dtype=np.int, copy=False)
+        if 'discretization' in locals():
+            # TODO: get discretization also from other constructor calls!
+            self.continuous_centers = np.array([discretization.discrete_to_continuous(center) for center in centers], dtype=np.float)
 
     def tohdf(self, h5group, overwrite=True):
         """
@@ -642,15 +646,18 @@ class Domains(CavitiesBase):
         domain_surface_file_name = fmt.format(property="surface_areas")
         domain_volume_file_name = fmt.format(property="volumes")
 
-        with open(domain_center_file_name, 'w') as outfile:
-            for index, center in enumerate(self.centers, start=1):
-                outfile.write("{} {} {} {}\n".format(index, center[0], center[1], center[2]))
         with open(domain_surface_file_name, 'w') as outfile:
             for index, surface_area in enumerate(self.surface_areas, start=1):
                 outfile.write("{} {}\n".format(index, surface_area))
         with open(domain_volume_file_name, 'w') as outfile:
             for index, volume in enumerate(self.volumes, start=1):
                 outfile.write("{} {}\n".format(index, volume))
+        if hasattr(self, 'continuous_centers'):
+            with open(domain_center_file_name, 'w') as outfile:
+                for index, continuous_center in enumerate(self.continuous_centers, start=1):
+                    outfile.write("{} {} {} {}\n".format(index, continuous_center[0], continuous_center[1], continuous_center[2]))
+        else:
+            raise ValueError('No discretization present -> can only access discrete domain centers, no conversion to continuous space possible.')
 
 class Cavities(CavitiesBase):
     """

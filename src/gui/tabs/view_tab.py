@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from functools import partial
-from PySide import QtGui, QtCore
+from PyQt4 import QtGui, QtCore
 
 
 class ViewTabDock(QtGui.QDockWidget):

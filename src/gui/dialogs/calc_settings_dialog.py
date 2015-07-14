@@ -6,7 +6,7 @@ from core import calculation
 from core import file
 import os.path
 from config.configuration import config
-from PySide import QtGui, QtCore
+from PyQt4 import QtGui, QtCore
 
 
 class CalculationSettingsDialog(QtGui.QDialog):
@@ -76,7 +76,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
         self.update_table()
 
         self.surf_check = QtGui.QCheckBox('calculate surface based cavities', self)
-        self.surf_check.setCheckState(QtCore.Qt.CheckState.Checked)
+        self.surf_check.setChecked(True)
         self.center_check = QtGui.QCheckBox('calculate center based cavities', self)
         self.overwrite_check = QtGui.QCheckBox('overwrite existing results', self)
         self.exporthdf5_check = QtGui.QCheckBox('export results as HDF5 files', self)

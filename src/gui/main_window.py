@@ -2,13 +2,15 @@
 
 
 import os
+import sys
 from gui.tabs.file_tab import FileTabDock
 from gui.tabs.view_tab import ViewTabDock
 from gui.tabs.image_video_tab import ImageVideoTabDock
 from gui.tabs.statistics_tab import StatisticsTabDock
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 from gui.dialogs.settings_dialog import SettingsDialog
 from gui.dialogs.about_dialog import AboutDialog
+from gui.gl_widget import UpdateGLEvent
 from util import message
 from gl_stack import GLStack
 from _version import __version__
@@ -68,6 +70,8 @@ class MainWindow(QtGui.QMainWindow):
         self.setWindowIcon(QtGui.QIcon('icon.png'))
 
         self.show()
+        if 'darwin' in sys.platform:
+            self.raise_()
         # get Dock Widgets TabBar and set the first one to current
         self.file_dock.show()
         self.file_dock.raise_()
@@ -150,7 +154,7 @@ class MainWindow(QtGui.QMainWindow):
             self.recent_files_submenu.setEnabled(True)
             for f in config.recent_files:
                 f_action = QtGui.QAction(f, self)
-                f_action.triggered.connect(lambda arg=f: self.wrapper_recent_files(arg))
+                f_action.triggered.connect(functools.partial(self.wrapper_recent_files, f))
                 self.recent_files_submenu.addAction(f_action)
 
             self.file_dock.file_tab.most_recent_path = os.path.dirname(config.recent_files[0])
@@ -176,7 +180,7 @@ class MainWindow(QtGui.QMainWindow):
             self.recent_files_submenu.insertAction(actions_in_menu[0], actions_in_menu[index])
         else:
             new_action = QtGui.QAction(most_recent_file, self)
-            new_action.triggered.connect(lambda arg=most_recent_file: self.wrapper_recent_files(arg))
+            new_action.triggered.connect(functools.partial(self.wrapper_recent_files, most_recent_file))
 
             if not actions_in_menu:
                 self.recent_files_submenu.setEnabled(True)
@@ -206,27 +210,27 @@ class MainWindow(QtGui.QMainWindow):
 
     def wrapper_export_bonds(self):
         filename = QtGui.QFileDialog.getSaveFileName(self, "Export Bonds", "bonds.txt")
-        if filename[0] != "":
-            core.bonds.export_bonds(filename[0], self.control.visualization.results.atoms)
+        if filename:
+            core.bonds.export_bonds(filename, self.control.visualization.results.atoms)
             msgBox = QtGui.QMessageBox()
-            msgBox.setText("Saved to filename: %s"%(filename[0]))
+            msgBox.setText("Saved to filename: %s"%(filename))
             msgBox.exec_()
 
     def wrapper_export_bond_angles(self):
         filename = QtGui.QFileDialog.getSaveFileName(self, "Export Bond Angles", "bond_angles.txt")
-        if filename[0] != "":
-            core.bonds.export_bond_angles(filename[0], self.control.visualization.results.atoms)
+        if filename:
+            core.bonds.export_bond_angles(filename, self.control.visualization.results.atoms)
             msgBox = QtGui.QMessageBox()
-            msgBox.setText("Saved to filename: %s"%(filename[0]))
+            msgBox.setText("Saved to filename: %s"%(filename))
             msgBox.exec_()
 
 
     def wrapper_export_bond_dihedral_angles(self):
         filename = QtGui.QFileDialog.getSaveFileName(self, "Export Bond Dihedral Angles", "bond_dihedral_angles.txt")
-        if filename[0] != "":
-            core.bonds.export_bond_dihedral_angles(filename[0], self.control.visualization.results.atoms)
+        if filename:
+            core.bonds.export_bond_dihedral_angles(filename, self.control.visualization.results.atoms)
             msgBox = QtGui.QMessageBox()
-            msgBox.setText("Saved to filename: %s"%(filename[0]))
+            msgBox.setText("Saved to filename: %s"%(filename))
             msgBox.exec_()
 
     def keyPressEvent(self, e):
@@ -240,17 +244,20 @@ class MainWindow(QtGui.QMainWindow):
                     dock.show()
                 self.showNormal()
 
-    def set_output_callbacks(self, progress_func, print_func, finish_func):
-        message.set_output_callbacks(progress_func, print_func, finish_func)
+    def set_output_callbacks(self, progress_func, print_func, finish_func, error_func):
+        message.set_output_callbacks(progress_func, print_func, finish_func, error_func)
 
-    def updatestatus(self):
-        results = self.control.results[-1][-1]
-        self.shown_dataset = results
-        status = str(results)
-        self.statusBar().showMessage(status)
-        self.statistics_dock.update_results(self.control.visualization.results)
-        self.view_dock.view_tab.update_cavity_buttons(self.control.visualization.results, None)
-
+    def updatestatus(self, was_successful=lambda : True):
+        if was_successful and self.control.results is not None:
+            results = self.control.results[-1][-1]
+            self.shown_dataset = results
+            status = str(results)
+            self.statusBar().showMessage(status)
+            self.statistics_dock.update_results(self.control.visualization.results)
+            self.view_dock.view_tab.update_cavity_buttons(self.control.visualization.results, None)
+            # update GL scene
+            self.center.gl_stack.gl_widget.update_needed = True
+            QtGui.QApplication.postEvent(self.center.gl_stack.gl_widget, UpdateGLEvent())
 
 #    def closeEvent(self, event):
 #        reply = QtGui.QMessageBox.question(self, 'Message',

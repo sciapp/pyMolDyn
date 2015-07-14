@@ -10,6 +10,15 @@ import numpy.linalg as la
 import file
 import collections
 
+def clamping_acos(cos):
+    """
+    Calculate arccos with its argument clamped to [-1, 1]
+    """
+    if cos > 1:
+        return 0
+    if cos < -1:
+        return math.pi/2
+    return math.acos(cos)
 
 def get_bonds_with_constant_delta(atoms, delta):
     """
@@ -72,7 +81,7 @@ def calculate_bond_angles(atoms, bond_target_index_arrays):
             for target_index2 in target_indices[i+1:]:
                 vec2 = atoms.positions[target_index2]-shared_atom_position
                 nvec2 = vec2/np.linalg.norm(vec2)
-                bond_angle = math.acos(np.dot(nvec1, nvec2))
+                bond_angle = clamping_acos(np.dot(nvec1, nvec2))
                 bond_angles[((target_index1, shared_atom_index), (shared_atom_index, target_index2))] = bond_angle
                 bond_angles[((target_index2, shared_atom_index), (shared_atom_index, target_index1))] = bond_angle
 
@@ -101,7 +110,7 @@ def calculate_bond_angles(atoms, bond_target_index_arrays):
         vec2 -= np.dot(vec2, axis)*axis
         nvec2 = normalized(vec2)
 
-        angle = math.acos(np.dot(nvec1, nvec2))
+        angle = clamping_acos(np.dot(nvec1, nvec2))
         if np.dot(nvec2, np.cross(nvec1, axis)) < 0:
             angle = -angle
         bond_chain_angles[tuple(bond_chain)] = angle

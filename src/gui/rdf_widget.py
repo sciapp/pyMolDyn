@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 import gr
 from qtgr import GRWidget
 import os
@@ -101,11 +101,11 @@ class RDFWidget(QtGui.QWidget):
         self.datasetlabel.setAlignment(QtCore.Qt.AlignHCenter)
 
         elembox = QtGui.QHBoxLayout()
-        elembox.addWidget(QtGui.QLabel("Elements:", self), 0, 0)
+        elembox.addWidget(QtGui.QLabel("Elements:", self), 0)
         self.elem1 = QtGui.QComboBox(self)
-        elembox.addWidget(self.elem1, 0, 1)
+        elembox.addWidget(self.elem1, 0, QtCore.Qt.AlignLeft)
         self.elem2 = QtGui.QComboBox(self)
-        elembox.addWidget(self.elem2, 0, 2)
+        elembox.addWidget(self.elem2, 0, QtCore.Qt.AlignRight)
         grid.addLayout(elembox, 0, 0)
 
         rangebox = QtGui.QHBoxLayout()
@@ -185,7 +185,7 @@ class RDFWidget(QtGui.QWidget):
         extensions = (".eps", ".ps", ".pdf", ".png", ".bmp", ".jpg", ".jpeg",
                       ".png", ".tiff", ".fig", ".svg", ".wmf")
         qtext = "*" + " *".join(extensions)
-        filepath, _ = QtGui.QFileDialog.getSaveFileName(self, "Save Image",
+        filepath = QtGui.QFileDialog.getSaveFileName(self, "Save Image",
                                                         ".", "Image Files ({})".format(qtext))
         if len(filepath) == 0:
             return

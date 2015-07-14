@@ -63,8 +63,8 @@ class Control(object):
 
     def __init__(self):
         self.config = config
-        if not os.path.isdir(config.Path.cache_dir):
-            os.makedirs(config.Path.cache_dir)
+        if not os.path.isdir(os.path.expanduser(config.Path.cache_dir)):
+            os.makedirs(os.path.expanduser(config.Path.cache_dir))
         self._calculation = calculation.Calculation()
         self._visualization = None  # will be initialized when needed
         self.results = None
@@ -90,14 +90,14 @@ class Control(object):
         # TODO: only call when something is calculated
         self.calculationcallback(self._calculate, settings.copy())
 
-    def update(self):
+    def update(self, was_successful=lambda : True):
         """
         Visualize previously calculated results. It has to be called from
         the same thread which uses the OpenGL context, usually the
         event handler of the GUI.
         """
         with self.lock:
-            if self.results:
+            if was_successful and self.results is not None:
                 self.visualization.setresults(self.results[-1][-1])
 
     def visualize(self, filename, frame, resolution=None):

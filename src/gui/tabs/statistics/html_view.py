@@ -1,5 +1,5 @@
 import jinja2
-from PySide import QtWebKit, QtGui, QtCore
+from PyQt4 import QtWebKit, QtGui, QtCore
 import os.path
 import core.elements
 import core.bonds
