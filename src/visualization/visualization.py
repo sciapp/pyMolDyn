@@ -67,8 +67,8 @@ class Visualization(object):
             return
 
         show_domains = self.settings.show_domains
-        show_surface_cavities = self.settings.show_cavities
-        show_center_cavities = self.settings.show_alt_cavities
+        show_surface_cavities = self.settings.show_surface_cavities
+        show_center_cavities = self.settings.show_center_cavities
         if show_center_cavities and self.results.center_cavities is not None:
             show_domains = False
             show_surface_cavities = False
@@ -122,10 +122,10 @@ class Visualization(object):
                                config.Colors.domain, 'domain')
         if show_surface_cavities and self.results.surface_cavities is not None:
             self.draw_cavities(self.results.surface_cavities,
-                               config.Colors.cavity, 'surface cavity')
+                               config.Colors.surface_cavity, 'surface cavity')
         if show_center_cavities and self.results.center_cavities is not None:
             self.draw_cavities(self.results.center_cavities,
-                               config.Colors.alt_cavity, 'center cavity')
+                               config.Colors.center_cavity, 'center cavity')
 
     def draw_cavities(self, cavities, color, cavity_type):
         for index, triangles in enumerate(cavities.triangles):
@@ -241,20 +241,21 @@ class VisualizationSettings(object):
 
         `show_domains`
 
-        `show_cavities`
+        `show_surface_cavities`
 
-        `show_alt_cavities`
+        `show_center_cavities`
 
         `show_atoms`
 
         `show_bounding_box`
 
     """
-    def __init__(self, domains=False, cavities=True, alt_cavities=False,
-                 atoms=True, bonds=True, bounding_box=True):
+    def __init__(self, domains=False, show_surface_cavities=True,
+                 show_center_cavities=False, atoms=True, bonds=True,
+                 bounding_box=True):
         self.show_domains = domains
-        self.show_cavities = cavities
-        self.show_alt_cavities = alt_cavities
+        self.show_surface_cavities = show_surface_cavities
+        self.show_center_cavities = show_center_cavities
         self.show_atoms = atoms
         self.show_bonds = bonds
         self.show_bounding_box = bounding_box

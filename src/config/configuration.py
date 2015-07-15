@@ -32,9 +32,9 @@ class Configuration(ConfigNode):
     class Colors(ConfigNode):
 
         def __init__(self):
-            self.cavity = [0.2, 0.4, 1.]
+            self.surface_cavity = [0.2, 0.4, 1.]
             self.domain = [0., 1., 0.5]
-            self.alt_cavity = [0.9, 0.4, 0.2]
+            self.center_cavity = [0.9, 0.4, 0.2]
             self.background = [0.0, 0.0, 0.0]
             self.bounding_box = [1.0, 1.0, 1.0]
             self.bonds = [0.8, 0.8, 0.8]

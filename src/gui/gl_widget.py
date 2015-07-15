@@ -129,18 +129,18 @@ class GLWidget(QtOpenGL.QGLWidget):
             self.vis.rotate_mouse(0, rot_v_key)
         elif e.key() == QtCore.Qt.Key_D:            # Domains
             self.vis.settings.show_domains = True
-            self.vis.settings.show_cavities = False
-            self.vis.settings.show_alt_cavities = False
+            self.vis.settings.show_surface_cavities = False
+            self.vis.settings.show_center_cavities = False
             self.vis.create_scene()
         elif e.key() == QtCore.Qt.Key_S:            # Cavities
             self.vis.settings.show_domains = False
-            self.vis.settings.show_cavities = True
-            self.vis.settings.show_alt_cavities = False
+            self.vis.settings.show_surface_cavities = True
+            self.vis.settings.show_center_cavities = False
             self.vis.create_scene()
         elif e.key() == QtCore.Qt.Key_C:            # center based cavities
             self.vis.settings.show_domains = False
-            self.vis.settings.show_cavities = False
-            self.vis.settings.show_alt_cavities = True
+            self.vis.settings.show_surface_cavities = False
+            self.vis.settings.show_center_cavities = True
             self.vis.create_scene()
         if e.key() == QtCore.Qt.Key_R:
             self.vis.reset_view()
