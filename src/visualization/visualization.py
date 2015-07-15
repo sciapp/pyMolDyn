@@ -95,14 +95,21 @@ class Visualization(object):
                                [edge_radius]*num_corners)
 
         if self.settings.show_atoms and self.results.atoms is not None:
-            gr3.drawspheremesh(self.results.atoms.number,
-                               self.results.atoms.positions,
-                               self.results.atoms.colors,
-                               [edge_radius * 4] * self.results.atoms.number)
+            visible_atom_indices = self.settings.visible_atom_indices
+            if visible_atom_indices is None:
+                visible_atom_indices = range(self.results.atoms.number)
+            visible_atom_indices = np.array(visible_atom_indices)
+            gr3.drawspheremesh(len(visible_atom_indices),
+                               self.results.atoms.positions[visible_atom_indices],
+                               self.results.atoms.colors[visible_atom_indices],
+                               [edge_radius * 4] * len(visible_atom_indices))
 
             if self.settings.show_bonds:
                 bonds = self.results.atoms.bonds
                 for start_index, target_indices in enumerate(bonds):
+                    if start_index not in visible_atom_indices:
+                        continue
+                    target_indices = np.array([i for i in target_indices if i in visible_atom_indices])
                     if len(target_indices) == 0:
                         continue
                     start_position = self.results.atoms.positions[start_index]
@@ -262,6 +269,7 @@ class VisualizationSettings(object):
     def __init__(self, domains=False, show_surface_cavities=True,
                  show_center_cavities=False, atoms=True, bonds=True,
                  bounding_box=True,
+                 visible_atom_indices=None,
                  visible_domain_indices=None,
                  visible_surface_cavity_indices=None,
                  visible_center_cavity_indices=None):
@@ -272,5 +280,6 @@ class VisualizationSettings(object):
         self.show_center_cavities = show_center_cavities
         self.visible_center_cavity_indices = visible_center_cavity_indices
         self.show_atoms = atoms
+        self.visible_atom_indices = visible_atom_indices
         self.show_bonds = bonds
         self.show_bounding_box = bounding_box

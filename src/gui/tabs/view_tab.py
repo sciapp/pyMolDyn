@@ -41,7 +41,7 @@ class ViewTab(QtGui.QWidget):
         view_box = QtGui.QVBoxLayout()
 
         self.box_check = QtGui.QCheckBox('show bounding box', self)
-        self.atom_check = QtGui.QCheckBox('show atoms', self)
+        self.all_atom_check = QtGui.QCheckBox('show all atoms', self)
         self.bonds_check = QtGui.QCheckBox('show bonds', self)
         self.all_domain_check = QtGui.QCheckBox('show all domains', self)
         self.some_domain_box = QtGui.QHBoxLayout()
@@ -64,13 +64,13 @@ class ViewTab(QtGui.QWidget):
 
         # TODO synch with dataset
         # self.box_check.setCheckState(self.vis_settings.show_bounding_box)
-        # self.atom_check.setCheckState(self.vis_settings.show_atoms)
+        # self.all_atom_check.setCheckState(self.vis_settings.show_atoms)
         # self.all_domain_check.setCheckState(self.vis_settings.show_domains)
         # self.all_surface_cavity_check.setCheckState(self.vis_settings.show_surface_cavities)
         # self.all_center_cavity_check.setCheckState(self.vis_settings.show_center_cavities)
 
         self.box_check.setChecked(True)
-        self.atom_check.setChecked(True)
+        self.all_atom_check.setChecked(True)
         self.bonds_check.setChecked(True)
         self.all_domain_check.setChecked(False)
         self.all_surface_cavity_check.setChecked(True)
@@ -78,8 +78,8 @@ class ViewTab(QtGui.QWidget):
 
         self.box_check.stateChanged.connect(partial(self.on_checkbox,
                                                     self.box_check))
-        self.atom_check.stateChanged.connect(partial(self.on_checkbox,
-                                                     self.atom_check))
+        self.all_atom_check.stateChanged.connect(partial(self.on_checkbox,
+                                                     self.all_atom_check))
         self.bonds_check.stateChanged.connect(partial(self.on_checkbox,
                                                       self.bonds_check))
         self.all_domain_check.stateChanged.connect(partial(self.on_checkbox,
@@ -111,7 +111,7 @@ class ViewTab(QtGui.QWidget):
         self.update_cavity_buttons(self.results, None)
 
         view_box.addWidget(self.box_check)
-        view_box.addWidget(self.atom_check)
+        view_box.addWidget(self.all_atom_check)
         view_box.addWidget(self.bonds_check)
         view_box.addWidget(self.all_domain_check)
         view_box.addLayout(self.some_domain_box)
@@ -191,8 +191,8 @@ class ViewTab(QtGui.QWidget):
     def on_checkbox(self, check_box, check_state, clicked_box=None):
         settings = self.gl_widget.vis.settings
         settings.show_bounding_box = self.box_check.isChecked()
-        settings.show_atoms = self.atom_check.isChecked()
-        if check_box == self.atom_check:
+        settings.show_atoms = self.all_atom_check.isChecked()
+        if check_box == self.all_atom_check:
             if not settings.show_atoms:
                 self.bonds_check.setEnabled(False)
                 self.bonds_check.setChecked(False)
