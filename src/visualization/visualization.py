@@ -135,7 +135,7 @@ class Visualization(object):
     def draw_cavities(self, cavities, color, cavity_type, indices=None):
         if indices is None:
             indices = range(self.results.domains.number)
-        for index in indices:
+        for index in set(indices):
             if 0 <= index < len(cavities.triangles):
                 triangles = cavities.triangles[index]
                 gr3._gr3.gr3_setobjectid(gr3.c_int(len(self.objectids)))
