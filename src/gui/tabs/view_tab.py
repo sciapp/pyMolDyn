@@ -144,7 +144,13 @@ class ViewTab(QtGui.QWidget):
         self.update_cavity_buttons(self.results, clicked_box)
 
         settings.show_domains = self.domain_check.isChecked()
+        if check_box == self.domain_check and check_box.isChecked():
+            settings.visible_domain_indices = None
         settings.show_surface_cavities = self.surface_cavity_check.isChecked()
+        if check_box == self.surface_cavity_check and check_box.isChecked():
+            settings.visible_surface_cavity_indices = None
         settings.show_center_cavities = self.center_cavity_check.isChecked()
+        if check_box == self.center_cavity_check and check_box.isChecked():
+            settings.visible_center_cavity_indices = None
 
         self.gl_widget.create_scene()

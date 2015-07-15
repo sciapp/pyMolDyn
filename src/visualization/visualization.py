@@ -52,6 +52,9 @@ class Visualization(object):
         self.create_scene()
         if self.width != 0 and self.height != 0:
             self.paint(self.width, self.height)
+        self.settings.visible_domain_indices = None
+        self.settings.visible_surface_cavity_indices = None
+        self.settings.visible_center_cavity_indices = None
 
     def create_scene(self):
         """
@@ -70,7 +73,6 @@ class Visualization(object):
         show_surface_cavities = self.settings.show_surface_cavities
         show_center_cavities = self.settings.show_center_cavities
         if show_center_cavities and self.results.center_cavities is not None:
-            show_domains = False
             show_surface_cavities = False
         elif show_surface_cavities and self.results.surface_cavities is not None:
             show_domains = False
@@ -119,25 +121,32 @@ class Visualization(object):
             return
         if show_domains and self.results.domains is not None:
             self.draw_cavities(self.results.domains,
-                               config.Colors.domain, 'domain')
+                               config.Colors.domain, 'domain',
+                               self.settings.visible_domain_indices)
         if show_surface_cavities and self.results.surface_cavities is not None:
             self.draw_cavities(self.results.surface_cavities,
-                               config.Colors.surface_cavity, 'surface cavity')
+                               config.Colors.surface_cavity, 'surface cavity',
+                               self.settings.visible_surface_cavity_indices)
         if show_center_cavities and self.results.center_cavities is not None:
             self.draw_cavities(self.results.center_cavities,
-                               config.Colors.center_cavity, 'center cavity')
+                               config.Colors.center_cavity, 'center cavity',
+                               self.settings.visible_center_cavity_indices)
 
-    def draw_cavities(self, cavities, color, cavity_type):
-        for index, triangles in enumerate(cavities.triangles):
-            gr3._gr3.gr3_setobjectid(gr3.c_int(len(self.objectids)))
-            self.objectids.append((cavity_type, index))
-            mesh = gr3.createmesh(triangles.shape[1] * 3,
-                                  triangles[0, :, :, :],
-                                  triangles[1, :, :, :],
-                                  [color] * (triangles.shape[1] * 3))
-            gr3.drawmesh(mesh, 1, (0, 0, 0), (0, 0, 1), (0, 1, 0),
-                         (1, 1, 1), (1, 1, 1))
-            gr3.deletemesh(c_int(mesh.value))
+    def draw_cavities(self, cavities, color, cavity_type, indices=None):
+        if indices is None:
+            indices = range(self.results.domains.number)
+        for index in indices:
+            if 0 <= index < len(cavities.triangles):
+                triangles = cavities.triangles[index]
+                gr3._gr3.gr3_setobjectid(gr3.c_int(len(self.objectids)))
+                self.objectids.append((cavity_type, index))
+                mesh = gr3.createmesh(triangles.shape[1] * 3,
+                                      triangles[0, :, :, :],
+                                      triangles[1, :, :, :],
+                                      [color] * (triangles.shape[1] * 3))
+                gr3.drawmesh(mesh, 1, (0, 0, 0), (0, 0, 1), (0, 1, 0),
+                             (1, 1, 1), (1, 1, 1))
+                gr3.deletemesh(c_int(mesh.value))
         gr3._gr3.gr3_setobjectid(gr3.c_int(0))
 
     def zoom(self, delta):
@@ -252,10 +261,16 @@ class VisualizationSettings(object):
     """
     def __init__(self, domains=False, show_surface_cavities=True,
                  show_center_cavities=False, atoms=True, bonds=True,
-                 bounding_box=True):
+                 bounding_box=True,
+                 visible_domain_indices=None,
+                 visible_surface_cavity_indices=None,
+                 visible_center_cavity_indices=None):
         self.show_domains = domains
+        self.visible_domain_indices = visible_domain_indices
         self.show_surface_cavities = show_surface_cavities
+        self.visible_surface_cavity_indices = visible_surface_cavity_indices
         self.show_center_cavities = show_center_cavities
+        self.visible_center_cavity_indices = visible_center_cavity_indices
         self.show_atoms = atoms
         self.show_bonds = bonds
         self.show_bounding_box = bounding_box

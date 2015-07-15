@@ -203,6 +203,31 @@ class HTMLWindow(QtGui.QWidget):
             self.window().center.gl_stack.setCurrentIndex(0)
         elif value[0] == "atom":
             self.show_atom(int(value[1]))
+        elif value[0] == 'hideothers':
+            parent = self.parent()
+            while parent.parent():
+                parent = parent.parent()
+            main_window = parent
+            view_tab = main_window.view_dock.view_tab
+            gl_widget = main_window.center.gl_widget
+            visualization = gl_widget.vis
+            create_scene = gl_widget.create_scene
+            # Temporarily disable redrawing
+            gl_widget.create_scene = lambda *args: None
+            if value[1] == 'domain':
+                view_tab.domain_check.setChecked(True)
+                domain_index = int(value[2])-1
+                visualization.settings.visible_domain_indices = [domain_index]
+            elif value[1] == 'surface_cavity':
+                view_tab.surface_cavity_check.setChecked(True)
+                surface_cavity_index = int(value[2])-1
+                visualization.settings.visible_surface_cavity_indices = [surface_cavity_index]
+            elif value[1] == 'center_cavity':
+                view_tab.center_cavity_check.setChecked(True)
+                center_cavity_index = int(value[2])-1
+                visualization.settings.visible_center_cavity_indices = [center_cavity_index]
+            gl_widget.create_scene = create_scene
+            gl_widget.create_scene()
 
     def update_results(self, results):
         self.atoms = results.atoms
