@@ -22,7 +22,7 @@ import core.bonds
 import core.control
 #from core.data import Results
 
-WEBSITE_URL = 'https://pgi-jcns.fz-juelich.de/portal/pages/pymoldyn-gui.html'
+WEBSITE_URL = 'https://pgi-jcns.fz-juelich.de/portal/pages/pymoldyn-doc.html'
 
 class MainWindow(QtGui.QMainWindow):
     def __init__(self, control):
