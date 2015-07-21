@@ -70,8 +70,6 @@ class MainWindow(QtGui.QMainWindow):
         self.setWindowIcon(QtGui.QIcon('icon.png'))
 
         self.show()
-        if 'darwin' in sys.platform:
-            self.raise_()
         # get Dock Widgets TabBar and set the first one to current
         self.file_dock.show()
         self.file_dock.raise_()
