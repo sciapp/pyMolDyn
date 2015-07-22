@@ -1,6 +1,8 @@
 SUBDIRS=$(shell find . -mindepth 1 -maxdepth 1 -type d)
 
-all: app
+all: sub app
+
+sub: app
 	@for subdir in ${SUBDIRS}; do \
 		if [ -f $$subdir/Makefile ]; then \
 			echo "make -C $$subdir"; \
@@ -8,7 +10,7 @@ all: app
 		fi; \
 	done
 
-app:
+app: sub
 	pwd
 	PATH=/usr/local/bin:${PATH} gr shallow-appify.py -d src/ -i src/icon.png -e PATH PYTHONPATH DYLD_LIBRARY_PATH -o pyMolDyn.app src/startGUI.py
 
