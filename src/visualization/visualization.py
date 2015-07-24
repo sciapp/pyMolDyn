@@ -96,33 +96,37 @@ class Visualization(object):
 
         if self.settings.show_atoms and self.results.atoms is not None:
             visible_atom_indices = self.settings.visible_atom_indices
-            if visible_atom_indices is None:
+            if visible_atom_indices is not None:
+                visible_atom_indices = [comp for comp in visible_atom_indices if 0 <= comp < self.results.atoms.number]
+            else:
                 visible_atom_indices = range(self.results.atoms.number)
-            visible_atom_indices = np.array(visible_atom_indices)
-            gr3.drawspheremesh(len(visible_atom_indices),
-                               self.results.atoms.positions[visible_atom_indices],
-                               self.results.atoms.colors[visible_atom_indices],
-                               [edge_radius * 4] * len(visible_atom_indices))
-
-            if self.settings.show_bonds:
-                bonds = self.results.atoms.bonds
-                for start_index, target_indices in enumerate(bonds):
-                    if start_index not in visible_atom_indices:
-                        continue
-                    target_indices = np.array([i for i in target_indices if i in visible_atom_indices])
-                    if len(target_indices) == 0:
-                        continue
-                    start_position = self.results.atoms.positions[start_index]
-                    target_positions = self.results.atoms.positions[target_indices]
-                    directions = target_positions - start_position
-                    bond_lengths = la.norm(directions, axis=1)
-                    directions /= bond_lengths.reshape(len(directions), 1)
-                    gr3.drawcylindermesh(len(target_indices),
-                                         target_positions,
-                                         -directions,
-                                         [config.Colors.bonds] * self.results.atoms.number,
-                                         np.ones(bond_lengths.shape)*edge_radius,
-                                         bond_lengths)
+            if len(visible_atom_indices) == 0:
+                visible_atom_indices = None
+            if visible_atom_indices is not None:
+                visible_atom_indices = np.array(visible_atom_indices)
+                gr3.drawspheremesh(len(visible_atom_indices),
+                                   self.results.atoms.positions[visible_atom_indices],
+                                   self.results.atoms.colors[visible_atom_indices],
+                                   [edge_radius * 4] * len(visible_atom_indices))
+                if self.settings.show_bonds:
+                    bonds = self.results.atoms.bonds
+                    for start_index, target_indices in enumerate(bonds):
+                        if start_index not in visible_atom_indices:
+                            continue
+                        target_indices = np.array([i for i in target_indices if i in visible_atom_indices])
+                        if len(target_indices) == 0:
+                            continue
+                        start_position = self.results.atoms.positions[start_index]
+                        target_positions = self.results.atoms.positions[target_indices]
+                        directions = target_positions - start_position
+                        bond_lengths = la.norm(directions, axis=1)
+                        directions /= bond_lengths.reshape(len(directions), 1)
+                        gr3.drawcylindermesh(len(target_indices),
+                                             target_positions,
+                                             -directions,
+                                             [config.Colors.bonds] * self.results.atoms.number,
+                                             np.ones(bond_lengths.shape)*edge_radius,
+                                             bond_lengths)
 
         if self.results is None:
             return
