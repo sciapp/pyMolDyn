@@ -120,7 +120,7 @@ class DomainCalculation:
                                                                                self.atom_discretization.discrete_positions,
                                                                                self.discretization.combined_translation_vectors,
                                                                                self.discretization.get_translation_vector)
-        print_message("number of domains:", len(self.centers))
+        print_message("Number of domains:", len(self.centers))
         self.domain_volumes = []
         for domain_index in range(len(self.centers)):
             domain_volume = (self.grid == -(domain_index + 1)).sum() * (self.discretization.s_step ** 3)
@@ -131,7 +131,7 @@ class DomainCalculation:
         if hasattr(self, "domain_triangles"):
             return self.domain_triangles
         number_of_domains = len(self.centers)
-        print_message(number_of_domains)
+        print_message("Number of domains:", number_of_domains)
         triangles = []
         surface_areas = []
         step = (self.discretization.s_step,) * 3
@@ -195,7 +195,7 @@ class CavityCalculation:
         if use_surface_points:
             self.grid = self.domain_calculation.grid
             num_surface_points = sum(map(len, self.domain_calculation.surface_point_list))
-            print_message("number of surface points:", num_surface_points)
+            print_message("Number of surface points:", num_surface_points)
         else:
             self.grid = None
 
@@ -239,9 +239,9 @@ class CavityCalculation:
         self.multicavity_volumes = []
         for multicavity in multicavities:
             self.multicavity_volumes.append(sum(self.cavity_volumes[cavity_index] for cavity_index in multicavity))
-        print_message("multicavity volumes:", self.multicavity_volumes)
+        print_message("Multicavity volumes:", self.multicavity_volumes)
 
-        print_message("multicavities:", multicavities)
+        print_message("Multicavities:", multicavities)
 
         self.triangles()
 
@@ -262,8 +262,8 @@ class CavityCalculation:
         offset = self.domain_calculation.discretization.discrete_to_continuous((0, 0, 0))
         triangles = []
         surface_areas = []
-        for multicavity in self.multicavities:
-            print_message(multicavity)
+        for i, multicavity in enumerate(self.multicavities):
+            print_message("Generating triangles for multicavity:", i+1)
             vertices, normals, surface_area = cavity_triangles(
                     self.grid3,
                     multicavity,

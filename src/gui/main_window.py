@@ -2,6 +2,7 @@
 
 
 import os
+import sys
 from gui.tabs.file_tab import FileTabDock
 from gui.tabs.view_tab import ViewTabDock
 from gui.tabs.image_video_tab import ImageVideoTabDock
@@ -21,7 +22,7 @@ import core.bonds
 import core.control
 #from core.data import Results
 
-WEBSITE_URL = 'https://pgi-jcns.fz-juelich.de/portal/pages/pymoldyn-gui.html'
+WEBSITE_URL = 'https://pgi-jcns.fz-juelich.de/portal/pages/pymoldyn-doc.html'
 
 class MainWindow(QtGui.QMainWindow):
     def __init__(self, control):
@@ -100,6 +101,18 @@ class MainWindow(QtGui.QMainWindow):
         export_bond_dihedral_angles_action.setShortcut('Ctrl+3')
         export_bond_dihedral_angles_action.triggered.connect(self.wrapper_export_bond_dihedral_angles)
 
+        export_domains_action = QtGui.QAction('Export Domain Information', self)
+        export_domains_action.setShortcut('Ctrl+4')
+        export_domains_action.triggered.connect(self.wrapper_export_domains)
+
+        export_surface_cavities_action = QtGui.QAction('Export Cavity Information (surface method)', self)
+        export_surface_cavities_action.setShortcut('Ctrl+5')
+        export_surface_cavities_action.triggered.connect(self.wrapper_export_surface_cavities)
+
+        export_center_cavities_action = QtGui.QAction('Export Cavity Information (center method)', self)
+        export_center_cavities_action.setShortcut('Ctrl+6')
+        export_center_cavities_action.triggered.connect(self.wrapper_export_center_cavities)
+
         website_action = QtGui.QAction('&pyMolDyn website', self)
         website_action.setShortcut('F1')
         website_action.triggered.connect(self.show_website)
@@ -119,6 +132,9 @@ class MainWindow(QtGui.QMainWindow):
         export_submenu.addAction(export_bonds_action)
         export_submenu.addAction(export_bond_angles_action)
         export_submenu.addAction(export_bond_dihedral_angles_action)
+        export_submenu.addAction(export_domains_action)
+        export_submenu.addAction(export_surface_cavities_action)
+        export_submenu.addAction(export_center_cavities_action)
 
 
         help_menu = self.menubar.addMenu('&Help')
@@ -209,26 +225,49 @@ class MainWindow(QtGui.QMainWindow):
         filename = QtGui.QFileDialog.getSaveFileName(self, "Export Bonds", "bonds.txt")
         if filename:
             core.bonds.export_bonds(filename, self.control.visualization.results.atoms)
-            msgBox = QtGui.QMessageBox()
-            msgBox.setText("Saved to filename: %s"%(filename))
-            msgBox.exec_()
+            QtGui.QMessageBox.information(self,
+                                          'Export Bonds',
+                                          "Saved to filename: %s" % (filename))
 
     def wrapper_export_bond_angles(self):
         filename = QtGui.QFileDialog.getSaveFileName(self, "Export Bond Angles", "bond_angles.txt")
         if filename:
             core.bonds.export_bond_angles(filename, self.control.visualization.results.atoms)
-            msgBox = QtGui.QMessageBox()
-            msgBox.setText("Saved to filename: %s"%(filename))
-            msgBox.exec_()
-
+            QtGui.QMessageBox.information(self,
+                                          'Export Bond Angles',
+                                          "Saved to filename: %s" % (filename))
 
     def wrapper_export_bond_dihedral_angles(self):
         filename = QtGui.QFileDialog.getSaveFileName(self, "Export Bond Dihedral Angles", "bond_dihedral_angles.txt")
         if filename:
             core.bonds.export_bond_dihedral_angles(filename, self.control.visualization.results.atoms)
-            msgBox = QtGui.QMessageBox()
-            msgBox.setText("Saved to filename: %s"%(filename))
-            msgBox.exec_()
+            QtGui.QMessageBox.information(self,
+                                          'Export Bond Dihedral Angles',
+                                          "Saved to filename: %s" % (filename))
+
+    def wrapper_export_domains(self):
+        filename = QtGui.QFileDialog.getSaveFileName(self, "Export Domain Information", "domains")
+        if filename:
+            filenames = self.control.visualization.results.domains.totxt(filename + '_{property}.txt')
+            QtGui.QMessageBox.information(self,
+                                          'Export Domain Information',
+                                          "Saved to filenames: %s" % (', '.join(filenames)))
+
+    def wrapper_export_surface_cavities(self):
+        filename = QtGui.QFileDialog.getSaveFileName(self, "Export Cavity Information (surface method)", "surface_cavities")
+        if filename:
+            filenames = self.control.visualization.results.surface_cavities.totxt(filename + '_{property}.txt')
+            QtGui.QMessageBox.information(self,
+                                          'Export Cavity Information (surface method)',
+                                          "Saved to filenames: %s" % (', '.join(filenames)))
+
+    def wrapper_export_center_cavities(self):
+        filename = QtGui.QFileDialog.getSaveFileName(self, "Export Cavity Information (center method)", "center_cavities")
+        if filename:
+            filenames = self.control.visualization.results.center_cavities.totxt(filename + '_{property}.txt')
+            QtGui.QMessageBox.information(self,
+                                          'Export Cavity Information (center method)',
+                                          "Saved to filenames: %s" % (', '.join(filenames)))
 
     def keyPressEvent(self, e):
         if e.key() == QtCore.Qt.Key_M:
@@ -279,7 +318,7 @@ class CentralWidget(QtGui.QWidget):
         self.init_gui()
 
     def init_gui(self):
-        self.gl_stack = GLStack(self)
+        self.gl_stack = GLStack(self, self.parent())
         self.gl_widget = self.gl_stack.gl_widget
         self.combo = QtGui.QComboBox()
         for title in self.widget_titles:

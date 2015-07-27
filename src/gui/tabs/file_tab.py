@@ -339,10 +339,15 @@ class TreeList(QtGui.QTreeWidget):
     def show_selected_frame(self):
         sel = self.get_selection()
         if not sel:
-            QtGui.QMessageBox.information(self, 'Information',
-                                          "Choose a single frame to show",
-                                          QtGui.QMessageBox.Ok)
-            return
+            # if there is just one file with one frame, select that frame automatically
+            if self.topLevelItemCount() == 1 and self.topLevelItem(0).childCount() == 1:
+                self.select_nth(1)
+                sel = self.get_selection()
+            else:
+                QtGui.QMessageBox.information(self, 'Information',
+                                              "Choose a single frame to show",
+                                              QtGui.QMessageBox.Ok)
+                return
         filename = sel.keys()[0]
         frame = sel[filename][0]
 

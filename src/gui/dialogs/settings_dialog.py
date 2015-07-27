@@ -16,8 +16,8 @@ class ColorSettingsPage(QtGui.QWidget):
                                   ('bounding_box', 'Bounding Box'),
                                   ('bonds', 'Bonds'),
                                   ('domain', 'Domain'),
-                                  ('cavity', 'Cavity (surface method)'),
-                                  ('alt_cavity', 'Cavity (Center method)')))
+                                  ('surface_cavity', 'Cavity (surface method)'),
+                                  ('center_cavity', 'Cavity (Center method)')))
 
         self.button_dict = {}
         layout = QtGui.QGridLayout()
