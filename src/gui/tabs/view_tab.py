@@ -133,19 +133,24 @@ class ViewTab(QtGui.QWidget):
         if clicked_box is None:
             return
 
+        has_triggered_check_event = False
         if clicked_box == ObjectTypeId.SURFACE_BASED_CAVITY:
             is_checked = self.surface_cavity_check.isChecked()
             if is_checked:
+                has_triggered_check_event = self.domain_check.isChecked() or self.center_cavity_check.isChecked()
                 self.domain_check.setChecked(False)
                 self.center_cavity_check.setChecked(False)
         elif clicked_box == ObjectTypeId.CENTER_BASED_CAVITY:
             is_checked = self.center_cavity_check.isChecked()
             if is_checked:
+                has_triggered_check_event = self.surface_cavity_check.isChecked()
                 self.surface_cavity_check.setChecked(False)
         elif clicked_box == ObjectTypeId.DOMAIN:
             is_checked = self.domain_check.isChecked()
             if is_checked:
+                has_triggered_check_event = self.surface_cavity_check.isChecked()
                 self.surface_cavity_check.setChecked(False)
+        return has_triggered_check_event
 
     def on_checkbox(self, check_box, check_state, clicked_box=None):
         settings = self.gl_widget.vis.settings
@@ -164,7 +169,7 @@ class ViewTab(QtGui.QWidget):
         if self.bonds_check.isEnabled():
             settings.show_bonds = self.bonds_check.isChecked()
 
-        self.update_cavity_buttons(self.results, clicked_box)
+        has_triggered_check_event = self.update_cavity_buttons(self.results, clicked_box)
         settings.show_domains = self.domain_check.isChecked()
         if check_box == self.domain_check and check_box.isChecked():
             settings.visible_domain_indices = check_box.indices
@@ -174,7 +179,9 @@ class ViewTab(QtGui.QWidget):
         settings.show_center_cavities = self.center_cavity_check.isChecked()
         if check_box == self.center_cavity_check and check_box.isChecked():
             settings.visible_center_cavity_indices = check_box.indices
-        self.gl_widget.create_scene()
+        # If no further check event was triggered, all settings are refreshed and the scene can be redrawn
+        if not has_triggered_check_event:
+            self.gl_widget.create_scene()
 
     def object_indices_changed(self, indices, object_type_id, update_scene=True):
         object_type_id2attribute_name = {

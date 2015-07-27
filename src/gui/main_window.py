@@ -318,7 +318,7 @@ class CentralWidget(QtGui.QWidget):
         self.init_gui()
 
     def init_gui(self):
-        self.gl_stack = GLStack(self)
+        self.gl_stack = GLStack(self, self.parent())
         self.gl_widget = self.gl_stack.gl_widget
         self.combo = QtGui.QComboBox()
         for title in self.widget_titles:
