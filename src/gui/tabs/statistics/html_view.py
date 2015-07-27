@@ -209,65 +209,30 @@ class HTMLWindow(QtGui.QWidget):
                 parent = parent.parent()
             main_window = parent
             view_tab = main_window.view_dock.view_tab
-            gl_widget = main_window.center.gl_widget
-            visualization = gl_widget.vis
-            create_scene = gl_widget.create_scene
-            # Temporarily disable redrawing
-            gl_widget.create_scene = lambda *args: None
             if value[1] == 'domain':
                 domain_index = int(value[2])-1
-                view_tab.some_domain_text.setText(str(domain_index+1))
-                view_tab.some_domain_check.setChecked(True)
-                visualization.settings.visible_domain_indices = [domain_index]
+                view_tab.domain_check.indices = [domain_index]
             elif value[1] == 'surface_cavity':
                 surface_cavity_index = int(value[2])-1
-                view_tab.some_surface_cavity_text.setText(str(surface_cavity_index+1))
-                view_tab.some_surface_cavity_check.setChecked(True)
-                visualization.settings.visible_surface_cavity_indices = [surface_cavity_index]
+                view_tab.surface_cavity_check.indices = [surface_cavity_index]
             elif value[1] == 'center_cavity':
                 center_cavity_index = int(value[2])-1
-                view_tab.some_center_cavity_text.setText(str(center_cavity_index+1))
-                view_tab.some_center_cavity_check.setChecked(True)
-                visualization.settings.visible_center_cavity_indices = [center_cavity_index]
-            gl_widget.create_scene = create_scene
-            gl_widget.create_scene()
+                view_tab.center_cavity_check.indices = [center_cavity_index]
         elif value[0] == 'addtovisible':
             parent = self.parent()
             while parent.parent():
                 parent = parent.parent()
             main_window = parent
             view_tab = main_window.view_dock.view_tab
-            gl_widget = main_window.center.gl_widget
-            visualization = gl_widget.vis
-            create_scene = gl_widget.create_scene
-            # Temporarily disable redrawing
-            gl_widget.create_scene = lambda *args: None
             if value[1] == 'domain':
                 domain_index = int(value[2])-1
-                if view_tab.some_domain_text.text().strip():
-                    view_tab.some_domain_text.setText(view_tab.some_domain_text.text()+', '+str(domain_index+1))
-                else:
-                    view_tab.some_domain_text.setText(str(domain_index+1))
-                if visualization.settings.visible_domain_indices is not None:
-                    visualization.settings.visible_domain_indices.append(domain_index)
+                view_tab.domain_check.add_indices([domain_index])
             elif value[1] == 'surface_cavity':
                 surface_cavity_index = int(value[2])-1
-                if view_tab.some_surface_cavity_text.text().strip():
-                    view_tab.some_surface_cavity_text.setText(view_tab.some_surface_cavity_text.text()+', '+str(surface_cavity_index+1))
-                else:
-                    view_tab.some_surface_cavity_text.setText(str(surface_cavity_index+1))
-                if visualization.settings.visible_surface_cavity_indices is not None:
-                    visualization.settings.visible_surface_cavity_indices.append(surface_cavity_index)
+                view_tab.surface_cavity_check.add_indices([surface_cavity_index])
             elif value[1] == 'center_cavity':
                 center_cavity_index = int(value[2])-1
-                if view_tab.some_center_cavity_text.text().strip():
-                    view_tab.some_center_cavity_text.setText(view_tab.some_center_cavity_text.text()+', '+str(center_cavity_index+1))
-                else:
-                    view_tab.some_center_cavity_text.setText(str(center_cavity_index+1))
-                if visualization.settings.visible_center_cavity_indices is not None:
-                    visualization.settings.visible_center_cavity_indices.append(center_cavity_index)
-            gl_widget.create_scene = create_scene
-            gl_widget.create_scene()
+                view_tab.center_cavity_check.add_indices([center_cavity_index])
 
     def update_results(self, results):
         self.atoms = results.atoms

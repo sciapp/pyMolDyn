@@ -40,6 +40,13 @@ class ObjectSelectWidget(QtGui.QWidget):
         else:
             return None
 
+    @indices.setter
+    def indices(self, indices):
+        self._index_selection.indices = indices
+
+    def add_indices(self, indices):
+        self._index_selection.add_indices(indices)
+
     def isChecked(self):
         return self._activation_checkbox.isChecked()
 
@@ -83,13 +90,59 @@ class IndexSelectLineEdit(QtGui.QLineEdit):
         self.indices_emit_timer.setInterval(self.TIMER_INTERVAL)
         self.indices_emit_timer.setSingleShot(True)
         self.indices_emit_timer.timeout.connect(self._time_out)
-        self.textChanged.connect(self._text_changed)
+        self.textEdited.connect(self._text_edited)
 
     @property
     def indices(self):
         return self._indices
 
-    def _text_changed(self):
+    @indices.setter
+    def indices(self, indices):
+        def indices2string(indices):
+            def range2string(range):
+                if range is None:
+                    return ''
+                elif len(range) == 1:
+                    start = range[0]
+                    end = start
+                else:
+                    start, end = range
+                if start == end:
+                    return str(start+1)
+                else:
+                    return '{:d}-{:d}'.format(start+1, end+1)
+
+            indices = list(set(indices))
+            indices.sort()
+            ranges = []
+            if len(indices) == 0:
+                current_range = None
+            else:
+                current_range = [indices[0]]
+                previous_index = indices[0]
+                for current_index in indices[1:]:
+                    if current_index > previous_index + 1:
+                        current_range.append(previous_index)
+                        ranges.append(current_range)
+                        current_range = [current_index]
+                    previous_index = current_index
+                current_range.append(previous_index)
+            ranges.append(current_range)
+            indices_string = ', '.join(map(range2string, ranges))
+            return indices_string
+
+        self.setText(indices2string(indices))
+        self._indices = tuple(indices)
+        if self.isEnabled():
+            self.indices_changed.emit(self._indices)
+
+    def add_indices(self, indices):
+        if self._indices is not None:
+            self.indices = set(self._indices) | set(indices)
+        else:
+            self.indices = indices
+
+    def _text_edited(self):
         if self.indices_emit_timer.isActive():
             self.indices_emit_timer.stop()
         indices_from_line_edit = self._get_indices_from_line_edit()
@@ -111,7 +164,7 @@ class IndexSelectLineEdit(QtGui.QLineEdit):
         if is_input_valid:
             parts = input_text.split(',') if input_text != '' else []
             indices = []
-            indices.extend((int(comp)-1 for comp in parts if '-' not in comp ))   # single indices
+            indices.extend((int(comp)-1 for comp in parts if '-' not in comp))   # single indices
             for comp in parts:
                 if '-' in comp:  # index ranges
                     start, end = map(int, comp.split('-'))
