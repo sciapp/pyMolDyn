@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 import os.path
+import functools
 from core import calculation, volumes, file
 from gui.dialogs.calc_settings_dialog import CalculationSettingsDialog
 from gui.dialogs.progress_dialog import ProgressDialog
@@ -9,6 +10,7 @@ from config.configuration import config
 from util.message import print_message, progress, finish
 from gui.gl_widget import GLWidget, UpdateGLEvent
 from core.file import File
+from util import message
 
 
 class FileTabDock(QtGui.QDockWidget):
@@ -36,9 +38,19 @@ class CalculationThread(QtCore.QThread):
         QtCore.QThread.__init__(self, parent)
         self.func = func
         self.settings = settings
+        self._exited_with_errors = False
+
+    @property
+    def exited_with_errors(self):
+        return self._exited_with_errors
 
     def run(self):
-        self.func(self.settings)
+        try:
+            self.func(self.settings)
+        except Exception as e:
+            self._exited_with_errors = True
+            message.error(e)
+            message.finish()
 
 
 class FileTab(QtGui.QWidget):
@@ -53,10 +65,14 @@ class FileTab(QtGui.QWidget):
         self.most_recent_path = "~"
 
         p = self.progress_dialog
-        self.main_window.set_output_callbacks(p.progress, p.print_step, p.calculation_finished)
+        self.main_window.set_output_callbacks(p.progress, p.print_step, p.calculation_finished, lambda e: QtCore.QMetaObject.invokeMethod(self, '_error', QtCore.Qt.QueuedConnection, QtCore.Q_ARG(str, e.message)))
         self.control = main_window.control
 
         self.init_gui()
+
+    @QtCore.pyqtSlot(str)
+    def _error(self, error_message):
+        QtGui.QMessageBox.information(self, 'Information', error_message, QtGui.QMessageBox.Ok)
 
     def init_gui(self):
         self.vbox = QtGui.QVBoxLayout()
@@ -163,10 +179,14 @@ class FileTab(QtGui.QWidget):
         for action in self.main_window.recent_files_submenu.actions():
             if action.text() == path:
                 action.setDisabled(True)
-        self.file_list.add_file(path)
+        try:
+            self.file_list.add_file(path)
+        except ValueError as e:
+            QtGui.QMessageBox.information(self, 'Information', e.message, QtGui.QMessageBox.Ok)
+            return
 
     def open_file_dialog(self):
-        filenames, _ = QtGui.QFileDialog.getOpenFileNames(self, 'Open dataset', self.most_recent_path)
+        filenames = QtGui.QFileDialog.getOpenFileNames(self, 'Open dataset', self.most_recent_path)
         for path in filenames:
             if path:
                 #print path
@@ -178,8 +198,8 @@ class FileTab(QtGui.QWidget):
 
     def calculationcallback(self, func, settings):
         thread = CalculationThread(self, func, settings)
-        thread.finished.connect(self.control.update)
-        thread.finished.connect(self.main_window.updatestatus)
+        thread.finished.connect(functools.partial(self.control.update, was_successful=lambda : thread.exited_with_errors))
+        thread.finished.connect(functools.partial(self.main_window.updatestatus, was_successful=lambda : thread.exited_with_errors))
         thread.start()
         self.progress_dialog.exec_()
 
@@ -319,10 +339,15 @@ class TreeList(QtGui.QTreeWidget):
     def show_selected_frame(self):
         sel = self.get_selection()
         if not sel:
-            QtGui.QMessageBox.information(self, 'Information',
-                                          "Choose a single frame to show",
-                                          QtGui.QMessageBox.Ok)
-            return
+            # if there is just one file with one frame, select that frame automatically
+            if self.topLevelItemCount() == 1 and self.topLevelItem(0).childCount() == 1:
+                self.select_nth(1)
+                sel = self.get_selection()
+            else:
+                QtGui.QMessageBox.information(self, 'Information',
+                                              "Choose a single frame to show",
+                                              QtGui.QMessageBox.Ok)
+                return
         filename = sel.keys()[0]
         frame = sel[filename][0]
 

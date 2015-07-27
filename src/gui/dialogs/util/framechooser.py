@@ -4,7 +4,7 @@
 # TODO: fix frame indexing. it should start at 0 for everything, except in the strings that are displayed in the widgets
 
 
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 
 
 class LabeledFrameChooser(QtGui.QWidget):

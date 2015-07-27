@@ -1,4 +1,4 @@
-from PySide import QtGui, QtCore
+from PyQt4 import QtGui, QtCore
 from collections import Counter, OrderedDict
 
 class TreeList(QtGui.QTreeWidget):

@@ -1,4 +1,4 @@
-from PySide import QtGui, QtCore
+from PyQt4 import QtGui, QtCore
 
 class ProgressDialog(QtGui.QDialog):
     def __init__(self, parent=None):
@@ -32,9 +32,9 @@ class ProgressDialog(QtGui.QDialog):
         QtCore.QMetaObject.invokeMethod(self, "close_dialog", QtCore.Qt.QueuedConnection)
 
     def progress(self, value):
-        QtCore.QMetaObject.invokeMethod(self.progressbar, "setValue", QtCore.Qt.QueuedConnection, QtCore.QGenericArgument('int', value))
+        QtCore.QMetaObject.invokeMethod(self.progressbar, "setValue", QtCore.Qt.QueuedConnection, QtCore.Q_ARG(int, value))
 
-    @QtCore.Slot()
+    @QtCore.pyqtSlot()
     def close_dialog(self):
         if self.finished:
             self.done(QtGui.QDialog.Accepted)

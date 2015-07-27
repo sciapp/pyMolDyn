@@ -34,6 +34,7 @@ class Visualization(object):
 
         self.results = None
         self.settings = VisualizationSettings()
+        self.objectids = [None]
 
     def setresults(self, results):
         """
@@ -51,6 +52,9 @@ class Visualization(object):
         self.create_scene()
         if self.width != 0 and self.height != 0:
             self.paint(self.width, self.height)
+        self.settings.visible_domain_indices = None
+        self.settings.visible_surface_cavity_indices = None
+        self.settings.visible_center_cavity_indices = None
 
     def create_scene(self):
         """
@@ -66,14 +70,14 @@ class Visualization(object):
             return
 
         show_domains = self.settings.show_domains
-        show_surface_cavities = self.settings.show_cavities
-        show_center_cavities = self.settings.show_alt_cavities
+        show_surface_cavities = self.settings.show_surface_cavities
+        show_center_cavities = self.settings.show_center_cavities
         if show_center_cavities and self.results.center_cavities is not None:
-            show_domains = False
             show_surface_cavities = False
         elif show_surface_cavities and self.results.surface_cavities is not None:
             show_domains = False
 
+        self.objectids = [None]
         edges = self.results.atoms.volume.edges
         num_edges = len(edges)
         edge_positions = [edge[0] for edge in edges]
@@ -91,48 +95,70 @@ class Visualization(object):
                                [edge_radius]*num_corners)
 
         if self.settings.show_atoms and self.results.atoms is not None:
-            gr3.drawspheremesh(self.results.atoms.number,
-                               self.results.atoms.positions,
-                               self.results.atoms.colors,
-                               [edge_radius * 4] * self.results.atoms.number)
-
-            if self.settings.show_bonds:
-                bonds = self.results.atoms.bonds
-                for start_index, target_indices in enumerate(bonds):
-                    if len(target_indices) == 0:
-                        continue
-                    start_position = self.results.atoms.positions[start_index]
-                    target_positions = self.results.atoms.positions[target_indices]
-                    directions = target_positions - start_position
-                    bond_lengths = la.norm(directions, axis=1)
-                    directions /= bond_lengths.reshape(len(directions), 1)
-                    gr3.drawcylindermesh(len(target_indices),
-                                         target_positions,
-                                         -directions,
-                                         [config.Colors.bonds] * self.results.atoms.number,
-                                         np.ones(bond_lengths.shape)*edge_radius,
-                                         bond_lengths)
+            visible_atom_indices = self.settings.visible_atom_indices
+            if visible_atom_indices is not None:
+                visible_atom_indices = [comp for comp in visible_atom_indices if 0 <= comp < self.results.atoms.number]
+            else:
+                visible_atom_indices = range(self.results.atoms.number)
+            if len(visible_atom_indices) == 0:
+                visible_atom_indices = None
+            if visible_atom_indices is not None:
+                visible_atom_indices = np.array(visible_atom_indices)
+                gr3.drawspheremesh(len(visible_atom_indices),
+                                   self.results.atoms.positions[visible_atom_indices],
+                                   self.results.atoms.colors[visible_atom_indices],
+                                   [edge_radius * 4] * len(visible_atom_indices))
+                if self.settings.show_bonds:
+                    bonds = self.results.atoms.bonds
+                    for start_index, target_indices in enumerate(bonds):
+                        if start_index not in visible_atom_indices:
+                            continue
+                        target_indices = np.array([i for i in target_indices if i in visible_atom_indices])
+                        if len(target_indices) == 0:
+                            continue
+                        start_position = self.results.atoms.positions[start_index]
+                        target_positions = self.results.atoms.positions[target_indices]
+                        directions = target_positions - start_position
+                        bond_lengths = la.norm(directions, axis=1)
+                        directions /= bond_lengths.reshape(len(directions), 1)
+                        gr3.drawcylindermesh(len(target_indices),
+                                             target_positions,
+                                             -directions,
+                                             [config.Colors.bonds] * self.results.atoms.number,
+                                             np.ones(bond_lengths.shape)*edge_radius,
+                                             bond_lengths)
 
         if self.results is None:
             return
         if show_domains and self.results.domains is not None:
-            self.draw_cavities(self.results.domains, config.Colors.domain)
+            self.draw_cavities(self.results.domains,
+                               config.Colors.domain, 'domain',
+                               self.settings.visible_domain_indices)
         if show_surface_cavities and self.results.surface_cavities is not None:
             self.draw_cavities(self.results.surface_cavities,
-                               config.Colors.cavity)
+                               config.Colors.surface_cavity, 'surface cavity',
+                               self.settings.visible_surface_cavity_indices)
         if show_center_cavities and self.results.center_cavities is not None:
             self.draw_cavities(self.results.center_cavities,
-                               config.Colors.alt_cavity)
+                               config.Colors.center_cavity, 'center cavity',
+                               self.settings.visible_center_cavity_indices)
 
-    def draw_cavities(self, cavities, color):
-        for triangles in cavities.triangles:
-            mesh = gr3.createmesh(triangles.shape[1] * 3,
-                                  triangles[0, :, :, :],
-                                  triangles[1, :, :, :],
-                                  [color] * (triangles.shape[1] * 3))
-            gr3.drawmesh(mesh, 1, (0, 0, 0), (0, 0, 1), (0, 1, 0),
-                         (1, 1, 1), (1, 1, 1))
-            gr3.deletemesh(c_int(mesh.value))
+    def draw_cavities(self, cavities, color, cavity_type, indices=None):
+        if indices is None:
+            indices = range(self.results.domains.number)
+        for index in set(indices):
+            if 0 <= index < len(cavities.triangles):
+                triangles = cavities.triangles[index]
+                gr3._gr3.gr3_setobjectid(gr3.c_int(len(self.objectids)))
+                self.objectids.append((cavity_type, index))
+                mesh = gr3.createmesh(triangles.shape[1] * 3,
+                                      triangles[0, :, :, :],
+                                      triangles[1, :, :, :],
+                                      [color] * (triangles.shape[1] * 3))
+                gr3.drawmesh(mesh, 1, (0, 0, 0), (0, 0, 1), (0, 1, 0),
+                             (1, 1, 1), (1, 1, 1))
+                gr3.deletemesh(c_int(mesh.value))
+        gr3._gr3.gr3_setobjectid(gr3.c_int(0))
 
     def zoom(self, delta):
         """
@@ -205,7 +231,12 @@ class Visualization(object):
         """
         gr3.export(file_name, width, height)
 
-    def get_object_at_position(self, x, y, z):
+    def get_object_at_2dposition(self, x, y):
+        oid = gr3.c_int(0)
+        gr3._gr3.gr3_selectid(gr3.c_int(x), gr3.c_int(y), gr3.c_int(self.width), gr3.c_int(self.height), gr3.byref(oid))
+        return self.objectids[oid.value]
+
+    def get_object_at_3dposition(self, x, y, z):
         if self.results is None:
             return None
         if self.results.atoms is not None:
@@ -223,7 +254,6 @@ class Visualization(object):
             if 0.95 < distances[nearest_atom_index]/atom_radius < 1.05:
                 return ('atom', nearest_atom_index)
 
-
 class VisualizationSettings(object):
     """
     Container for settings that control which part of the data is visualized.
@@ -231,20 +261,29 @@ class VisualizationSettings(object):
 
         `show_domains`
 
-        `show_cavities`
+        `show_surface_cavities`
 
-        `show_alt_cavities`
+        `show_center_cavities`
 
         `show_atoms`
 
         `show_bounding_box`
 
     """
-    def __init__(self, domains=False, cavities=True, alt_cavities=False,
-                 atoms=True, bonds=True, bounding_box=True):
+    def __init__(self, domains=False, show_surface_cavities=True,
+                 show_center_cavities=False, atoms=True, bonds=True,
+                 bounding_box=True,
+                 visible_atom_indices=None,
+                 visible_domain_indices=None,
+                 visible_surface_cavity_indices=None,
+                 visible_center_cavity_indices=None):
         self.show_domains = domains
-        self.show_cavities = cavities
-        self.show_alt_cavities = alt_cavities
+        self.visible_domain_indices = visible_domain_indices
+        self.show_surface_cavities = show_surface_cavities
+        self.visible_surface_cavity_indices = visible_surface_cavity_indices
+        self.show_center_cavities = show_center_cavities
+        self.visible_center_cavity_indices = visible_center_cavity_indices
         self.show_atoms = atoms
+        self.visible_atom_indices = visible_atom_indices
         self.show_bonds = bonds
         self.show_bounding_box = bounding_box

@@ -38,7 +38,7 @@ class DiscretizationCache(object):
         cache file and then return it.
         """
         discretization_repr = repr(volume) + " d_max=%d" % d_max
-        print_message(discretization_repr)
+        print_message("{volume}, discretization resolution: {resolution:d}".format(volume=repr(volume), resolution=d_max))
         if discretization_repr in self.file['/discretizations']:
             stored_discretization = self.file['/discretizations/' + discretization_repr]
             grid = np.array(stored_discretization)
@@ -111,14 +111,14 @@ class Discretization(object):
         if self.d_max % 2 == 1:
             self.d_max -= 1
         self.s_step = self.s_max / (self.d_max - 4)
-        print_message("s_step", self.s_step)
+        print_message("Step length:", self.s_step)
 
         # step 2
         self.d = [int(floor(self.s[i] / self.s_step) + 4) for i in dimensions]
         for i in dimensions:
             if self.d[i] % 2 == 1:
                 self.d[i] += 1
-        print_message("d", self.d)
+        print_message("Resolution per axis: (x: {x:d}, y: {y:d}, z: {z:d})".format(x=self.d[0], y=self.d[1], z=self.d[2]))
         self.s_tilde = [(self.d[i] - 1) * self.s_step for i in dimensions]
 
         # step 3
@@ -149,7 +149,8 @@ class Discretization(object):
             del indices
             # steps 5, 6, 7
             mark_translation_vectors(self.grid, self.combined_translation_vectors)
-        print_message("translation vectors", self.translation_vectors)
+        translation_vector_output = ", ".join(["({0}, {1}, {2})".format(*vec) for vec in self.translation_vectors])
+        print_message("Translation vectors:", translation_vector_output)
 
     def get_direct_neighbors(self, point):
         '''
@@ -235,4 +236,4 @@ class AtomDiscretization:
         for radius in self.atoms.sorted_radii:
             discrete_radius = int(floor(radius / self.discretization.s_step + 0.5))
             self.sorted_discrete_radii.append(discrete_radius)
-        print_message("maximum radius:", self.sorted_discrete_radii[0])
+        print_message("Maximum radius:", self.sorted_discrete_radii[0])

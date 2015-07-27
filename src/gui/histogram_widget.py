@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from PySide import QtCore, QtGui
+from PyQt4 import QtCore, QtGui
 import gr
 from qtgr import GRWidget
 import os
@@ -119,9 +119,9 @@ class HistogramWidget(QtGui.QWidget):
         grid.addWidget(self.weightbutton, 0, 1)
 
         binbox = QtGui.QHBoxLayout()
-        binbox.addWidget(QtGui.QLabel("Number of Bins:", self), 0, 0)
+        binbox.addWidget(QtGui.QLabel("Number of Bins:", self), 0)
         self.nbins = QtGui.QLineEdit(self)
-        binbox.addWidget(self.nbins, 0, 1)
+        binbox.addWidget(self.nbins, 0, QtCore.Qt.AlignLeft)
         grid.addLayout(binbox, 0, 2)
 
         self.plotbutton = QtGui.QPushButton("Plot", self)
@@ -180,9 +180,9 @@ class HistogramWidget(QtGui.QWidget):
         extensions = (".eps", ".ps", ".pdf", ".png", ".bmp", ".jpg", ".jpeg",
                       ".png", ".tiff", ".fig", ".svg", ".wmf")
         qtext = "*" + " *".join(extensions)
-        filepath, okay = QtGui.QFileDialog.getSaveFileName(self, "Save Image",
+        filepath = QtGui.QFileDialog.getSaveFileName(self, "Save Image",
                                                            ".", "Image Files ({})".format(qtext))
-        if not okay or len(filepath) == 0:
+        if not filepath:
             return
         gr.beginprint(filepath)
         self.draw()
