@@ -8,44 +8,51 @@ class ObjectSelectWidget(QtGui.QWidget):
     state_changed = QtCore.pyqtSignal(bool)
     selection_indices_changed = QtCore.pyqtSignal(object)
 
-    def __init__(self, text, parent, *args, **kwargs):
+    def __init__(self, text, parent, add_index_selector=True, *args, **kwargs):
         super(ObjectSelectWidget, self).__init__(parent, *args, **kwargs)
+
+        self._has_index_selector = add_index_selector
 
         # Widgets
         self._activation_checkbox = QtGui.QCheckBox(text, self)
-        self._selection_checkbox = QtGui.QCheckBox('only selected indices', self)
-        self._index_selection = IndexSelectLineEdit(self)
+        if self._has_index_selector:
+            self._selection_checkbox = QtGui.QCheckBox('only selected indices', self)
+            self._index_selection = IndexSelectLineEdit(self)
 
         # Layout
         layout = QtGui.QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setColumnMinimumWidth(0, 8)
         layout.addWidget(self._activation_checkbox, 0, 0, 1, 3)
-        layout.addWidget(self._selection_checkbox, 1, 1)
-        layout.addWidget(self._index_selection, 1, 2)
+        if self._has_index_selector:
+            layout.addWidget(self._selection_checkbox, 1, 1)
+            layout.addWidget(self._index_selection, 1, 2)
         self.setLayout(layout)
 
         # Signals
         self._activation_checkbox.stateChanged.connect(self._state_changed)
-        self._selection_checkbox.stateChanged.connect(self._selection_toggled)
-        self._index_selection.indices_changed.connect(self._selection_indices_changed)
+        if self._has_index_selector:
+            self._selection_checkbox.stateChanged.connect(self._selection_toggled)
+            self._index_selection.indices_changed.connect(self._selection_indices_changed)
 
         # State setup
         self._state_changed(check_state=False)
 
     @property
     def indices(self):
-        if self._selection_checkbox.isChecked():
+        if self._has_index_selector and self._selection_checkbox.isChecked():
             return self._index_selection.indices
         else:
             return None
 
     @indices.setter
     def indices(self, indices):
-        self._index_selection.indices = indices
+        if self._has_index_selector:
+            self._index_selection.indices = indices
 
     def add_indices(self, indices):
-        self._index_selection.add_indices(indices)
+        if self._has_index_selector:
+            self._index_selection.add_indices(indices)
 
     def isChecked(self):
         return self._activation_checkbox.isChecked()
@@ -54,8 +61,9 @@ class ObjectSelectWidget(QtGui.QWidget):
         return self._activation_checkbox.setChecked(checkState)
 
     def _state_changed(self, check_state):
-        self._selection_checkbox.setEnabled(check_state)
-        self._index_selection.setEnabled(check_state)
+        if self._has_index_selector:
+            self._selection_checkbox.setEnabled(check_state)
+            self._index_selection.setEnabled(check_state)
         self.state_changed.emit(check_state)
 
     def _selection_toggled(self, check_state):
