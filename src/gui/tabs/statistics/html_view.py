@@ -209,7 +209,10 @@ class HTMLWindow(QtGui.QWidget):
                 parent = parent.parent()
             main_window = parent
             view_tab = main_window.view_dock.view_tab
-            if value[1] == 'domain':
+            if value[1] == 'atom':
+                atom_index = int(value[2])-1
+                view_tab.atom_check.indices = [atom_index]
+            elif value[1] == 'domain':
                 domain_index = int(value[2])-1
                 view_tab.domain_check.indices = [domain_index]
             elif value[1] == 'surface_cavity':
@@ -224,7 +227,10 @@ class HTMLWindow(QtGui.QWidget):
                 parent = parent.parent()
             main_window = parent
             view_tab = main_window.view_dock.view_tab
-            if value[1] == 'domain':
+            if value[1] == 'atom':
+                atom_index = int(value[2])-1
+                view_tab.domain_check.add_indices([atom_index])
+            elif value[1] == 'domain':
                 domain_index = int(value[2])-1
                 view_tab.domain_check.add_indices([domain_index])
             elif value[1] == 'surface_cavity':
