@@ -51,9 +51,10 @@ class ViewTab(QtGui.QWidget):
         group_box = QtGui.QGroupBox('view settings', self)
         view_layout = QtGui.QVBoxLayout()
 
-        self.box_check = QtGui.QCheckBox('show bounding box', self)
+        # normal checkboxes are not used to prevent alignment problems between the different check box types
+        self.box_check = ObjectSelectWidget('show bounding box', self, add_index_selector=False)
         self.atom_check = ObjectSelectWidget('show atoms', self)
-        self.bonds_check = QtGui.QCheckBox('show bonds', self)
+        self.bonds_check = ObjectSelectWidget('show bonds', self, add_index_selector=False)
         self.domain_check = ObjectSelectWidget('show domains', self)
         self.surface_cavity_check = ObjectSelectWidget('show cavities (surface method)', self)
         self.center_cavity_check = ObjectSelectWidget('show cavities (center method)', self)
@@ -72,10 +73,10 @@ class ViewTab(QtGui.QWidget):
         self.surface_cavity_check.setChecked(True)
         self.center_cavity_check.setChecked(False)
 
-        self.box_check.stateChanged.connect(partial(self.on_checkbox, self.box_check))
+        self.box_check.state_changed.connect(partial(self.on_checkbox, self.box_check))
         self.atom_check.state_changed.connect(partial(self.on_checkbox, self.atom_check,
                                                       clicked_box=ObjectTypeId.ATOM))
-        self.bonds_check.stateChanged.connect(partial(self.on_checkbox, self.bonds_check))
+        self.bonds_check.state_changed.connect(partial(self.on_checkbox, self.bonds_check))
         self.domain_check.state_changed.connect(partial(self.on_checkbox, self.domain_check,
                                                         clicked_box=ObjectTypeId.DOMAIN))
         self.surface_cavity_check.state_changed.connect(partial(self.on_checkbox, self.surface_cavity_check,
