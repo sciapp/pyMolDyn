@@ -1,14 +1,14 @@
 SUBDIRS=$(shell find . -mindepth 1 -maxdepth 1 -type d)
 
-all: sub app
-
-sub: app
+sub:
 	@for subdir in ${SUBDIRS}; do \
 		if [ -f $$subdir/Makefile ]; then \
 			echo "make -C $$subdir"; \
 			$(MAKE) -C $$subdir; \
 		fi; \
 	done
+
+all: sub app
 
 app: sub
 	pwd
