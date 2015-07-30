@@ -212,6 +212,13 @@ class HTMLWindow(QtGui.QWidget):
             if value[1] == 'atom':
                 atom_index = int(value[2])-1
                 view_tab.atom_check.indices = [atom_index]
+            elif value[1] == 'element':
+                element = core.elements.names[int(value[2])]
+                visible_atom_indices = []
+                for i, element_name in enumerate(self.atoms.elements):
+                    if core.elements.names[core.elements.numbers[element_name.upper()]] == element:
+                        visible_atom_indices.append(i)
+                view_tab.atom_check.indices = visible_atom_indices
             elif value[1] == 'domain':
                 domain_index = int(value[2])-1
                 view_tab.domain_check.indices = [domain_index]
@@ -239,6 +246,24 @@ class HTMLWindow(QtGui.QWidget):
             elif value[1] == 'center_cavity':
                 center_cavity_index = int(value[2])-1
                 view_tab.center_cavity_check.add_indices([center_cavity_index])
+        elif value[0] == 'showall':
+            parent = self.parent()
+            while parent.parent():
+                parent = parent.parent()
+            main_window = parent
+            view_tab = main_window.view_dock.view_tab
+            if value[1] == 'atoms':
+                view_tab.atom_check.setChecked(True)
+                view_tab.atom_check.selection_checkbox_set_checked(False)
+            if value[1] == 'domains':
+                view_tab.domain_check.setChecked(True)
+                view_tab.domain_check.selection_checkbox_set_checked(False)
+            if value[1] == 'surface_cavities':
+                view_tab.surface_cavity_check.setChecked(True)
+                view_tab.surface_cavity_check.selection_checkbox_set_checked(False)
+            if value[1] == 'center_cavities':
+                view_tab.center_cavity_check.setChecked(True)
+                view_tab.center_cavity_check.selection_checkbox_set_checked(False)
 
     def update_results(self, results):
         self.atoms = results.atoms
