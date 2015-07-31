@@ -294,7 +294,8 @@ class TreeList(QtGui.QTreeWidget):
         any_frame_selected = len(self.selectedItems()) > 0
         self.parent().delete_button.setEnabled(any_frame_selected)
         self.parent().calculate_button.setEnabled(any_frame_selected)
-        self.parent().show_button.setEnabled(frames_selected == 1)
+        only_one_frame_available = self.topLevelItemCount() == 1 and self.topLevelItem(0).childCount() == 1
+        self.parent().show_button.setEnabled(frames_selected == 1 or (not any_frame_selected and only_one_frame_available))
         parent = self.parent()
         while parent.parent():
             parent = parent.parent()
@@ -308,6 +309,7 @@ class TreeList(QtGui.QTreeWidget):
         self.parent().select_all_button.setEnabled(any_files_available)
         self.parent().select_nth_button.setEnabled(any_files_available)
         self.parent().file_button.setDefault(not any_files_available)
+        self.selection_changed()
 
     def get_selection(self):
         sel = {}
