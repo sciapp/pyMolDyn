@@ -81,6 +81,7 @@ class FileTab(QtGui.QWidget):
         self.button_hbox.setSpacing(10)
 
         self.file_button = QtGui.QPushButton('Open', self)
+        self.file_button.setDefault(True)
         self.file_button.clicked.connect(self.open_file_dialog)
         self.button_hbox.addWidget(self.file_button)
 
@@ -299,6 +300,7 @@ class TreeList(QtGui.QTreeWidget):
         any_files_available = self.topLevelItemCount() > 0
         self.parent().select_all_button.setEnabled(any_files_available)
         self.parent().select_nth_button.setEnabled(any_files_available)
+        self.parent().file_button.setDefault(not any_files_available)
 
     def get_selection(self):
         sel = {}
