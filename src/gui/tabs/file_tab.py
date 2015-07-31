@@ -86,14 +86,17 @@ class FileTab(QtGui.QWidget):
 
         self.delete_button = QtGui.QPushButton('Delete', self)
         self.delete_button.clicked.connect(self.remove_selected_files)
+        self.delete_button.setDisabled(True)
         self.button_hbox.addWidget(self.delete_button)
 
         self.calculate_button = QtGui.QPushButton('Calculate', self)
         self.calculate_button.clicked.connect(self.calculate)
+        self.calculate_button.setDisabled(True)
         self.button_hbox.addWidget(self.calculate_button)
 
         self.show_button = QtGui.QPushButton('Show', self)
         self.show_button.clicked.connect(self.show_selected_frame)
+        self.show_button.setDisabled(True)
         self.button_hbox.addWidget(self.show_button)
 
         self.vbox.addLayout(self.button_hbox)
@@ -103,10 +106,12 @@ class FileTab(QtGui.QWidget):
 
         self.select_all_button = QtGui.QPushButton('Select all frames', self)
         self.select_all_button.clicked.connect(self.select_all)
+        self.select_all_button.setDisabled(True)
         self.button2_hbox.addWidget(self.select_all_button)
 
         self.select_nth_button = QtGui.QPushButton('Select every nth frame...', self)
         self.select_nth_button.clicked.connect(self.select_nth)
+        self.select_nth_button.setDisabled(True)
         self.button2_hbox.addWidget(self.select_nth_button)
 
         self.vbox.addLayout(self.button2_hbox)
@@ -205,9 +210,6 @@ class FileTab(QtGui.QWidget):
 
     def calculate(self):
         file_frame_dict = self.file_list.get_selection()
-        if not file_frame_dict:
-            QtGui.QMessageBox.information(self, 'Information', "Choose a dataset", QtGui.QMessageBox.Ok)
-            return
         dia = CalculationSettingsDialog(self, file_frame_dict)
         settings, ok = dia.calculation_settings()
 
@@ -217,7 +219,7 @@ class FileTab(QtGui.QWidget):
 
 class TreeList(QtGui.QTreeWidget):
 
-    def __init__(self,parent, data={}):
+    def __init__(self, parent, data={}):
         QtGui.QTreeWidget.__init__(self, parent)
 
         self.control = parent.control
@@ -277,13 +279,26 @@ class TreeList(QtGui.QTreeWidget):
                 self.add_file(f.path())
 
     def selection_changed(self):
+        frames_selected = 0
         for item in self.selectedItems():
             # items representing the whole dataset
-            if (not item.data(0, 0).startswith('frame')):
+            if not item.data(0, 0).startswith('frame'):
                 # select the children of the selected dataset
-                 for i in range(item.childCount()):
-                     c = item.child(i)
-                     c.setSelected(True)
+                for i in range(item.childCount()):
+                    c = item.child(i)
+                    c.setSelected(True)
+                    frames_selected += 1
+            else:
+                frames_selected += 1
+        any_frame_selected = len(self.selectedItems()) > 0
+        self.parent().delete_button.setEnabled(any_frame_selected)
+        self.parent().calculate_button.setEnabled(any_frame_selected)
+        self.parent().show_button.setEnabled(frames_selected == 1)
+
+    def files_changed(self):
+        any_files_available = self.topLevelItemCount() > 0
+        self.parent().select_all_button.setEnabled(any_files_available)
+        self.parent().select_nth_button.setEnabled(any_files_available)
 
     def get_selection(self):
         sel = {}
@@ -318,6 +333,8 @@ class TreeList(QtGui.QTreeWidget):
                 self.removeItemWidget(item, 0)
                 del self.path_dict[content]
 
+        self.files_changed()
+
     def add_file(self, path):
         bname = os.path.basename(path)
         f = file.File.open(path)
@@ -336,18 +353,15 @@ class TreeList(QtGui.QTreeWidget):
                 config.recent_files.pop(index)
                 config.add_recent_file(path)
 
+        self.files_changed()
+
     def show_selected_frame(self):
+        # if there is just one file with one frame, select that frame automatically
+        if self.topLevelItemCount() == 1 and self.topLevelItem(0).childCount() == 1:
+            self.select_all()
+
         sel = self.get_selection()
-        if not sel:
-            # if there is just one file with one frame, select that frame automatically
-            if self.topLevelItemCount() == 1 and self.topLevelItem(0).childCount() == 1:
-                self.select_nth(1)
-                sel = self.get_selection()
-            else:
-                QtGui.QMessageBox.information(self, 'Information',
-                                              "Choose a single frame to show",
-                                              QtGui.QMessageBox.Ok)
-                return
+
         filename = sel.keys()[0]
         frame = sel[filename][0]
 
@@ -356,12 +370,6 @@ class TreeList(QtGui.QTreeWidget):
                 frame = -2
             else:
                 frame = 0
-
-        if len(sel.keys()) > 1 or len(sel.values()[0]) > 1 or frame == -2:
-            QtGui.QMessageBox.information(self, 'Information',
-                                          "Choose a single frame to show",
-                                          QtGui.QMessageBox.Ok)
-            return
 
         self.control.visualize(filename, frame)
 
