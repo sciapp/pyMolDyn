@@ -32,6 +32,7 @@ class MainWindow(QtGui.QMainWindow):
         self.center = CentralWidget(self)
         self.file_dock = FileTabDock(self)
         self.view_dock = ViewTabDock(self)
+        self.view_dock.setVisible(False)
         self.image_video_dock = ImageVideoTabDock(self)
         self.statistics_dock = StatisticsTabDock(self)
 
@@ -290,6 +291,7 @@ class MainWindow(QtGui.QMainWindow):
             status = str(results)
             self.statusBar().showMessage(status)
             self.statistics_dock.update_results(self.control.visualization.results)
+            self.view_dock.setVisible(True)
             self.view_dock.view_tab.update_cavity_buttons(self.control.visualization.results, None)
             # update GL scene
             self.center.gl_stack.gl_widget.update_needed = True
