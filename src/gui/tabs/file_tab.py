@@ -295,6 +295,13 @@ class TreeList(QtGui.QTreeWidget):
         self.parent().delete_button.setEnabled(any_frame_selected)
         self.parent().calculate_button.setEnabled(any_frame_selected)
         self.parent().show_button.setEnabled(frames_selected == 1)
+        parent = self.parent()
+        while parent.parent():
+            parent = parent.parent()
+        main_window = parent
+        image_video_tab = main_window.image_video_dock.image_video_tab
+        image_video_tab.mass_screenshot_button.setEnabled(any_frame_selected)
+        image_video_tab.video_button.setEnabled(any_frame_selected)
 
     def files_changed(self):
         any_files_available = self.topLevelItemCount() > 0
@@ -385,6 +392,13 @@ class TreeList(QtGui.QTreeWidget):
             for gl_widget in widget.findChildren(GLWidget):
                 gl_widget.update_needed = True
                 QtGui.QApplication.postEvent(gl_widget, UpdateGLEvent())
+
+        parent = self.parent()
+        while parent.parent():
+            parent = parent.parent()
+        main_window = parent
+        image_video_tab = main_window.image_video_dock.image_video_tab
+        image_video_tab.screenshot_button.setEnabled(True)
 
     def select_all(self):
         self.select_nth(1)

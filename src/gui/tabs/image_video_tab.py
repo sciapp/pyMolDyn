@@ -41,17 +41,20 @@ class ImageVideoTab(QtGui.QWidget):
     def init_gui(self):
         self.vbox = QtGui.QVBoxLayout()
 
-        screenshot_button = QtGui.QPushButton('Save screenshot for this frame', self)
-        video_button = QtGui.QPushButton('Save video for all selected frames', self)
-        mass_screenshot_button = QtGui.QPushButton('Save screenshot for all selected frames', self)
+        self.screenshot_button = QtGui.QPushButton('Save screenshot for the current frame', self)
+        self.video_button = QtGui.QPushButton('Save video for all selected frames', self)
+        self.mass_screenshot_button = QtGui.QPushButton('Save screenshot for all selected frames', self)
 
-        screenshot_button.clicked.connect(self.save_screenshot)
-        mass_screenshot_button.clicked.connect(self.save_screenshot_for_all_selected_frames)
-        video_button.clicked.connect(self.save_video_for_all_selected_frames)
+        self.screenshot_button.clicked.connect(self.save_screenshot)
+        self.screenshot_button.setDisabled(True)
+        self.mass_screenshot_button.clicked.connect(self.save_screenshot_for_all_selected_frames)
+        self.mass_screenshot_button.setDisabled(True)
+        self.video_button.clicked.connect(self.save_video_for_all_selected_frames)
+        self.video_button.setDisabled(True)
 
-        self.vbox.addWidget(screenshot_button)
-        self.vbox.addWidget(mass_screenshot_button)
-        self.vbox.addWidget(video_button)
+        self.vbox.addWidget(self.screenshot_button)
+        self.vbox.addWidget(self.mass_screenshot_button)
+        self.vbox.addWidget(self.video_button)
         self.vbox.addStretch()
         self.setLayout(self.vbox)
 
