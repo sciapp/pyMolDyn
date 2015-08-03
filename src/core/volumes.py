@@ -453,14 +453,17 @@ class Volume(object):
 
     @classmethod
     def fromstring(cls, s):
-        s = s.split()
-        t = s[0].upper()        # volume type
-        cl = cls.volumes[t][0]  # volume class
-        if len(s) == 10:        # cell vectors given
-            param = [float(f) for f in s[1:]]
-        else:
-            param_list = s[1:]
-            # parsing parameter
-            param = [cls.convert_functions[p](param_list[i])
-                     for i, p in enumerate(cls.volumes[t][1])]
-        return cl(*param)
+        try:
+            s = s.split()
+            t = s[0].upper()        # volume type
+            cl = cls.volumes[t][0]  # volume class
+            if len(s) == 10:        # cell vectors given
+                param = [float(f) for f in s[1:]]
+            else:
+                param_list = s[1:]
+                # parsing parameter
+                param = [cls.convert_functions[p](param_list[i])
+                         for i, p in enumerate(cls.volumes[t][1])]
+            return cl(*param)
+        except Exception:
+            return None
