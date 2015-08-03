@@ -69,6 +69,7 @@ class FileTab(QtGui.QWidget):
         self.control = main_window.control
 
         self.init_gui()
+        self.guessed_volumes_for = set()
 
     @QtCore.pyqtSlot(str)
     def _error(self, error_message):
@@ -381,6 +382,26 @@ class TreeList(QtGui.QTreeWidget):
                 frame = -2
             else:
                 frame = 0
+
+        f = file.File.open(filename)
+        if filename not in self.parent().guessed_volumes_for and f.info.volume_guessed:
+            msgBox = QtGui.QMessageBox(self)
+            msgBox.setWindowTitle("Missing cell shape description")
+            msgBox.setTextFormat(QtCore.Qt.RichText)
+            msgBox.setText("This file does not contain information about the "
+                           "cell shape. Should pyMolDyn use an orthorhombic "
+                           "shape?<br />"
+                           "You can find information about the different cell "
+                           "shapes shapes in the "
+                           "<a href=\"https://pgi-jcns.fz-juelich.de/portal/pages/pymoldyn-doc.html#cell-shape-description\">pyMolDyn documentation</a>")
+            msgBox.addButton(QtGui.QMessageBox.Yes)
+            msgBox.addButton(QtGui.QMessageBox.No)
+            msgBox.setDefaultButton(QtGui.QMessageBox.Yes)
+            msgBox.setEscapeButton(QtGui.QMessageBox.No)
+            response = msgBox.exec_()
+            if response == QtGui.QMessageBox.No:
+                return
+            self.parent().guessed_volumes_for.add(filename)
 
         self.control.visualize(filename, frame)
 

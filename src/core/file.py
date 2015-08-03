@@ -79,6 +79,7 @@ class InputFile(object):
                 # logger.error(str(e))
                 pass
             if self._info.volume is None:
+                self._info.volume_guessed = True
                 minx, maxx = float('inf'), float('-inf')
                 miny, maxy = float('inf'), float('-inf')
                 minz, maxz = float('inf'), float('-inf')
