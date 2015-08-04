@@ -234,11 +234,8 @@ class TreeList(QtGui.QTreeWidget):
         self.setHeaderHidden(True)
         self.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
         self.setSelectionBehavior(QtGui.QAbstractItemView.SelectItems)
-        #self.setDragDropMode(QtGui.QAbstractItemView.DragDrop)
         self.setAcceptDrops(True)
-        self.setDragEnabled(True)
         self.setDropIndicatorShown(True)
-        #self.setDefaultDropAction(QtCore.Qt.MoveAction)
         self.setMouseTracking(True)
         self.itemSelectionChanged.connect(self.selection_changed)
 
@@ -252,33 +249,32 @@ class TreeList(QtGui.QTreeWidget):
                 item.addChild(tmp)
         self.addTopLevelItem(item)
 
-    def mimeTypes(self):
-        print 'mimeTypes'
-        return ['text/uri-list', 'application/x-qabstractitemmodeldatalist']
-
-    def supportedDropActions(self):
-        print('supportedDropAction', self.defaultDropAction())
-        return QtCore.Qt.MoveAction
+    def acceptable_drop_urls(self, e):
+        if e.mimeData().hasUrls():
+            for url in e.mimeData().urls():
+                if url.scheme() == 'file' and os.path.isfile(url.path()):
+                    yield url
 
     def dragEnterEvent(self, e):
-        self.setState(QtGui.QAbstractItemView.DraggingState)
-        print 'DRAG', e.mimeData().formats()
-        if e.mimeData().hasUrls():
-            if e.mimeData().urls()[0].scheme() == 'file':
-                e.accept()
-        e.ignore()
+        if any(self.acceptable_drop_urls(e)):
+            e.accept()
+        else:
+            e.ignore()
 
-    def mimeData(self, *args, **kwargs):
-        print('mimeData', args, kwargs)
-
-    def dropMimeData(self, *args, **kwargs):
-        print('dropMimeData', args, kwargs)
+    def dragMoveEvent(self, e):
+        if any(self.acceptable_drop_urls(e)):
+            e.accept()
+        else:
+            e.ignore()
 
     def dropEvent(self, e):
-        print 'dropEvent'
-        for f in e.mimeData().urls():
-            if os.path.isfile(f.path()):
-                self.add_file(f.path())
+        if any(self.acceptable_drop_urls(e)):
+            e.accept()
+        else:
+            e.ignore()
+        # actually add the files
+        for url in self.acceptable_drop_urls(e):
+            self.add_file(url.path())
 
     def selection_changed(self):
         frames_selected = 0
