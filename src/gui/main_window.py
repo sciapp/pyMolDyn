@@ -293,8 +293,7 @@ class MainWindow(QtGui.QMainWindow):
             self.statistics_dock.update_results(self.control.visualization.results)
             self.view_dock.setVisible(True)
             self.view_dock.view_tab.update_cavity_buttons(self.control.visualization.results, None)
-            # update GL scene
-            self.center.gl_stack.gl_widget.update_needed = True
+            self.center.gl_stack.updatestatus()
             QtGui.QApplication.postEvent(self.center.gl_stack.gl_widget, UpdateGLEvent())
 
 #    def closeEvent(self, event):
@@ -336,4 +335,4 @@ class CentralWidget(QtGui.QWidget):
 
     def on_combo(self, string):
         index = self.widget_titles.index(string)
-        self.gl_stack.setCurrentIndex(index)
+        self.gl_stack.activate(index)
