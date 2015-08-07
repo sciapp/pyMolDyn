@@ -79,8 +79,6 @@ class ObjectSelectWidget(QtGui.QWidget):
     def _selection_indices_changed(self, indices):
         if self._selection_checkbox.isChecked():
             self.selection_indices_changed.emit(indices)
-        else:
-            self._selection_checkbox.setChecked(True)
 
 
 class IndexSelectLineEdit(QtGui.QLineEdit):
