@@ -20,3 +20,12 @@ class GLStack(QtGui.QStackedWidget):
         self.addWidget(self.histogram_widget)
 
         self.show()
+
+    def activate(self, index):
+        self.setCurrentIndex(index)
+        self.widget(index).activate()
+
+    def updatestatus(self):
+        for index in range(self.count()):
+            widget = self.widget(index)
+            widget.updatestatus()

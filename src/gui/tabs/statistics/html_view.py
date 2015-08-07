@@ -74,6 +74,7 @@ def render_html_cavity_center(index, surface, volume, domains, volume_fraction):
                     "index": index,
                     "surface": surface,
                     "volume": volume,
+                    "surface_to_volume_ratio": surface / volume,
                     "domains": domains,
                     "volume_fraction": volume_fraction,
     }
@@ -96,7 +97,7 @@ def render_html_cavity_surface_group(surface_volumes, volume_fraction):
 
     return template.render(template_vars)
 
-def render_html_cavity_surface(index, volume, domains, volume_fraction):
+def render_html_cavity_surface(index, surface, volume, domains, volume_fraction):
     template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
     template_env = jinja2.Environment(loader=template_loader)
 
@@ -107,7 +108,9 @@ def render_html_cavity_surface(index, volume, domains, volume_fraction):
     template_vars = { "title": "Summary of atoms",
                     "description": "a summury of all calculated surface based cavities",
                     "index": index,
+                    "surface": surface,
                     "volume": volume,
+                    "surface_to_volume_ratio": surface / volume,
                     "domains": domains,
                     "volume_fraction": volume_fraction,
     }
@@ -145,6 +148,7 @@ def render_html_cavity_domain(index, domain_center, surface, volume, volume_frac
                     "domain_center": domain_center,
                     "surface": surface,
                     "volume": volume,
+                    "surface_to_volume_ratio": surface / volume,
                     "volume_fraction": volume_fraction,
                     "surface_cavity_index": surface_cavity_index,
                     "center_cavity_index": center_cavity_index,
@@ -354,6 +358,7 @@ class HTMLWindow(QtGui.QWidget):
         cavities = self.cavities_surface.multicavities[index]
         domains = []
 
+        surface = self.cavities_surface.surface_areas[index]
         volume = self.cavities_surface.volumes[index]
         for cavity in cavities:
             domains.append((cavity+1, self.discretization.discrete_to_continuous(self.domains.centers[cavity])))
@@ -361,7 +366,7 @@ class HTMLWindow(QtGui.QWidget):
         if self.atoms.volume is not None:
             volume_fraction = (volume/self.atoms.volume.volume)*100
 
-        self.webview.setHtml(render_html_cavity_surface(index, volume, domains, volume_fraction))
+        self.webview.setHtml(render_html_cavity_surface(index, surface, volume, domains, volume_fraction))
 
     def show_domain_group(self):
         surface = 0.0

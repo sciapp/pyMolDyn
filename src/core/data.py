@@ -232,7 +232,7 @@ class FileInfo(object):
 
     """
 
-    def __init__(self, num_frames=None, volumestr=None):
+    def __init__(self, num_frames=None, volumestr=None, volume_guessed=False):
         """
         **Parameters:**
             `num_frames` :
@@ -244,6 +244,7 @@ class FileInfo(object):
         self.num_frames = num_frames
         self.volumestr = volumestr
         self._volume = None
+        self.volume_guessed = volume_guessed
 
     @property
     def volume(self):

@@ -4,11 +4,23 @@ This module provides classes to handle pyMolDyn related files.
 """
 
 import os
+import os.path
 import h5py
+from itertools import repeat
 from datetime import datetime
 import data
 import sys
 from util.logger import Logger
+import core.elements
+try:
+    import pybel
+    raise ImportError
+except ImportError:
+    class pybel:
+        """
+        Dummy class representing a missing pybel module.
+        """
+        informats = {}
 
 __all__ = ["File",
            "InputFile",
@@ -66,6 +78,22 @@ class InputFile(object):
             except IOError as e:
                 # logger.error(str(e))
                 pass
+            if self._info.volume is None:
+                self._info.volume_guessed = True
+                minx, maxx = float('inf'), float('-inf')
+                miny, maxy = float('inf'), float('-inf')
+                minz, maxz = float('inf'), float('-inf')
+                for frame in range(self._info.num_frames):
+                    atoms = self.getatoms(frame)
+                    minx = min(minx, atoms.positions[:, 0].min())
+                    maxx = max(maxx, atoms.positions[:, 0].max())
+                    miny = min(miny, atoms.positions[:, 1].min())
+                    maxy = max(maxy, atoms.positions[:, 1].max())
+                    minz = min(minz, atoms.positions[:, 2].min())
+                    maxz = max(maxz, atoms.positions[:, 2].max())
+                self._info.volumestr = 'ORT %f %f %f' % (maxx-minx,
+                                                         maxy-miny,
+                                                         maxz-minz)
         return self._info
 
     def getatoms(self, frame):
@@ -158,6 +186,66 @@ class XYZFile(InputFile):
                             positions.append(position)
                 except StopIteration:
                     raise IndexError("Frame {} not found".format(frame))
+            return data.Atoms(positions, None, symbols, self.info.volume)
+        except (IOError, IndexError):
+            raise
+        except Exception as e:
+            raise FileError("Cannot read atom data.", e)
+
+
+class BabelFile(InputFile):
+    """
+    Implementation on :class:`InputFile` for Open Babel 'xyz' files.
+    """
+    def __init__(self, path):
+        super(BabelFile, self).__init__(path)
+        # Check if the file exists
+        f = open(self.path, "r")
+        f.close()
+
+    def readinfo(self):
+        try:
+            file_extension = os.path.splitext(self.path)[1][1:]
+            mol_iter = pybel.readfile(file_extension.encode('utf8'),
+                                      self.path.encode('utf8'))
+            try:
+                mol = next(mol_iter)
+                self._info.volumestr = mol.title
+                self._info.num_frames = 1
+                for _ in mol_iter:
+                    self._info.num_frames += 1
+            except StopIteration:
+                self._info.num_frames = 0
+            self.inforead = True
+        except IOError:
+            raise
+        except Exception as e:
+            raise FileError("Cannot read file info.", e)
+
+    def readatoms(self, frame):
+        try:
+            if self.info.num_frames <= frame:
+                raise IndexError("Frame {} not found".format(frame))
+
+            file_extension = os.path.splitext(self.path)[1][1:]
+            mol_iter = pybel.readfile(file_extension.encode('utf8'),
+                                      self.path.encode('utf8'))
+
+            # get the correct frame
+            try:
+                for _ in range(frame):
+                    mol_iter.next()
+                mol = mol_iter.next()
+            except StopIteration:
+                raise IndexError("Frame {} not found".format(frame))
+
+            # read the atom information
+            symbols = []
+            positions = []
+            for atom in mol.atoms:
+                positions.append(tuple(float(c) for c in atom.coords))
+                symbol = core.elements.symbols[atom.atomicnum]
+                symbols.append(symbol)
             return data.Atoms(positions, None, symbols, self.info.volume)
         except (IOError, IndexError):
             raise
@@ -387,15 +475,17 @@ class HDF5File(ResultFile):
         except Exception as e:
             raise FileError("Cannot write results.", e)
 
-
 class File(object):
     """
     Provides static methods for easy access to files and directories.
     The class attribute `types` associates filename endings with
     classes to handle them.
     """
-    types = {"xyz": XYZFile,
-             "hdf5": HDF5File}
+    types = dict(list(zip(pybel.informats.keys(), repeat(BabelFile))) +
+                 [
+                     ("xyz", XYZFile),
+                     ("hdf5", HDF5File),
+                 ])
     
     @classmethod
     def listdir(cls, directory):

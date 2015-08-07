@@ -69,6 +69,7 @@ class FileTab(QtGui.QWidget):
         self.control = main_window.control
 
         self.init_gui()
+        self.guessed_volumes_for = set()
 
     @QtCore.pyqtSlot(str)
     def _error(self, error_message):
@@ -81,19 +82,23 @@ class FileTab(QtGui.QWidget):
         self.button_hbox.setSpacing(10)
 
         self.file_button = QtGui.QPushButton('Open', self)
+        self.file_button.setDefault(True)
         self.file_button.clicked.connect(self.open_file_dialog)
         self.button_hbox.addWidget(self.file_button)
 
         self.delete_button = QtGui.QPushButton('Delete', self)
         self.delete_button.clicked.connect(self.remove_selected_files)
+        self.delete_button.setDisabled(True)
         self.button_hbox.addWidget(self.delete_button)
 
         self.calculate_button = QtGui.QPushButton('Calculate', self)
         self.calculate_button.clicked.connect(self.calculate)
+        self.calculate_button.setDisabled(True)
         self.button_hbox.addWidget(self.calculate_button)
 
         self.show_button = QtGui.QPushButton('Show', self)
         self.show_button.clicked.connect(self.show_selected_frame)
+        self.show_button.setDisabled(True)
         self.button_hbox.addWidget(self.show_button)
 
         self.vbox.addLayout(self.button_hbox)
@@ -103,10 +108,12 @@ class FileTab(QtGui.QWidget):
 
         self.select_all_button = QtGui.QPushButton('Select all frames', self)
         self.select_all_button.clicked.connect(self.select_all)
+        self.select_all_button.setDisabled(True)
         self.button2_hbox.addWidget(self.select_all_button)
 
         self.select_nth_button = QtGui.QPushButton('Select every nth frame...', self)
         self.select_nth_button.clicked.connect(self.select_nth)
+        self.select_nth_button.setDisabled(True)
         self.button2_hbox.addWidget(self.select_nth_button)
 
         self.vbox.addLayout(self.button2_hbox)
@@ -205,9 +212,6 @@ class FileTab(QtGui.QWidget):
 
     def calculate(self):
         file_frame_dict = self.file_list.get_selection()
-        if not file_frame_dict:
-            QtGui.QMessageBox.information(self, 'Information', "Choose a dataset", QtGui.QMessageBox.Ok)
-            return
         dia = CalculationSettingsDialog(self, file_frame_dict)
         settings, ok = dia.calculation_settings()
 
@@ -217,7 +221,7 @@ class FileTab(QtGui.QWidget):
 
 class TreeList(QtGui.QTreeWidget):
 
-    def __init__(self,parent, data={}):
+    def __init__(self, parent, data={}):
         QtGui.QTreeWidget.__init__(self, parent)
 
         self.control = parent.control
@@ -230,11 +234,8 @@ class TreeList(QtGui.QTreeWidget):
         self.setHeaderHidden(True)
         self.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
         self.setSelectionBehavior(QtGui.QAbstractItemView.SelectItems)
-        #self.setDragDropMode(QtGui.QAbstractItemView.DragDrop)
         self.setAcceptDrops(True)
-        self.setDragEnabled(True)
         self.setDropIndicatorShown(True)
-        #self.setDefaultDropAction(QtCore.Qt.MoveAction)
         self.setMouseTracking(True)
         self.itemSelectionChanged.connect(self.selection_changed)
 
@@ -248,42 +249,64 @@ class TreeList(QtGui.QTreeWidget):
                 item.addChild(tmp)
         self.addTopLevelItem(item)
 
-    def mimeTypes(self):
-        print 'mimeTypes'
-        return ['text/uri-list', 'application/x-qabstractitemmodeldatalist']
-
-    def supportedDropActions(self):
-        print('supportedDropAction', self.defaultDropAction())
-        return QtCore.Qt.MoveAction
+    def acceptable_drop_urls(self, e):
+        if e.mimeData().hasUrls():
+            for url in e.mimeData().urls():
+                if url.scheme() == 'file' and os.path.isfile(url.path()):
+                    yield url
 
     def dragEnterEvent(self, e):
-        self.setState(QtGui.QAbstractItemView.DraggingState)
-        print 'DRAG', e.mimeData().formats()
-        if e.mimeData().hasUrls():
-            if e.mimeData().urls()[0].scheme() == 'file':
-                e.accept()
-        e.ignore()
+        if any(self.acceptable_drop_urls(e)):
+            e.accept()
+        else:
+            e.ignore()
 
-    def mimeData(self, *args, **kwargs):
-        print('mimeData', args, kwargs)
-
-    def dropMimeData(self, *args, **kwargs):
-        print('dropMimeData', args, kwargs)
+    def dragMoveEvent(self, e):
+        if any(self.acceptable_drop_urls(e)):
+            e.accept()
+        else:
+            e.ignore()
 
     def dropEvent(self, e):
-        print 'dropEvent'
-        for f in e.mimeData().urls():
-            if os.path.isfile(f.path()):
-                self.add_file(f.path())
+        if any(self.acceptable_drop_urls(e)):
+            e.accept()
+        else:
+            e.ignore()
+        # actually add the files
+        for url in self.acceptable_drop_urls(e):
+            self.add_file(url.path())
 
     def selection_changed(self):
+        frames_selected = 0
         for item in self.selectedItems():
             # items representing the whole dataset
-            if (not item.data(0, 0).startswith('frame')):
+            if not item.data(0, 0).startswith('frame'):
                 # select the children of the selected dataset
-                 for i in range(item.childCount()):
-                     c = item.child(i)
-                     c.setSelected(True)
+                for i in range(item.childCount()):
+                    c = item.child(i)
+                    c.setSelected(True)
+                    frames_selected += 1
+            else:
+                frames_selected += 1
+        any_frame_selected = len(self.selectedItems()) > 0
+        self.parent().delete_button.setEnabled(any_frame_selected)
+        self.parent().calculate_button.setEnabled(any_frame_selected)
+        only_one_frame_available = self.topLevelItemCount() == 1 and self.topLevelItem(0).childCount() == 1
+        self.parent().show_button.setEnabled(frames_selected == 1 or (not any_frame_selected and only_one_frame_available))
+        parent = self.parent()
+        while parent.parent():
+            parent = parent.parent()
+        main_window = parent
+        image_video_tab = main_window.image_video_dock.image_video_tab
+        image_video_tab.mass_screenshot_button.setEnabled(any_frame_selected)
+        image_video_tab.video_button.setEnabled(any_frame_selected)
+
+    def files_changed(self):
+        any_files_available = self.topLevelItemCount() > 0
+        self.parent().select_all_button.setEnabled(any_files_available)
+        self.parent().select_nth_button.setEnabled(any_files_available)
+        self.parent().file_button.setDefault(not any_files_available)
+        self.selection_changed()
 
     def get_selection(self):
         sel = {}
@@ -318,6 +341,8 @@ class TreeList(QtGui.QTreeWidget):
                 self.removeItemWidget(item, 0)
                 del self.path_dict[content]
 
+        self.files_changed()
+
     def add_file(self, path):
         bname = os.path.basename(path)
         f = file.File.open(path)
@@ -336,18 +361,15 @@ class TreeList(QtGui.QTreeWidget):
                 config.recent_files.pop(index)
                 config.add_recent_file(path)
 
+        self.files_changed()
+
     def show_selected_frame(self):
+        # if there is just one file with one frame, select that frame automatically
+        if self.topLevelItemCount() == 1 and self.topLevelItem(0).childCount() == 1:
+            self.select_all()
+
         sel = self.get_selection()
-        if not sel:
-            # if there is just one file with one frame, select that frame automatically
-            if self.topLevelItemCount() == 1 and self.topLevelItem(0).childCount() == 1:
-                self.select_nth(1)
-                sel = self.get_selection()
-            else:
-                QtGui.QMessageBox.information(self, 'Information',
-                                              "Choose a single frame to show",
-                                              QtGui.QMessageBox.Ok)
-                return
+
         filename = sel.keys()[0]
         frame = sel[filename][0]
 
@@ -357,11 +379,25 @@ class TreeList(QtGui.QTreeWidget):
             else:
                 frame = 0
 
-        if len(sel.keys()) > 1 or len(sel.values()[0]) > 1 or frame == -2:
-            QtGui.QMessageBox.information(self, 'Information',
-                                          "Choose a single frame to show",
-                                          QtGui.QMessageBox.Ok)
-            return
+        f = file.File.open(filename)
+        if filename not in self.parent().guessed_volumes_for and f.info.volume_guessed:
+            msgBox = QtGui.QMessageBox(self)
+            msgBox.setWindowTitle("Missing cell shape description")
+            msgBox.setTextFormat(QtCore.Qt.RichText)
+            msgBox.setText("This file does not contain information about the "
+                           "cell shape. Should pyMolDyn use an orthorhombic "
+                           "shape?<br />"
+                           "You can find information about the different cell "
+                           "shapes shapes in the "
+                           "<a href=\"https://pgi-jcns.fz-juelich.de/portal/pages/pymoldyn-doc.html#cell-shape-description\">pyMolDyn documentation</a>")
+            msgBox.addButton(QtGui.QMessageBox.Yes)
+            msgBox.addButton(QtGui.QMessageBox.No)
+            msgBox.setDefaultButton(QtGui.QMessageBox.Yes)
+            msgBox.setEscapeButton(QtGui.QMessageBox.No)
+            response = msgBox.exec_()
+            if response == QtGui.QMessageBox.No:
+                return
+            self.parent().guessed_volumes_for.add(filename)
 
         self.control.visualize(filename, frame)
 
@@ -375,6 +411,13 @@ class TreeList(QtGui.QTreeWidget):
             for gl_widget in widget.findChildren(GLWidget):
                 gl_widget.update_needed = True
                 QtGui.QApplication.postEvent(gl_widget, UpdateGLEvent())
+
+        parent = self.parent()
+        while parent.parent():
+            parent = parent.parent()
+        main_window = parent
+        image_video_tab = main_window.image_video_dock.image_video_tab
+        image_video_tab.screenshot_button.setEnabled(True)
 
     def select_all(self):
         self.select_nth(1)

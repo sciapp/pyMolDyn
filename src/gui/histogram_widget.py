@@ -199,5 +199,9 @@ class HistogramWidget(QtGui.QWidget):
             self.datasetlabel.setText(str(results))
         else:
             self.datasetlabel.setText("")
-            self.elem1.clear()
-            self.elem2.clear()
+
+    def activate(self):
+        self.refresh()
+
+    def updatestatus(self):
+        self.refresh()
