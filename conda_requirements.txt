@@ -1,0 +1,26 @@
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+# platform: osx-64
+dateutil=2.4.1=py27_0
+freetype=2.5.2=2
+gr=0.15.0=nppy27_0
+h5py=2.5.0=np19py27_3
+hdf5=1.8.15.1=1
+jinja2=2.8=py27_0
+libpng=1.6.17=0
+markupsafe=0.23=py27_0
+numpy=1.9.2=py27_0
+openssl=1.0.1k=1
+pip=7.1.0=py27_0
+pygments=2.0.2=py27_0
+pyopengl=3.1.1a1=np19py27_0
+pyqt=4.11.3=py27_0
+python=2.7.10=0
+qt=4.8.6=3
+readline=6.2=2
+setuptools=18.0.1=py27_0
+sip=4.16.5=py27_0
+six=1.9.0=py27_0
+sqlite=3.8.4.1=1
+tk=8.5.18=0
+zlib=1.2.8=0

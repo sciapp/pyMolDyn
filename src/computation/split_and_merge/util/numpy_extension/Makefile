@@ -3,10 +3,14 @@ UNAME := $(shell uname -s)
 
 ifeq ($(UNAME), Darwin) 
 	INCLUDES = -I/usr/local/include/python2.7 -I/usr/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages/numpy/core/include 
-	LIBS = -L/usr/local/Library/Frameworks/Python.framework/Versions/2.7/lib/ -lpython2.7
+	ifeq ($(PYLIBPATH),)
+		LIBS = -L/usr/local/Library/Frameworks/Python.framework/Versions/2.7/lib/ -lpython2.7
+	else
+		LIBS = -L$(PYLIBPATH) -lpython2.7
+	endif
 else
 	INCLUDES = -I/usr/local/include/python2.7 -I/usr/local/lib/python2.7/site-packages/numpy/core/include
-        LIBS = -lpython2.7
+	LIBS = -lpython2.7
 endif
 
 all: find_index_of_first_element_not_equivalentmodule.so

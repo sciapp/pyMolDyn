@@ -25,3 +25,5 @@ src/.idea
 *.synctex.gz
 results/*
 .idea/*
+
+pyMolDyn*.app
