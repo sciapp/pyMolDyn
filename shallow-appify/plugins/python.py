@@ -11,8 +11,12 @@ __email__ = 'i.heimbach@fz-juelich.de'
 import fnmatch
 import itertools
 import os
+import re
+import shutil
 import subprocess
 from jinja2 import Template
+from .util import libpatch
+from .util import command
 
 
 PY_PRE_STARTUP_CONDA_SETUP = '''
@@ -70,11 +74,18 @@ _CONDA_DEFAULT_PACKAGES = ('pyobjc-framework-cocoa', )
 _CONDA_DEFAULT_CHANNELS = ('https://conda.binstar.org/erik', )
 _EXT_PYLIB_VARIABLE = 'PYLIBPATH'
 _EXT_MAKEFILE_TARGET = 'app_extension_modules'
+_GR_LIB_COPY_DICT = {'/opt/X11/lib': 'lib/X11'}
+_GR_LIB_DIR_PATHS_TO_PATCH = ('lib/X11', 'lib/python2.7/site-packages/gr', 'lib/python2.7/site-packages/gr3')
+_GR_OLD_TO_NEW_DEPENDENCY_DICT = {'/opt/X11/': '@executable_path/../lib/X11/',
+                                  '/usr/local/qt-4.8/lib/': '@executable_path/../lib/'}
+# TODO: add support for more libraries, for example wxWidgets
+
 
 _create_conda_env = False
 _requirements_file = None
 _conda_channels = None
 _extension_makefile = None
+_conda_gr_included = False
 
 
 class CondaError(Exception):
@@ -97,7 +108,12 @@ def get_command_line_arguments():
     return arguments
 
 def parse_command_line_arguments(args):
-    global _create_conda_env, _requirements_file, _conda_channels, _extension_makefile
+    global _create_conda_env, _requirements_file, _conda_channels, _extension_makefile, _conda_gr_included
+
+    def is_gr_in_conda_requirements(requirements_file):
+        with open(requirements_file, 'r') as f:
+            found_gr = any((line.startswith('gr=') for line in f))
+        return found_gr
 
     checked_args = {}
     if args.conda_req_file is not None:
@@ -108,6 +124,7 @@ def parse_command_line_arguments(args):
             _conda_channels = args.conda_channels
         if args.extension_makefile is not None:
             _extension_makefile = args.extension_makefile
+        _conda_gr_included = is_gr_in_conda_requirements(_requirements_file)
     return checked_args
 
 def pre_create_app(**kwargs):
@@ -156,6 +173,94 @@ def setup_startup(app_path, executable_path, app_executable_path, executable_roo
 
         env_path = create_env()
         patch_lib_python(env_path)
+        return env_path
+
+    def make_conda_portable(env_path):
+        CONDA_BIN_PATH = 'bin/conda'
+        CONDA_ACTIVATE_PATH = 'bin/activate'
+        CONDA_MISSING_PACKAGES = ('conda', )
+
+        def fix_links_to_system_files():
+            for root_path, dirnames, filenames in os.walk(env_path):
+                dirpaths = [os.path.join(root_path, dirname) for dirname in dirnames]
+                filepaths = [os.path.join(root_path, filename) for filename in filenames]
+                link_dirpaths = [dirpath for dirpath in dirpaths if os.path.islink(dirpath) and not os.path.realpath(dirpath).startswith(env_path)]
+                link_filepaths = [filepath for filepath in filepaths if os.path.islink(filepath) and not os.path.realpath(filepath).startswith(env_path)]
+                for link_dirpath in link_dirpaths:
+                    real_dirpath = os.path.realpath(link_dirpath)
+                    os.remove(link_dirpath)
+                    shutil.copytree(real_dirpath, os.path.join(root_path, os.path.basename(link_dirpath)))
+                for link_filepath in link_filepaths:
+                    real_filepath = os.path.realpath(link_filepath)
+                    os.remove(link_filepath)
+                    shutil.copy(real_filepath, os.path.join(root_path, os.path.basename(link_filepath)))
+
+        def fix_activate_script():
+            SEARCHED_LINE_START = '_THIS_DIR='
+            INSERT_LINE = 'export PATH=${_THIS_DIR}:${PATH}'
+            full_conda_activate_path = '{env_path}/{conda_activate_path}'.format(env_path=env_path, conda_activate_path=CONDA_ACTIVATE_PATH)
+            found_line = False
+            new_lines = []
+            with open(full_conda_activate_path, 'r') as f:
+                for line in f:
+                    new_lines.append(line)
+                    if not found_line:
+                        if line.startswith(SEARCHED_LINE_START):
+                            new_lines.append(INSERT_LINE)
+                            found_line = True
+            with open(full_conda_activate_path, 'w') as f:
+                f.writelines(new_lines)
+
+        def fix_conda_shebang():
+            full_conda_bin_path = '{env_path}/{conda_bin_path}'.format(env_path=env_path,
+                                                                       conda_bin_path=CONDA_BIN_PATH)
+            with open(full_conda_bin_path, 'r') as f:
+                lines = f.readlines()
+            # replace shebang line
+            lines[0] = '#!/usr/bin/env python\n'
+            with open(full_conda_bin_path, 'w') as f:
+                f.writelines(lines)
+
+        def copy_missing_conda_packages():
+            ANACONDA_PYTHON_PACKAGES_PATH = 'lib/python2.7/site-packages'
+            CONDAENV_PYTHON_PACKAGES_PATH = 'lib/python2.7/site-packages'
+
+            def get_system_anaconda_root_path():
+                anaconda_dir_path = None
+                system_conda_bin_path = command.which('conda')
+                if system_conda_bin_path:
+                    with open(system_conda_bin_path, 'r') as f:
+                        shebang_line = f.readline()
+                    match_obj = re.match('#!(.*)/bin/python', shebang_line)
+                    if match_obj:
+                        anaconda_dir_path = match_obj.group(1)
+                return anaconda_dir_path
+
+            system_anaconda_root_path = get_system_anaconda_root_path()
+            full_anaconda_python_packages_path = '{system_anaconda_root}/{relative_packages_path}'.format(system_anaconda_root=system_anaconda_root_path,
+                                                                                                          relative_packages_path=ANACONDA_PYTHON_PACKAGES_PATH)
+            full_condaenv_python_packages_path = '{env_path}/{relative_packages_path}'.format(env_path=env_path,
+                                                                                              relative_packages_path=CONDAENV_PYTHON_PACKAGES_PATH)
+            for package in CONDA_MISSING_PACKAGES:
+                shutil.copytree('{system_anaconda_packages_root_path}/{package}'.format(system_anaconda_packages_root_path=full_anaconda_python_packages_path, package=package),
+                                '{condaenv_packages_root_path}/{package}'.format(condaenv_packages_root_path=full_condaenv_python_packages_path, package=package))
+
+        fix_links_to_system_files()
+        fix_activate_script()
+        fix_conda_shebang()
+        copy_missing_conda_packages()
+
+    def fix_conda_gr(env_path):
+        def copy_missing_dependencies():
+            for src, dst in _GR_LIB_COPY_DICT.iteritems():
+                shutil.copytree(src, '{env_path}/{relative_dst}'.format(env_path=env_path, relative_dst=dst))
+
+        def patch_lib_dependencies():
+            lib_dir_paths = tuple(('{env_path}/{relative_lib_path}'.format(env_path=env_path, relative_lib_path=lib_path) for lib_path in _GR_LIB_DIR_PATHS_TO_PATCH))
+            libpatch.patch_libs(lib_dir_paths, _GR_OLD_TO_NEW_DEPENDENCY_DICT)
+
+        copy_missing_dependencies()
+        patch_lib_dependencies()
 
     def build_extension_modules(env_path):
         def get_makefile_path():
@@ -185,9 +290,12 @@ def setup_startup(app_path, executable_path, app_executable_path, executable_roo
     with open('{macos}/{startup}'.format(macos=macos_path, startup=_PY_STARTUP_SCRIPT_NAME), 'w') as f:
         f.writelines(python_startup_script.encode('utf-8'))
     if _create_conda_env:
-        create_conda_env()
+        env_path = create_conda_env()
+        make_conda_portable(env_path)
+        if _conda_gr_included:
+            fix_conda_gr(env_path)
         if _extension_makefile is not None:
-            build_extension_modules(env_path='{resources}/{env}'.format(resources=resources_path, env='conda_env'))
+            build_extension_modules(env_path)
         env_startup_script = PY_PRE_STARTUP_CONDA_SETUP
         with open('{macos}/{startup}'.format(macos=macos_path, startup=_ENV_STARTUP_SCRIPT_NAME), 'w') as f:
             f.writelines(env_startup_script.encode('utf-8'))

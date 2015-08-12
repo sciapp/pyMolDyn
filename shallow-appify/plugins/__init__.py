@@ -9,8 +9,8 @@ __author__ = 'Ingo Heimbach'
 __email__ = 'i.heimbach@fz-juelich.de'
 
 
+import importlib
 import pkgutil
-import re
 
 _modules = None
 _ext2module = None
@@ -82,9 +82,10 @@ def _pkg_init():
     _modules = {}
     _ext2module = {}
     for importer, module_name, is_package in pkgutil.iter_modules(__path__):
-        current_module = importer.find_module(module_name).load_module(module_name)
-        _modules[module_name] = current_module
-        _ext2module[current_module._file_ext_] = current_module
+        if not is_package:
+            current_module = importlib.import_module('.{module_name}'.format(module_name=module_name), 'plugins')
+            _modules[module_name] = current_module
+            _ext2module[current_module._file_ext_] = current_module
 
 
 _pkg_init()
