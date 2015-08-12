@@ -8,7 +8,7 @@ sub:
 		fi; \
 	done
 
-all: sub app
+all: sub app shallow-app
 
 app:
 	gr shallow-appify/shallow-appify.py -d src/ -i src/icon.png --conda conda_requirements.txt --conda-channels https://conda.anaconda.org/jheinen --extension-makefile src/Makefile -o pyMolDyn.app src/startGUI.py
