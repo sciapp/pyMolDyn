@@ -157,3 +157,9 @@ class GLWidget(QtOpenGL.QGLWidget):
         Refresh scene
         """
         self.vis.paint(self.geometry().width(), self.geometry().height())
+
+    def activate(self):
+        pass
+
+    def updatestatus(self):
+        self.update_needed = True

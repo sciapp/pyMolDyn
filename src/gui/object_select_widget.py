@@ -60,6 +60,12 @@ class ObjectSelectWidget(QtGui.QWidget):
     def setChecked(self, checkState):
         return self._activation_checkbox.setChecked(checkState)
 
+    def selection_checkbox_is_checked(self):
+        return self._selection_checkbox.isChecked()
+
+    def selection_checkbox_set_checked(self, check_state):
+        return self._selection_checkbox.setChecked(check_state)
+
     def _state_changed(self, check_state):
         if self._has_index_selector:
             self._selection_checkbox.setEnabled(check_state)
@@ -73,8 +79,6 @@ class ObjectSelectWidget(QtGui.QWidget):
     def _selection_indices_changed(self, indices):
         if self._selection_checkbox.isChecked():
             self.selection_indices_changed.emit(indices)
-        else:
-            self._selection_checkbox.setChecked(True)
 
 
 class IndexSelectLineEdit(QtGui.QLineEdit):

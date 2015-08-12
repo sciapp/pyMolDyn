@@ -1,5 +1,10 @@
 CFLAGS=-O3 -I/usr/local/gr/include
 LDFLAGS=-L/usr/local/gr/lib -lGR3
+ifeq ($(PYLIBPATH),)
+	LDFLAGS=-L/usr/local/gr/lib -lGR3
+else
+	LDFLAGS=-L$(PYLIBPATH)/python2.7/site-packages/gr3/ -lGR3
+endif
 SUBDIRS=
 
 

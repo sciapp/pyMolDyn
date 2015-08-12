@@ -74,6 +74,7 @@ def render_html_cavity_center(index, surface, volume, domains, volume_fraction):
                     "index": index,
                     "surface": surface,
                     "volume": volume,
+                    "surface_to_volume_ratio": surface / volume,
                     "domains": domains,
                     "volume_fraction": volume_fraction,
     }
@@ -96,7 +97,7 @@ def render_html_cavity_surface_group(surface_volumes, volume_fraction):
 
     return template.render(template_vars)
 
-def render_html_cavity_surface(index, volume, domains, volume_fraction):
+def render_html_cavity_surface(index, surface, volume, domains, volume_fraction):
     template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
     template_env = jinja2.Environment(loader=template_loader)
 
@@ -107,7 +108,9 @@ def render_html_cavity_surface(index, volume, domains, volume_fraction):
     template_vars = { "title": "Summary of atoms",
                     "description": "a summury of all calculated surface based cavities",
                     "index": index,
+                    "surface": surface,
                     "volume": volume,
+                    "surface_to_volume_ratio": surface / volume,
                     "domains": domains,
                     "volume_fraction": volume_fraction,
     }
@@ -145,6 +148,7 @@ def render_html_cavity_domain(index, domain_center, surface, volume, volume_frac
                     "domain_center": domain_center,
                     "surface": surface,
                     "volume": volume,
+                    "surface_to_volume_ratio": surface / volume,
                     "volume_fraction": volume_fraction,
                     "surface_cavity_index": surface_cavity_index,
                     "center_cavity_index": center_cavity_index,
@@ -212,6 +216,13 @@ class HTMLWindow(QtGui.QWidget):
             if value[1] == 'atom':
                 atom_index = int(value[2])-1
                 view_tab.atom_check.indices = [atom_index]
+            elif value[1] == 'element':
+                element = core.elements.names[int(value[2])]
+                visible_atom_indices = []
+                for i, element_name in enumerate(self.atoms.elements):
+                    if core.elements.names[core.elements.numbers[element_name.upper()]] == element:
+                        visible_atom_indices.append(i)
+                view_tab.atom_check.indices = visible_atom_indices
             elif value[1] == 'domain':
                 domain_index = int(value[2])-1
                 view_tab.domain_check.indices = [domain_index]
@@ -239,6 +250,24 @@ class HTMLWindow(QtGui.QWidget):
             elif value[1] == 'center_cavity':
                 center_cavity_index = int(value[2])-1
                 view_tab.center_cavity_check.add_indices([center_cavity_index])
+        elif value[0] == 'showall':
+            parent = self.parent()
+            while parent.parent():
+                parent = parent.parent()
+            main_window = parent
+            view_tab = main_window.view_dock.view_tab
+            if value[1] == 'atoms':
+                view_tab.atom_check.setChecked(True)
+                view_tab.atom_check.selection_checkbox_set_checked(False)
+            if value[1] == 'domains':
+                view_tab.domain_check.setChecked(True)
+                view_tab.domain_check.selection_checkbox_set_checked(False)
+            if value[1] == 'surface_cavities':
+                view_tab.surface_cavity_check.setChecked(True)
+                view_tab.surface_cavity_check.selection_checkbox_set_checked(False)
+            if value[1] == 'center_cavities':
+                view_tab.center_cavity_check.setChecked(True)
+                view_tab.center_cavity_check.selection_checkbox_set_checked(False)
 
     def update_results(self, results):
         self.atoms = results.atoms
@@ -329,6 +358,7 @@ class HTMLWindow(QtGui.QWidget):
         cavities = self.cavities_surface.multicavities[index]
         domains = []
 
+        surface = self.cavities_surface.surface_areas[index]
         volume = self.cavities_surface.volumes[index]
         for cavity in cavities:
             domains.append((cavity+1, self.discretization.discrete_to_continuous(self.domains.centers[cavity])))
@@ -336,7 +366,7 @@ class HTMLWindow(QtGui.QWidget):
         if self.atoms.volume is not None:
             volume_fraction = (volume/self.atoms.volume.volume)*100
 
-        self.webview.setHtml(render_html_cavity_surface(index, volume, domains, volume_fraction))
+        self.webview.setHtml(render_html_cavity_surface(index, surface, volume, domains, volume_fraction))
 
     def show_domain_group(self):
         surface = 0.0

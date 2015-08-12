@@ -97,7 +97,7 @@ class RDFWidget(QtGui.QWidget):
         grid = QtGui.QGridLayout()
         self.gr_widget = GrPlotWidget()
 
-        self.datasetlabel = QtGui.QLabel("No data loaded. Press 'Refresh'.", self)
+        self.datasetlabel = QtGui.QLabel("No data loaded.", self)
         self.datasetlabel.setAlignment(QtCore.Qt.AlignHCenter)
 
         elembox = QtGui.QHBoxLayout()
@@ -126,17 +126,16 @@ class RDFWidget(QtGui.QWidget):
         cutoffbox.addWidget(self.bandwidth)
         grid.addLayout(cutoffbox, 0, 2)
 
+        buttonbox = QtGui.QHBoxLayout()
+
         self.plotbutton = QtGui.QPushButton("Plot", self)
-        grid.addWidget(self.plotbutton, 1, 0)
+        buttonbox.addWidget(self.plotbutton)
         self.connect(self.plotbutton, QtCore.SIGNAL("clicked()"), self.draw)
 
         self.exportbutton = QtGui.QPushButton("Save Image", self)
-        grid.addWidget(self.exportbutton, 1, 1)
+        buttonbox.addWidget(self.exportbutton)
         self.connect(self.exportbutton, QtCore.SIGNAL("clicked()"), self.export)
-
-        self.refreshbutton = QtGui.QPushButton("Refresh Data", self)
-        grid.addWidget(self.refreshbutton, 1, 2)
-        self.connect(self.refreshbutton, QtCore.SIGNAL("clicked()"), self.refresh)
+        grid.addLayout(buttonbox, 1, 0, 1, 3)
 
         vbox.addWidget(self.gr_widget, stretch=1)
         vbox.addWidget(self.datasetlabel, stretch=0)
@@ -216,3 +215,9 @@ class RDFWidget(QtGui.QWidget):
             self.datasetlabel.setText("")
             self.elem1.clear()
             self.elem2.clear()
+
+    def activate(self):
+        self.refresh()
+
+    def updatestatus(self):
+        self.refresh()

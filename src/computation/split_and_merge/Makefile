@@ -2,7 +2,7 @@
 SUBDIRS = domain_centers util
 
 all:
-	for i in $(SUBDIRS); do make -C $$i all; done
+	for i in $(SUBDIRS); do make -C $$i PYLIBPATH=$(PYLIBPATH) all; done
 
 clean:
 	rm -f *.pyc *.pyo

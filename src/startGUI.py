@@ -53,6 +53,12 @@ def main():
     # ... to allow it to quit the application on SIGINT (Ctrl-C)
     signal.signal(signal.SIGINT, lambda *args: app.quit())
 
+
+    filenames = sys.argv[1:]
+    for filename in filenames:
+        if filename:
+            window.file_dock.file_tab.disable_files_in_menu_and_open(filename)
+            window.update_submenu_recent_files()
     sys.exit(app.exec_())
 
 
