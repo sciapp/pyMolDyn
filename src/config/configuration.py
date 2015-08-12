@@ -44,7 +44,7 @@ class Configuration(ConfigNode):
         def __init__(self):
             # camera_position =
             # offset          = (0.0, 0.0, 0.0)
-            self.gl_window_size = [800, 800]
+            self.gl_window_size = [400, 400]
             pass
 
     class Computation(ConfigNode):
