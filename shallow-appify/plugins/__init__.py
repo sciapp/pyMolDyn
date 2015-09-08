@@ -5,12 +5,13 @@ from __future__ import unicode_literals
 from __future__ import division
 from __future__ import absolute_import
 
+import importlib
+import pkgutil
+
+
 __author__ = 'Ingo Heimbach'
 __email__ = 'i.heimbach@fz-juelich.de'
 
-
-import importlib
-import pkgutil
 
 _modules = None
 _ext2module = None
@@ -23,6 +24,7 @@ def _normalize_ext(f):
         return f(file_ext, *args, **kwargs)
     return g
 
+
 def _check_ext_availability(f):
     @_normalize_ext
     def g(file_ext, *args, **kwargs):
@@ -34,6 +36,7 @@ def _check_ext_availability(f):
         else:
             raise NotInitializedError
     return g
+
 
 class NotInitializedError(Exception):
     pass
@@ -50,13 +53,16 @@ def add_plugin_command_line_arguments(parser):
                 name_or_flags = [name_or_flags]
             parser.add_argument(*name_or_flags, **kwargs)
 
+
 @_check_ext_availability
 def parse_command_line_arguments(file_ext, arguments):
     return _ext2module[file_ext].parse_command_line_arguments(arguments)
 
+
 @_check_ext_availability
 def pre_create_app(file_ext, **arguments):
     return _ext2module[file_ext].pre_create_app(**arguments)
+
 
 @_normalize_ext
 def setup_startup(file_ext, app_path, executable_path, app_executable_path,
@@ -72,9 +78,11 @@ def setup_startup(file_ext, app_path, executable_path, app_executable_path,
     else:
         raise NotInitializedError
 
+
 @_check_ext_availability
 def post_create_app(file_ext, **arguments):
     return _ext2module[file_ext].post_create_app(**arguments)
+
 
 def _pkg_init():
     global _modules, _ext2module
