@@ -1,12 +1,19 @@
 #!/bin/bash
 
-SRC_DIR="../../src"
-BIN_DEST_DIR="/usr/bin"
-PACKAGE_DIRS="/usr"
-CLEANUP_DIRS="/usr"
+# set current working directory to the script directory
+cd $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
 NAME="pymoldyn"
-VERSION=$(./get_version.py ${SRC_DIR})
-VALID_DISTROS=( "debian" "centos" )
+DISPLAY_NAME="pyMolDyn"
+DESCRIPTION="Molecular viewer and cavity computation program"
+SRC_DIR="../../src"
+VERSION=$(./_get_version.py ${SRC_DIR})
+BIN_DIR="/usr/bin"
+DESKTOP_ENTRY_DIR="/usr/share/applications"
+MAIN_SCRIPT="startGUI.py"
+PACKAGE_DIRS=( "/usr" )
+CLEANUP_DIRS=( "/usr" )
+VALID_DISTROS=( "centos" "centos6" "suse" "debian" )
 
 
 array_contains() {
@@ -16,37 +23,135 @@ array_contains() {
     return 1
 }
 
+get_dependencies() {
+    local TMP_DISTRO
+
+    if [ ! -z "${1}" ]; then
+        TMP_DISTRO="${1}"
+    else
+        TMP_DISTRO="${DISTRO}"
+    fi
+
+    case ${TMP_DISTRO} in
+    debian)
+        DEPENDENCIES=( "python-numpy" )
+        ;;
+    centos)
+        DEPENDENCIES=( "numpy" )
+        ;;
+    centos6)
+        DEPENDENCIES=( "numpy" )
+        ;;
+    suse)
+        DEPENDENCIES=( "python-numpy" )
+        ;;
+    unspecified_distro)
+        if [ -f /etc/debian_version ] || [ -f /etc/SuSE-release ]; then
+            get_dependencies "debian"
+        else
+            get_dependencies "centos"
+        fi
+        ;;
+    *)
+        echo "${DISTRO} is an invalid distribution string! => No package dependencies set!"
+        ;;
+    esac
+}
 
 create_directory_structure() {
     mkdir -p "$@"
 }
 
+create_directory_structure_for_unspecified_distro() {
+    PYTHON_VERSION=$(python -c 'import platform; print ".".join(platform.python_version_tuple()[:2])')
+    PYTHON_DIR=$(python -c 'from distutils.sysconfig import get_python_lib; print get_python_lib()')
+    PYTHON_DEST_DIR="${PYTHON_DIR}/${NAME}"
+    local DIRECTORIES=( ".${BIN_DIR}" ".${PYTHON_DEST_DIR}" ".${DESKTOP_ENTRY_DIR}" )
+
+    create_directory_structure "${DIRECTORIES[@]}"
+}
+
 create_directory_structure_for_debian() {
-    SRC_DEST_DIR="/usr/lib/python2.7/dist-packages/pyMolDyn"
-    local DIRECTORIES=( ".${BIN_DEST_DIR}" ".${SRC_DEST_DIR}" )
+    PYTHON_VERSION="2.7"
+    PYTHON_DIR="/usr/lib/python${PYTHON_VERSION}/dist-packages"
+    PYTHON_DEST_DIR="${PYTHON_DIR}/${NAME}"
+    local DIRECTORIES=( ".${BIN_DIR}" ".${PYTHON_DEST_DIR}" ".${DESKTOP_ENTRY_DIR}" )
 
     create_directory_structure "${DIRECTORIES[@]}"
 }
 
 create_directory_structure_for_centos() {
-    SRC_DEST_DIR="/usr/lib/python2.7/site-packages/pyMolDyn"
-    local DIRECTORIES=( ".${BIN_DEST_DIR}" ".${SRC_DEST_DIR}" )
+    PYTHON_VERSION="2.7"
+    PYTHON_DIR="/usr/lib/python${PYTHON_VERSION}/site-packages"
+    PYTHON_DEST_DIR="${PYTHON_DIR}/${NAME}"
+    local DIRECTORIES=( ".${BIN_DIR}" ".${PYTHON_DEST_DIR}" ".${DESKTOP_ENTRY_DIR}" )
 
     create_directory_structure "${DIRECTORIES[@]}"
 }
 
+create_directory_structure_for_centos6() {
+    PYTHON_VERSION="2.6"
+    PYTHON_DIR="/usr/lib/python${PYTHON_VERSION}/site-packages"
+    PYTHON_DEST_DIR="${PYTHON_DIR}/${NAME}"
+    local DIRECTORIES=( ".${BIN_DIR}" ".${PYTHON_DEST_DIR}" ".${DESKTOP_ENTRY_DIR}" )
+
+    create_directory_structure "${DIRECTORIES[@]}"
+}
+
+create_directory_structure_for_suse() {
+    create_directory_structure_for_centos
+}
+
 copy_src_and_setup_startup() {
-    cp -r ${SRC_DIR}/* ".${SRC_DEST_DIR}/"
-    ln -s "${SRC_DEST_DIR}/startGUI.py" ".${BIN_DEST_DIR}/pyMolDyn"
+    cp -r ${SRC_DIR}/* ".${PYTHON_DEST_DIR}/"
+    ln -s "${PYTHON_DEST_DIR}/${MAIN_SCRIPT}" ".${BIN_DIR}/${NAME}"
+    create_desktop_file ".${DESKTOP_ENTRY_DIR}/${NAME}.desktop"
+    python -m compileall ".${PYTHON_DEST_DIR}/"
+}
+
+create_desktop_file() {
+    local FILE_PATH="$1"
+
+    cat >"${FILE_PATH}" <<EOF
+[Desktop Entry]
+Name=${DISPLAY_NAME} 
+Type=Application
+Exec=${BIN_DIR}/${NAME}
+Terminal=false
+Icon=${PYTHON_DEST_DIR}/icon.png
+Comment=${DESCRIPTION}
+NoDisplay=false
+Categories=Science
+Name[en]=${DISPLAY_NAME}
+EOF
 }
 
 create_package() {
-    DEPENDENCIES_STRING=""
+    local DEPENDENCIES_STRING=""
     for DEP in ${DEPENDENCIES}; do
         DEPENDENCIES_STRING="${DEPENDENCIES_STRING} -d ${DEP}"
     done
+    local FPM_PACKAGE_DIRS=""
+    for DIR in ${PACKAGE_DIRS[@]}; do
+        FPM_PACKAGE_DIRS="${FPM_PACKAGE_DIRS} .${DIR}"
+    done
 
-    fpm -s dir -t "${PACKAGE_FORMAT}" -n "${NAME}" -v "${VERSION}" ${DEPENDENCIES_STRING} ".${PACKAGE_DIRS}"
+    fpm -s dir -t "${PACKAGE_FORMAT}" -n "${NAME}" -v "${VERSION}" --directories ${PYTHON_DEST_DIR} ${DEPENDENCIES_STRING} ${FPM_PACKAGE_DIRS}
+
+    if [ "${DISTRO}" != "unspecified_distro" ]; then
+        mkdir "${DISTRO}"
+        mv *.${PACKAGE_FORMAT} "${DISTRO}/"
+    fi
+}
+
+create_package_for_unspecified_distro() {
+    if [ -f /etc/debian_version ]; then
+        PACKAGE_FORMAT="deb"
+    else
+        PACKAGE_FORMAT="rpm"
+    fi
+
+    create_package
 }
 
 create_package_for_debian() {
@@ -61,19 +166,32 @@ create_package_for_centos() {
     create_package
 }
 
+create_package_for_centos6() {
+    create_package_for_centos
+}
+
+create_package_for_suse() {
+    create_package_for_centos
+}
+
 cleanup() {
-    for DIR in ${CLEANUP_DIRS}; do
+    for DIR in ${CLEANUP_DIRS[@]}; do
         rm -rf ".${DIR}"
     done
 }
 
 main() {
     DISTRO="${1}"
-    DEPENDENCIES="${*:2}"
-    if ! array_contains "${DISTRO}" "${VALID_DISTROS[@]}"; then
-        echo "The first parameter is no valid linux distribution name."
-        exit 1
+    if [ ! -z "${DISTRO}" ]; then
+        if ! array_contains "${DISTRO}" "${VALID_DISTROS[@]}"; then
+            echo "The first parameter (${DISTRO}) is no valid linux distribution name."
+            exit 1
+        fi
+    else
+        DISTRO="unspecified_distro"
     fi
+
+    get_dependencies
 
     eval "create_directory_structure_for_${DISTRO}"
     copy_src_and_setup_startup
