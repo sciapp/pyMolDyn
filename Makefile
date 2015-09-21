@@ -1,15 +1,23 @@
 SUBDIRS=$(shell find . -mindepth 1 -maxdepth 1 -type d)
+MAC_APPS=mac-app mac-shallow-app
+LINUX_PACKAGES=debian-package centos-package
 
-all: mac-app mac-shallow-app extensions doc
+all: $(MAC_APPS) $(LINUX_PACKAGES) extensions doc
 
 extensions:
 	$(MAKE) -C src
 
 mac-app:
-	$(MAKE) -C packaging mac-app
+	$(MAKE) -C packaging $@
 
 mac-shallow-app: extensions
-	$(MAKE) -C packaging mac-shallow-app
+	$(MAKE) -C packaging $@
+
+debian-package: extensions
+	$(MAKE) -C packaging $@
+
+centos-package: extensions
+	$(MAKE) -C packaging $@
 
 doc:
 	$(MAKE) -C doc
@@ -22,4 +30,4 @@ clean:
                 fi; \
         done
 
-.PHONY: all extensions mac-app mac-shallow-app doc clean
+.PHONY: all extensions doc clean $(MAC_APPS) $(LINUX_PACKAGES)
