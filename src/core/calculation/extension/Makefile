@@ -1,9 +1,9 @@
-CFLAGS=-O3 -I/usr/local/gr/include
-LDFLAGS=-L/usr/local/gr/lib -lGR3
+CFLAGS = -O3
+INCLUDES := $(shell ./build-flags --include-flags gr)
 ifeq ($(PYLIBPATH),)
-	LDFLAGS=-L/usr/local/gr/lib -lGR3
+	LDFLAGS := $(shell ./build-flags --lib-flags gr)
 else
-	LDFLAGS=-L$(PYLIBPATH)/python2.7/site-packages/gr3/ -lGR3
+	LDFLAGS := -L$(PYLIBPATH)/python2.7/site-packages/gr3/ -lGR3
 endif
 SUBDIRS=
 
@@ -11,7 +11,7 @@ SUBDIRS=
 all: libalgorithm.so subdirs
 
 libalgorithm.so: algorithm.c
-	$(CC) -Wall -Wextra -fPIC ${CFLAGS} -o $@ $< -shared $(LDFLAGS)
+	$(CC) -Wall -Wextra -fPIC $(CFLAGS) $(INCLUDES) -o $@ $< -shared $(LDFLAGS)
 
 subdirs:
 	for i in $(SUBDIRS); do make -C $$i all; done
