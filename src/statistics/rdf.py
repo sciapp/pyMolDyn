@@ -17,6 +17,8 @@ from util.logger import Logger
 import sys
 from core.calculation.discretization import DiscretizationCache
 import itertools
+import os.path
+from config.configuration import config
 
 
 logger = Logger("statistics.rdf")
@@ -46,9 +48,11 @@ class RDF(object):
             positions = results.atoms.positions
             elements = results.atoms.elements
             volume = results.atoms.volume
-            if not results.domains is None:
+            if results.domains is not None:
                 centers = results.domains.centers
-                dcache = DiscretizationCache('cache.hdf5')
+                cachedir = os.path.expanduser(config.Path.cache_dir)
+                cachepath = os.path.join(cachedir, 'discretization_cache.hdf5')
+                dcache = DiscretizationCache(cachepath)
                 disc = dcache.get_discretization(volume, results.resolution)
                 centers = map(disc.discrete_to_continuous, centers)
             else:
@@ -106,7 +110,7 @@ class RDF(object):
             logger.debug("No statistical data for '{}-{}' found.".format(
                     elem1, elem2))
             return None # TODO: raise Exception
-        
+
         if cutoff is None:
             cutoff = data.max()
         sel = np.where(np.logical_and(data > MINDISTANCE, data <= cutoff))[0]
@@ -354,7 +358,9 @@ class Kernels(object):
 class _TestRDF(object):
     @staticmethod
     def continuous_coordinates(coords, volume, resolution):
-        dcache = DiscretizationCache('cache.hdf5')
+        cachedir = os.path.expanduser(config.Path.cache_dir)
+        cachepath = os.path.join(cachedir, 'discretization_cache.hdf5')
+        dcache = DiscretizationCache(cachepath)
         disc = dcache.get_discretization(volume, resolution)
 
         return np.array(map(disc.discrete_to_continuous, coords))
