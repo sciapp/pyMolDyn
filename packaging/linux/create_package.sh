@@ -34,16 +34,13 @@ get_dependencies() {
 
     case ${TMP_DISTRO} in
     debian)
-        DEPENDENCIES=( "python-numpy" )
+        DEPENDENCIES=( "python-numpy" "python-qt4" "python-qt4-gl" "python-dateutil" "python-h5py" "python-opengl" "python-jinja2" )
         ;;
-    centos)
-        DEPENDENCIES=( "numpy" )
-        ;;
-    centos6)
-        DEPENDENCIES=( "numpy" )
+    centos*)
+        DEPENDENCIES=( "numpy" "PyQt4" "PyQt4-webkit" "python-dateutil" "h5py" "PyOpenGL" "python-jinja2" )
         ;;
     suse)
-        DEPENDENCIES=( "python-numpy" )
+        DEPENDENCIES=( "python-numpy" "python-qt4" "pyton-dateutil" "python-h5py" "python-opengl" "python-Jinja2" )
         ;;
     unspecified_distro)
         if [ -f /etc/debian_version ] || [ -f /etc/SuSE-release ]; then
@@ -128,7 +125,7 @@ EOF
 
 create_package() {
     local DEPENDENCIES_STRING=""
-    for DEP in ${DEPENDENCIES}; do
+    for DEP in ${DEPENDENCIES[@]}; do
         DEPENDENCIES_STRING="${DEPENDENCIES_STRING} -d ${DEP}"
     done
     local FPM_PACKAGE_DIRS=""
