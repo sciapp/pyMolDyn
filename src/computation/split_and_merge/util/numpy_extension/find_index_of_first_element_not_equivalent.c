@@ -1,5 +1,9 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#ifdef __APPLE__
+#include <Python/Python.h>
+#else
 #include <Python.h>
+#endif
 #include <numpy/ndarraytypes.h>
 
 

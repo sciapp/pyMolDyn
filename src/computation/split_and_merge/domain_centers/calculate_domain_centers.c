@@ -1,4 +1,8 @@
+#ifdef __APPLE__
+#include <Python/Python.h>
+#else
 #include <Python.h>
+#endif
 #include <limits.h>
 
 
