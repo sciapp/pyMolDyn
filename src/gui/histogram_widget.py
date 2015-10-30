@@ -19,7 +19,6 @@ logger.setstream("default", sys.stdout, Logger.DEBUG)
 class GrHistogramWidget(GRWidget):
     def __init__(self, *args, **kwargs):
         super(GrHistogramWidget, self).__init__(*args, **kwargs)
-        self._draw(clear=True)
 
         self.init_gui(self)
 
@@ -38,7 +37,7 @@ class GrHistogramWidget(GRWidget):
         self.widths = widths
         self.title = title
 
-    def draw(self, clear=False, update=True):
+    def draw(self):
         if self.xvalues is not None and self.widths is not None:
             maxidx = np.argmax(self.xvalues)
             rangex = (self.xvalues.min(),
@@ -50,8 +49,6 @@ class GrHistogramWidget(GRWidget):
         else:
             rangey = (0.0, 8.0)
 
-        if clear:
-            gr.clearws()
         gr.setwsviewport(0, self.mwidth, 0, self.mheight)
         gr.setwswindow(0, self.sizex, 0, self.sizey)
         gr.setviewport(0.075 * self.sizex, 0.95 * self.sizex,
@@ -82,7 +79,6 @@ class GrHistogramWidget(GRWidget):
 
         if self.title is not None:
             gr.text(0.8 * self.sizex, 0.9 * self.sizey, self.title)
-        self.update()
 
 
 class HistogramWidget(QtGui.QWidget):
@@ -173,7 +169,7 @@ class HistogramWidget(QtGui.QWidget):
                 yvalues = hist
 
         self.gr_widget.setdata(xvalues, yvalues, widths, title)
-        self.gr_widget.draw()
+        self.gr_widget.update()
 
     def export(self):
         extensions = (".eps", ".ps", ".pdf", ".png", ".bmp", ".jpg", ".jpeg",
