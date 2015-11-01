@@ -99,10 +99,36 @@ create_directory_structure_for_suse() {
     create_directory_structure_for_centos
 }
 
+install_numpy() {
+    local NUMPY_VERSION="1.10.1"
+    local NUMPY_SRC_LINK="https://pypi.python.org/packages/source/n/numpy/numpy-${NUMPY_VERSION}.tar.gz"
+    local NUMPY_INSTALL_LOCATION="${TMP_INSTALL}/lib64/python2.7/site-packages/numpy"
+    
+    pushd "${TMP_INSTALL}"
+    curl -o numpy.tar.gz "${NUMPY_SRC_LINK}"
+    tar -xf numpy.tar.gz
+    pushd "numpy-${NUMPY_VERSION}"
+    python setup.py build install --prefix "${TMP_INSTALL}"
+    popd
+    popd
+    cp -r "${NUMPY_INSTALL_LOCATION}" ".${PYTHON_DEST_DIR}/"
+}
+
+install_additional_python_packages() {
+    TMP_INSTALL="$(pwd)/tmp"
+    mkdir -p "${TMP_INSTALL}"
+
+    install_numpy
+
+    rm -rf "${TMP_INSTALL}"
+    unset TMP_INSTALL
+}
+
 copy_src_and_setup_startup() {
     cp -r ${SRC_DIR}/* ".${PYTHON_DEST_DIR}/"
     ln -s "${PYTHON_DEST_DIR}/${MAIN_SCRIPT}" ".${BIN_DIR}/${NAME}"
     create_desktop_file ".${DESKTOP_ENTRY_DIR}/${NAME}.desktop"
+    install_additional_python_packages
     python -m compileall ".${PYTHON_DEST_DIR}/"
 }
 
