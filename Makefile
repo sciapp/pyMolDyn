@@ -1,20 +1,22 @@
 SUBDIRS=$(shell find . -mindepth 1 -maxdepth 1 -type d)
+MAC_APPS=mac-app mac-shallow-app
 
-sub:
-	@for subdir in ${SUBDIRS}; do \
-		if [ -f $$subdir/Makefile ]; then \
-			echo "make -C $$subdir"; \
-			$(MAKE) -C $$subdir; \
-		fi; \
-	done
+all: $(MAC_APPS) linuxpackages extensions doc
 
-all: sub app shallow-app
+extensions:
+	$(MAKE) -C src
 
-app:
-	gr shallow-appify/shallow-appify.py -d src/ -i src/icon.png --conda conda_requirements.txt --conda-channels https://conda.anaconda.org/jheinen --extension-makefile src/Makefile -o pyMolDyn.app src/startGUI.py
+mac-app:
+	$(MAKE) -C packaging $@
 
-shallow-app: sub
-	PATH=/usr/local/bin:${PATH} gr shallow-appify/shallow-appify.py -d src/ -i src/icon.png -e PATH PYTHONPATH DYLD_LIBRARY_PATH -o pyMolDyn-shallow.app src/startGUI.py
+mac-shallow-app: extensions
+	$(MAKE) -C packaging $@
+
+linuxpackages: extensions
+	$(MAKE) -C packaging $@
+
+doc:
+	$(MAKE) -C doc
 
 clean:
 	@for subdir in ${SUBDIRS}; do \
@@ -23,4 +25,5 @@ clean:
                         $(MAKE) -C $$subdir clean; \
                 fi; \
         done
-	rm -rf pyMolDyn.app pyMolDyn-shallow.app
+
+.PHONY: all extensions doc clean $(MAC_APPS) linuxpackages
