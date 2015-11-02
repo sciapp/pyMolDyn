@@ -34,13 +34,13 @@ get_dependencies() {
 
     case ${TMP_DISTRO} in
     debian)
-        DEPENDENCIES=( "python-numpy" "python-qt4" "python-qt4-gl" "python-dateutil" "python-h5py" "python-opengl" "python-jinja2" )
+        DEPENDENCIES=( "python-numpy" "python-qt4" "python-qt4-gl" "python-dateutil" "python-h5py" "python-opengl" "python-jinja2" "gr" )
         ;;
     centos*)
-        DEPENDENCIES=( "numpy" "PyQt4" "PyQt4-webkit" "python-dateutil" "h5py" "PyOpenGL" "python-jinja2" )
+        DEPENDENCIES=( "numpy" "PyQt4" "PyQt4-webkit" "python-dateutil" "h5py" "PyOpenGL" "python-jinja2" "gr" )
         ;;
     suse)
-        DEPENDENCIES=( "python-numpy" "python-qt4" "pyton-dateutil" "python-h5py" "python-opengl" "python-Jinja2" )
+        DEPENDENCIES=( "python-numpy" "python-qt4" "pyton-dateutil" "python-h5py" "python-opengl" "python-Jinja2" "gr" )
         ;;
     unspecified_distro)
         if [ -f /etc/debian_version ] || [ -f /etc/SuSE-release ]; then
