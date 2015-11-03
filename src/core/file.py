@@ -180,7 +180,7 @@ class XYZFile(InputFile):
                     for i in range(num_atoms):
                         line = f.next()
                         if line.strip():
-                            symbol, x, y, z = line.split()
+                            symbol, x, y, z = line.split()[:4]
                             position = (float(x), float(y), float(z))
                             symbols.append(symbol)
                             positions.append(position)
@@ -486,7 +486,7 @@ class File(object):
                      ("xyz", XYZFile),
                      ("hdf5", HDF5File),
                  ])
-    
+
     @classmethod
     def listdir(cls, directory):
         """
@@ -502,7 +502,7 @@ class File(object):
         if not directory:
             directory = "."
         return [f for f in os.listdir(directory)
-                if cls.exists(f)] 
+                if cls.exists(f)]
 
     @classmethod
     def open(cls, filepath):
