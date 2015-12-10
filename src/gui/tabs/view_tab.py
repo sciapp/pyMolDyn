@@ -55,7 +55,7 @@ class ViewTab(QtGui.QWidget):
         self.box_check = ObjectSelectWidget('show bounding box', self, add_index_selector=False)
         self.atom_check = ObjectSelectWidget('show atoms', self)
         self.bonds_check = ObjectSelectWidget('show bonds', self, add_index_selector=False)
-        self.domain_check = ObjectSelectWidget('show domains', self)
+        self.domain_check = ObjectSelectWidget('show cavities (domains)', self)
         self.surface_cavity_check = ObjectSelectWidget('show cavities (surface method)', self)
         self.center_cavity_check = ObjectSelectWidget('show cavities (center method)', self)
 

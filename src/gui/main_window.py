@@ -102,7 +102,7 @@ class MainWindow(QtGui.QMainWindow):
         export_bond_dihedral_angles_action.setShortcut('Ctrl+3')
         export_bond_dihedral_angles_action.triggered.connect(self.wrapper_export_bond_dihedral_angles)
 
-        export_domains_action = QtGui.QAction('Export Domain Information', self)
+        export_domains_action = QtGui.QAction('Export Cavity Information (domains)', self)
         export_domains_action.setShortcut('Ctrl+4')
         export_domains_action.triggered.connect(self.wrapper_export_domains)
 
@@ -247,11 +247,11 @@ class MainWindow(QtGui.QMainWindow):
                                           "Saved to filename: %s" % (filename))
 
     def wrapper_export_domains(self):
-        filename = QtGui.QFileDialog.getSaveFileName(self, "Export Domain Information", "domains")
+        filename = QtGui.QFileDialog.getSaveFileName(self, "Export Cavity Information (domains)", "domains")
         if filename:
             filenames = self.control.visualization.results.domains.totxt(filename + '_{property}.txt')
             QtGui.QMessageBox.information(self,
-                                          'Export Domain Information',
+                                          'Export Cavity Information (domains)',
                                           "Saved to filenames: %s" % (', '.join(filenames)))
 
     def wrapper_export_surface_cavities(self):
