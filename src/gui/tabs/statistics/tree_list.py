@@ -68,7 +68,7 @@ class TreeList(QtGui.QTreeWidget):
             self.html_view.show_center_cavity_group()
         elif data == 'Cavities (surface)':
             self.html_view.show_surface_cavity_group()
-        elif data == 'Cavity Domains':
+        elif data == 'Cavities (domains)':
             self.html_view.show_domain_group()
         elif item.parent().data(0, column) is not None:
             parent = item.parent().data(0, column)
@@ -78,7 +78,7 @@ class TreeList(QtGui.QTreeWidget):
             elif data.startswith('Cavity ') and parent == 'Cavities (surface)':
                 index = int(data.split()[-1])-1
                 self.html_view.show_surface_cavity(index)
-            elif data.startswith('Domain ') and parent == 'Cavity Domains':
+            elif data.startswith('Cavity ') and parent == 'Cavities (domains)':
                 index = int(data.split()[-1])-1
                 self.html_view.show_domain(index)
 
@@ -96,7 +96,7 @@ class TreeList(QtGui.QTreeWidget):
         if self.cavities_surface is not None:
             self.cavities_surface_list = ["Cavity %d" % (i+1) for i in range(len(self.cavities_surface.multicavities))]
         if self.domains is not None:
-            self.domains_list = ["Domain %d" % (i+1) for i in range(self.domains.number)]
+            self.domains_list = ["Cavity %d" % (i+1) for i in range(self.domains.number)]
         #print dir(atoms)
         #print atoms.positions
         #print atoms.elements
@@ -115,7 +115,7 @@ class TreeList(QtGui.QTreeWidget):
             ('Atoms', self.atom_list),
             ('Cavities (center)', self.cavities_center_list),
             ('Cavities (surface)', self.cavities_surface_list),
-            ('Cavity Domains', self.domains_list)])
+            ('Cavities (domains)', self.domains_list)])
 
         self.items = []
         for root, sib in src.iteritems():

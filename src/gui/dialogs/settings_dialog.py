@@ -15,7 +15,7 @@ class ColorSettingsPage(QtGui.QWidget):
         self.colors = OrderedDict((('background', 'Background'),
                                   ('bounding_box', 'Bounding Box'),
                                   ('bonds', 'Bonds'),
-                                  ('domain', 'Domain'),
+                                  ('domain', 'Cavity (domain)'),
                                   ('surface_cavity', 'Cavity (surface method)'),
                                   ('center_cavity', 'Cavity (Center method)')))
 

@@ -17,7 +17,7 @@ def render_html_atom_group(atom_number, atom_elements):
     template = template_env.get_template( TEMPLATE_FILE )
 
     template_vars = { "title": "Summary of atoms",
-                    "description": "a summury of all calculated atoms",
+                    "description": "a summary of all calculated atoms",
                     "atom_number": atom_number,
                     "atom_elements": atom_elements,
     }
@@ -33,7 +33,7 @@ def render_html_atom(index, atom_fullname, atom_positions, atom_number, covalent
 
     #FAVORITES = ["chocolates", "lunar eclipses", "rabbits"]
     template_vars = { "title": "Summary of atoms",
-                    "description": "a summury of one atom",
+                    "description": "a summary of one atom",
                     "index": index,
                     "atom_fullname": atom_fullname,
                     "atom_positions": atom_positions,
@@ -54,7 +54,7 @@ def render_html_cavity_center_group(surface_area, surface_volumes, volume_fracti
 
     #FAVORITES = ["chocolates", "lunar eclipses", "rabbits"]
     template_vars = { "title": "Summary of all cavities",
-                    "description": "a summury of all calculated center bases cavities",
+                    "description": "a summary of all calculated center bases cavities",
                     "surface_area": surface_area,
                     "surface_volumes": surface_volumes,
                     "volume_fraction": volume_fraction,
@@ -70,7 +70,7 @@ def render_html_cavity_center(index, surface, volume, domains, volume_fraction):
     template = template_env.get_template( TEMPLATE_FILE )
 
     template_vars = { "title": "Summary of one cavity",
-                    "description": "a summury of one calculated center bases cavity",
+                    "description": "a summary of one calculated center bases cavity",
                     "index": index,
                     "surface": surface,
                     "volume": volume,
@@ -90,7 +90,7 @@ def render_html_cavity_surface_group(surface_volumes, volume_fraction):
 
     #FAVORITES = ["chocolates", "lunar eclipses", "rabbits"]
     template_vars = { "title": "Summary of atoms",
-                    "description": "a summury of all calculated surface based cavities",
+                    "description": "a summary of all calculated surface based cavities",
                     "surface_volumes": surface_volumes,
                     "volume_fraction": volume_fraction,
     }
@@ -106,7 +106,7 @@ def render_html_cavity_surface(index, surface, volume, domains, volume_fraction)
 
     #FAVORITES = ["chocolates", "lunar eclipses", "rabbits"]
     template_vars = { "title": "Summary of atoms",
-                    "description": "a summury of all calculated surface based cavities",
+                    "description": "a summary of all calculated surface based cavities",
                     "index": index,
                     "surface": surface,
                     "volume": volume,
@@ -125,8 +125,8 @@ def render_html_cavity_domain_group(surface_area, surface_volumes, surface_volum
     template = template_env.get_template( TEMPLATE_FILE )
 
     #FAVORITES = ["chocolates", "lunar eclipses", "rabbits"]
-    template_vars = { "title": "Summary of all domains",
-                    "description": "a summury of all calculated domains",
+    template_vars = { "title": "Summary of all cavities (domains)",
+                    "description": "a summary of all calculated cavities (domains)",
                     "surface_area": surface_area,
                     "surface_volumes": surface_volumes,
                     "surface_volumes_fractions": surface_volumes_fractions,
@@ -142,8 +142,8 @@ def render_html_cavity_domain(index, domain_center, surface, volume, volume_frac
     template = template_env.get_template( TEMPLATE_FILE )
 
     #FAVORITES = ["chocolates", "lunar eclipses", "rabbits"]
-    template_vars = { "title": "Summary of one domain",
-                    "description": "a summury of one calculated domain",
+    template_vars = { "title": "Summary of one cavity (domain)",
+                    "description": "a summary of one calculated cavities (domain)",
                     "index": index,
                     "domain_center": domain_center,
                     "surface": surface,
