@@ -809,7 +809,15 @@ class Results(object):
         if self.surface_cavities is not None and self.atoms.volume is not None:
             cavvolume = np.sum(self.surface_cavities.volumes)
             volpercent = 100 * cavvolume / self.atoms.volume.volume
-            s += ", {:0.1f}% cavities".format(volpercent)
+            s += ", {:0.1f}% cavities (surface-based)".format(volpercent)
+        if self.center_cavities is not None and self.atoms.volume is not None:
+            cavvolume = np.sum(self.center_cavities.volumes)
+            volpercent = 100 * cavvolume / self.atoms.volume.volume
+            s += ", {:0.1f}% cavities (center-based)".format(volpercent)
+        if self.domains is not None and self.atoms.volume is not None:
+            cavvolume = np.sum(self.domains.volumes)
+            volpercent = 100 * cavvolume / self.atoms.volume.volume
+            s += ", {:0.1f}% cavities (domains)".format(volpercent)
         return s
 
     # Properties to be compatible to the old CalculationResults
