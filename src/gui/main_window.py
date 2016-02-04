@@ -288,7 +288,8 @@ class MainWindow(QtGui.QMainWindow):
         if was_successful and self.control.results is not None:
             results = self.control.results[-1][-1]
             self.shown_dataset = results
-            status = str(results)
+            visualization_settings = self.control.visualization.settings
+            status = results.description(domain_volume=visualization_settings.show_domains, surface_cavity_volume=visualization_settings.show_surface_cavities, center_cavity_volume=visualization_settings.show_center_cavities)
             self.statusBar().showMessage(status)
             self.statistics_dock.update_results(self.control.visualization.results)
             self.view_dock.setVisible(True)
