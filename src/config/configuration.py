@@ -51,6 +51,7 @@ class Configuration(ConfigNode):
         def __init__(self):
             self.atom_radius = 2.8
             self.std_resolution = 64
+            self.max_cachefiles = 0
 
     class Path(ConfigNode):
 
