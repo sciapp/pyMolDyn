@@ -120,6 +120,15 @@ class Cli(object):
                               "default": None,
                               "type": "str",
                               "help": "directory to store the results in"},
+                             {"special_type": "parameter",
+                              "name": "max cachefiles",
+                              "short": "",
+                              "long": "--maxcachefiles",
+                              "action": "store",
+                              "dest": "max_cachefiles",
+                              "default": None,
+                              "type": "int",
+                              "help": "maximum number of cached files"},
 #                             {"special_type": "parameter",
 #                              "name": "bond delta",
 #                              "short": "-b",
@@ -180,6 +189,8 @@ class Cli(object):
         settings_list = file_list.createCalculationSettings(default_settings)
         if self.options.atom_radius is not None:
             config.Computation.atom_radius = self.options.atom_radius
+        if self.options.max_cachefiles is not None:
+            config.Computation.max_cachefiles = self.options.max_cachefiles
 
         print 'processing files:'
         print file_list

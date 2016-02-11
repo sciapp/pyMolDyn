@@ -131,7 +131,8 @@ class Calculation(object):
         if cachedir is None:
             cachedir = os.path.expanduser(config.Path.cache_dir)
         self.cachedir = cachedir
-        self.cache = CalculationCache(cachedir)
+        max_cachefiles = config.Computation.max_cachefiles
+        self.cache = CalculationCache(cachedir, max_cachefiles)
 
     def calculatedframes(self, filepath, resolution, surface=False, center=False):
         """
@@ -407,13 +408,14 @@ class CalculationCache(object):
     """
 
     # TODO: replacement strategy
-    def __init__(self, directory):
+    def __init__(self, directory, max_cachefiles=0):
         """
         **Parameters:**
             `directory` :
                 path of the directory in which the cahce files are stored
         """
         self.directory = directory
+        self.max_cachefiles = max_cachefiles
         self.index = dict()
         self.indexfilepath = self.abspath("index.txt")
         if not os.path.isdir(directory):
@@ -476,7 +478,23 @@ class CalculationCache(object):
             except (IOError, AttributeError, RuntimeError):
                 pass
 
+    def cleanindex(self):
+        if 0 < self.max_cachefiles < len(self.index):
+            # get list of cachefiles and their last modification times (mtime)
+            file_mtimes = []
+            for filepath, cachefile in sorted(self.index.iteritems()):
+                cachepath = os.path.join(self.directory, cachefile)
+                cache_mtime = os.path.getmtime(cachepath)
+                file_mtimes.append((cache_mtime, cachepath))
+            # delete older cachefiles so that only max_cachefiles are left
+            file_mtimes.sort()
+            for _, cachepath in file_mtimes[:-self.max_cachefiles]:
+                os.remove(cachepath)
+            # rebuild the index
+            self.buildindex()
+
     def writeindex(self):
+        self.cleanindex()
         with open(self.indexfilepath, "w") as f:
             for filepath, cachefile in sorted(self.index.iteritems(),
                                               key=lambda x: x[0]):

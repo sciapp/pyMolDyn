@@ -182,6 +182,7 @@ class ViewTab(QtGui.QWidget):
         # If no further check event was triggered, all settings are refreshed and the scene can be redrawn
         if not has_triggered_check_event:
             self.gl_widget.create_scene()
+            self.topLevelWidget().updatestatus()
 
     def object_indices_changed(self, indices, object_type_id, update_scene=True):
         object_type_id2attribute_name = {

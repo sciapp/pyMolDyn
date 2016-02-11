@@ -81,7 +81,7 @@ def render_html_cavity_center(index, surface, volume, domains, volume_fraction):
 
     return template.render(template_vars)
 
-def render_html_cavity_surface_group(surface_volumes, volume_fraction):
+def render_html_cavity_surface_group(surface_area, surface_volumes, volume_fraction):
     template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
     template_env = jinja2.Environment(loader=template_loader)
 
@@ -91,6 +91,7 @@ def render_html_cavity_surface_group(surface_volumes, volume_fraction):
     #FAVORITES = ["chocolates", "lunar eclipses", "rabbits"]
     template_vars = { "title": "Summary of atoms",
                     "description": "a summary of all calculated surface based cavities",
+                    "surface_area": surface_area,
                     "surface_volumes": surface_volumes,
                     "volume_fraction": volume_fraction,
     }
@@ -304,20 +305,19 @@ class HTMLWindow(QtGui.QWidget):
         self.webview.setHtml(render_html_atom(index, atom_fullname, atom_positions, atom_number, covalent_radius, atom_color_rgb, bonds))
 
     def show_center_cavity_group(self):
-        #todo real values
-        surface = 0.0
+        surface_area = 0.0
         volumes = 0.0
         volume_fraction = 0.0
         if self.cavities_center is not None:
             for sf in self.cavities_center.surface_areas:
-                surface += sf
+                surface_area += sf
             for vl in self.cavities_center.volumes:
                 volumes += vl
 
         if self.atoms.volume is not None:
             volume_fraction = (volumes/self.atoms.volume.volume)*100
 
-        self.webview.setHtml(render_html_cavity_center_group(surface, volumes, volume_fraction))
+        self.webview.setHtml(render_html_cavity_center_group(surface_area, volumes, volume_fraction))
 
     def show_center_cavity(self, index):
         if self.tree_list is not None:
@@ -340,16 +340,19 @@ class HTMLWindow(QtGui.QWidget):
         self.webview.setHtml(render_html_cavity_center(index, surface, volume, domains, volume_fraction))
 
     def show_surface_cavity_group(self):
+        surface_area = 0.0
         volumes = 0.0
         volume_fraction = 0.0
-        if self.cavities_center is not None:
-            for vl in self.cavities_center.volumes:
+        if self.cavities_surface is not None:
+            for sf in self.cavities_center.surface_areas:
+                surface_area += sf
+            for vl in self.cavities_surface.volumes:
                 volumes += vl
 
         if self.atoms.volume is not None:
             volume_fraction = (volumes/self.atoms.volume.volume)*100
 
-        self.webview.setHtml(render_html_cavity_surface_group(volumes, volume_fraction))
+        self.webview.setHtml(render_html_cavity_surface_group(surface_area, volumes, volume_fraction))
 
     def show_surface_cavity(self, index):
         if self.tree_list is not None:

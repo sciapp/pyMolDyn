@@ -802,14 +802,25 @@ class Results(object):
         self.center_cavities = center_cavities
 
     def __str__(self):
+        return self.description()
+
+    def description(self, domain_volume=True, surface_cavity_volume=True, center_cavity_volume=True):
         s = "{}, frame {}, resolution {}".format(
                 os.path.basename(self.filepath),
                 self.frame + 1,
                 self.resolution)
-        if self.surface_cavities is not None and self.atoms.volume is not None:
+        if surface_cavity_volume and self.surface_cavities is not None and self.atoms.volume is not None:
             cavvolume = np.sum(self.surface_cavities.volumes)
             volpercent = 100 * cavvolume / self.atoms.volume.volume
-            s += ", {:0.1f}% cavities".format(volpercent)
+            s += ", {:0.1f}% cavities (surface-based)".format(volpercent)
+        if center_cavity_volume and self.center_cavities is not None and self.atoms.volume is not None:
+            cavvolume = np.sum(self.center_cavities.volumes)
+            volpercent = 100 * cavvolume / self.atoms.volume.volume
+            s += ", {:0.1f}% cavities (center-based)".format(volpercent)
+        if domain_volume and self.domains is not None and self.atoms.volume is not None:
+            cavvolume = np.sum(self.domains.volumes)
+            volpercent = 100 * cavvolume / self.atoms.volume.volume
+            s += ", {:0.1f}% cavities (domains)".format(volpercent)
         return s
 
     # Properties to be compatible to the old CalculationResults
