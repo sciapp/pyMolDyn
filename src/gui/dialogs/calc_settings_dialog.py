@@ -27,7 +27,8 @@ class CalculationSettingsDialog(QtGui.QDialog):
         self.setWindowTitle("Calculation Settings")
     
     def init_gui(self):
-
+        
+        hbox            = QtGui.QHBoxLayout()
         vbox            = QtGui.QVBoxLayout() 
         button_hbox     = QtGui.QHBoxLayout() 
         res_hbox        = QtGui.QHBoxLayout()
@@ -97,7 +98,13 @@ class CalculationSettingsDialog(QtGui.QDialog):
         vbox.addWidget(self.exportdir_radio_config)
 
         vbox.addLayout(button_hbox)
-        self.setLayout(vbox)
+        hbox.addLayout(vbox)
+
+        radii_widget = RadiiWidget(None, None, self)
+
+        hbox.addWidget(radii_widget)
+
+        self.setLayout(hbox)
 
     def update_table(self):
         # get timestamps for selected frames for each file
@@ -202,3 +209,146 @@ class CalculationSettingsDialog(QtGui.QDialog):
                                                 exporttext=exporttext,
                                                 exportdir=exportdir),
                 ok)
+
+
+class RadiiWidget(QtGui.QWidget):
+
+
+    def __init__(self, radii, numbers, parent=None):
+
+        self.radii = [0,0]
+        self.radii[1] = 0.15
+
+        self.numbers ={}
+        self.numbers["H"] = 1
+
+
+        super(RadiiWidget, self).__init__(parent)
+
+        self.createMenuBox()
+        self.createCovalentTableBox()
+
+        mainLayout = QtGui.QGridLayout()
+        mainLayout.addWidget(self.covalentTableBox, 0, 0)
+        mainLayout.addWidget(self.menuBox, 1, 0,)
+
+        self.setLayout(mainLayout)
+        self.setWindowTitle("Dialog")
+        self.resize(600, 450)
+
+
+    def createMenuBox(self):
+
+        self.menuBox = QtGui.QGroupBox("Menu")
+        self.menuBox.setFixedSize(600, 320)
+        layout = QtGui.QGridLayout()
+
+        #Fixed Radio Button
+        self.fixed = QtGui.QRadioButton("Fixed Radius:", self)
+        self.fixed.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        self.extensionFixed = QtGui.QWidget()
+        self.extensionFixed.setVisible(False)
+        extensionFixedLayout = QtGui.QGridLayout()
+        self.radiusEdit = QtGui.QLineEdit()
+        self.radiusEdit.setFixedSize(150, 25)
+        self.radiusEdit.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        extensionFixedLayout.addWidget(self.radiusEdit, 0, 0, 0 ,0)
+        self.extensionFixed.setLayout(extensionFixedLayout)
+        self.fixed.toggled.connect(self.fixed_clicked)
+
+        #Costum Radio Button
+        self.costum = QtGui.QRadioButton("Costum:", self)
+        self.costum.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        self.extensionCostum = QtGui.QWidget()
+        self.extensionCostum.setVisible(False)
+        extensionCostumLayout = QtGui.QGridLayout()
+        self.createCostumTableBox()
+        extensionCostumLayout.addWidget(self.costumTableBox, 0, 0)
+        self.extensionCostum.setLayout(extensionCostumLayout)
+        self.costum.toggled.connect(self.costum_clicked)
+
+        layout.addWidget(self.fixed, 0, 0)
+        layout.addWidget(self.extensionFixed, 0, 0)
+        layout.addWidget(self.costum, 1, 0)
+        layout.addWidget(self.extensionCostum, 1, 1)
+
+        self.menuBox.setLayout(layout)
+
+
+    def fixed_clicked(self):
+
+        self.extensionCostum.setVisible(False)
+        self.extensionFixed.setVisible(True)
+
+
+    def costum_clicked(self):
+
+        self.extensionFixed.setVisible(False)
+        self.extensionCostum.setVisible(True)
+
+
+    def createCovalentTableBox(self):
+
+        self.covalentTableBox = QtGui.QGroupBox("Table")
+        self.covalentTableBox.setFixedSize(500, 120)
+        layoutTableBox = QtGui.QGridLayout()
+        covalentTable = QtGui.QTableWidget(1, len(self.numbers))
+        covalentTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
+        covalentTable.setHorizontalHeaderLabels(self.numbers.keys())
+        covalentTable.setVerticalHeaderLabels(("Covalent Radius", ))
+
+        j = 1
+        for i in range(len(self.numbers)):
+            covalentTable.setItem(0, i, QtGui.QTableWidgetItem())
+            covalentTable.item(0, i).setText(str(self.radii[j]))
+            j += 1
+        covalentTable.setShowGrid(True)
+
+        layoutTableBox.addWidget(covalentTable, 0, 0)
+        self.covalentTableBox.setLayout(layoutTableBox)
+
+
+    def input(self):
+
+        if self.fixed.isChecked() and hasattr(self, "radiusEdit"):
+            try:
+                radius = self.radiusEdit.text()
+                float(radius)
+                return radius
+            except ValueError:
+                message = QtGui.QMessageBox()
+                message.setStandardButtons(QMessageBox.Ok)
+                message.setText("Incorrect Entry")
+                message.exec_()
+
+        if self.costum.isChecked():
+            costumList = []
+            for i in range(len(self.numbers)):
+                try:
+                    costum = self.customTable.cellWidget(0, i).text()
+                    float(costum)
+                    costumList.append(costum)
+                except ValueError:
+                    message = QtGui.QMessageBox()
+                    message.setStandardButtons(QMessageBox.Ok)
+                    message.setText("Incorrect Entry")
+                    message.exec_()
+                    break
+            return costumList
+
+
+    def createCostumTableBox(self):
+
+        self.costumTableBox = QtGui.QGroupBox("Table")
+        self.costumTableBox.setFixedSize(400, 120)
+        layoutCostumTableBox = QtGui.QGridLayout()
+        self.customTable = QtGui.QTableWidget(1, len(self.numbers))
+        self.customTable.setHorizontalHeaderLabels(self.numbers.keys())
+        self.customTable.setVerticalHeaderLabels(("Costum Radius", ))
+
+        for i in range(len(self.numbers)):
+            self.customTable.setCellWidget(0, i, QtGui.QLineEdit())
+        self.customTable.setShowGrid(True)
+
+        layoutCostumTableBox.addWidget(self.customTable, 0, 0)
+        self.costumTableBox.setLayout(layoutCostumTableBox)
