@@ -103,15 +103,23 @@ class CalculationSettingsDialog(QtGui.QDialog):
         vbox.addLayout(button_hbox)
         hbox.addLayout(vbox)
 
-        covalence_radii_by_element = file.File.open(self.file_frame_dict.keys()[0]).getatoms(0).covalence_radii_by_element
-        radii = [None] + list(covalence_radii_by_element.values())
-        numbers = dict((element_name, element_number) for element_name, element_number in zip(covalence_radii_by_element.keys(),
-                                                                                              it.count(1)))
-        radii_widget = RadiiWidget(radii, numbers, self)
+        covalence_radii_by_element = self.__get_all_covalence_radii_by_element()
+        radii_widget = RadiiWidget(covalence_radii_by_element, self)
 
         hbox.addWidget(radii_widget)
 
         self.setLayout(hbox)
+
+    def __get_all_covalence_radii_by_element(self):
+        radii = {}
+        for filepath, frames in self.file_frame_dict.iteritems():
+            inputfile = file.File.open(filepath)
+            if frames == (-1, ):
+                frames = range(inputfile.info.num_frames)
+            for frame in frames:
+                current_radii = inputfile.getatoms(frame).covalence_radii_by_element
+                radii.update(current_radii)
+        return radii
 
     def update_table(self):
         # get timestamps for selected frames for each file
@@ -219,10 +227,9 @@ class CalculationSettingsDialog(QtGui.QDialog):
 
 
 class RadiiWidget(QtGui.QWidget):
-    def __init__(self, radii, numbers, parent=None):
+    def __init__(self, radii, parent=None):
 
         self.radii = radii
-        self.numbers = numbers
 
         super(RadiiWidget, self).__init__(parent)
 
@@ -293,23 +300,21 @@ class RadiiWidget(QtGui.QWidget):
         self.covalentTableBox = QtGui.QGroupBox("Table")
         self.covalentTableBox.setFixedSize(500, 120)
         layoutTableBox = QtGui.QGridLayout()
-        covalentTable = QtGui.QTableWidget(1, len(self.numbers))
+        covalentTable = QtGui.QTableWidget(1, len(self.radii))
         covalentTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
-        covalentTable.setHorizontalHeaderLabels(self.numbers.keys())
+        covalentTable.setHorizontalHeaderLabels(self.radii.keys())
         covalentTable.setVerticalHeaderLabels(("Covalent Radius", ))
 
-        j = 1
-        for i in range(len(self.numbers)):
+        for i in range(len(self.radii)):
             covalentTable.setItem(0, i, QtGui.QTableWidgetItem())
-            covalentTable.item(0, i).setText(str(self.radii[j]))
-            j += 1
+            covalentTable.item(0, i).setText(str(self.radii.values()[i]))
         covalentTable.setShowGrid(True)
 
         layoutTableBox.addWidget(covalentTable, 0, 0)
         self.covalentTableBox.setLayout(layoutTableBox)
 
 
-    def input(self):
+    def __get_input_from_CostumTable(self):
 
         if self.fixed.isChecked() and hasattr(self, "radiusEdit"):
             try:
@@ -324,7 +329,7 @@ class RadiiWidget(QtGui.QWidget):
 
         if self.costum.isChecked():
             costumList = []
-            for i in range(len(self.numbers)):
+            for i in range(len(self.radii)):
                 try:
                     costum = self.customTable.cellWidget(0, i).text()
                     float(costum)
@@ -343,11 +348,11 @@ class RadiiWidget(QtGui.QWidget):
         self.costumTableBox = QtGui.QGroupBox("Table")
         self.costumTableBox.setFixedSize(400, 120)
         layoutCostumTableBox = QtGui.QGridLayout()
-        self.customTable = QtGui.QTableWidget(1, len(self.numbers))
-        self.customTable.setHorizontalHeaderLabels(self.numbers.keys())
+        self.customTable = QtGui.QTableWidget(1, len(self.radii))
+        self.customTable.setHorizontalHeaderLabels(self.radii.keys())
         self.customTable.setVerticalHeaderLabels(("Costum Radius", ))
 
-        for i in range(len(self.numbers)):
+        for i in range(len(self.radii)):
             self.customTable.setCellWidget(0, i, QtGui.QLineEdit())
         self.customTable.setShowGrid(True)
 
