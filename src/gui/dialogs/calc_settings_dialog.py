@@ -5,6 +5,7 @@ from gui.dialogs.util.calc_table import CalculationTable, TableModel
 from core import calculation
 from core import file
 import os.path
+import itertools as it
 from config.configuration import config
 from PyQt4 import QtGui, QtCore
 
@@ -23,14 +24,16 @@ class CalculationSettingsDialog(QtGui.QDialog):
         self.filenames = file_frame_dict.keys()
         self.file_frame_dict = file_frame_dict
 
+        print self.file_frame_dict
+
         self.init_gui()
         self.setWindowTitle("Calculation Settings")
-    
+
     def init_gui(self):
-        
+
         hbox            = QtGui.QHBoxLayout()
-        vbox            = QtGui.QVBoxLayout() 
-        button_hbox     = QtGui.QHBoxLayout() 
+        vbox            = QtGui.QVBoxLayout()
+        button_hbox     = QtGui.QHBoxLayout()
         res_hbox        = QtGui.QHBoxLayout()
 
         self.res_slider = QtGui.QSlider(QtCore.Qt.Horizontal, self)
@@ -100,7 +103,11 @@ class CalculationSettingsDialog(QtGui.QDialog):
         vbox.addLayout(button_hbox)
         hbox.addLayout(vbox)
 
-        radii_widget = RadiiWidget(None, None, self)
+        covalence_radii_by_element = file.File.open(self.file_frame_dict.keys()[0]).getatoms(0).covalence_radii_by_element
+        radii = [None] + list(covalence_radii_by_element.values())
+        numbers = dict((element_name, element_number) for element_name, element_number in zip(covalence_radii_by_element.keys(),
+                                                                                              it.count(1)))
+        radii_widget = RadiiWidget(radii, numbers, self)
 
         hbox.addWidget(radii_widget)
 
@@ -212,16 +219,10 @@ class CalculationSettingsDialog(QtGui.QDialog):
 
 
 class RadiiWidget(QtGui.QWidget):
-
-
     def __init__(self, radii, numbers, parent=None):
 
-        self.radii = [0,0]
-        self.radii[1] = 0.15
-
-        self.numbers ={}
-        self.numbers["H"] = 1
-
+        self.radii = radii
+        self.numbers = numbers
 
         super(RadiiWidget, self).__init__(parent)
 

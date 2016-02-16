@@ -458,6 +458,7 @@ class Atoms(object):
         self.radii_as_indices = np.sort(indices)
 
         self._covalence_radii = None
+        self._covalence_radii_by_element = None
         self._bonds = None
         self._colors = None
 
@@ -470,6 +471,15 @@ class Atoms(object):
                 covalence_radii[i] = core.elements.radii[element_number]
             self._covalence_radii = covalence_radii
         return self._covalence_radii
+
+    @property
+    def covalence_radii_by_element(self):
+        covalence_radii = self.covalence_radii
+        if self._covalence_radii_by_element is None:
+            self._covalence_radii_by_element = dict((element, covalence_radius)
+                                                    for element, covalence_radius
+                                                    in zip(self.elements, covalence_radii))
+        return self._covalence_radii_by_element
 
     @property
     def bonds(self):
