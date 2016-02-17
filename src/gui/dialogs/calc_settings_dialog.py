@@ -238,67 +238,58 @@ class RadiiWidget(QtGui.QWidget):
 
         mainLayout = QtGui.QGridLayout()
         mainLayout.addWidget(self.covalentTableBox, 0, 0)
-        mainLayout.addWidget(self.menuBox, 1, 0,)
+        mainLayout.addWidget(self.menuBox, 1, 0)
 
         self.setLayout(mainLayout)
-        self.setWindowTitle("Dialog")
         self.resize(600, 450)
 
 
     def createMenuBox(self):
 
         self.menuBox = QtGui.QGroupBox("Menu")
-        self.menuBox.setFixedSize(600, 320)
+        self.menuBox.setFixedSize(400, 320)
         layout = QtGui.QGridLayout()
 
         #Fixed Radio Button
         self.fixed = QtGui.QRadioButton("Fixed Radius:", self)
         self.fixed.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
-        self.extensionFixed = QtGui.QWidget()
-        self.extensionFixed.setVisible(False)
-        extensionFixedLayout = QtGui.QGridLayout()
         self.radiusEdit = QtGui.QLineEdit()
-        self.radiusEdit.setFixedSize(150, 25)
+        self.radiusEdit.setFixedSize(150, 20)
+        self.radiusEdit.setVisible(False)
         self.radiusEdit.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
-        extensionFixedLayout.addWidget(self.radiusEdit, 0, 0, 0 ,0)
-        self.extensionFixed.setLayout(extensionFixedLayout)
         self.fixed.toggled.connect(self.fixed_clicked)
 
-        #Costum Radio Button
-        self.costum = QtGui.QRadioButton("Costum:", self)
-        self.costum.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
-        self.extensionCostum = QtGui.QWidget()
-        self.extensionCostum.setVisible(False)
-        extensionCostumLayout = QtGui.QGridLayout()
-        self.createCostumTableBox()
-        extensionCostumLayout.addWidget(self.costumTableBox, 0, 0)
-        self.extensionCostum.setLayout(extensionCostumLayout)
-        self.costum.toggled.connect(self.costum_clicked)
+        #Custom Radio Button
+        self.custom = QtGui.QRadioButton("Custom:", self)
+        self.custom.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        self.createCustomTable()
+        self.customTable.setVisible(False)
+        self.custom.toggled.connect(self.custom_clicked)
 
-        layout.addWidget(self.fixed, 0, 0)
-        layout.addWidget(self.extensionFixed, 0, 0)
-        layout.addWidget(self.costum, 1, 0)
-        layout.addWidget(self.extensionCostum, 1, 1)
+        layout.addWidget(self.fixed, 0, 0, 0, 0, QtCore.Qt.AlignTop)
+        layout.addWidget(self.radiusEdit, 0, 1)
+        layout.addWidget(self.custom, 1, 0)
+        layout.addWidget(self.customTable, 2, 0)
 
         self.menuBox.setLayout(layout)
 
 
     def fixed_clicked(self):
 
-        self.extensionCostum.setVisible(False)
-        self.extensionFixed.setVisible(True)
+        self.customTable.setVisible(False)
+        self.radiusEdit.setVisible(True)
 
 
-    def costum_clicked(self):
+    def custom_clicked(self):
 
-        self.extensionFixed.setVisible(False)
-        self.extensionCostum.setVisible(True)
+        self.radiusEdit.setVisible(False)
+        self.customTable.setVisible(True)
 
 
     def createCovalentTableBox(self):
 
         self.covalentTableBox = QtGui.QGroupBox("Table")
-        self.covalentTableBox.setFixedSize(500, 120)
+        self.covalentTableBox.setFixedSize(400, 120)
         layoutTableBox = QtGui.QGridLayout()
         covalentTable = QtGui.QTableWidget(1, len(self.radii))
         covalentTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
@@ -314,7 +305,7 @@ class RadiiWidget(QtGui.QWidget):
         self.covalentTableBox.setLayout(layoutTableBox)
 
 
-    def __get_input_from_CostumTable(self):
+    def __get_input_from_CustomTable(self):
 
         if self.fixed.isChecked() and hasattr(self, "radiusEdit"):
             try:
@@ -327,34 +318,29 @@ class RadiiWidget(QtGui.QWidget):
                 message.setText("Incorrect Entry")
                 message.exec_()
 
-        if self.costum.isChecked():
-            costumList = []
+        if self.custom.isChecked():
+            customList = []
             for i in range(len(self.radii)):
                 try:
-                    costum = self.customTable.cellWidget(0, i).text()
-                    float(costum)
-                    costumList.append(costum)
+                    custom = self.customTable.cellWidget(0, i).text()
+                    float(custom)
+                    customList.append(custom)
                 except ValueError:
                     message = QtGui.QMessageBox()
                     message.setStandardButtons(QMessageBox.Ok)
                     message.setText("Incorrect Entry")
                     message.exec_()
                     break
-            return costumList
+            return customList
 
 
-    def createCostumTableBox(self):
+    def createCustomTable(self):
 
-        self.costumTableBox = QtGui.QGroupBox("Table")
-        self.costumTableBox.setFixedSize(400, 120)
-        layoutCostumTableBox = QtGui.QGridLayout()
         self.customTable = QtGui.QTableWidget(1, len(self.radii))
+        self.customTable.setFixedSize(380, 60)
         self.customTable.setHorizontalHeaderLabels(self.radii.keys())
-        self.customTable.setVerticalHeaderLabels(("Costum Radius", ))
+        self.customTable.setVerticalHeaderLabels(("Custom Radius", ))
 
         for i in range(len(self.radii)):
             self.customTable.setCellWidget(0, i, QtGui.QLineEdit())
         self.customTable.setShowGrid(True)
-
-        layoutCostumTableBox.addWidget(self.customTable, 0, 0)
-        self.costumTableBox.setLayout(layoutCostumTableBox)
