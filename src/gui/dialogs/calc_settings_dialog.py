@@ -233,43 +233,44 @@ class RadiiWidget(QtGui.QWidget):
 
         super(RadiiWidget, self).__init__(parent)
 
-        self.createMenuBox()
         self.createCovalentTableBox()
+        self.createMenuBox()
 
         mainLayout = QtGui.QGridLayout()
         mainLayout.addWidget(self.covalentTableBox, 0, 0)
         mainLayout.addWidget(self.menuBox, 1, 0)
 
         self.setLayout(mainLayout)
-        self.resize(600, 450)
+        # self.resize(600, 450)
 
 
     def createMenuBox(self):
 
         self.menuBox = QtGui.QGroupBox("Menu")
-        self.menuBox.setFixedSize(400, 320)
+        # self.menuBox.setFixedSize(400, 320)
         layout = QtGui.QGridLayout()
 
         #Fixed Radio Button
-        self.fixed = QtGui.QRadioButton("Fixed Radius:", self)
-        self.fixed.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        self.fixed = QtGui.QRadioButton("Fixed Radius:")
+        self.fixed.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
         self.radiusEdit = QtGui.QLineEdit()
-        self.radiusEdit.setFixedSize(150, 20)
+        self.radiusEdit.setMinimumWidth(150)
         self.radiusEdit.setVisible(False)
-        self.radiusEdit.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        self.radiusEdit.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
         self.fixed.toggled.connect(self.fixed_clicked)
 
         #Custom Radio Button
-        self.custom = QtGui.QRadioButton("Custom:", self)
-        self.custom.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        self.custom = QtGui.QRadioButton("Custom:")
+        self.custom.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
+        self.custom.setStyleSheet('background-color: red;')
         self.createCustomTable()
         self.customTable.setVisible(False)
         self.custom.toggled.connect(self.custom_clicked)
 
-        layout.addWidget(self.fixed, 0, 0, 0, 0, QtCore.Qt.AlignTop)
-        layout.addWidget(self.radiusEdit, 0, 1)
-        layout.addWidget(self.custom, 1, 0)
-        layout.addWidget(self.customTable, 2, 0)
+        layout.addWidget(self.fixed, 0, 0, QtCore.Qt.AlignTop)
+        layout.addWidget(self.radiusEdit, 0, 1, QtCore.Qt.AlignTop)
+        layout.addWidget(self.custom, 1, 0, 1, 2, QtCore.Qt.AlignTop)
+        layout.addWidget(self.customTable, 2, 0, 1, 2, QtCore.Qt.AlignTop)
 
         self.menuBox.setLayout(layout)
 
@@ -289,9 +290,11 @@ class RadiiWidget(QtGui.QWidget):
     def createCovalentTableBox(self):
 
         self.covalentTableBox = QtGui.QGroupBox("Table")
-        self.covalentTableBox.setFixedSize(400, 120)
+        # self.covalentTableBox.setFixedSize(400, 120)
         layoutTableBox = QtGui.QGridLayout()
         covalentTable = QtGui.QTableWidget(1, len(self.radii))
+        covalentTable.setMinimumHeight(0)
+        covalentTable.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Maximum)
         covalentTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         covalentTable.setHorizontalHeaderLabels(self.radii.keys())
         covalentTable.setVerticalHeaderLabels(("Covalent Radius", ))
@@ -337,7 +340,8 @@ class RadiiWidget(QtGui.QWidget):
     def createCustomTable(self):
 
         self.customTable = QtGui.QTableWidget(1, len(self.radii))
-        self.customTable.setFixedSize(380, 60)
+        self.customTable.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Maximum)
+        # self.customTable.setFixedSize(380, 60)
         self.customTable.setHorizontalHeaderLabels(self.radii.keys())
         self.customTable.setVerticalHeaderLabels(("Custom Radius", ))
 
