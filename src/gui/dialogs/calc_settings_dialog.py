@@ -241,13 +241,11 @@ class RadiiWidget(QtGui.QWidget):
         mainLayout.addWidget(self.menuBox, 1, 0)
 
         self.setLayout(mainLayout)
-        # self.resize(600, 450)
 
 
     def createMenuBox(self):
 
         self.menuBox = QtGui.QGroupBox("Menu")
-        # self.menuBox.setFixedSize(400, 320)
         layout = QtGui.QGridLayout()
 
         #Fixed Radio Button
@@ -262,35 +260,47 @@ class RadiiWidget(QtGui.QWidget):
         #Custom Radio Button
         self.custom = QtGui.QRadioButton("Custom:")
         self.custom.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
-        self.custom.setStyleSheet('background-color: red;')
         self.createCustomTable()
         self.customTable.setVisible(False)
         self.custom.toggled.connect(self.custom_clicked)
 
+        #QStackedWidget customTable
+        self.tmp1 = QtGui.QWidget()
+        self.stackedWidgetCustomTable = QtGui.QStackedWidget()
+        self.stackedWidgetCustomTable.addWidget(self.customTable)
+        self.stackedWidgetCustomTable.addWidget(self.tmp1)
+        self.stackedWidgetCustomTable.setCurrentIndex(1)
+
+        #QStrackedWidget radiusEdit
+        self.tmp2 = QtGui.QWidget()
+        self.stackedWidgetRadiusEdit = QtGui.QStackedWidget()
+        self.stackedWidgetRadiusEdit.addWidget(self.radiusEdit)
+        self.stackedWidgetRadiusEdit.addWidget(self.tmp2)
+        self.stackedWidgetRadiusEdit.setCurrentIndex(1)
+
         layout.addWidget(self.fixed, 0, 0, QtCore.Qt.AlignTop)
-        layout.addWidget(self.radiusEdit, 0, 1, QtCore.Qt.AlignTop)
+        layout.addWidget(self.stackedWidgetRadiusEdit, 0, 1, QtCore.Qt.AlignTop)
         layout.addWidget(self.custom, 1, 0, 1, 2, QtCore.Qt.AlignTop)
-        layout.addWidget(self.customTable, 2, 0, 1, 2, QtCore.Qt.AlignTop)
+        layout.addWidget(self.stackedWidgetCustomTable, 2, 0, 1, 2, QtCore.Qt.AlignTop)
 
         self.menuBox.setLayout(layout)
 
 
     def fixed_clicked(self):
 
-        self.customTable.setVisible(False)
-        self.radiusEdit.setVisible(True)
+        self.stackedWidgetCustomTable.setCurrentIndex(1)
+        self.stackedWidgetRadiusEdit.setCurrentIndex(0)
 
 
     def custom_clicked(self):
 
-        self.radiusEdit.setVisible(False)
-        self.customTable.setVisible(True)
+        self.stackedWidgetCustomTable.setCurrentIndex(0)
+        self.stackedWidgetRadiusEdit.setCurrentIndex(1)
 
 
     def createCovalentTableBox(self):
 
         self.covalentTableBox = QtGui.QGroupBox("Table")
-        # self.covalentTableBox.setFixedSize(400, 120)
         layoutTableBox = QtGui.QGridLayout()
         covalentTable = QtGui.QTableWidget(1, len(self.radii))
         covalentTable.setMinimumHeight(0)
@@ -317,7 +327,7 @@ class RadiiWidget(QtGui.QWidget):
                 return radius
             except ValueError:
                 message = QtGui.QMessageBox()
-                message.setStandardButtons(QMessageBox.Ok)
+                message.setStandardButtons(QtGui.QMessageBox.Ok)
                 message.setText("Incorrect Entry")
                 message.exec_()
 
@@ -330,7 +340,7 @@ class RadiiWidget(QtGui.QWidget):
                     customList.append(custom)
                 except ValueError:
                     message = QtGui.QMessageBox()
-                    message.setStandardButtons(QMessageBox.Ok)
+                    message.setStandardButtons(QtGui.QMessageBox.Ok)
                     message.setText("Incorrect Entry")
                     message.exec_()
                     break
@@ -341,7 +351,6 @@ class RadiiWidget(QtGui.QWidget):
 
         self.customTable = QtGui.QTableWidget(1, len(self.radii))
         self.customTable.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Maximum)
-        # self.customTable.setFixedSize(380, 60)
         self.customTable.setHorizontalHeaderLabels(self.radii.keys())
         self.customTable.setVerticalHeaderLabels(("Custom Radius", ))
 
