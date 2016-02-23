@@ -344,7 +344,7 @@ class HTMLWindow(QtGui.QWidget):
         volumes = 0.0
         volume_fraction = 0.0
         if self.cavities_surface is not None:
-            for sf in self.cavities_center.surface_areas:
+            for sf in self.cavities_surface.surface_areas:
                 surface_area += sf
             for vl in self.cavities_surface.volumes:
                 volumes += vl
