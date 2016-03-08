@@ -51,6 +51,7 @@ class CalculationThread(QtCore.QThread):
             self._exited_with_errors = True
             message.error(e)
             message.finish()
+            raise
 
 
 class FileTab(QtGui.QWidget):

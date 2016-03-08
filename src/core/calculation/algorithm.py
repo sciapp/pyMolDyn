@@ -75,6 +75,7 @@ from config.configuration import config
 
 import os
 from computation.split_and_merge.pipeline import start_split_and_merge_pipeline
+from computation.split_and_merge.algorithm import ObjectType
 import util.colored_exceptions
 import time
 from util.message import print_message, progress, finish
@@ -116,11 +117,22 @@ class DomainCalculation:
                     [(0, 0, 0)] + self.discretization.combined_translation_vectors,
                     self.discretization.grid)
         # step 3
-        self.centers, self.surface_point_list = start_split_and_merge_pipeline(self.grid, self.discretization.grid,
-                                                                               self.atom_discretization.discrete_positions,
-                                                                               self.discretization.combined_translation_vectors,
-                                                                               self.discretization.get_translation_vector)
+        result = start_split_and_merge_pipeline(self.grid,
+                                                self.discretization.grid,
+                                                self.atom_discretization.discrete_positions,
+                                                self.discretization.combined_translation_vectors,
+                                                self.discretization.get_translation_vector,
+                                                ObjectType.DOMAIN)
+        self.centers, translated_areas, non_translated_areas, self.surface_point_list = result
         print_message("Number of domains:", len(self.centers))
+
+        # ================================================================================
+
+        np.savez_compressed('domains.npz', translated_areas=translated_areas, non_translated_areas=non_translated_areas)
+        # sys.exit()
+
+        # ================================================================================
+
         self.domain_volumes = []
         for domain_index in range(len(self.centers)):
             domain_volume = (self.grid == -(domain_index + 1)).sum() * (self.discretization.s_step ** 3)
