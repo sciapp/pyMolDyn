@@ -106,12 +106,14 @@ class GridVisWidget(QtOpenGL.QGLWidget):
         if self._current_area_index >= len(self._areas):
             self._current_area_index = 0
         self.updateGL()
+        return self._current_area_index
 
     def show_previous_area(self):
         self._current_area_index -= 1
         if self._current_area_index < 0:
             self._current_area_index = len(self._areas) - 1
         self.updateGL()
+        return self._current_area_index
 
     def show_diff(self):
         pass

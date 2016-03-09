@@ -94,5 +94,44 @@ class TwinViewWidget(QtGui.QWidget):
         key = unicode(event.text())
         if key in key_to_method:
             method_name = key_to_method[key]
-            getattr(self._left_view, method_name)()
-            getattr(self._right_view, method_name)()
+            getattr(self, method_name)()
+
+    def show_box(self):
+        self.topLevelWidget().show_box = True
+        self._left_view.show_box()
+        self._right_view.show_box()
+
+    def hide_box(self):
+        self.topLevelWidget().show_box = False
+        self._left_view.hide_box()
+        self._right_view.hide_box()
+
+    def show_all_areas(self):
+        self.topLevelWidget().show_all_areas = True
+        self._left_view.show_all_areas()
+        self._right_view.show_all_areas()
+
+    def show_single_area(self):
+        self.topLevelWidget().show_all_areas = False
+        self._left_view.show_single_area()
+        self._right_view.show_single_area()
+
+    def show_next_area(self):
+        current_index = self._left_view.show_next_area()
+        self._right_view.show_next_area()
+        self.topLevelWidget().index = current_index
+
+    def show_previous_area(self):
+        current_index = self._left_view.show_previous_area()
+        self._right_view.show_previous_area()
+        self.topLevelWidget().index = current_index
+
+    def show_diff(self):
+        self.topLevelWidget().show_diff = True
+        self._left_view.show_diff()
+        self._right_view.show_diff()
+
+    def disable_diff(self):
+        self.topLevelWidget().show_diff = False
+        self._left_view.disable_diff()
+        self._right_view.disable_diff()
