@@ -163,7 +163,8 @@ class MergeGroup(object):
         generators.extend(forwards_generators)
         backwards_generators = get_generators_from_start_index(index_of_non_translated_subgroup, reverse=True)
         generators.extend(backwards_generators)
-        return it.chain(*generators)
+        # return it.chain(*generators)
+        return generators
 
     @property
     def is_cyclic(self):
@@ -437,10 +438,15 @@ class GraphForSplitAndMerge(Graph):
                     )
                     if with_non_translated_nodes:
                         alt_area = set()
-                        for merged_node, translated_node in node_iterator:
-                            area.add(translated_node)
-                            alt_area.add(merged_node)
-                            visited_nodes.add(merged_node)
+                        for generator in node_iterator:
+                            sub_area = []
+                            sub_alt_area = []
+                            for merged_node, translated_node in generator:
+                                sub_area.append(translated_node)
+                                sub_alt_area.append(merged_node)
+                                visited_nodes.add(merged_node)
+                            area.add(tuple(sub_area))
+                            alt_area.add(tuple(sub_alt_area))
                         alt_areas.append(alt_area)
                     else:
                         for merged_node, translated_node in node_iterator:

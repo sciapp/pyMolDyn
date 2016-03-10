@@ -22,7 +22,9 @@ class GridVisWidget(QtOpenGL.QGLWidget):
         super(GridVisWidget, self).__init__(parent, *args, **kwargs)
         self._areas = areas
         self._center = center
+        self._cube_mesh = None
         self._show_single_area = False
+        self._show_subparts = False
         self._current_area_index = 0
         self._bounding_box_min = bounding_box_min
         self._bounding_box_max = bounding_box_max
@@ -49,7 +51,7 @@ class GridVisWidget(QtOpenGL.QGLWidget):
                          self._center[0], self._center[1], self._center[2],
                          0, 1, 0)
         gr3.setlightdirection(0, 0, 0)
-        self.cube_mesh = create_cube()
+        self._cube_mesh = create_cube()
 
     def resizeGL(self, width, height):
         pass
@@ -61,14 +63,32 @@ class GridVisWidget(QtOpenGL.QGLWidget):
                       gr3.GR3_Drawable.GR3_DRAWABLE_OPENGL)
 
     def _draw_scene(self):
+        def draw_area(area, colors):
+            colorize_subareas = not isinstance(colors, tuple)
+            node_positions = [(pos[0] + x, pos[1] + y, pos[2] + z) for subarea in area
+                              for pos, dim in subarea
+                              for x, y, z in it.product(*(range(c) for c in dim))]
+            count_positions = len(node_positions)
+            if colorize_subareas:
+                count_positions_per_subarea = [sum(w * h * d for _, (w, h, d) in subarea) for subarea in area]
+                colors = tuple(it.chain(*(count * (color, ) for count, color in
+                                          zip(count_positions_per_subarea, colors))))
+            else:
+                colors = count_positions * (colors, )
+            gr3.drawmesh(self._cube_mesh, count_positions, node_positions, count_positions*((0, 0, 1), ),
+                         count_positions*((0, 1, 0), ), colors, count_positions*((1, 1, 1), ))
+
         color_generator = self._get_color_generator()
-        for i, (area, color) in enumerate(zip(self._areas, color_generator)):
-            if not self._show_single_area or i == self._current_area_index:
-                node_positions = [(pos[0] + x, pos[1] + y, pos[2] + z) for pos, dim in area
-                                  for x, y, z in it.product(*(range(c) for c in dim))]
-                count_positions = len(node_positions)
-                gr3.drawmesh(self.cube_mesh, count_positions, node_positions, count_positions*((0, 0, 1), ),
-                             count_positions*((0, 1, 0), ), count_positions*(color, ), count_positions*((1, 1, 1), ))
+        if self._show_single_area:
+            if self._show_subparts:
+                draw_area(self._areas[self._current_area_index], color_generator)
+            else:
+                for _ in range(self._current_area_index - 1):
+                    color_generator.next()
+                draw_area(self._areas[self._current_area_index], color_generator.next())
+        else:
+            for area, color in zip(self._areas, color_generator):
+                draw_area(area, color)
 
     def mousePressEvent(self, event):
         self.parent().on_mouse_press(event)
@@ -115,11 +135,13 @@ class GridVisWidget(QtOpenGL.QGLWidget):
         self.updateGL()
         return self._current_area_index
 
-    def show_diff(self):
-        pass
+    def show_subparts(self):
+        self._show_subparts = True
+        self.updateGL()
 
-    def disable_diff(self):
-        pass
+    def hide_subparts(self):
+        self._show_subparts = False
+        self.updateGL()
 
     @staticmethod
     def _get_color_generator():

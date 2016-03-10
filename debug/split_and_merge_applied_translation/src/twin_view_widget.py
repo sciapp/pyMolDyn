@@ -56,7 +56,7 @@ class TwinViewWidget(QtGui.QWidget):
 
     @staticmethod
     def get_bounding_box_and_center(data):
-        plain_nodes = tuple(node for area in data for node in area)
+        plain_nodes = tuple(node for area in data for subarea in area for node in subarea)
         node_positions = [(pos[0] + x, pos[1] + y, pos[2] + z) for pos, dim in plain_nodes
                           for x, y, z in it.product(*(range(c) for c in dim))]
         min_components = tuple(min(axis) for axis in zip(*node_positions))
@@ -87,8 +87,8 @@ class TwinViewWidget(QtGui.QWidget):
             'A': 'show_single_area',
             'n': 'show_next_area',
             'N': 'show_previous_area',
-            'd': 'show_diff',
-            'D': 'disable_diff'
+            'c': 'show_subparts',
+            'C': 'hide_subparts'
         }
 
         key = unicode(event.text())
@@ -126,12 +126,12 @@ class TwinViewWidget(QtGui.QWidget):
         self._right_view.show_previous_area()
         self.topLevelWidget().index = current_index
 
-    def show_diff(self):
-        self.topLevelWidget().show_diff = True
-        self._left_view.show_diff()
-        self._right_view.show_diff()
+    def show_subparts(self):
+        self.topLevelWidget().show_subparts = True
+        self._left_view.show_subparts()
+        self._right_view.show_subparts()
 
-    def disable_diff(self):
-        self.topLevelWidget().show_diff = False
-        self._left_view.disable_diff()
-        self._right_view.disable_diff()
+    def hide_subparts(self):
+        self.topLevelWidget().show_subparts = False
+        self._left_view.hide_subparts()
+        self._right_view.hide_subparts()
