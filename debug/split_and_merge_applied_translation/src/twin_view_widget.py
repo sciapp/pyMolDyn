@@ -16,10 +16,11 @@ CAMERA_DISTANCE = 100
 
 
 class TwinViewWidget(QtGui.QWidget):
-    def __init__(self, parent, non_translated_data, translated_data, mask, *args, **kwargs):
+    def __init__(self, parent, non_translated_data, translated_data, areas_translation_vectors, mask, *args, **kwargs):
         super(TwinViewWidget, self).__init__(parent, *args, **kwargs)
         self._non_translated_data, self._translated_data = self._filter_for_relevant_data(non_translated_data,
-                                                                                        translated_data)
+                                                                                          translated_data)
+        self._areas_translation_vectors = areas_translation_vectors
         self._mask = mask
         center, bounding_box_min, bounding_box_max = self.get_bounding_box_and_center(non_translated_data)
         self._center = center
@@ -45,11 +46,11 @@ class TwinViewWidget(QtGui.QWidget):
         self._right_label = QtGui.QLabel('Translated data:', self)
         self._right_label.setSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Maximum)
         self._main_layout.addWidget(self._right_label, 0, 1)
-        self._left_view = GridVisWidget(self, self._non_translated_data, self._mask, self._center,
-                                        self._bounding_box_min, self._bounding_box_max, CAMERA_DISTANCE)
+        self._left_view = GridVisWidget(self, self._non_translated_data, self._areas_translation_vectors, self._mask,
+                                        self._center, self._bounding_box_min, self._bounding_box_max, CAMERA_DISTANCE)
         self._left_view.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.MinimumExpanding)
         self._main_layout.addWidget(self._left_view, 1, 0)
-        self._right_view = GridVisWidget(self, self._translated_data, self._mask, self._center,
+        self._right_view = GridVisWidget(self, self._translated_data, None, self._mask, self._center,
                                          self._bounding_box_min, self._bounding_box_max, CAMERA_DISTANCE)
         self._right_view.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.MinimumExpanding)
         self._main_layout.addWidget(self._right_view, 1, 1)
@@ -89,7 +90,9 @@ class TwinViewWidget(QtGui.QWidget):
             'n': 'show_next_area',
             'N': 'show_previous_area',
             'c': 'show_subparts',
-            'C': 'hide_subparts'
+            'C': 'hide_subparts',
+            'l': 'show_link',
+            'L': 'hide_link'
         }
 
         key = unicode(event.text())
@@ -136,3 +139,13 @@ class TwinViewWidget(QtGui.QWidget):
         self.topLevelWidget().show_subparts = False
         self._left_view.hide_subparts()
         self._right_view.hide_subparts()
+
+    def show_link(self):
+        self.topLevelWidget().show_link = True
+        self._left_view.show_link()
+        self._right_view.show_link()
+
+    def hide_link(self):
+        self.topLevelWidget().show_link = False
+        self._left_view.hide_link()
+        self._right_view.hide_link()

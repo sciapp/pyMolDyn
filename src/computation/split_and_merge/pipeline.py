@@ -14,9 +14,9 @@ def start_split_and_merge_pipeline(data, mask, atoms, combined_translation_vecto
     algorithm.merge(data, graph)
     algorithm.add_periodic_neighbors(graph)
     algorithm.merge_periodic_border(data, graph)
-    areas, non_translated_areas, cyclic_area_indices = graph.get_all_areas(apply_translation=True,
-                                                                           with_non_translated_nodes=True,
-                                                                           mark_cyclic_areas=True)
+    areas, non_translated_areas, areas_translation_vectors, cyclic_area_indices = graph.get_all_areas(apply_translation=True,
+                                                                                                      with_non_translated_nodes=True,
+                                                                                                      mark_cyclic_areas=True)
     # algorithm.mark_domain_points(data, non_translated_areas)
 
     # centers = algorithm.calculate_domain_centers(atoms, combined_translation_vectors, non_translated_areas)
@@ -24,4 +24,4 @@ def start_split_and_merge_pipeline(data, mask, atoms, combined_translation_vecto
 
     centers, surface_cells = None, None
 
-    return centers, areas, non_translated_areas, surface_cells
+    return centers, areas, non_translated_areas, areas_translation_vectors, surface_cells

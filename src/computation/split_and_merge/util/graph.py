@@ -425,6 +425,7 @@ class GraphForSplitAndMerge(Graph):
         if self.split_allowed:
             return []
         areas = []
+        areas_translation_vectors = []
         # Saves non translated areas if "apply_translation" and "with_non_translated_nodes" are set to true
         alt_areas = [] if with_non_translated_nodes else None
         cyclic_areas = [] if mark_cyclic_areas else None
@@ -448,6 +449,7 @@ class GraphForSplitAndMerge(Graph):
                             area.append(tuple(sub_area))
                             alt_area.append(tuple(sub_alt_area))
                         alt_areas.append(alt_area)
+                        areas_translation_vectors.append(tuple(self.merged_nodes[node]._translation_vectors))
                     else:
                         for merged_node, translated_node in node_iterator:
                             area.add(translated_node)
@@ -461,7 +463,7 @@ class GraphForSplitAndMerge(Graph):
                 if mark_cyclic_areas and self.merged_nodes[node].is_cyclic:
                     cyclic_areas.append(len(areas) - 1)
         if apply_translation and with_non_translated_nodes and mark_cyclic_areas:
-            return areas, alt_areas, cyclic_areas
+            return areas, alt_areas, areas_translation_vectors, cyclic_areas
         elif mark_cyclic_areas:
             return areas, cyclic_areas
         else:

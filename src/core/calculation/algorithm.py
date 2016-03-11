@@ -123,12 +123,14 @@ class DomainCalculation:
                                                 self.discretization.combined_translation_vectors,
                                                 self.discretization.get_translation_vector,
                                                 ObjectType.DOMAIN)
-        self.centers, translated_areas, non_translated_areas, self.surface_point_list = result
+        (self.centers, translated_areas, non_translated_areas,
+         areas_translation_vectors, self.surface_point_list) = result
         # print_message("Number of domains:", len(self.centers))
 
         # ================================================================================
 
-        np.savez_compressed('domains.npz', translated_areas=translated_areas, non_translated_areas=non_translated_areas)
+        np.savez_compressed('domains.npz', translated_areas=translated_areas, non_translated_areas=non_translated_areas,
+                            areas_translation_vectors=areas_translation_vectors)
         np.savez_compressed('mask.npz', mask=self.discretization.grid)
         sys.exit()
 

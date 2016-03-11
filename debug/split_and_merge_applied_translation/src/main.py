@@ -19,7 +19,8 @@ def main():
     mask = np.load('../data/mask.npz')['mask']
     mask[mask != 0] = 1
     non_translated_data, translated_data = data['non_translated_areas'], data['translated_areas']
-    w = MainWindow(non_translated_data, translated_data, mask)
+    areas_translation_vectors = data['areas_translation_vectors']
+    w = MainWindow(non_translated_data, translated_data, areas_translation_vectors, mask)
     w.resize(2000, 1000)
     w.setWindowTitle('Grid Visualization')
     screen_geometry = QtGui.QApplication.desktop().screenGeometry()

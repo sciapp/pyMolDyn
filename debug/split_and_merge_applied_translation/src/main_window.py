@@ -10,12 +10,12 @@ from twin_view_widget import TwinViewWidget
 
 
 class MainWindow(QtGui.QMainWindow):
-    def __init__(self, non_translated_data, translated_data, mask, *args, **kwargs):
+    def __init__(self, non_translated_data, translated_data, areas_translation_vectors, mask, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
-        self._init_ui(non_translated_data, translated_data, mask)
+        self._init_ui(non_translated_data, translated_data, areas_translation_vectors, mask)
 
-    def _init_ui(self, non_translated_data, translated_data, mask):
-        self._grid_vis = TwinViewWidget(self, non_translated_data, translated_data, mask)
+    def _init_ui(self, non_translated_data, translated_data, areas_translation_vectors, mask):
+        self._grid_vis = TwinViewWidget(self, non_translated_data, translated_data, areas_translation_vectors, mask)
         self.setCentralWidget(self._grid_vis)
         self._status_bar = StatusBar(self)
         self.setStatusBar(self._status_bar)
@@ -52,6 +52,14 @@ class MainWindow(QtGui.QMainWindow):
     def show_subparts(self, value):
         self._status_bar.show_subparts = value
 
+    @property
+    def show_link(self):
+        return self._status_bar.show_link
+
+    @show_link.setter
+    def show_link(self, value):
+        self._status_bar.show_link = value
+
 
 class StatusBar(QtGui.QStatusBar):
     def __init__(self, *args, **kwargs):
@@ -60,6 +68,7 @@ class StatusBar(QtGui.QStatusBar):
         self._show_box = False
         self._show_all_areas = True
         self._show_subparts = False
+        self._show_link = False
         self._init_ui()
 
     def _init_ui(self):
@@ -67,7 +76,9 @@ class StatusBar(QtGui.QStatusBar):
         self._show_box_label = QtGui.QLabel(self)
         self._show_all_areas_label = QtGui.QLabel(self)
         self._show_subparts_label = QtGui.QLabel(self)
-        for label in (self._index_label, self._show_box_label, self._show_all_areas_label, self._show_subparts_label):
+        self._show_link_label = QtGui.QLabel(self)
+        for label in (self._index_label, self._show_box_label, self._show_all_areas_label, self._show_subparts_label,
+                      self._show_link_label):
             label.setFont(QtGui.QFont('Menlo'))
             self.addPermanentWidget(label)
         # call property setters to set labels correctly
@@ -75,6 +86,7 @@ class StatusBar(QtGui.QStatusBar):
         self.show_box = self._show_box
         self.show_all_areas = self._show_all_areas
         self.show_subparts = self._show_subparts
+        self.show_link = self._show_link
 
     @property
     def index(self):
@@ -111,3 +123,12 @@ class StatusBar(QtGui.QStatusBar):
     def show_subparts(self, value):
         self._show_subparts = value
         self._show_subparts_label.setText('show subparts: {}'.format(self._show_subparts))
+
+    @property
+    def show_link(self):
+        return self._show_link
+
+    @show_link.setter
+    def show_link(self, value):
+        self._show_link = value
+        self._show_link_label.setText('show link: {}'.format(self._show_link))
