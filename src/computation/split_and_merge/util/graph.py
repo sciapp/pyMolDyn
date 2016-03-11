@@ -159,10 +159,10 @@ class MergeGroup(object):
         else:
             index_of_non_translated_subgroup = self._index_of_primary_subgroup
         generators = []
+        backwards_generators = get_generators_from_start_index(index_of_non_translated_subgroup, reverse=True)
+        generators.extend(list(reversed(backwards_generators)))
         forwards_generators = get_generators_from_start_index(index_of_non_translated_subgroup)
         generators.extend(forwards_generators)
-        backwards_generators = get_generators_from_start_index(index_of_non_translated_subgroup, reverse=True)
-        generators.extend(backwards_generators)
         # return it.chain(*generators)
         return generators
 

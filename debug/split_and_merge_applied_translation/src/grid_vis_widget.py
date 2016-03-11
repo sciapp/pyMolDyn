@@ -39,6 +39,7 @@ class GridVisWidget(QtOpenGL.QGLWidget):
         self._show_single_area = False
         self._show_subparts = False
         self._show_link = False
+        self._show_translation = False
         self._current_area_index = 0
         self._bounding_box_min = bounding_box_min
         self._bounding_box_max = bounding_box_max
@@ -83,18 +84,31 @@ class GridVisWidget(QtOpenGL.QGLWidget):
             gr3.drawmesh(self._cube_mesh, count_positions, self._mask_node_positions, count_positions*((0, 0, 1), ),
                          count_positions*((0, 1, 0), ), count_positions*(mask_color, ), count_positions*((1, 1, 1), ))
 
-        def draw_translation_vectors(area, translation_vectors):
+        def draw_link_vectors(area):
             center_points = tuple(np.mean(np.array([(pos[0] + x, pos[1] + y, pos[2] + z)
                                                     for pos, dim in subarea
                                                     for x, y, z in it.product(*(range(c) for c in dim))]), axis=0)
                                   for subarea in area)
-            cone_positions = tuple(c for c in center_points[:-1])
+            cone_positions = center_points[:-1]
             cone_vectors = tuple(c2 - c1 for c1, c2 in zip(center_points, center_points[1:]))
             cone_lengths = tuple(np.linalg.norm(c) for c in cone_vectors)
             cone_normalized_vectors = tuple(c / length for c, length in zip(cone_vectors, cone_lengths))
             count_positions = len(cone_positions)
             gr3.drawconemesh(count_positions, cone_positions, cone_normalized_vectors,
                              count_positions*((1, 0.7, 0.7), ), count_positions*((0.5, 0.5, 0.5), ), cone_lengths)
+
+        def draw_translation_vectors(area, translation_vectors):
+            center_points = tuple(np.mean(np.array([(pos[0] + x, pos[1] + y, pos[2] + z)
+                                                    for pos, dim in subarea
+                                                    for x, y, z in it.product(*(range(c) for c in dim))]), axis=0)
+                                  for subarea in area)
+            cone_positions, cone_vectors = zip(*[(c, t) for c, t in zip(center_points, translation_vectors)
+                                                 if t != (0, 0, 0)])
+            cone_lengths = tuple(np.linalg.norm(c) for c in cone_vectors)
+            cone_normalized_vectors = tuple(c / length for c, length in zip(cone_vectors, cone_lengths))
+            count_positions = len(cone_positions)
+            gr3.drawconemesh(count_positions, cone_positions, cone_normalized_vectors,
+                             count_positions*((0.7, 0.7, 1), ), count_positions*((0.5, 0.5, 0.5), ), cone_lengths)
 
         def draw_area(area, colors):
             colorize_subareas = not isinstance(colors, tuple)
@@ -118,6 +132,8 @@ class GridVisWidget(QtOpenGL.QGLWidget):
         if self._show_single_area:
             current_area = self._areas[self._current_area_index]
             if self._show_link and self._areas_translation_vectors is not None:
+                draw_link_vectors(current_area)
+            if self._show_translation and self._areas_translation_vectors is not None:
                 current_translation_vectors = self._areas_translation_vectors[self._current_area_index]
                 draw_translation_vectors(current_area, current_translation_vectors)
             if self._show_subparts:
@@ -191,6 +207,14 @@ class GridVisWidget(QtOpenGL.QGLWidget):
 
     def hide_link(self):
         self._show_link = False
+        self.updateGL()
+
+    def show_translation(self):
+        self._show_translation = True
+        self.updateGL()
+
+    def hide_translation(self):
+        self._show_translation = False
         self.updateGL()
 
     @staticmethod

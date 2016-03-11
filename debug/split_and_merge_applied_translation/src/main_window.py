@@ -60,6 +60,14 @@ class MainWindow(QtGui.QMainWindow):
     def show_link(self, value):
         self._status_bar.show_link = value
 
+    @property
+    def show_translation(self):
+        return self._status_bar.show_translation
+
+    @show_translation.setter
+    def show_translation(self, value):
+        self._status_bar.show_translation = value
+
 
 class StatusBar(QtGui.QStatusBar):
     def __init__(self, *args, **kwargs):
@@ -69,6 +77,7 @@ class StatusBar(QtGui.QStatusBar):
         self._show_all_areas = True
         self._show_subparts = False
         self._show_link = False
+        self._show_translation = False
         self._init_ui()
 
     def _init_ui(self):
@@ -77,8 +86,9 @@ class StatusBar(QtGui.QStatusBar):
         self._show_all_areas_label = QtGui.QLabel(self)
         self._show_subparts_label = QtGui.QLabel(self)
         self._show_link_label = QtGui.QLabel(self)
+        self._show_translation_label = QtGui.QLabel(self)
         for label in (self._index_label, self._show_box_label, self._show_all_areas_label, self._show_subparts_label,
-                      self._show_link_label):
+                      self._show_link_label, self._show_translation_label):
             label.setFont(QtGui.QFont('Menlo'))
             self.addPermanentWidget(label)
         # call property setters to set labels correctly
@@ -87,6 +97,7 @@ class StatusBar(QtGui.QStatusBar):
         self.show_all_areas = self._show_all_areas
         self.show_subparts = self._show_subparts
         self.show_link = self._show_link
+        self.show_translation = self._show_translation
 
     @property
     def index(self):
@@ -132,3 +143,12 @@ class StatusBar(QtGui.QStatusBar):
     def show_link(self, value):
         self._show_link = value
         self._show_link_label.setText('show link: {}'.format(self._show_link))
+
+    @property
+    def show_translation(self):
+        return self._show_translation
+
+    @show_translation.setter
+    def show_translation(self, value):
+        self._show_translation = value
+        self._show_translation_label.setText('show translation: {}'.format(self._show_translation))

@@ -18,9 +18,8 @@ CAMERA_DISTANCE = 100
 class TwinViewWidget(QtGui.QWidget):
     def __init__(self, parent, non_translated_data, translated_data, areas_translation_vectors, mask, *args, **kwargs):
         super(TwinViewWidget, self).__init__(parent, *args, **kwargs)
-        self._non_translated_data, self._translated_data = self._filter_for_relevant_data(non_translated_data,
-                                                                                          translated_data)
-        self._areas_translation_vectors = areas_translation_vectors
+        result = self._filter_for_relevant_data(non_translated_data, translated_data, areas_translation_vectors)
+        self._non_translated_data, self._translated_data, self._areas_translation_vectors = result
         self._mask = mask
         center, bounding_box_min, bounding_box_max = self.get_bounding_box_and_center(non_translated_data)
         self._center = center
@@ -30,13 +29,14 @@ class TwinViewWidget(QtGui.QWidget):
         self._init_ui()
 
     @staticmethod
-    def _filter_for_relevant_data(non_translated_data, translated_data):
+    def _filter_for_relevant_data(non_translated_data, translated_data, areas_translation_vectors):
         relevant_indices = tuple(i for i, (translated_area, non_translated_area)
                                  in enumerate(zip(translated_data, non_translated_data))
                                  if translated_area != non_translated_area)
         non_translated_data = [non_translated_data[i] for i in relevant_indices]
         translated_data = [translated_data[i] for i in relevant_indices]
-        return non_translated_data, translated_data
+        areas_translation_vectors = [areas_translation_vectors[i] for i in relevant_indices]
+        return non_translated_data, translated_data, areas_translation_vectors
 
     def _init_ui(self):
         self._main_layout = QtGui.QGridLayout()
@@ -92,7 +92,9 @@ class TwinViewWidget(QtGui.QWidget):
             'c': 'show_subparts',
             'C': 'hide_subparts',
             'l': 'show_link',
-            'L': 'hide_link'
+            'L': 'hide_link',
+            't': 'show_translation',
+            'T': 'hide_translation'
         }
 
         key = unicode(event.text())
@@ -149,3 +151,13 @@ class TwinViewWidget(QtGui.QWidget):
         self.topLevelWidget().show_link = False
         self._left_view.hide_link()
         self._right_view.hide_link()
+
+    def show_translation(self):
+        self.topLevelWidget().show_translation = True
+        self._left_view.show_translation()
+        self._right_view.show_translation()
+
+    def hide_translation(self):
+        self.topLevelWidget().show_translation = False
+        self._left_view.hide_translation()
+        self._right_view.hide_translation()
