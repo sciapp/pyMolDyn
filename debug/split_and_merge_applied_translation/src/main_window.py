@@ -10,12 +10,12 @@ from twin_view_widget import TwinViewWidget
 
 
 class MainWindow(QtGui.QMainWindow):
-    def __init__(self, non_translated_data, translated_data, *args, **kwargs):
+    def __init__(self, non_translated_data, translated_data, mask, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
-        self._init_ui(non_translated_data, translated_data)
+        self._init_ui(non_translated_data, translated_data, mask)
 
-    def _init_ui(self, non_translated_data, translated_data):
-        self._grid_vis = TwinViewWidget(self, non_translated_data, translated_data)
+    def _init_ui(self, non_translated_data, translated_data, mask):
+        self._grid_vis = TwinViewWidget(self, non_translated_data, translated_data, mask)
         self.setCentralWidget(self._grid_vis)
         self._status_bar = StatusBar(self)
         self.setStatusBar(self._status_bar)
@@ -92,7 +92,7 @@ class StatusBar(QtGui.QStatusBar):
     @show_box.setter
     def show_box(self, value):
         self._show_box = value
-        self._show_box_label.setText('show box: {}'.format(self._index))
+        self._show_box_label.setText('show box: {}'.format(self._show_box))
 
     @property
     def show_all_areas(self):

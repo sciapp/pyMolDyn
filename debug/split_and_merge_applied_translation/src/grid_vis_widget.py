@@ -18,11 +18,23 @@ cgr3.gr3_setviewmatrix.argtypes = [ctypes.POINTER(ctypes.c_float)]
 
 
 class GridVisWidget(QtOpenGL.QGLWidget):
-    def __init__(self, parent, areas, center, bounding_box_min, bounding_box_max, camera_distance, *args, **kwargs):
+    def __init__(self, parent, areas, mask, center, bounding_box_min, bounding_box_max, camera_distance,
+                 *args, **kwargs):
         super(GridVisWidget, self).__init__(parent, *args, **kwargs)
         self._areas = areas
+        self._mask = mask
+        inner_cell_positions = zip(*np.where(self._mask == 0))
+        self._mask_node_positions = set((x, y, z) for x, y, z in inner_cell_positions
+                                        if np.sum(self._mask[x-1:x+2, y-1:y+2, z-1:z+2]) > 9)
+        node_positions = set((pos[0] + x, pos[1] + y, pos[2] + z)
+                             for area in areas
+                             for subarea in area
+                             for pos, dim in subarea
+                             for x, y, z in it.product(*(range(c) for c in dim)))
+        self._mask_node_positions = tuple(self._mask_node_positions - node_positions)
         self._center = center
         self._cube_mesh = None
+        self._show_box = False
         self._show_single_area = False
         self._show_subparts = False
         self._current_area_index = 0
@@ -63,9 +75,16 @@ class GridVisWidget(QtOpenGL.QGLWidget):
                       gr3.GR3_Drawable.GR3_DRAWABLE_OPENGL)
 
     def _draw_scene(self):
+        def draw_box():
+            count_positions = len(self._mask_node_positions)
+            mask_color = (0, 0, 1)
+            gr3.drawmesh(self._cube_mesh, count_positions, self._mask_node_positions, count_positions*((0, 0, 1), ),
+                         count_positions*((0, 1, 0), ), count_positions*(mask_color, ), count_positions*((1, 1, 1), ))
+
         def draw_area(area, colors):
             colorize_subareas = not isinstance(colors, tuple)
-            node_positions = [(pos[0] + x, pos[1] + y, pos[2] + z) for subarea in area
+            node_positions = [(pos[0] + x, pos[1] + y, pos[2] + z)
+                              for subarea in area
                               for pos, dim in subarea
                               for x, y, z in it.product(*(range(c) for c in dim))]
             count_positions = len(node_positions)
@@ -79,6 +98,8 @@ class GridVisWidget(QtOpenGL.QGLWidget):
                          count_positions*((0, 1, 0), ), colors, count_positions*((1, 1, 1), ))
 
         color_generator = self._get_color_generator()
+        if self._show_box:
+            draw_box()
         if self._show_single_area:
             if self._show_subparts:
                 draw_area(self._areas[self._current_area_index], color_generator)
@@ -108,10 +129,12 @@ class GridVisWidget(QtOpenGL.QGLWidget):
         self.updateGL()
 
     def show_box(self):
-        pass
+        self._show_box = True
+        self.updateGL()
 
     def hide_box(self):
-        pass
+        self._show_box = False
+        self.updateGL()
 
     def show_all_areas(self):
         self._show_single_area = False

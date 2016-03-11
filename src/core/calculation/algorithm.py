@@ -129,6 +129,7 @@ class DomainCalculation:
         # ================================================================================
 
         np.savez_compressed('domains.npz', translated_areas=translated_areas, non_translated_areas=non_translated_areas)
+        np.savez_compressed('mask.npz', mask=self.discretization.grid)
         sys.exit()
 
         # ================================================================================
