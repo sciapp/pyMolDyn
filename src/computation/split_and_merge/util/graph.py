@@ -431,13 +431,13 @@ class GraphForSplitAndMerge(Graph):
         visited_nodes = set()
         for node in self:
             if node not in visited_nodes:
-                area = set()
+                area = []
                 if apply_translation:
                     node_iterator = self.merged_nodes[node].iter_with_applied_translation(
                         iter_with_non_translated_nodes=True, keep_largest_volume_within_cell=True
                     )
                     if with_non_translated_nodes:
-                        alt_area = set()
+                        alt_area = []
                         for generator in node_iterator:
                             sub_area = []
                             sub_alt_area = []
@@ -445,8 +445,8 @@ class GraphForSplitAndMerge(Graph):
                                 sub_area.append(translated_node)
                                 sub_alt_area.append(merged_node)
                                 visited_nodes.add(merged_node)
-                            area.add(tuple(sub_area))
-                            alt_area.add(tuple(sub_alt_area))
+                            area.append(tuple(sub_area))
+                            alt_area.append(tuple(sub_alt_area))
                         alt_areas.append(alt_area)
                     else:
                         for merged_node, translated_node in node_iterator:
