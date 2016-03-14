@@ -217,6 +217,7 @@ class HTMLWindow(QtGui.QWidget):
             if value[1] == 'atom':
                 atom_index = int(value[2])-1
                 view_tab.atom_check.indices = [atom_index]
+                view_tab.atom_check.selection_checkbox_set_checked(True)
             elif value[1] == 'element':
                 element = core.elements.names[int(value[2])]
                 visible_atom_indices = []
@@ -224,15 +225,19 @@ class HTMLWindow(QtGui.QWidget):
                     if core.elements.names[core.elements.numbers[element_name.upper()]] == element:
                         visible_atom_indices.append(i)
                 view_tab.atom_check.indices = visible_atom_indices
+                view_tab.atom_check.selection_checkbox_set_checked(True)
             elif value[1] == 'domain':
                 domain_index = int(value[2])-1
                 view_tab.domain_check.indices = [domain_index]
+                view_tab.domain_check.selection_checkbox_set_checked(True)
             elif value[1] == 'surface_cavity':
                 surface_cavity_index = int(value[2])-1
                 view_tab.surface_cavity_check.indices = [surface_cavity_index]
+                view_tab.surface_cavity_check.selection_checkbox_set_checked(True)
             elif value[1] == 'center_cavity':
                 center_cavity_index = int(value[2])-1
                 view_tab.center_cavity_check.indices = [center_cavity_index]
+                view_tab.center_cavity_check.selection_checkbox_set_checked(True)
         elif value[0] == 'addtovisible':
             parent = self.parent()
             while parent.parent():
