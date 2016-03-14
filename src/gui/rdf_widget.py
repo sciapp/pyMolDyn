@@ -179,11 +179,11 @@ class RDFWidget(QtGui.QWidget):
             self.gr_widget.draw()
 
     def export(self):
-        extensions = (".eps", ".ps", ".pdf", ".png", ".bmp", ".jpg", ".jpeg",
-                      ".png", ".tiff", ".fig", ".svg", ".wmf")
+        extensions = (".pdf", ".png", ".bmp", ".jpg", ".jpeg", ".png",
+                      ".tiff", ".fig", ".svg", ".wmf", ".eps", ".ps")
         qtext = "*" + " *".join(extensions)
         filepath = QtGui.QFileDialog.getSaveFileName(self, "Save Image",
-                                                        ".", "Image Files ({})".format(qtext))
+                                                     ".", "Image Files ({})".format(qtext))
         if len(filepath) == 0:
             return
 
