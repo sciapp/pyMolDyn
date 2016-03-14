@@ -144,7 +144,7 @@ class RDFWidget(QtGui.QWidget):
                 or event.key() == QtCore.Qt.Key_Enter:
             self.draw()
 
-    def draw(self):
+    def draw(self, now=False):
         xvalues = None
         yvalues = None
         title = None
@@ -175,6 +175,8 @@ class RDFWidget(QtGui.QWidget):
 
         self.gr_widget.setdata(xvalues, yvalues, title, datapoints)
         self.gr_widget.update()
+        if now:
+            self.gr_widget.draw()
 
     def export(self):
         extensions = (".eps", ".ps", ".pdf", ".png", ".bmp", ".jpg", ".jpeg",
@@ -184,8 +186,9 @@ class RDFWidget(QtGui.QWidget):
                                                         ".", "Image Files ({})".format(qtext))
         if len(filepath) == 0:
             return
+
         gr.beginprint(filepath)
-        self.draw()
+        self.draw(now=True)
         gr.endprint()
 
     def refresh(self):

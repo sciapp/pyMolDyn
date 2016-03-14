@@ -142,7 +142,7 @@ class HistogramWidget(QtGui.QWidget):
                 or event.key() == QtCore.Qt.Key_Enter:
             self.draw()
 
-    def draw(self):
+    def draw(self, now=False):
         xvalues = None
         yvalues = None
         widths = None
@@ -170,6 +170,8 @@ class HistogramWidget(QtGui.QWidget):
 
         self.gr_widget.setdata(xvalues, yvalues, widths, title)
         self.gr_widget.update()
+        if now:
+            self.gr_widget.draw()
 
     def export(self):
         extensions = (".eps", ".ps", ".pdf", ".png", ".bmp", ".jpg", ".jpeg",
@@ -180,7 +182,7 @@ class HistogramWidget(QtGui.QWidget):
         if not filepath:
             return
         gr.beginprint(filepath)
-        self.draw()
+        self.draw(now=True)
         gr.endprint()
 
     def refresh(self):
