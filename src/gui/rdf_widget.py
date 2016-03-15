@@ -42,7 +42,7 @@ class GrPlotWidget(GRWidget):
         self.title = title
         self.datapoints = datapoints
 
-    def draw(self):
+    def draw(self, wsviewport=None):
         if self.xvalues is not None:
             rangex = (self.xvalues.min(), self.xvalues.max())
         else:
@@ -52,7 +52,10 @@ class GrPlotWidget(GRWidget):
         else:
             rangey = (0, 4)
 
-        gr.setwsviewport(0, self.mwidth, 0, self.mheight)
+        if wsviewport is None:
+            gr.setwsviewport(0, self.mwidth, 0, self.mheight)
+        else:
+            gr.setwsviewport(*wsviewport)
         gr.setwswindow(0, self.sizex, 0, self.sizey)
         gr.setviewport(0.075 * self.sizex, 0.95 * self.sizex,
                        0.075 * self.sizey, 0.95 * self.sizey)
@@ -144,7 +147,7 @@ class RDFWidget(QtGui.QWidget):
                 or event.key() == QtCore.Qt.Key_Enter:
             self.draw()
 
-    def draw(self, now=False):
+    def draw(self, now=False, wsviewport=None):
         xvalues = None
         yvalues = None
         title = None
@@ -176,7 +179,7 @@ class RDFWidget(QtGui.QWidget):
         self.gr_widget.setdata(xvalues, yvalues, title, datapoints)
         self.gr_widget.update()
         if now:
-            self.gr_widget.draw()
+            self.gr_widget.draw(wsviewport=wsviewport)
 
     def export(self):
         extensions = (".pdf", ".png", ".bmp", ".jpg", ".jpeg", ".png",
@@ -187,8 +190,12 @@ class RDFWidget(QtGui.QWidget):
         if len(filepath) == 0:
             return
 
-        gr.beginprint(filepath)
-        self.draw(now=True)
+        if filepath.endswith('.eps') or filepath.endswith('.ps'):
+            gr.beginprintext(filepath, 'Color', 'A4', 'Landscape')
+            self.draw(now=True, wsviewport=(0, 0.297*0.9, 0, 0.21*0.95))
+        else:
+            gr.beginprint(filepath)
+            self.draw(now=True)
         gr.endprint()
 
     def refresh(self):

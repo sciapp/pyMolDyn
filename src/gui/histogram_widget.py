@@ -37,7 +37,7 @@ class GrHistogramWidget(GRWidget):
         self.widths = widths
         self.title = title
 
-    def draw(self):
+    def draw(self, wsviewport=None):
         if self.xvalues is not None and self.widths is not None:
             maxidx = np.argmax(self.xvalues)
             rangex = (self.xvalues.min(),
@@ -49,7 +49,10 @@ class GrHistogramWidget(GRWidget):
         else:
             rangey = (0.0, 8.0)
 
-        gr.setwsviewport(0, self.mwidth, 0, self.mheight)
+        if wsviewport is None:
+            gr.setwsviewport(0, self.mwidth, 0, self.mheight)
+        else:
+            gr.setwsviewport(*wsviewport)
         gr.setwswindow(0, self.sizex, 0, self.sizey)
         gr.setviewport(0.075 * self.sizex, 0.95 * self.sizex,
                        0.075 * self.sizey, 0.95 * self.sizey)
@@ -142,7 +145,7 @@ class HistogramWidget(QtGui.QWidget):
                 or event.key() == QtCore.Qt.Key_Enter:
             self.draw()
 
-    def draw(self, now=False):
+    def draw(self, now=False, wsviewport=None):
         xvalues = None
         yvalues = None
         widths = None
@@ -171,7 +174,7 @@ class HistogramWidget(QtGui.QWidget):
         self.gr_widget.setdata(xvalues, yvalues, widths, title)
         self.gr_widget.update()
         if now:
-            self.gr_widget.draw()
+            self.gr_widget.draw(wsviewport=wsviewport)
 
     def export(self):
         extensions = (".pdf", ".png", ".bmp", ".jpg", ".jpeg", ".png",
@@ -181,8 +184,13 @@ class HistogramWidget(QtGui.QWidget):
                                                            ".", "Image Files ({})".format(qtext))
         if not filepath:
             return
-        gr.beginprint(filepath)
-        self.draw(now=True)
+
+        if filepath.endswith('.eps') or filepath.endswith('.ps'):
+            gr.beginprintext(filepath, 'Color', 'A4', 'Landscape')
+            self.draw(now=True, wsviewport=(0, 0.297*0.9, 0, 0.21*0.95))
+        else:
+            gr.beginprint(filepath)
+            self.draw(now=True)
         gr.endprint()
 
     def refresh(self):
