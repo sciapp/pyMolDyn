@@ -103,6 +103,9 @@ class HistogramWidget(QtGui.QWidget):
         self.datasetlabel.setAlignment(QtCore.Qt.AlignHCenter)
 
         selectbox = QtGui.QHBoxLayout()
+        self.cavity_type_box = QtGui.QComboBox(self)
+        self.cavity_type_box.setMinimumWidth(180)
+        selectbox.addWidget(self.cavity_type_box)
         selectbuttongroup = QtGui.QButtonGroup(self)
         self.volumebutton = QtGui.QRadioButton("Cavity Volume", self)
         selectbox.addWidget(self.volumebutton)
@@ -152,16 +155,22 @@ class HistogramWidget(QtGui.QWidget):
         title = None
         if self.results is None:
             self.refresh()
-        if self.results is not None and self.results.surface_cavities is not None:
+        if self.cavity_type_box.currentText():
+            if self.cavity_type_box.currentText() == 'Surface-based Cavities':
+                cavities = self.results.surface_cavities
+            elif self.cavity_type_box.currentText() == 'Center-based Cavities':
+                cavities = self.results.center_cavities
+            elif self.cavity_type_box.currentText() == 'Cavity Domains':
+                cavities = self.results.domains
             nbins = str(self.nbins.text())
             if len(nbins) > 0 and float(nbins) > 0:
                 nbins = float(nbins)
             else:
                 nbins = 50
             if self.volumebutton.isChecked():
-                data = self.results.surface_cavities.volumes
+                data = cavities.volumes
             else:
-                data = self.results.surface_cavities.surface_areas
+                data = cavities.surface_areas
             if len(data) > 0:
                 if self.weightbutton.isChecked():
                     hist, bin_edges = np.histogram(data, bins=nbins, weights=data)
@@ -194,9 +203,16 @@ class HistogramWidget(QtGui.QWidget):
         gr.endprint()
 
     def refresh(self):
+        self.cavity_type_box.clear()
         results = self.control.results
         if results is not None:
             results = results[-1][-1]
+            if results.surface_cavities is not None:
+                self.cavity_type_box.addItem('Surface-based Cavities')
+            if results.center_cavities is not None:
+                self.cavity_type_box.addItem('Center-based Cavities')
+            if results.domains is not None:
+                self.cavity_type_box.addItem('Cavity Domains')
             if self.results != results:
                 self.results = results
                 self.gr_widget.setdata(None, None, None, None)
