@@ -42,7 +42,7 @@ class GrPlotWidget(GRWidget):
         self.title = title
         self.datapoints = datapoints
 
-    def draw(self):
+    def draw(self, wsviewport=None):
         if self.xvalues is not None:
             rangex = (self.xvalues.min(), self.xvalues.max())
         else:
@@ -52,7 +52,10 @@ class GrPlotWidget(GRWidget):
         else:
             rangey = (0, 4)
 
-        gr.setwsviewport(0, self.mwidth, 0, self.mheight)
+        if wsviewport is None:
+            gr.setwsviewport(0, self.mwidth, 0, self.mheight)
+        else:
+            gr.setwsviewport(*wsviewport)
         gr.setwswindow(0, self.sizex, 0, self.sizey)
         gr.setviewport(0.075 * self.sizex, 0.95 * self.sizex,
                        0.075 * self.sizey, 0.95 * self.sizey)
@@ -99,8 +102,10 @@ class RDFWidget(QtGui.QWidget):
         elembox = QtGui.QHBoxLayout()
         elembox.addWidget(QtGui.QLabel("Elements:", self), 0)
         self.elem1 = QtGui.QComboBox(self)
+        self.elem1.setMinimumWidth(170)
         elembox.addWidget(self.elem1, 0, QtCore.Qt.AlignLeft)
         self.elem2 = QtGui.QComboBox(self)
+        self.elem2.setMinimumWidth(170)
         elembox.addWidget(self.elem2, 0, QtCore.Qt.AlignRight)
         grid.addLayout(elembox, 0, 0)
 
@@ -144,7 +149,7 @@ class RDFWidget(QtGui.QWidget):
                 or event.key() == QtCore.Qt.Key_Enter:
             self.draw()
 
-    def draw(self):
+    def draw(self, now=False, wsviewport=None):
         xvalues = None
         yvalues = None
         title = None
@@ -153,7 +158,11 @@ class RDFWidget(QtGui.QWidget):
             self.refresh()
         if self.rdf is not None:
             elem1 = str(self.elem1.currentText())
+            if elem1 == "cavity domain centers":
+                elem1 = "cav"
             elem2 = str(self.elem2.currentText())
+            if elem2 == "cavity domain centers":
+                elem2 = "cav"
             range1 = float(str(self.range1.text()))
             range2 = float(str(self.range2.text()))
             cutoff = str(self.cutoff.text())
@@ -175,17 +184,24 @@ class RDFWidget(QtGui.QWidget):
 
         self.gr_widget.setdata(xvalues, yvalues, title, datapoints)
         self.gr_widget.update()
+        if now:
+            self.gr_widget.draw(wsviewport=wsviewport)
 
     def export(self):
-        extensions = (".eps", ".ps", ".pdf", ".png", ".bmp", ".jpg", ".jpeg",
-                      ".png", ".tiff", ".fig", ".svg", ".wmf")
+        extensions = (".pdf", ".png", ".bmp", ".jpg", ".jpeg", ".png",
+                      ".tiff", ".fig", ".svg", ".wmf", ".eps", ".ps")
         qtext = "*" + " *".join(extensions)
         filepath = QtGui.QFileDialog.getSaveFileName(self, "Save Image",
-                                                        ".", "Image Files ({})".format(qtext))
+                                                     ".", "Image Files ({})".format(qtext))
         if len(filepath) == 0:
             return
-        gr.beginprint(filepath)
-        self.draw()
+
+        if filepath.endswith('.eps') or filepath.endswith('.ps'):
+            gr.beginprintext(filepath, 'Color', 'A4', 'Landscape')
+            self.draw(now=True, wsviewport=(0, 0.297*0.9, 0, 0.21*0.95))
+        else:
+            gr.beginprint(filepath)
+            self.draw(now=True)
         gr.endprint()
 
     def refresh(self):
@@ -199,7 +215,7 @@ class RDFWidget(QtGui.QWidget):
                 if results.domains is not None \
                         and len(results.domains.centers) > 0 \
                         and "cav" not in e:
-                    e.append("cav")
+                    e.append("cavity domain centers")
                 self.elem1.clear()
                 self.elem1.addItems(e)
                 self.elem2.clear()
