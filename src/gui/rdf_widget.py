@@ -102,8 +102,10 @@ class RDFWidget(QtGui.QWidget):
         elembox = QtGui.QHBoxLayout()
         elembox.addWidget(QtGui.QLabel("Elements:", self), 0)
         self.elem1 = QtGui.QComboBox(self)
+        self.elem1.setMinimumWidth(170)
         elembox.addWidget(self.elem1, 0, QtCore.Qt.AlignLeft)
         self.elem2 = QtGui.QComboBox(self)
+        self.elem2.setMinimumWidth(170)
         elembox.addWidget(self.elem2, 0, QtCore.Qt.AlignRight)
         grid.addLayout(elembox, 0, 0)
 
