@@ -156,7 +156,11 @@ class RDFWidget(QtGui.QWidget):
             self.refresh()
         if self.rdf is not None:
             elem1 = str(self.elem1.currentText())
+            if elem1 == "cavity domain centers":
+                elem1 = "cav"
             elem2 = str(self.elem2.currentText())
+            if elem2 == "cavity domain centers":
+                elem2 = "cav"
             range1 = float(str(self.range1.text()))
             range2 = float(str(self.range2.text()))
             cutoff = str(self.cutoff.text())
@@ -209,7 +213,7 @@ class RDFWidget(QtGui.QWidget):
                 if results.domains is not None \
                         and len(results.domains.centers) > 0 \
                         and "cav" not in e:
-                    e.append("cav")
+                    e.append("cavity domain centers")
                 self.elem1.clear()
                 self.elem1.addItems(e)
                 self.elem2.clear()
