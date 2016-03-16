@@ -61,6 +61,14 @@ def render_html_cavity_center_group(number, surface_area, surface_volumes, volum
 
     return template.render(template_vars)
 
+def render_html_cavity_center_group_unknown():
+    template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
+    template_env = jinja2.Environment(loader=template_loader)
+
+    TEMPLATE_FILE = 'cavities_center_unknown.html'
+    template = template_env.get_template( TEMPLATE_FILE )
+    return template.render({})
+
 def render_html_cavity_center(index, surface, volume, domains, volume_fraction):
     template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
     template_env = jinja2.Environment(loader=template_loader)
@@ -97,6 +105,14 @@ def render_html_cavity_surface_group(number, surface_area, surface_volumes, volu
 
     return template.render(template_vars)
 
+def render_html_cavity_surface_group_unknown():
+    template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
+    template_env = jinja2.Environment(loader=template_loader)
+
+    TEMPLATE_FILE = 'cavities_surface_unknown.html'
+    template = template_env.get_template( TEMPLATE_FILE )
+    return template.render({})
+
 def render_html_cavity_surface(index, surface, volume, domains, volume_fraction):
     template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
     template_env = jinja2.Environment(loader=template_loader)
@@ -132,6 +148,14 @@ def render_html_cavity_domain_group(number, surface_area, surface_volumes, surfa
     }
 
     return template.render(template_vars)
+
+def render_html_cavity_domain_group_unknown():
+    template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
+    template_env = jinja2.Environment(loader=template_loader)
+
+    TEMPLATE_FILE = 'domains_unknown.html'
+    template = template_env.get_template( TEMPLATE_FILE )
+    return template.render({})
 
 def render_html_cavity_domain(index, domain_center, surface, volume, volume_fraction, surface_cavity_index, center_cavity_index):
     template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
@@ -170,6 +194,7 @@ class HTMLWindow(QtGui.QWidget):
         self.cavities_surface = None
         self.domains = None
         self.discretization = None
+        self.previous_result_parameters = None
 
         self.tree_list = None
         self.webview.setHtml(None)
@@ -273,11 +298,16 @@ class HTMLWindow(QtGui.QWidget):
                 view_tab.center_cavity_check.selection_checkbox_set_checked(False)
 
     def update_results(self, results):
+        result_parameters = (results.filepath, results.frame, results.resolution)
+        if self.previous_result_parameters == result_parameters:
+            return
+        self.previous_result_parameters = result_parameters
         self.atoms = results.atoms
         self.cavities_center = results.center_cavities
         self.cavities_surface = results.surface_cavities
         self.domains = results.domains
         self.discretization = Discretization(results.atoms.volume, results.resolution, True)
+        self.show_atom_group()
 
     def show_atom_group(self):
         atom_number = self.atoms.number
@@ -311,12 +341,14 @@ class HTMLWindow(QtGui.QWidget):
         surface_area = 0.0
         volumes = 0.0
         volume_fraction = 0.0
-        if self.cavities_center is not None:
-            number = self.cavities_center.number
-            for sf in self.cavities_center.surface_areas:
-                surface_area += sf
-            for vl in self.cavities_center.volumes:
-                volumes += vl
+        if self.cavities_center is None:
+            self.webview.setHtml(render_html_cavity_center_group_unknown())
+            return
+        number = self.cavities_center.number
+        for sf in self.cavities_center.surface_areas:
+            surface_area += sf
+        for vl in self.cavities_center.volumes:
+            volumes += vl
 
         if self.atoms.volume is not None:
             volume_fraction = (volumes/self.atoms.volume.volume)*100
@@ -348,12 +380,14 @@ class HTMLWindow(QtGui.QWidget):
         surface_area = 0.0
         volumes = 0.0
         volume_fraction = 0.0
-        if self.cavities_surface is not None:
-            number = self.cavities_surface.number
-            for sf in self.cavities_surface.surface_areas:
-                surface_area += sf
-            for vl in self.cavities_surface.volumes:
-                volumes += vl
+        if self.cavities_surface is None:
+            self.webview.setHtml(render_html_cavity_surface_group_unknown())
+            return
+        number = self.cavities_surface.number
+        for sf in self.cavities_surface.surface_areas:
+            surface_area += sf
+        for vl in self.cavities_surface.volumes:
+            volumes += vl
 
         if self.atoms.volume is not None:
             volume_fraction = (volumes/self.atoms.volume.volume)*100
@@ -383,12 +417,14 @@ class HTMLWindow(QtGui.QWidget):
         volumes = 0.0
         volume_fraction = 0.0
 
-        if self.domains is not None:
-            number = self.domains.number
-            for sf in self.domains.surface_areas:
-                surface += sf
-            for vl in self.domains.volumes:
-                volumes += vl
+        if self.domains is None:
+            self.webview.setHtml(render_html_cavity_domain_group_unknown())
+            return
+        number = self.domains.number
+        for sf in self.domains.surface_areas:
+            surface += sf
+        for vl in self.domains.volumes:
+            volumes += vl
 
         if self.atoms.volume is not None:
             volume_fraction = (volumes/self.atoms.volume.volume)*100
