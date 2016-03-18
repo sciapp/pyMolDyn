@@ -10,12 +10,12 @@ from twin_view_widget import TwinViewWidget
 
 
 class MainWindow(QtGui.QMainWindow):
-    def __init__(self, non_translated_data, translated_data, areas_translation_vectors, mask, *args, **kwargs):
+    def __init__(self, non_translated_data, translated_data, merge_groups, mask, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
-        self._init_ui(non_translated_data, translated_data, areas_translation_vectors, mask)
+        self._init_ui(non_translated_data, translated_data, merge_groups, mask)
 
-    def _init_ui(self, non_translated_data, translated_data, areas_translation_vectors, mask):
-        self._grid_vis = TwinViewWidget(self, non_translated_data, translated_data, areas_translation_vectors, mask)
+    def _init_ui(self, non_translated_data, translated_data, merge_groups, mask):
+        self._grid_vis = TwinViewWidget(self, non_translated_data, translated_data, merge_groups, mask)
         self.setCentralWidget(self._grid_vis)
         self._status_bar = StatusBar(self)
         self.setStatusBar(self._status_bar)
@@ -68,6 +68,14 @@ class MainWindow(QtGui.QMainWindow):
     def show_translation(self, value):
         self._status_bar.show_translation = value
 
+    @property
+    def show_merging_history(self):
+        return self._status_bar.show_merging_history
+
+    @show_merging_history.setter
+    def show_merging_history(self, value):
+        self._status_bar.show_merging_history = value
+
 
 class StatusBar(QtGui.QStatusBar):
     def __init__(self, *args, **kwargs):
@@ -78,6 +86,7 @@ class StatusBar(QtGui.QStatusBar):
         self._show_subparts = False
         self._show_link = False
         self._show_translation = False
+        self._show_merging_history = False
         self._init_ui()
 
     def _init_ui(self):
@@ -87,8 +96,9 @@ class StatusBar(QtGui.QStatusBar):
         self._show_subparts_label = QtGui.QLabel(self)
         self._show_link_label = QtGui.QLabel(self)
         self._show_translation_label = QtGui.QLabel(self)
+        self._show_merging_history_label = QtGui.QLabel(self)
         for label in (self._index_label, self._show_box_label, self._show_all_areas_label, self._show_subparts_label,
-                      self._show_link_label, self._show_translation_label):
+                      self._show_link_label, self._show_translation_label, self._show_merging_history_label):
             label.setFont(QtGui.QFont('Menlo'))
             self.addPermanentWidget(label)
         # call property setters to set labels correctly
@@ -98,6 +108,7 @@ class StatusBar(QtGui.QStatusBar):
         self.show_subparts = self._show_subparts
         self.show_link = self._show_link
         self.show_translation = self._show_translation
+        self.show_merging_history = self._show_merging_history
 
     @property
     def index(self):
@@ -152,3 +163,12 @@ class StatusBar(QtGui.QStatusBar):
     def show_translation(self, value):
         self._show_translation = value
         self._show_translation_label.setText('show translation: {}'.format(self._show_translation))
+
+    @property
+    def show_merging_history(self):
+        return self._show_merging_history
+
+    @show_merging_history.setter
+    def show_merging_history(self, value):
+        self._show_merging_history = value
+        self._show_merging_history_label.setText('show merging history: {}'.format(self._show_merging_history))

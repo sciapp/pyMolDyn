@@ -12,17 +12,18 @@ import gr3
 import numpy as np
 from gr3 import _gr3 as cgr3
 from PyQt4 import QtCore, QtGui, QtOpenGL
+from computation.split_and_merge.util.graph import MergeGroup
 
 cgr3.gr3_getviewmatrix.argtypes = [ctypes.POINTER(ctypes.c_float)]
 cgr3.gr3_setviewmatrix.argtypes = [ctypes.POINTER(ctypes.c_float)]
 
 
 class GridVisWidget(QtOpenGL.QGLWidget):
-    def __init__(self, parent, areas, areas_translation_vectors, mask, center, bounding_box_min, bounding_box_max,
+    def __init__(self, parent, areas, merge_groups, mask, center, bounding_box_min, bounding_box_max,
                  camera_distance, *args, **kwargs):
         super(GridVisWidget, self).__init__(parent, *args, **kwargs)
         self._areas = areas
-        self._areas_translation_vectors = areas_translation_vectors
+        self._merge_groups = merge_groups
         self._mask = mask
         inner_cell_positions = zip(*np.where(self._mask == 0))
         self._mask_node_positions = set((x, y, z) for x, y, z in inner_cell_positions
@@ -40,7 +41,10 @@ class GridVisWidget(QtOpenGL.QGLWidget):
         self._show_subparts = False
         self._show_link = False
         self._show_translation = False
+        self._show_merging_history = False
         self._current_area_index = 0
+        self._current_merging_history = None
+        self._current_merging_step_index = 0
         self._bounding_box_min = bounding_box_min
         self._bounding_box_max = bounding_box_max
         self._camera_distance = camera_distance
@@ -126,17 +130,44 @@ class GridVisWidget(QtOpenGL.QGLWidget):
             gr3.drawmesh(self._cube_mesh, count_positions, node_positions, count_positions*((0, 0, 1), ),
                          count_positions*((0, 1, 0), ), colors, count_positions*((1, 1, 1), ))
 
-        color_generator = self._get_color_generator()
+        def get_hsv_color_generator():
+            s, v = 0.8, 1.0
+
+            def hsv_generator():
+                color_range_queue = [(0.0, 0.5)]
+                while len(color_range_queue) > 0:
+                    current_color_range = color_range_queue.pop(0)
+                    next_hue = sum(current_color_range) / 2.0
+                    yield next_hue
+                    yield next_hue + 0.5
+                    color_range_queue.append((0.0, next_hue))
+                    color_range_queue.append((next_hue, 0.5))
+
+            for h in hsv_generator():
+                yield colorsys.hsv_to_rgb(h, s, v)
+
+        def get_color_generator_for_merge_history(area):
+            current_merging_step = self._current_merging_history[self._current_merging_step_index]
+            subgroup_indices = tuple(subgroup_index for subgroup_index, subarea in enumerate(area)
+                                     if self._merge_groups[subarea[0]]._instance_id in current_merging_step)
+            for i in range(len(area)):
+                color = (1, 0, 0) if i in subgroup_indices else (1, 1, 1)
+                yield color
+
+        color_generator = get_hsv_color_generator()
         if self._show_box:
             draw_box()
         if self._show_single_area:
             current_area = self._areas[self._current_area_index]
-            if self._show_link and self._areas_translation_vectors is not None:
+            if self._show_link and self._merge_groups is not None:
                 draw_link_vectors(current_area)
-            if self._show_translation and self._areas_translation_vectors is not None:
-                current_translation_vectors = self._areas_translation_vectors[self._current_area_index]
+            if self._show_translation and self._merge_groups is not None:
+                current_translation_vectors = self._merge_groups[current_area[0][0]]._translation_vectors
                 draw_translation_vectors(current_area, current_translation_vectors)
-            if self._show_subparts:
+            if self._show_merging_history and self._merge_groups is not None:
+                color_generator = get_color_generator_for_merge_history(current_area)
+                draw_area(current_area, color_generator)
+            elif self._show_subparts:
                 draw_area(current_area, color_generator)
             else:
                 for _ in range(self._current_area_index - 1):
@@ -180,18 +211,36 @@ class GridVisWidget(QtOpenGL.QGLWidget):
         self.updateGL()
 
     def show_next_area(self):
-        self._current_area_index += 1
-        if self._current_area_index >= len(self._areas):
-            self._current_area_index = 0
+        if not self._show_merging_history:
+            self._current_area_index += 1
+            if self._current_area_index >= len(self._areas):
+                self._current_area_index = 0
+            new_index = self._current_area_index
+        elif self._merge_groups is not None:
+            self._current_merging_step_index += 1
+            if self._current_merging_step_index >= len(self._current_merging_history):
+                self._current_merging_step_index = 0
+            new_index = self._current_merging_step_index
+        else:
+            new_index = self._current_area_index
         self.updateGL()
-        return self._current_area_index
+        return new_index
 
     def show_previous_area(self):
-        self._current_area_index -= 1
-        if self._current_area_index < 0:
-            self._current_area_index = len(self._areas) - 1
+        if not self._show_merging_history:
+            self._current_area_index -= 1
+            if self._current_area_index < 0:
+                self._current_area_index = len(self._areas) - 1
+            new_index = self._current_area_index
+        elif self._merge_groups is not None:
+            self._current_merging_step_index -= 1
+            if self._current_merging_step_index < 0:
+                self._current_merging_step_index = len(self._current_merging_history) - 1
+            new_index = self._current_merging_step_index
+        else:
+            new_index = self._current_area_index
         self.updateGL()
-        return self._current_area_index
+        return new_index
 
     def show_subparts(self):
         self._show_subparts = True
@@ -217,19 +266,25 @@ class GridVisWidget(QtOpenGL.QGLWidget):
         self._show_translation = False
         self.updateGL()
 
-    @staticmethod
-    def _get_color_generator():
-        s, v = 0.8, 1.0
+    def show_merging_history(self):
+        self._show_merging_history = True
+        self._current_merging_step_index = 0
+        self._current_merging_history = self._get_current_merging_history()
+        self.updateGL()
 
-        def hsv_generator():
-            color_range_queue = [(0.0, 0.5)]
-            while len(color_range_queue) > 0:
-                current_color_range = color_range_queue.pop(0)
-                next_hue = sum(current_color_range) / 2.0
-                yield next_hue
-                yield next_hue + 0.5
-                color_range_queue.append((0.0, next_hue))
-                color_range_queue.append((next_hue, 0.5))
+    def hide_merging_history(self):
+        self._show_merging_history = False
+        self.updateGL()
 
-        for h in hsv_generator():
-            yield colorsys.hsv_to_rgb(h, s, v)
+    def _get_current_merging_history(self):
+        if self._merge_groups is not None:
+            merge_history = self._merge_groups.values()[0]._save_merge_history
+            current_area = self._areas[self._current_area_index]
+            relevant_merge_group_indices = tuple(self._merge_groups[subarea[0]]._instance_id
+                                                 for subarea in current_area)
+            relevant_history = tuple(merging_step for merging_step in merge_history
+                                     if any(merge_group_index in merging_step
+                                            for merge_group_index in relevant_merge_group_indices))
+        else:
+            relevant_history = None
+        return relevant_history
