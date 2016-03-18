@@ -4,7 +4,7 @@
 from PyQt4 import QtCore, QtGui
 import gr
 from qtgr import GRWidget
-import os
+import csv
 
 from util.logger import Logger
 import sys
@@ -133,9 +133,13 @@ class RDFWidget(QtGui.QWidget):
         buttonbox.addWidget(self.plotbutton)
         self.connect(self.plotbutton, QtCore.SIGNAL("clicked()"), self.draw)
 
-        self.exportbutton = QtGui.QPushButton("Save Image", self)
-        buttonbox.addWidget(self.exportbutton)
-        self.connect(self.exportbutton, QtCore.SIGNAL("clicked()"), self.export)
+        self.export_image_button = QtGui.QPushButton("Save Image", self)
+        buttonbox.addWidget(self.export_image_button)
+        self.connect(self.export_image_button, QtCore.SIGNAL("clicked()"), self.export_image)
+
+        self.export_data_button = QtGui.QPushButton("Export Data", self)
+        buttonbox.addWidget(self.export_data_button)
+        self.connect(self.export_data_button, QtCore.SIGNAL("clicked()"), self.export_data)
         grid.addLayout(buttonbox, 1, 0, 1, 3)
 
         vbox.addWidget(self.gr_widget, stretch=1)
@@ -187,7 +191,7 @@ class RDFWidget(QtGui.QWidget):
         if now:
             self.gr_widget.draw(wsviewport=wsviewport)
 
-    def export(self):
+    def export_image(self):
         extensions = (".pdf", ".png", ".bmp", ".jpg", ".jpeg", ".png",
                       ".tiff", ".fig", ".svg", ".wmf", ".eps", ".ps")
         qtext = "*" + " *".join(extensions)
@@ -203,6 +207,22 @@ class RDFWidget(QtGui.QWidget):
             gr.beginprint(filepath)
             self.draw(now=True)
         gr.endprint()
+
+    def export_data(self):
+        qtext = " *.csv"
+        filepath = QtGui.QFileDialog.getSaveFileName(self, "Save Data",
+                                                     ".", "CSV Files ({})".format(qtext))
+        if len(filepath) == 0:
+            return
+        self.draw()
+        xvalues = self.gr_widget.xvalues
+        yvalues = self.gr_widget.yvalues
+        if xvalues is None or yvalues is None:
+            return
+        with open(filepath, 'wb') as csvfile:
+            csvwriter = csv.writer(csvfile)
+            for x, y in zip(xvalues, yvalues):
+                csvwriter.writerow([x, y])
 
     def refresh(self):
         results = self.control.results
