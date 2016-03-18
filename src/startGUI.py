@@ -15,12 +15,23 @@ from core.control import Control
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 import signal
+import subprocess
 import sys
 import os
 import core.calculation
 
 
 def main():
+    if len(sys.argv) > 1 and sys.argv[1] == '--batch':
+        # The user actually wants to use startBatch.py instead of startGUI.py
+        # This is implemented here as both Linux and OS X use completely
+        # different ways to implement the pymoldyn executable, but both call
+        # startGUI.py.
+        script_directory = os.path.dirname(os.path.abspath(__file__))
+        batch_script_path = os.path.join(script_directory, 'startBatch.py')
+        args = [sys.executable, batch_script_path] + sys.argv[2:]
+        sys.exit(subprocess.call(args))
+
     os.chdir(os.path.abspath(os.path.dirname(__file__)))
     app = QtGui.QApplication(sys.argv)
     control = Control()
