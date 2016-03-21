@@ -148,10 +148,27 @@ class GridVisWidget(QtOpenGL.QGLWidget):
 
         def get_color_generator_for_merge_history(area):
             current_merging_step = self._current_merging_history[self._current_merging_step_index]
-            subgroup_indices = tuple(subgroup_index for subgroup_index, subarea in enumerate(area)
-                                     if self._merge_groups[subarea[0]]._instance_id in current_merging_step)
+
+            subgroup_indices = []
+            for subarea in area:
+                merge_group = self._merge_groups[subarea[0]]
+                if merge_group._instance_id in current_merging_step:
+                    if merge_group._instance_id == current_merging_step[0]:
+                        instance = merge_group._merge_obj_history[current_merging_step[1]]
+                    else:
+                        instance = merge_group._merge_obj_history[current_merging_step[0]]
+                    index_array = set()
+                    for subgroup_index, sub_area in enumerate(area):
+                        if set(sub_area) in instance._subgroups:
+                            index_array.add(subgroup_index)
+                    subgroup_indices.append(tuple(index_array))
+
             for i in range(len(area)):
-                color = (1, 0, 0) if i in subgroup_indices else (1, 1, 1)
+                for index_array, color in zip(subgroup_indices, ((1, 0, 0), (0, 1, 0))):
+                    if i in index_array:
+                        break
+                else:
+                    color = (1, 1, 1)
                 yield color
 
         color_generator = get_hsv_color_generator()

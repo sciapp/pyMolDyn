@@ -1,3 +1,5 @@
+import collections
+import copy
 import itertools as it
 import sys
 from computation.split_and_merge.util.node_border_iterator import iterate_node_border
@@ -28,6 +30,17 @@ class MergeGroup(object):
         def __contains__(self, item):
             return item in self.__dict__
 
+        def __deepcopy__(self, memo):
+            cls = self.__class__
+            result = cls.__new__(cls)
+            memo[id(self)] = result
+            for attr in vars(self):
+                if attr != 'other_merge_groups':
+                    setattr(result, attr, copy.deepcopy(getattr(self, attr), memo))
+                else:
+                    setattr(result, 'other_merge_groups', [])
+            return result
+
     _instance_count = 0
     _merge_history = []
 
@@ -43,6 +56,7 @@ class MergeGroup(object):
                                                 # been assigned to this MergeGroup object
         self._instance_id = MergeGroup._instance_count
         MergeGroup._instance_count += 1
+        self._merge_obj_history = collections.OrderedDict()
         if initial_node is not None:
             self.add(set([initial_node]))
         self._save_merge_history = self._merge_history  # Force the class attribute to be pickled by referencing it as
@@ -79,6 +93,8 @@ class MergeGroup(object):
             return translation_vector
 
         MergeGroup._merge_history.append((self._instance_id, merge_group._instance_id))
+        self._merge_obj_history[merge_group._instance_id] = copy.deepcopy(self)
+        merge_group._merge_obj_history[self._instance_id] = copy.deepcopy(merge_group)
 
         subgroup_count_before_merge = len(self._subgroups)
         other_merge_groups_before_merge = self._other_merge_groups
@@ -103,6 +119,17 @@ class MergeGroup(object):
     def _update_other_merge_groups(self):
         for merge_group in self._other_merge_groups:
             merge_group._shared_attributes = self._shared_attributes
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for attr in vars(self):
+            if attr in ('_shared_attributes', '_index_of_primary_subgroup', '_instance_id'):
+                setattr(result, attr, copy.deepcopy(getattr(self, attr), memo))
+            else:
+                setattr(result, attr, copy.copy(getattr(self, attr)))
+        return result
 
     def __getattr__(self, attr):
         if attr.startswith('_'):
