@@ -5,6 +5,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import collections
 import itertools as it
 import colorsys
 import ctypes
@@ -102,6 +103,9 @@ class GridVisWidget(QtOpenGL.QGLWidget):
                              count_positions*((1, 0.7, 0.7), ), count_positions*((0.5, 0.5, 0.5), ), cone_lengths)
 
         def draw_translation_vectors(area, translation_vectors):
+            if not translation_vectors:
+                return
+
             center_points = tuple(np.mean(np.array([(pos[0] + x, pos[1] + y, pos[2] + z)
                                                     for pos, dim in subarea
                                                     for x, y, z in it.product(*(range(c) for c in dim))]), axis=0)
@@ -146,22 +150,35 @@ class GridVisWidget(QtOpenGL.QGLWidget):
             for h in hsv_generator():
                 yield colorsys.hsv_to_rgb(h, s, v)
 
-        def get_color_generator_for_merge_history(area):
+        def get_subgroups_for_current_merging_step(area):
+            Subgroup = collections.namedtuple('Subgroup', ['id', 'instance', 'subarea'])
             current_merging_step = self._current_merging_history[self._current_merging_step_index]
 
-            subgroup_indices = []
+            subgroups = []
             for subarea in area:
                 merge_group = self._merge_groups[subarea[0]]
                 if merge_group._instance_id in current_merging_step:
                     if merge_group._instance_id == current_merging_step[0]:
-                        instance = merge_group._merge_obj_history[current_merging_step[1]]
+                        other_instance = merge_group._merge_obj_history[current_merging_step[1]]
                     else:
-                        instance = merge_group._merge_obj_history[current_merging_step[0]]
-                    index_array = set()
-                    for subgroup_index, sub_area in enumerate(area):
-                        if set(sub_area) in instance._subgroups:
-                            index_array.add(subgroup_index)
-                    subgroup_indices.append(tuple(index_array))
+                        other_instance = merge_group._merge_obj_history[current_merging_step[0]]
+                    subgroups.append(Subgroup(merge_group._instance_id, other_instance, subarea))
+            # Swap instances since they are found in wrong order
+            a, b = subgroups
+            subgroups = [Subgroup(a.id, b.instance, a.subarea),
+                         Subgroup(b.id, a.instance, b.subarea)]
+            return subgroups
+
+        def get_color_generator_for_merge_history(area):
+            subgroups = get_subgroups_for_current_merging_step(area)
+
+            subgroup_indices = []
+            for instance_id, instance_obj, subarea in subgroups:
+                index_array = set()
+                for subgroup_index, sub_area in enumerate(area):
+                    if set(sub_area) in instance_obj._subgroups:
+                        index_array.add(subgroup_index)
+                subgroup_indices.append(tuple(index_array))
 
             for i in range(len(area)):
                 for index_array, color in zip(subgroup_indices, ((1, 0, 0), (0, 1, 0))):
@@ -171,25 +188,41 @@ class GridVisWidget(QtOpenGL.QGLWidget):
                     color = (1, 1, 1)
                 yield color
 
+        def get_translation_vectors_for_merge_history(area):
+            subgroups = get_subgroups_for_current_merging_step(area)
+            current_merging_step = self._current_merging_history[self._current_merging_step_index]
+            translation_vectors = tuple(subgroup.instance._translation_vectors for subgroup in subgroups)
+            translation_vectors_with_areas = zip(translation_vectors,
+                                                 (subgroup.instance._subgroups for subgroup in subgroups))
+            return translation_vectors_with_areas
+
         color_generator = get_hsv_color_generator()
         if self._show_box:
             draw_box()
         if self._show_single_area:
             current_area = self._areas[self._current_area_index]
-            if self._show_link and self._merge_groups is not None:
-                draw_link_vectors(current_area)
-            if self._show_translation and self._merge_groups is not None:
-                current_translation_vectors = self._merge_groups[current_area[0][0]]._translation_vectors
-                draw_translation_vectors(current_area, current_translation_vectors)
             if self._show_merging_history and self._merge_groups is not None:
                 color_generator = get_color_generator_for_merge_history(current_area)
+                current_translation_vectors_with_areas = get_translation_vectors_for_merge_history(current_area)
                 draw_area(current_area, color_generator)
-            elif self._show_subparts:
-                draw_area(current_area, color_generator)
+                if self._show_link:
+                    for translation_vectors, area in current_translation_vectors_with_areas:
+                        draw_link_vectors(area)
+                if self._show_translation:
+                    for translation_vectors, area in current_translation_vectors_with_areas:
+                        draw_translation_vectors(area, translation_vectors)
             else:
-                for _ in range(self._current_area_index - 1):
-                    color_generator.next()
-                draw_area(current_area, color_generator.next())
+                if self._show_link and self._merge_groups is not None:
+                    draw_link_vectors(current_area)
+                if self._show_translation and self._merge_groups is not None:
+                    current_translation_vectors = self._merge_groups[current_area[0][0]]._translation_vectors
+                    draw_translation_vectors(current_area, current_translation_vectors)
+                if self._show_subparts:
+                    draw_area(current_area, color_generator)
+                else:
+                    for _ in range(self._current_area_index - 1):
+                        color_generator.next()
+                    draw_area(current_area, color_generator.next())
         else:
             for area, color in zip(self._areas, color_generator):
                 draw_area(area, color)
