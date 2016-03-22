@@ -96,7 +96,11 @@ class TwinViewWidget(QtGui.QWidget):
             't': 'show_translation',
             'T': 'hide_translation',
             'h': 'show_merging_history',
-            'H': 'hide_merging_history'
+            'H': 'hide_merging_history',
+            'r': 'show_merging_result',
+            'R': 'hide_merging_result',
+            'm': 'show_merging_translation',
+            'M': 'hide_merging_translation'
         }
 
         key = unicode(event.text())
@@ -173,3 +177,23 @@ class TwinViewWidget(QtGui.QWidget):
         self.topLevelWidget().show_merging_history = False
         self._left_view.hide_merging_history()
         self._right_view.hide_merging_history()
+
+    def show_merging_result(self):
+        self.topLevelWidget().show_merging_result = True
+        self._left_view.show_merging_result()
+        self._right_view.show_merging_result()
+
+    def hide_merging_result(self):
+        self.topLevelWidget().show_merging_result = False
+        self._left_view.hide_merging_result()
+        self._right_view.hide_merging_result()
+
+    def show_merging_translation(self):
+        self.topLevelWidget().show_merging_translation = True
+        self._left_view.show_merging_translation()
+        self._right_view.show_merging_translation()
+
+    def hide_merging_translation(self):
+        self.topLevelWidget().show_merging_translation = True
+        self._left_view.hide_merging_translation()
+        self._right_view.hide_merging_translation()

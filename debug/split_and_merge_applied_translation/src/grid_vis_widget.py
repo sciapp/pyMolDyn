@@ -43,6 +43,8 @@ class GridVisWidget(QtOpenGL.QGLWidget):
         self._show_link = False
         self._show_translation = False
         self._show_merging_history = False
+        self._show_merging_result = False
+        self._show_merging_translation = False
         self._current_area_index = 0
         self._current_merging_history = None
         self._current_merging_step_index = 0
@@ -89,7 +91,7 @@ class GridVisWidget(QtOpenGL.QGLWidget):
             gr3.drawmesh(self._cube_mesh, count_positions, self._mask_node_positions, count_positions*((0, 0, 1), ),
                          count_positions*((0, 1, 0), ), count_positions*(mask_color, ), count_positions*((1, 1, 1), ))
 
-        def draw_link_vectors(area):
+        def draw_link_vectors(area, color=(1, 0.7, 0.7)):
             center_points = tuple(np.mean(np.array([(pos[0] + x, pos[1] + y, pos[2] + z)
                                                     for pos, dim in subarea
                                                     for x, y, z in it.product(*(range(c) for c in dim))]), axis=0)
@@ -100,9 +102,9 @@ class GridVisWidget(QtOpenGL.QGLWidget):
             cone_normalized_vectors = tuple(c / length for c, length in zip(cone_vectors, cone_lengths))
             count_positions = len(cone_positions)
             gr3.drawconemesh(count_positions, cone_positions, cone_normalized_vectors,
-                             count_positions*((1, 0.7, 0.7), ), count_positions*((0.5, 0.5, 0.5), ), cone_lengths)
+                             count_positions*(color, ), count_positions*((0.5, 0.5, 0.5), ), cone_lengths)
 
-        def draw_translation_vectors(area, translation_vectors):
+        def draw_translation_vectors(area, translation_vectors, color=(0.7, 0.7, 1)):
             if not translation_vectors:
                 return
 
@@ -116,7 +118,7 @@ class GridVisWidget(QtOpenGL.QGLWidget):
             cone_normalized_vectors = tuple(c / length for c, length in zip(cone_vectors, cone_lengths))
             count_positions = len(cone_positions)
             gr3.drawconemesh(count_positions, cone_positions, cone_normalized_vectors,
-                             count_positions*((0.7, 0.7, 1), ), count_positions*((0.5, 0.5, 0.5), ), cone_lengths)
+                             count_positions*(color, ), count_positions*((0.5, 0.5, 0.5), ), cone_lengths)
 
         def draw_area(area, colors):
             colorize_subareas = not isinstance(colors, tuple)
@@ -151,7 +153,8 @@ class GridVisWidget(QtOpenGL.QGLWidget):
                 yield colorsys.hsv_to_rgb(h, s, v)
 
         def get_subgroups_for_current_merging_step(area):
-            Subgroup = collections.namedtuple('Subgroup', ['id', 'instance', 'subarea'])
+            Subgroup = collections.namedtuple('Subgroup', ['id', 'instance_before', 'instance_after',
+                                                           'translation_vector', 'subarea'])
             current_merging_step = self._current_merging_history[self._current_merging_step_index]
 
             subgroups = []
@@ -159,21 +162,27 @@ class GridVisWidget(QtOpenGL.QGLWidget):
                 merge_group = self._merge_groups[subarea[0]]
                 if merge_group._instance_id in current_merging_step:
                     if merge_group._instance_id == current_merging_step[0]:
-                        other_instance = merge_group._merge_obj_history[current_merging_step[1]]
+                        (other_instance_before,
+                         other_instance_after,
+                         translation_vector) = merge_group._merge_obj_history[current_merging_step[1]]
                     else:
-                        other_instance = merge_group._merge_obj_history[current_merging_step[0]]
-                    subgroups.append(Subgroup(merge_group._instance_id, other_instance, subarea))
+                        (other_instance_before,
+                         other_instance_after,
+                         translation_vector) = merge_group._merge_obj_history[current_merging_step[0]]
+                    subgroups.append(Subgroup(merge_group._instance_id, other_instance_before,
+                                              other_instance_after, translation_vector, subarea))
             # Swap instances since they are found in wrong order
             a, b = subgroups
-            subgroups = [Subgroup(a.id, b.instance, a.subarea),
-                         Subgroup(b.id, a.instance, b.subarea)]
+            subgroups = [Subgroup(a.id, b.instance_before, b.instance_after, b.translation_vector, a.subarea),
+                         Subgroup(b.id, a.instance_before, a.instance_after, a.translation_vector, b.subarea)]
             return subgroups
 
-        def get_color_generator_for_merge_history(area):
+        def get_color_generator_for_merge_history(area, show_result=False):
             subgroups = get_subgroups_for_current_merging_step(area)
 
             subgroup_indices = []
-            for instance_id, instance_obj, subarea in subgroups:
+            for instance_id, instance_obj_before, instance_obj_after, translation_vector, subarea in subgroups:
+                instance_obj = instance_obj_before if not show_result else instance_obj_after
                 index_array = set()
                 for subgroup_index, sub_area in enumerate(area):
                     if set(sub_area) in instance_obj._subgroups:
@@ -188,13 +197,30 @@ class GridVisWidget(QtOpenGL.QGLWidget):
                     color = (1, 1, 1)
                 yield color
 
-        def get_translation_vectors_for_merge_history(area):
+        def get_translation_vectors_for_merge_history(area, show_result=False):
+            instance_attr_name = 'instance_before' if not show_result else 'instance_after'
             subgroups = get_subgroups_for_current_merging_step(area)
-            current_merging_step = self._current_merging_history[self._current_merging_step_index]
-            translation_vectors = tuple(subgroup.instance._translation_vectors for subgroup in subgroups)
+            translation_vectors = tuple(getattr(subgroup, instance_attr_name)._translation_vectors
+                                        for subgroup in subgroups)
             translation_vectors_with_areas = zip(translation_vectors,
-                                                 (subgroup.instance._subgroups for subgroup in subgroups))
-            return translation_vectors_with_areas
+                                                 (getattr(subgroup, instance_attr_name)._subgroups
+                                                  for subgroup in subgroups))
+            subgroup_index_with_translation_vector = 0 if subgroups[0].translation_vector is not None else 1
+            subgroup_index_without_translation_vector = 1 - subgroup_index_with_translation_vector
+            subgroup_with_merging_vector = subgroups[subgroup_index_with_translation_vector]
+            index_of_primary_merge_group = subgroup_with_merging_vector.instance_before._index_of_primary_subgroup
+            merging_vector_with_primary_group = (subgroup_with_merging_vector.translation_vector,
+                                                 subgroup_with_merging_vector.instance_before._subgroups[
+                                                     index_of_primary_merge_group])
+            primary_groups = (
+                subgroups[subgroup_index_with_translation_vector].instance_before._subgroups[
+                    subgroups[subgroup_index_with_translation_vector].instance_before._index_of_primary_subgroup
+                ],
+                subgroups[subgroup_index_without_translation_vector].instance_before._subgroups[
+                    subgroups[subgroup_index_without_translation_vector].instance_before._index_of_primary_subgroup
+                ]
+            )
+            return translation_vectors_with_areas, merging_vector_with_primary_group, primary_groups
 
         color_generator = get_hsv_color_generator()
         if self._show_box:
@@ -202,15 +228,22 @@ class GridVisWidget(QtOpenGL.QGLWidget):
         if self._show_single_area:
             current_area = self._areas[self._current_area_index]
             if self._show_merging_history and self._merge_groups is not None:
-                color_generator = get_color_generator_for_merge_history(current_area)
-                current_translation_vectors_with_areas = get_translation_vectors_for_merge_history(current_area)
+                color_generator = get_color_generator_for_merge_history(current_area, self._show_merging_result)
+                current_translation_vectors_with_areas, merging_vector_with_primary_group, primary_groups = \
+                    get_translation_vectors_for_merge_history(current_area, self._show_merging_result)
                 draw_area(current_area, color_generator)
                 if self._show_link:
                     for translation_vectors, area in current_translation_vectors_with_areas:
                         draw_link_vectors(area)
+                if self._show_merging_translation and not self._show_merging_result:
+                    draw_link_vectors(primary_groups, color=(1.0, 0.7, 1.0))
                 if self._show_translation:
                     for translation_vectors, area in current_translation_vectors_with_areas:
                         draw_translation_vectors(area, translation_vectors)
+                if self._show_merging_translation and not self._show_merging_result:
+                    draw_translation_vectors((merging_vector_with_primary_group[1], ),
+                                             (merging_vector_with_primary_group[0], ),
+                                             color=(0.7, 1.0, 0.7))
             else:
                 if self._show_link and self._merge_groups is not None:
                     draw_link_vectors(current_area)
@@ -324,6 +357,22 @@ class GridVisWidget(QtOpenGL.QGLWidget):
 
     def hide_merging_history(self):
         self._show_merging_history = False
+        self.updateGL()
+
+    def show_merging_result(self):
+        self._show_merging_result = True
+        self.updateGL()
+
+    def hide_merging_result(self):
+        self._show_merging_result = False
+        self.updateGL()
+
+    def show_merging_translation(self):
+        self._show_merging_translation = True
+        self.updateGL()
+
+    def hide_merging_translation(self):
+        self._show_merging_translation = False
         self.updateGL()
 
     def _get_current_merging_history(self):

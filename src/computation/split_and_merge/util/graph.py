@@ -93,8 +93,8 @@ class MergeGroup(object):
             return translation_vector
 
         MergeGroup._merge_history.append((self._instance_id, merge_group._instance_id))
-        self._merge_obj_history[merge_group._instance_id] = copy.deepcopy(self)
-        merge_group._merge_obj_history[self._instance_id] = copy.deepcopy(merge_group)
+        self_before_copy = copy.deepcopy(self)
+        merge_group_before_copy = copy.deepcopy(merge_group)
 
         subgroup_count_before_merge = len(self._subgroups)
         other_merge_groups_before_merge = self._other_merge_groups
@@ -112,6 +112,11 @@ class MergeGroup(object):
         merge_group._other_merge_groups.append(self)
         merge_group._other_merge_groups.extend(other_merge_groups_before_merge)
         merge_group._index_of_primary_subgroup += subgroup_count_before_merge
+
+        self._merge_obj_history[merge_group._instance_id] = (self_before_copy, copy.deepcopy(self), translation_vector)
+        merge_group._merge_obj_history[self._instance_id] = (merge_group_before_copy, copy.deepcopy(merge_group),
+                                                             None)  # only the first merge argument gains a translation
+                                                                    # vector
 
     def set_cyclic(self):
         self._shared_attributes.is_cyclic = True
