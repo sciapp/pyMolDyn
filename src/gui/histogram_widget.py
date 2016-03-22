@@ -123,6 +123,7 @@ class HistogramWidget(QtGui.QWidget):
         binbox = QtGui.QHBoxLayout()
         binbox.addWidget(QtGui.QLabel("Number of Bins:", self), 0)
         self.nbins = QtGui.QLineEdit(self)
+        self.nbins.setMinimumWidth(50)
         binbox.addWidget(self.nbins, 0, QtCore.Qt.AlignLeft)
         grid.addLayout(binbox, 0, 2)
 
