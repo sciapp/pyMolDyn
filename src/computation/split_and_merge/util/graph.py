@@ -35,10 +35,10 @@ class MergeGroup(object):
             result = cls.__new__(cls)
             memo[id(self)] = result
             for attr in vars(self):
-                if attr != 'other_merge_groups':
+                if attr != 'all_merge_groups':
                     setattr(result, attr, copy.deepcopy(getattr(self, attr), memo))
                 else:
-                    setattr(result, 'other_merge_groups', [])
+                    setattr(result, 'all_merge_groups', [])
             return result
 
     _instance_count = 0
@@ -49,7 +49,7 @@ class MergeGroup(object):
             subgroups=[],
             translation_vectors=[],     # offset that can be applied to the i-th subgroup to merge it with the next
                                         # subgroup in the list
-            other_merge_groups=[],
+            all_merge_groups=[self],
             is_cyclic=False
         )
         self._index_of_primary_subgroup = None  # Saves the index of the first subgroup in the subgroups list that has
@@ -97,7 +97,6 @@ class MergeGroup(object):
         merge_group_before_copy = copy.deepcopy(merge_group)
 
         subgroup_count_before_merge = len(self._subgroups)
-        other_merge_groups_before_merge = self._other_merge_groups
 
         self._subgroups.extend(merge_group._subgroups)
         subtraction_vectors = self._translation_vectors[self._index_of_primary_subgroup:]
@@ -105,13 +104,8 @@ class MergeGroup(object):
         self._translation_vectors.append(subtract_vector_list(translation_vector, subtraction_vectors))
         self._translation_vectors.extend(merge_group._translation_vectors)
 
-        self._other_merge_groups.append(merge_group)
-        self._other_merge_groups.extend(merge_group._other_merge_groups)
-        merge_group._shared_attributes = self._shared_attributes
-        merge_group._update_other_merge_groups()
-        merge_group._other_merge_groups.append(self)
-        merge_group._other_merge_groups.extend(other_merge_groups_before_merge)
-        merge_group._index_of_primary_subgroup += subgroup_count_before_merge
+        self._all_merge_groups.extend(merge_group._all_merge_groups)
+        merge_group._update_all_merge_groups(self._shared_attributes, subgroup_count_before_merge)
 
         self._merge_obj_history[merge_group._instance_id] = (self_before_copy, copy.deepcopy(self), translation_vector)
         merge_group._merge_obj_history[self._instance_id] = (merge_group_before_copy, copy.deepcopy(merge_group),
@@ -121,9 +115,10 @@ class MergeGroup(object):
     def set_cyclic(self):
         self._shared_attributes.is_cyclic = True
 
-    def _update_other_merge_groups(self):
-        for merge_group in self._other_merge_groups:
-            merge_group._shared_attributes = self._shared_attributes
+    def _update_all_merge_groups(self, shared_attributes, index_shift):
+        for merge_group in self._all_merge_groups[:]:
+            merge_group._shared_attributes = shared_attributes
+            merge_group._index_of_primary_subgroup += index_shift
 
     def __deepcopy__(self, memo):
         cls = self.__class__
