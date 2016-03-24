@@ -17,9 +17,11 @@ def start_split_and_merge_pipeline(data, mask, atoms, combined_translation_vecto
     areas, non_translated_areas, cyclic_area_indices = graph.get_all_areas(apply_translation=True,
                                                                            with_non_translated_nodes=True,
                                                                            mark_cyclic_areas=True)
-    algorithm.mark_domain_points(data, non_translated_areas)
+    if object_type == ObjectType.DOMAIN:
+        algorithm.mark_domain_points(data, non_translated_areas)
+        centers = algorithm.calculate_domain_centers(atoms, combined_translation_vectors, non_translated_areas)
+        surface_cells = algorithm.get_domain_surface_cells(data, mask, non_translated_areas)
 
-    centers = algorithm.calculate_domain_centers(atoms, combined_translation_vectors, non_translated_areas)
-    surface_cells = algorithm.get_domain_surface_cells(data, mask, non_translated_areas)
-
-    return centers, areas, non_translated_areas, surface_cells
+        return centers, areas, non_translated_areas, surface_cells
+    else:
+        return areas, non_translated_areas

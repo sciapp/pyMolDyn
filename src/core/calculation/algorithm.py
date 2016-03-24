@@ -126,13 +126,6 @@ class DomainCalculation:
         self.centers, translated_areas, non_translated_areas, self.surface_point_list = result
         print_message("Number of domains:", len(self.centers))
 
-        # ================================================================================
-
-        np.savez_compressed('domains.npz', translated_areas=translated_areas, non_translated_areas=non_translated_areas)
-        np.savez_compressed('mask.npz', mask=self.discretization.grid)
-
-        # ================================================================================
-
         self.domain_volumes = []
         for domain_index in range(len(self.centers)):
             domain_volume = (self.grid == -(domain_index + 1)).sum() * (self.discretization.s_step ** 3)
@@ -236,9 +229,7 @@ class CavityCalculation:
                                                 discretization.combined_translation_vectors,
                                                 discretization.get_translation_vector,
                                                 ObjectType.CAVITY)
-        centers, translated_areas, non_translated_areas, surface_point_list = result
-
-        np.savez_compressed('cavities.npz', translated_areas=translated_areas, non_translated_areas=non_translated_areas)
+        translated_areas, non_translated_areas = result
 
         num_domains = len(self.domain_calculation.centers)
         grid_volume = (discretization.grid == 0).sum()
