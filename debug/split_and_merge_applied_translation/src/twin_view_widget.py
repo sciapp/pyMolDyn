@@ -16,11 +16,10 @@ CAMERA_DISTANCE = 100
 
 
 class TwinViewWidget(QtGui.QWidget):
-    def __init__(self, parent, non_translated_data, translated_data, merge_groups, mask, *args, **kwargs):
+    def __init__(self, parent, non_translated_data, translated_data, mask, *args, **kwargs):
         super(TwinViewWidget, self).__init__(parent, *args, **kwargs)
         result = self._filter_for_relevant_data(non_translated_data, translated_data)
         self._non_translated_data, self._translated_data = result
-        self._merge_groups = merge_groups
         self._mask = mask
         center, bounding_box_min, bounding_box_max = self.get_bounding_box_and_center(non_translated_data)
         self._center = center
@@ -46,11 +45,11 @@ class TwinViewWidget(QtGui.QWidget):
         self._right_label = QtGui.QLabel('Translated data:', self)
         self._right_label.setSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Maximum)
         self._main_layout.addWidget(self._right_label, 0, 1)
-        self._left_view = GridVisWidget(self, self._non_translated_data, self._merge_groups, self._mask,
+        self._left_view = GridVisWidget(self, self._non_translated_data, self._mask,
                                         self._center, self._bounding_box_min, self._bounding_box_max, CAMERA_DISTANCE)
         self._left_view.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.MinimumExpanding)
         self._main_layout.addWidget(self._left_view, 1, 0)
-        self._right_view = GridVisWidget(self, self._translated_data, None, self._mask, self._center,
+        self._right_view = GridVisWidget(self, self._translated_data, self._mask, self._center,
                                          self._bounding_box_min, self._bounding_box_max, CAMERA_DISTANCE)
         self._right_view.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.MinimumExpanding)
         self._main_layout.addWidget(self._right_view, 1, 1)
@@ -58,7 +57,7 @@ class TwinViewWidget(QtGui.QWidget):
 
     @staticmethod
     def get_bounding_box_and_center(data):
-        plain_nodes = tuple(node for area in data for subarea in area for node in subarea)
+        plain_nodes = tuple(node for area in data for node in area)
         node_positions = [(pos[0] + x, pos[1] + y, pos[2] + z) for pos, dim in plain_nodes
                           for x, y, z in it.product(*(range(c) for c in dim))]
         min_components = tuple(min(axis) for axis in zip(*node_positions))
@@ -88,19 +87,7 @@ class TwinViewWidget(QtGui.QWidget):
             'a': 'show_all_areas',
             'A': 'show_single_area',
             'n': 'show_next_area',
-            'N': 'show_previous_area',
-            'c': 'show_subparts',
-            'C': 'hide_subparts',
-            'l': 'show_link',
-            'L': 'hide_link',
-            't': 'show_translation',
-            'T': 'hide_translation',
-            'h': 'show_merging_history',
-            'H': 'hide_merging_history',
-            'r': 'show_merging_result',
-            'R': 'hide_merging_result',
-            'm': 'show_merging_translation',
-            'M': 'hide_merging_translation'
+            'N': 'show_previous_area'
         }
 
         key = unicode(event.text())
@@ -137,63 +124,3 @@ class TwinViewWidget(QtGui.QWidget):
         current_index = self._left_view.show_previous_area()
         self._right_view.show_previous_area()
         self.topLevelWidget().index = current_index
-
-    def show_subparts(self):
-        self.topLevelWidget().show_subparts = True
-        self._left_view.show_subparts()
-        self._right_view.show_subparts()
-
-    def hide_subparts(self):
-        self.topLevelWidget().show_subparts = False
-        self._left_view.hide_subparts()
-        self._right_view.hide_subparts()
-
-    def show_link(self):
-        self.topLevelWidget().show_link = True
-        self._left_view.show_link()
-        self._right_view.show_link()
-
-    def hide_link(self):
-        self.topLevelWidget().show_link = False
-        self._left_view.hide_link()
-        self._right_view.hide_link()
-
-    def show_translation(self):
-        self.topLevelWidget().show_translation = True
-        self._left_view.show_translation()
-        self._right_view.show_translation()
-
-    def hide_translation(self):
-        self.topLevelWidget().show_translation = False
-        self._left_view.hide_translation()
-        self._right_view.hide_translation()
-
-    def show_merging_history(self):
-        self.topLevelWidget().show_merging_history = True
-        self._left_view.show_merging_history()
-        self._right_view.show_merging_history()
-
-    def hide_merging_history(self):
-        self.topLevelWidget().show_merging_history = False
-        self._left_view.hide_merging_history()
-        self._right_view.hide_merging_history()
-
-    def show_merging_result(self):
-        self.topLevelWidget().show_merging_result = True
-        self._left_view.show_merging_result()
-        self._right_view.show_merging_result()
-
-    def hide_merging_result(self):
-        self.topLevelWidget().show_merging_result = False
-        self._left_view.hide_merging_result()
-        self._right_view.hide_merging_result()
-
-    def show_merging_translation(self):
-        self.topLevelWidget().show_merging_translation = True
-        self._left_view.show_merging_translation()
-        self._right_view.show_merging_translation()
-
-    def hide_merging_translation(self):
-        self.topLevelWidget().show_merging_translation = True
-        self._left_view.hide_merging_translation()
-        self._right_view.hide_merging_translation()

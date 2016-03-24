@@ -1,7 +1,4 @@
-import collections
-import copy
 import itertools as it
-import sys
 from computation.split_and_merge.util.node_border_iterator import iterate_node_border
 
 
@@ -30,20 +27,6 @@ class MergeGroup(object):
         def __contains__(self, item):
             return item in self.__dict__
 
-        def __deepcopy__(self, memo):
-            cls = self.__class__
-            result = cls.__new__(cls)
-            memo[id(self)] = result
-            for attr in vars(self):
-                if attr != 'all_merge_groups':
-                    setattr(result, attr, copy.deepcopy(getattr(self, attr), memo))
-                else:
-                    setattr(result, 'all_merge_groups', [])
-            return result
-
-    _instance_count = 0
-    _merge_history = []
-
     def __init__(self, initial_node=None):
         self._shared_attributes = MergeGroup.SharedAttributes(
             subgroups=[],
@@ -54,13 +37,8 @@ class MergeGroup(object):
         )
         self._index_of_primary_subgroup = None  # Saves the index of the first subgroup in the subgroups list that has
                                                 # been assigned to this MergeGroup object
-        self._instance_id = MergeGroup._instance_count
-        MergeGroup._instance_count += 1
-        self._merge_obj_history = collections.OrderedDict()
         if initial_node is not None:
             self.add(set([initial_node]))
-        self._save_merge_history = self._merge_history  # Force the class attribute to be pickled by referencing it as
-                                                        # an instance attribute
 
     def add(self, nodes):
         """
@@ -92,10 +70,6 @@ class MergeGroup(object):
                 translation_vector = tuple(tc - vc for tc, vc in zip(translation_vector, vector))
             return translation_vector
 
-        MergeGroup._merge_history.append((self._instance_id, merge_group._instance_id))
-        self_before_copy = copy.deepcopy(self)
-        merge_group_before_copy = copy.deepcopy(merge_group)
-
         subgroup_count_before_merge = len(self._subgroups)
 
         self._subgroups.extend(merge_group._subgroups)
@@ -107,11 +81,6 @@ class MergeGroup(object):
         self._all_merge_groups.extend(merge_group._all_merge_groups)
         merge_group._update_all_merge_groups(self._shared_attributes, subgroup_count_before_merge)
 
-        self._merge_obj_history[merge_group._instance_id] = (self_before_copy, copy.deepcopy(self), translation_vector)
-        merge_group._merge_obj_history[self._instance_id] = (merge_group_before_copy, copy.deepcopy(merge_group),
-                                                             None)  # only the first merge argument gains a translation
-                                                                    # vector
-
     def set_cyclic(self):
         self._shared_attributes.is_cyclic = True
 
@@ -119,17 +88,6 @@ class MergeGroup(object):
         for merge_group in self._all_merge_groups[:]:
             merge_group._shared_attributes = shared_attributes
             merge_group._index_of_primary_subgroup += index_shift
-
-    def __deepcopy__(self, memo):
-        cls = self.__class__
-        result = cls.__new__(cls)
-        memo[id(self)] = result
-        for attr in vars(self):
-            if attr in ('_shared_attributes', '_index_of_primary_subgroup', '_instance_id'):
-                setattr(result, attr, copy.deepcopy(getattr(self, attr), memo))
-            else:
-                setattr(result, attr, copy.copy(getattr(self, attr)))
-        return result
 
     def __getattr__(self, attr):
         if attr.startswith('_'):
@@ -200,15 +158,11 @@ class MergeGroup(object):
         generators.extend(list(reversed(backwards_generators)))
         forwards_generators = get_generators_from_start_index(index_of_non_translated_subgroup)
         generators.extend(forwards_generators)
-        # return it.chain(*generators)
-        return generators
+        return it.chain(*generators)
 
     @property
     def is_cyclic(self):
         return self._is_cyclic
-
-
-setattr(sys.modules[__name__], 'SharedAttributes', MergeGroup.SharedAttributes)
 
 
 class Graph(object):
@@ -471,22 +425,17 @@ class GraphForSplitAndMerge(Graph):
         visited_nodes = set()
         for node in self:
             if node not in visited_nodes:
-                area = []
+                area = set()
                 if apply_translation:
                     node_iterator = self.merged_nodes[node].iter_with_applied_translation(
                         iter_with_non_translated_nodes=True, keep_largest_volume_within_cell=True
                     )
                     if with_non_translated_nodes:
-                        alt_area = []
-                        for generator in node_iterator:
-                            sub_area = []
-                            sub_alt_area = []
-                            for merged_node, translated_node in generator:
-                                sub_area.append(translated_node)
-                                sub_alt_area.append(merged_node)
-                                visited_nodes.add(merged_node)
-                            area.append(tuple(sub_area))
-                            alt_area.append(tuple(sub_alt_area))
+                        alt_area = set()
+                        for merged_node, translated_node in node_iterator:
+                            area.add(translated_node)
+                            alt_area.add(merged_node)
+                            visited_nodes.add(merged_node)
                         alt_areas.append(alt_area)
                     else:
                         for merged_node, translated_node in node_iterator:

@@ -76,13 +76,10 @@ from config.configuration import config
 import os
 from computation.split_and_merge.pipeline import start_split_and_merge_pipeline
 from computation.split_and_merge.algorithm import ObjectType
-from computation.split_and_merge.util.graph import MergeGroup
 import util.colored_exceptions
 import time
 from util.message import print_message, progress, finish
 from extension import atomstogrid, mark_cavities, cavity_triangles, cavity_intersections
-
-import pickle
 
 
 dimension = 3
@@ -126,16 +123,13 @@ class DomainCalculation:
                                                 self.discretization.combined_translation_vectors,
                                                 self.discretization.get_translation_vector,
                                                 ObjectType.DOMAIN)
-        (self.centers, translated_areas, non_translated_areas,
-         merge_groups, self.surface_point_list) = result
-        # print_message("Number of domains:", len(self.centers))
+        self.centers, translated_areas, non_translated_areas, self.surface_point_list = result
+        print_message("Number of domains:", len(self.centers))
 
         # ================================================================================
 
         np.savez_compressed('domains.npz', translated_areas=translated_areas, non_translated_areas=non_translated_areas)
         np.savez_compressed('mask.npz', mask=self.discretization.grid)
-        with open('merge_groups.pickle', 'w') as f:
-            pickle.dump(merge_groups, f)
         sys.exit()
 
         # ================================================================================
