@@ -130,7 +130,6 @@ class DomainCalculation:
 
         np.savez_compressed('domains.npz', translated_areas=translated_areas, non_translated_areas=non_translated_areas)
         np.savez_compressed('mask.npz', mask=self.discretization.grid)
-        sys.exit()
 
         # ================================================================================
 
@@ -218,22 +217,35 @@ class CavityCalculation:
         else:
             domain_seed_point_lists = [[center] for center in self.domain_calculation.centers]
 
+        discretization = self.domain_calculation.discretization
+        atom_discretization = self.domain_calculation.atom_discretization
+
         # steps 1 to 5
         self.grid3 = mark_cavities(self.grid,
-                                   self.domain_calculation.discretization.grid,
-                                   self.domain_calculation.discretization.d,
+                                   discretization.grid,
+                                   discretization.d,
                                    self.sg_cube_size,
-                                   self.domain_calculation.atom_discretization.discrete_positions,
-                                   [(0, 0, 0)] + self.domain_calculation.discretization.combined_translation_vectors,
+                                   atom_discretization.discrete_positions,
+                                   [(0, 0, 0)] + discretization.combined_translation_vectors,
                                    domain_seed_point_lists,
                                    use_surface_points)
 
+        result = start_split_and_merge_pipeline(self.grid3,
+                                                discretization.grid,
+                                                atom_discretization.discrete_positions,
+                                                discretization.combined_translation_vectors,
+                                                discretization.get_translation_vector,
+                                                ObjectType.CAVITY)
+        centers, translated_areas, non_translated_areas, surface_point_list = result
+
+        np.savez_compressed('cavities.npz', translated_areas=translated_areas, non_translated_areas=non_translated_areas)
+
         num_domains = len(self.domain_calculation.centers)
-        grid_volume = (self.domain_calculation.discretization.grid == 0).sum()
+        grid_volume = (discretization.grid == 0).sum()
         self.cavity_volumes = []
         for domain_index in range(num_domains):
             self.cavity_volumes.append(
-                1.0 * (self.grid3 == -(domain_index + 1)).sum() * (self.domain_calculation.discretization.s_step ** 3))
+                1.0 * (self.grid3 == -(domain_index + 1)).sum() * (discretization.s_step ** 3))
 
         # step 6
         intersection_table = cavity_intersections(self.grid3, num_domains)

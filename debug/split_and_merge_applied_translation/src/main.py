@@ -15,7 +15,7 @@ from main_window import MainWindow
 
 def main():
     app = QtGui.QApplication(sys.argv)
-    data = np.load('../data/domains.npz')
+    data = np.load('../data/cavities.npz')
     mask = np.load('../data/mask.npz')['mask']
     mask[mask != 0] = 1
     non_translated_data, translated_data = data['non_translated_areas'], data['translated_areas']
