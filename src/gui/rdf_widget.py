@@ -8,7 +8,7 @@ import csv
 
 from util.logger import Logger
 import sys
-from statistics.rdf import RDF
+from statistics.rdf import RDF, Kernels
 import numpy as np
 import os
 
@@ -121,6 +121,12 @@ class RDFWidget(QtGui.QWidget):
         grid.addLayout(rangebox, 0, 1)
 
         cutoffbox = QtGui.QHBoxLayout()
+        cutoffbox.addWidget(QtGui.QLabel("Kernel:", self))
+        self.kernels = {"Gaussian": Kernels.gauss, "Epanechnikov": Kernels.epanechnikov, "Compact": Kernels.compact, "Triangular": Kernels.triang, "Box": Kernels.quad, "Right Box": Kernels.posquad, "Left Box": Kernels.negquad}
+        self.kernel = QtGui.QComboBox(self)
+        self.kernel .setMinimumWidth(130)
+        self.kernel.addItems(["Gaussian", "Epanechnikov", "Compact", "Triangular", "Box", "Right Box", "Left Box"])
+        cutoffbox.addWidget(self.kernel)
         cutoffbox.addWidget(QtGui.QLabel("Cutoff:", self))
         self.cutoff = QtGui.QLineEdit("12", self)
         self.cutoff.setMinimumWidth(30)
@@ -183,7 +189,8 @@ class RDFWidget(QtGui.QWidget):
                 bandwidth = float(bandwidth)
             else:
                 bandwidth = None
-            f = self.rdf.rdf(elem1, elem2, cutoff=cutoff, h=bandwidth)
+            kernel = self.kernels.get(self.kernel.currentText(), None)
+            f = self.rdf.rdf(elem1, elem2, cutoff=cutoff, h=bandwidth, kernel=kernel)
             if f is not None:
                 xvalues = np.linspace(range1, range2, 400)
                 yvalues = f(xvalues)
