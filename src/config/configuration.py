@@ -45,6 +45,8 @@ class Configuration(ConfigNode):
             # camera_position =
             # offset          = (0.0, 0.0, 0.0)
             self.gl_window_size = [400, 400]
+            self.atom_radius = 0.4
+            self.bond_radius = 0.1
             pass
 
     class Computation(ConfigNode):
