@@ -99,7 +99,8 @@ def render_html_cavity_surface_group(surface_area, surface_volumes, volume_fract
     return template.render(template_vars)
 
 
-def render_html_cavity_surface(index, surface, volume, domains, volume_fraction):
+def render_html_cavity_surface(index, surface, volume, domains, volume_fraction, squared_gyration_radius,
+                               asphericity, acylindricity, anisotropy):
     template_loader = jinja2.FileSystemLoader(searchpath="gui/tabs/statistics/templates")
     template_env = jinja2.Environment(loader=template_loader)
 
@@ -114,6 +115,10 @@ def render_html_cavity_surface(index, surface, volume, domains, volume_fraction)
                      "surface_to_volume_ratio": surface / volume,
                      "domains": domains,
                      "volume_fraction": volume_fraction,
+                     "squared_gyration_radius": squared_gyration_radius,
+                     "asphericity": asphericity,
+                     "acylindricity": acylindricity,
+                     "anisotropy": anisotropy
                      }
 
     return template.render(template_vars)
@@ -367,13 +372,19 @@ class HTMLWindow(QtGui.QWidget):
 
         surface = self.cavities_surface.surface_areas[index]
         volume = self.cavities_surface.volumes[index]
+        squared_gyration_radius = self.cavities_surface.squared_gyration_radii[index]
+        asphericity = self.cavities_surface.asphericities[index]
+        acylindricity = self.cavities_surface.acylindricities[index]
+        anisotropy = self.cavities_surface.anisotropies[index]
         for cavity in cavities:
             domains.append((cavity+1, self.discretization.discrete_to_continuous(self.domains.centers[cavity])))
 
         if self.atoms.volume is not None:
             volume_fraction = (volume/self.atoms.volume.volume)*100
 
-        self.webview.setHtml(render_html_cavity_surface(index, surface, volume, domains, volume_fraction))
+        self.webview.setHtml(render_html_cavity_surface(index, surface, volume, domains, volume_fraction,
+                                                        squared_gyration_radius, asphericity, acylindricity,
+                                                        anisotropy))
 
     def show_domain_group(self):
         surface = 0.0

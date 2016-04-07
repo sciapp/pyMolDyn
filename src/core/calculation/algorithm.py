@@ -246,16 +246,19 @@ class CavityCalculation:
         # step 6
         intersection_table = cavity_intersections(self.grid3, num_domains)
         multicavities = []
+        cavity_to_neighbors = num_domains * [None]
         for domain in range(num_domains):
-            neighbors = set([domain])
+            current_neighbors = set([domain])
             for neighbor in range(num_domains):
                 if intersection_table[domain][neighbor] == 1:
-                    neighbors.add(neighbor)
+                    current_neighbors.add(neighbor)
             for multicavity in multicavities[:]:
-                if any([neighbor in multicavity for neighbor in neighbors]):
-                    neighbors = neighbors | multicavity
+                if any([neighbor in multicavity for neighbor in current_neighbors]):
+                    current_neighbors = current_neighbors | multicavity
                     multicavities.remove(multicavity)
-            multicavities.append(neighbors)
+            multicavities.append(current_neighbors)
+            for neighbor in current_neighbors:
+                cavity_to_neighbors[neighbor] = current_neighbors
         self.multicavities = multicavities
         self.multicavity_volumes = []
         for multicavity in multicavities:
@@ -263,6 +266,19 @@ class CavityCalculation:
         print_message("Multicavity volumes:", self.multicavity_volumes)
 
         print_message("Multicavities:", multicavities)
+
+        def key_func(cavity_index):
+            cavity_area = non_translated_areas[cavity_index]
+            a_single_cavity_index = -self.grid3[cavity_area[0]] - 1
+            max_neighbor_index = max(cavity_to_neighbors[a_single_cavity_index])
+            return max_neighbor_index
+        sorted_area_indices = sorted(range(len(self.multicavities)), key=key_func)
+        sorted_translated_areas = [translated_areas[i] for i in sorted_area_indices]
+
+        gyration_tensor_parameters = tuple(calculate_gyration_tensor_parameters(area)
+                                           for area in sorted_translated_areas)
+        (self.squared_gyration_radii, self.asphericities,
+         self.acylindricities, self.anisotropies) = zip(*gyration_tensor_parameters)
 
         self.triangles()
 

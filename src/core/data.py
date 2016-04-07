@@ -713,8 +713,12 @@ class Cavities(CavitiesBase):
             surface_areas = calculation.cavity_surface_areas
             triangles = calculation.cavity_triangles
             multicavities = calculation.multicavities
-            super(Cavities, self).__init__(timestamp, volumes,
-                                           surface_areas, triangles)
+            squared_gyration_radii = calculation.squared_gyration_radii
+            asphericities = calculation.asphericities
+            acylindricities = calculation.acylindricities
+            anisotropies = calculation.anisotropies
+            super(Cavities, self).__init__(timestamp, volumes, surface_areas, triangles,
+                                           squared_gyration_radii, asphericities, acylindricities, anisotropies)
         else:
             super(Cavities, self).__init__(*args)
             multicavities = args[4]
