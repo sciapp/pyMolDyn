@@ -8,157 +8,161 @@ from core.calculation.discretization import Discretization
 from gui.tabs.statistics.tree_list import TreeList
 
 
-
 def render_html_atom_group(atom_number, atom_elements):
-    template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
+    template_loader = jinja2.FileSystemLoader(searchpath="gui/tabs/statistics/templates")
     template_env = jinja2.Environment(loader=template_loader)
 
     TEMPLATE_FILE = 'atoms.html'
-    template = template_env.get_template( TEMPLATE_FILE )
+    template = template_env.get_template(TEMPLATE_FILE)
 
-    template_vars = { "title": "Summary of atoms",
-                    "description": "a summary of all calculated atoms",
-                    "atom_number": atom_number,
-                    "atom_elements": atom_elements,
-    }
+    template_vars = {"title": "Summary of atoms",
+                     "description": "a summary of all calculated atoms",
+                     "atom_number": atom_number,
+                     "atom_elements": atom_elements
+                     }
 
     return template.render(template_vars)
 
+
 def render_html_atom(index, atom_fullname, atom_positions, atom_number, covalent_radius, atom_color_rgb, bonds):
-    template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
+    template_loader = jinja2.FileSystemLoader(searchpath="gui/tabs/statistics/templates")
     template_env = jinja2.Environment(loader=template_loader)
 
     TEMPLATE_FILE = 'atom.html'
-    template = template_env.get_template( TEMPLATE_FILE )
+    template = template_env.get_template(TEMPLATE_FILE)
 
-    #FAVORITES = ["chocolates", "lunar eclipses", "rabbits"]
-    template_vars = { "title": "Summary of atoms",
-                    "description": "a summary of one atom",
-                    "index": index,
-                    "atom_fullname": atom_fullname,
-                    "atom_positions": atom_positions,
-                    "atom_number": atom_number,
-                    "covalent_radius": covalent_radius,
-                    "atom_color_rgb": atom_color_rgb,
-                    "bonds": bonds,
-    }
+    template_vars = {"title": "Summary of atoms",
+                     "description": "a summary of one atom",
+                     "index": index,
+                     "atom_fullname": atom_fullname,
+                     "atom_positions": atom_positions,
+                     "atom_number": atom_number,
+                     "covalent_radius": covalent_radius,
+                     "atom_color_rgb": atom_color_rgb,
+                     "bonds": bonds,
+                     }
 
     return template.render(template_vars)
 
+
 def render_html_cavity_center_group(surface_area, surface_volumes, volume_fraction):
-    template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
+    template_loader = jinja2.FileSystemLoader(searchpath="gui/tabs/statistics/templates")
     template_env = jinja2.Environment(loader=template_loader)
 
     TEMPLATE_FILE = 'cavities_center.html'
-    template = template_env.get_template( TEMPLATE_FILE )
+    template = template_env.get_template(TEMPLATE_FILE)
 
-    #FAVORITES = ["chocolates", "lunar eclipses", "rabbits"]
-    template_vars = { "title": "Summary of all cavities",
-                    "description": "a summary of all calculated center bases cavities",
-                    "surface_area": surface_area,
-                    "surface_volumes": surface_volumes,
-                    "volume_fraction": volume_fraction,
-    }
+    template_vars = {"title": "Summary of all cavities",
+                     "description": "a summary of all calculated center bases cavities",
+                     "surface_area": surface_area,
+                     "surface_volumes": surface_volumes,
+                     "volume_fraction": volume_fraction,
+                     }
 
     return template.render(template_vars)
 
+
 def render_html_cavity_center(index, surface, volume, domains, volume_fraction):
-    template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
+    template_loader = jinja2.FileSystemLoader(searchpath="gui/tabs/statistics/templates")
     template_env = jinja2.Environment(loader=template_loader)
 
     TEMPLATE_FILE = 'cavity_center.html'
-    template = template_env.get_template( TEMPLATE_FILE )
+    template = template_env.get_template(TEMPLATE_FILE)
 
-    template_vars = { "title": "Summary of one cavity",
-                    "description": "a summary of one calculated center bases cavity",
-                    "index": index,
-                    "surface": surface,
-                    "volume": volume,
-                    "surface_to_volume_ratio": surface / volume,
-                    "domains": domains,
-                    "volume_fraction": volume_fraction,
-    }
+    template_vars = {"title": "Summary of one cavity",
+                     "description": "a summary of one calculated center bases cavity",
+                     "index": index,
+                     "surface": surface,
+                     "volume": volume,
+                     "surface_to_volume_ratio": surface / volume,
+                     "domains": domains,
+                     "volume_fraction": volume_fraction,
+                     }
 
     return template.render(template_vars)
 
+
 def render_html_cavity_surface_group(surface_area, surface_volumes, volume_fraction):
-    template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
+    template_loader = jinja2.FileSystemLoader(searchpath="gui/tabs/statistics/templates")
     template_env = jinja2.Environment(loader=template_loader)
 
     TEMPLATE_FILE = 'cavities_surface.html'
-    template = template_env.get_template( TEMPLATE_FILE )
+    template = template_env.get_template(TEMPLATE_FILE)
 
-    #FAVORITES = ["chocolates", "lunar eclipses", "rabbits"]
-    template_vars = { "title": "Summary of atoms",
-                    "description": "a summary of all calculated surface based cavities",
-                    "surface_area": surface_area,
-                    "surface_volumes": surface_volumes,
-                    "volume_fraction": volume_fraction,
-    }
+    template_vars = {"title": "Summary of atoms",
+                     "description": "a summary of all calculated surface based cavities",
+                     "surface_area": surface_area,
+                     "surface_volumes": surface_volumes,
+                     "volume_fraction": volume_fraction,
+                     }
 
     return template.render(template_vars)
 
+
 def render_html_cavity_surface(index, surface, volume, domains, volume_fraction):
-    template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
+    template_loader = jinja2.FileSystemLoader(searchpath="gui/tabs/statistics/templates")
     template_env = jinja2.Environment(loader=template_loader)
 
     TEMPLATE_FILE = 'cavity_surface.html'
-    template = template_env.get_template( TEMPLATE_FILE )
+    template = template_env.get_template(TEMPLATE_FILE)
 
-    #FAVORITES = ["chocolates", "lunar eclipses", "rabbits"]
-    template_vars = { "title": "Summary of atoms",
-                    "description": "a summary of all calculated surface based cavities",
-                    "index": index,
-                    "surface": surface,
-                    "volume": volume,
-                    "surface_to_volume_ratio": surface / volume,
-                    "domains": domains,
-                    "volume_fraction": volume_fraction,
-    }
+    template_vars = {"title": "Summary of atoms",
+                     "description": "a summary of all calculated surface based cavities",
+                     "index": index,
+                     "surface": surface,
+                     "volume": volume,
+                     "surface_to_volume_ratio": surface / volume,
+                     "domains": domains,
+                     "volume_fraction": volume_fraction,
+                     }
 
     return template.render(template_vars)
 
+
 def render_html_cavity_domain_group(surface_area, surface_volumes, surface_volumes_fractions):
-    template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
+    template_loader = jinja2.FileSystemLoader(searchpath="gui/tabs/statistics/templates")
     template_env = jinja2.Environment(loader=template_loader)
 
     TEMPLATE_FILE = 'domains.html'
-    template = template_env.get_template( TEMPLATE_FILE )
+    template = template_env.get_template(TEMPLATE_FILE)
 
-    #FAVORITES = ["chocolates", "lunar eclipses", "rabbits"]
-    template_vars = { "title": "Summary of all cavities (domains)",
-                    "description": "a summary of all calculated cavities (domains)",
-                    "surface_area": surface_area,
-                    "surface_volumes": surface_volumes,
-                    "surface_volumes_fractions": surface_volumes_fractions,
-    }
+    template_vars = {"title": "Summary of all cavities (domains)",
+                     "description": "a summary of all calculated cavities (domains)",
+                     "surface_area": surface_area,
+                     "surface_volumes": surface_volumes,
+                     "surface_volumes_fractions": surface_volumes_fractions,
+                     }
 
     return template.render(template_vars)
 
-def render_html_cavity_domain(index, domain_center, surface, volume, volume_fraction, surface_cavity_index, center_cavity_index):
-    template_loader = jinja2.FileSystemLoader( searchpath="gui/tabs/statistics/templates" )
+
+def render_html_cavity_domain(index, domain_center, surface, volume, volume_fraction, surface_cavity_index,
+                              center_cavity_index, squared_gyration_radius, asphericity, acylindricity, anisotropy):
+    template_loader = jinja2.FileSystemLoader(searchpath="gui/tabs/statistics/templates")
     template_env = jinja2.Environment(loader=template_loader)
 
     TEMPLATE_FILE = 'domain.html'
-    template = template_env.get_template( TEMPLATE_FILE )
+    template = template_env.get_template(TEMPLATE_FILE)
 
-    #FAVORITES = ["chocolates", "lunar eclipses", "rabbits"]
-    template_vars = { "title": "Summary of one cavity (domain)",
-                    "description": "a summary of one calculated cavities (domain)",
-                    "index": index,
-                    "domain_center": domain_center,
-                    "surface": surface,
-                    "volume": volume,
-                    "surface_to_volume_ratio": surface / volume,
-                    "volume_fraction": volume_fraction,
-                    "surface_cavity_index": surface_cavity_index,
-                    "center_cavity_index": center_cavity_index,
+    template_vars = {"title": "Summary of one cavity (domain)",
+                     "description": "a summary of one calculated cavities (domain)",
+                     "index": index,
+                     "domain_center": domain_center,
+                     "surface": surface,
+                     "volume": volume,
+                     "surface_to_volume_ratio": surface / volume,
+                     "volume_fraction": volume_fraction,
+                     "surface_cavity_index": surface_cavity_index,
+                     "center_cavity_index": center_cavity_index,
+                     "squared_gyration_radius": squared_gyration_radius,
+                     "asphericity": asphericity,
+                     "acylindricity": acylindricity,
+                     "anisotropy": anisotropy
+                     }
 
-
-    }
-
+    print('values:')
+    print(squared_gyration_radius, asphericity, acylindricity, anisotropy)
     return template.render(template_vars)
-
 
 
 class HTMLWindow(QtGui.QWidget):
@@ -396,6 +400,10 @@ class HTMLWindow(QtGui.QWidget):
         volume_fraction = 0.0
         surface_cavity_index = None
         center_cavity_index = None
+        squared_gyration_radius = self.domains.squared_gyration_radii[index]
+        asphericity = self.domains.asphericities[index]
+        acylindricity = self.domains.acylindricities[index]
+        anisotropy = self.domains.anisotropies[index]
 
         if self.atoms.volume is not None:
             volume_fraction = (volume/self.atoms.volume.volume)*100
@@ -410,6 +418,8 @@ class HTMLWindow(QtGui.QWidget):
                     center_cavity_index = i+1
                     break
 
-        self.webview.setHtml(render_html_cavity_domain(index, domain, surface, volume, volume_fraction, surface_cavity_index, center_cavity_index))
+        self.webview.setHtml(render_html_cavity_domain(index, domain, surface, volume, volume_fraction,
+                                                       surface_cavity_index, center_cavity_index,
+                                                       squared_gyration_radius, asphericity, acylindricity, anisotropy))
 
 

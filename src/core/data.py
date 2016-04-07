@@ -553,7 +553,12 @@ class CavitiesBase(object):
             for i in range(number):
                 triangles[i] = h5group["triangles{}".format(i)]
         else:
-            timestamp, volumes, surface_areas, triangles = args[:4]
+            if len(args) > 4:
+                (timestamp, volumes, surface_areas, triangles,
+                 squared_gyration_radii, asphericities, acylindricities, anisotropies) = args[:8]
+            else:
+                timestamp, volumes, surface_areas, triangles = args[:4]
+                squared_gyration_radii, asphericities, acylindricities, anisotropies = 4 * (0.0, )
 
         if not isinstance(timestamp, datetime):
             timestamp = dateutil.parser.parse(str(timestamp))
@@ -561,8 +566,11 @@ class CavitiesBase(object):
         self.volumes = np.array(volumes, dtype=np.float, copy=False)
         self.number = len(volumes)
         self.surface_areas = np.array(surface_areas, dtype=np.float, copy=False)
-        self.triangles = map(lambda x: np.array(x, dtype=np.float,
-                             copy=False), triangles)
+        self.triangles = [np.array(triangle, dtype=np.float, copy=False) for triangle in triangles]
+        self.squared_gyration_radii = squared_gyration_radii
+        self.asphericities = asphericities
+        self.acylindricities = acylindricities
+        self.anisotropies = anisotropies
 
     def tohdf(self, h5group, overwrite=True):
         """
@@ -617,8 +625,12 @@ class Domains(CavitiesBase):
             triangles = calculation.domain_triangles
             centers = calculation.centers
             discretization = calculation.discretization
-            super(Domains, self).__init__(timestamp, volumes,
-                                          surface_areas, triangles)
+            squared_gyration_radii = calculation.squared_gyration_radii
+            asphericities = calculation.asphericities
+            acylindricities = calculation.acylindricities
+            anisotropies = calculation.anisotropies
+            super(Domains, self).__init__(timestamp, volumes, surface_areas, triangles,
+                                          squared_gyration_radii, asphericities, acylindricities, anisotropies)
         else:
             super(Domains, self).__init__(*args)
             centers = args[4]

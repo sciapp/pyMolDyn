@@ -126,6 +126,14 @@ def calculate_domain_centers(atoms, combined_translation_vectors, areas):
     return calc_dom(atoms, combined_translation_vectors, areas)
 
 
+def get_domain_area_cells(areas):
+    cell_positions = [[(pos[0] + x, pos[1] + y, pos[2] + z)
+                       for pos, dim in area
+                       for x, y, z in itertools.product(*(range(c) for c in dim))]
+                      for area in areas]
+    return cell_positions
+
+
 def get_domain_surface_cells(data, mask, areas):
     domain = None
 

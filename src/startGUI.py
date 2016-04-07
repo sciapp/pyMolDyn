@@ -8,7 +8,6 @@ API_VERSION = 2
 for name in API_NAMES:
     sip.setapi(name, API_VERSION)
 
-import util.colored_exceptions
 from gui import main_window
 from core import volumes
 from core.control import Control

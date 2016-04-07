@@ -76,7 +76,7 @@ from config.configuration import config
 import os
 from computation.split_and_merge.pipeline import start_split_and_merge_pipeline
 from computation.split_and_merge.algorithm import ObjectType
-import util.colored_exceptions
+from core.calculation.gyrationtensor import calculate_gyration_tensor_parameters
 import time
 from util.message import print_message, progress, finish
 from extension import atomstogrid, mark_cavities, cavity_triangles, cavity_intersections
@@ -130,6 +130,11 @@ class DomainCalculation:
         for domain_index in range(len(self.centers)):
             domain_volume = (self.grid == -(domain_index + 1)).sum() * (self.discretization.s_step ** 3)
             self.domain_volumes.append(domain_volume)
+
+        gyration_tensor_parameters = tuple(calculate_gyration_tensor_parameters(area) for area in translated_areas)
+        (self.squared_gyration_radii, self.asphericities,
+         self.acylindricities, self.anisotropies) = zip(*gyration_tensor_parameters)
+
         self.triangles()
 
     def triangles(self):

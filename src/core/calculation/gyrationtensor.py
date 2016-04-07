@@ -18,7 +18,8 @@ def calculate_gyration_tensor_parameters(points):
      - c is the acylindricity
      - κ is the anisotropy
     """
-    points = np.array(points)
+
+    points = np.array(points, dtype=np.float)
     points -= np.mean(points, axis=0)
 
     gyration_tensor = np.zeros((3, 3))
