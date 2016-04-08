@@ -132,8 +132,13 @@ class DomainCalculation:
             self.domain_volumes.append(domain_volume)
 
         gyration_tensor_parameters = tuple(calculate_gyration_tensor_parameters(area) for area in translated_areas)
-        (self.squared_gyration_radii, self.asphericities,
-         self.acylindricities, self.anisotropies) = zip(*gyration_tensor_parameters)
+        print(gyration_tensor_parameters)
+        if gyration_tensor_parameters:
+            (self.squared_gyration_radii, self.asphericities,
+             self.acylindricities, self.anisotropies) = zip(*gyration_tensor_parameters)
+        else:
+            (self.squared_gyration_radii, self.asphericities,
+             self.acylindricities, self.anisotropies) = 4*([], )
 
         self.triangles()
 
@@ -280,8 +285,12 @@ class CavityCalculation:
 
         gyration_tensor_parameters = tuple(calculate_gyration_tensor_parameters(area)
                                            for area in sorted_translated_areas)
-        (self.squared_gyration_radii, self.asphericities,
-         self.acylindricities, self.anisotropies) = zip(*gyration_tensor_parameters)
+        if gyration_tensor_parameters:
+            (self.squared_gyration_radii, self.asphericities,
+             self.acylindricities, self.anisotropies) = zip(*gyration_tensor_parameters)
+        else:
+            (self.squared_gyration_radii, self.asphericities,
+             self.acylindricities, self.anisotropies) = 4*([], )
 
         self.triangles()
 
