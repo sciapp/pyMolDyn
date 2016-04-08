@@ -37,4 +37,14 @@ body {
 
 }
 
+.alertbox {
+    border: 1px solid black;
+    background-color: #ffeeee;
+    padding: 10px;
+    margin: 20px;
+}
 
+.alert {
+    color: red;
+    font-weight: bold;
+}

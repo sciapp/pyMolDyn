@@ -23,6 +23,6 @@ def start_split_and_merge_pipeline(data, mask, atoms, combined_translation_vecto
         centers = algorithm.calculate_domain_centers(atoms, combined_translation_vectors, non_translated_areas)
         surface_cells = algorithm.get_domain_surface_cells(data, mask, non_translated_areas)
 
-        return centers, areas_cells, non_translated_areas_cells, surface_cells
+        return centers, areas_cells, non_translated_areas_cells, surface_cells, cyclic_area_indices
     else:
-        return areas_cells, non_translated_areas_cells
+        return areas_cells, non_translated_areas_cells, cyclic_area_indices

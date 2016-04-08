@@ -123,7 +123,7 @@ class DomainCalculation:
                                                 self.discretization.combined_translation_vectors,
                                                 self.discretization.get_translation_vector,
                                                 ObjectType.DOMAIN)
-        self.centers, translated_areas, non_translated_areas, self.surface_point_list = result
+        self.centers, translated_areas, non_translated_areas, self.surface_point_list, self.cyclic_area_indices = result
         print_message("Number of domains:", len(self.centers))
 
         self.domain_volumes = []
@@ -234,7 +234,7 @@ class CavityCalculation:
                                                 discretization.combined_translation_vectors,
                                                 discretization.get_translation_vector,
                                                 ObjectType.CAVITY)
-        translated_areas, non_translated_areas = result
+        translated_areas, non_translated_areas, cyclic_area_indices = result
 
         num_domains = len(self.domain_calculation.centers)
         grid_volume = (discretization.grid == 0).sum()
@@ -274,6 +274,9 @@ class CavityCalculation:
             return max_neighbor_index
         sorted_area_indices = sorted(range(len(self.multicavities)), key=key_func)
         sorted_translated_areas = [translated_areas[i] for i in sorted_area_indices]
+        sorted_cyclic_area_indices = [i for i, index in enumerate(sorted_area_indices)
+                                      if index in cyclic_area_indices]
+        self.cyclic_area_indices = sorted_cyclic_area_indices
 
         gyration_tensor_parameters = tuple(calculate_gyration_tensor_parameters(area)
                                            for area in sorted_translated_areas)

@@ -63,7 +63,7 @@ def render_html_cavity_center_group(surface_area, surface_volumes, volume_fracti
 
 
 def render_html_cavity_center(index, surface, volume, domains, volume_fraction, squared_gyration_radius,
-                              asphericity, acylindricity, anisotropy):
+                              asphericity, acylindricity, anisotropy, is_cyclic):
     template_loader = jinja2.FileSystemLoader(searchpath="gui/tabs/statistics/templates")
     template_env = jinja2.Environment(loader=template_loader)
 
@@ -81,7 +81,8 @@ def render_html_cavity_center(index, surface, volume, domains, volume_fraction, 
                      "squared_gyration_radius": squared_gyration_radius,
                      "asphericity": asphericity,
                      "acylindricity": acylindricity,
-                     "anisotropy": anisotropy
+                     "anisotropy": anisotropy,
+                     "is_cyclic": is_cyclic
                      }
 
     return template.render(template_vars)
@@ -105,7 +106,7 @@ def render_html_cavity_surface_group(surface_area, surface_volumes, volume_fract
 
 
 def render_html_cavity_surface(index, surface, volume, domains, volume_fraction, squared_gyration_radius,
-                               asphericity, acylindricity, anisotropy):
+                               asphericity, acylindricity, anisotropy, is_cyclic):
     template_loader = jinja2.FileSystemLoader(searchpath="gui/tabs/statistics/templates")
     template_env = jinja2.Environment(loader=template_loader)
 
@@ -123,7 +124,8 @@ def render_html_cavity_surface(index, surface, volume, domains, volume_fraction,
                      "squared_gyration_radius": squared_gyration_radius,
                      "asphericity": asphericity,
                      "acylindricity": acylindricity,
-                     "anisotropy": anisotropy
+                     "anisotropy": anisotropy,
+                     "is_cyclic": is_cyclic
                      }
 
     return template.render(template_vars)
@@ -147,7 +149,8 @@ def render_html_cavity_domain_group(surface_area, surface_volumes, surface_volum
 
 
 def render_html_cavity_domain(index, domain_center, surface, volume, volume_fraction, surface_cavity_index,
-                              center_cavity_index, squared_gyration_radius, asphericity, acylindricity, anisotropy):
+                              center_cavity_index, squared_gyration_radius, asphericity, acylindricity, anisotropy,
+                              is_cyclic):
     template_loader = jinja2.FileSystemLoader(searchpath="gui/tabs/statistics/templates")
     template_env = jinja2.Environment(loader=template_loader)
 
@@ -167,11 +170,10 @@ def render_html_cavity_domain(index, domain_center, surface, volume, volume_frac
                      "squared_gyration_radius": squared_gyration_radius,
                      "asphericity": asphericity,
                      "acylindricity": acylindricity,
-                     "anisotropy": anisotropy
+                     "anisotropy": anisotropy,
+                     "is_cyclic": is_cyclic
                      }
 
-    print('values:')
-    print(squared_gyration_radius, asphericity, acylindricity, anisotropy)
     return template.render(template_vars)
 
 
@@ -351,13 +353,14 @@ class HTMLWindow(QtGui.QWidget):
         asphericity = self.cavities_center.asphericities[index]
         acylindricity = self.cavities_center.acylindricities[index]
         anisotropy = self.cavities_center.anisotropies[index]
+        is_cyclic = index in self.cavities_center.cyclic_area_indices
 
         if self.atoms.volume is not None:
             volume_fraction = (volume/self.atoms.volume.volume)*100
 
         self.webview.setHtml(render_html_cavity_center(index, surface, volume, domains, volume_fraction,
                                                        squared_gyration_radius, asphericity, acylindricity,
-                                                       anisotropy))
+                                                       anisotropy, is_cyclic))
 
     def show_surface_cavity_group(self):
         surface_area = 0.0
@@ -387,6 +390,7 @@ class HTMLWindow(QtGui.QWidget):
         asphericity = self.cavities_surface.asphericities[index]
         acylindricity = self.cavities_surface.acylindricities[index]
         anisotropy = self.cavities_surface.anisotropies[index]
+        is_cyclic = index in self.cavities_surface.cyclic_area_indices
         for cavity in cavities:
             domains.append((cavity+1, self.discretization.discrete_to_continuous(self.domains.centers[cavity])))
 
@@ -395,7 +399,7 @@ class HTMLWindow(QtGui.QWidget):
 
         self.webview.setHtml(render_html_cavity_surface(index, surface, volume, domains, volume_fraction,
                                                         squared_gyration_radius, asphericity, acylindricity,
-                                                        anisotropy))
+                                                        anisotropy, is_cyclic))
 
     def show_domain_group(self):
         surface = 0.0
@@ -426,6 +430,7 @@ class HTMLWindow(QtGui.QWidget):
         asphericity = self.domains.asphericities[index]
         acylindricity = self.domains.acylindricities[index]
         anisotropy = self.domains.anisotropies[index]
+        is_cyclic = index in self.domains.cyclic_area_indices
 
         if self.atoms.volume is not None:
             volume_fraction = (volume/self.atoms.volume.volume)*100
@@ -442,6 +447,6 @@ class HTMLWindow(QtGui.QWidget):
 
         self.webview.setHtml(render_html_cavity_domain(index, domain, surface, volume, volume_fraction,
                                                        surface_cavity_index, center_cavity_index,
-                                                       squared_gyration_radius, asphericity, acylindricity, anisotropy))
-
+                                                       squared_gyration_radius, asphericity, acylindricity, anisotropy,
+                                                       is_cyclic))
 

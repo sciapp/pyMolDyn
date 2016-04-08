@@ -11,8 +11,13 @@
 
 <div id="content">
     <div class="headline">Cavity (Domain) {{ index+1 }}</div>
-
+    {% if is_cyclic %}
+    <div class="alertbox">
+      <span class="alert">Warning:</span> The cavity domain is infinite.
+    </div>
+    {% endif %}
     <table class="table_margin_upper_table">
+        {% if not is_cyclic %}
         <tr>
             <td>center:</td>
             <td>({{ "%.4f, %.4f, %.4f"|format(domain_center[0], domain_center[1], domain_center[2]) }})</td>
@@ -49,6 +54,7 @@
             <td>anisotropy:</td>
             <td>{{ "%.4f"|format(anisotropy) }}</td>
         </tr>
+        {% endif %}
         <!--<tr>
             <td>atoms: </td>
             <td>todo</td>

@@ -553,12 +553,9 @@ class CavitiesBase(object):
             for i in range(number):
                 triangles[i] = h5group["triangles{}".format(i)]
         else:
-            if len(args) > 4:
                 (timestamp, volumes, surface_areas, triangles,
-                 squared_gyration_radii, asphericities, acylindricities, anisotropies) = args[:8]
-            else:
-                timestamp, volumes, surface_areas, triangles = args[:4]
-                squared_gyration_radii, asphericities, acylindricities, anisotropies = 4 * (0.0, )
+                 squared_gyration_radii, asphericities, acylindricities, anisotropies,
+                 cyclic_area_indices) = args[:9]
 
         if not isinstance(timestamp, datetime):
             timestamp = dateutil.parser.parse(str(timestamp))
@@ -571,6 +568,7 @@ class CavitiesBase(object):
         self.asphericities = asphericities
         self.acylindricities = acylindricities
         self.anisotropies = anisotropies
+        self.cyclic_area_indices = cyclic_area_indices
 
     def tohdf(self, h5group, overwrite=True):
         """
@@ -629,8 +627,10 @@ class Domains(CavitiesBase):
             asphericities = calculation.asphericities
             acylindricities = calculation.acylindricities
             anisotropies = calculation.anisotropies
+            cyclic_area_indices = calculation.cyclic_area_indices
             super(Domains, self).__init__(timestamp, volumes, surface_areas, triangles,
-                                          squared_gyration_radii, asphericities, acylindricities, anisotropies)
+                                          squared_gyration_radii, asphericities, acylindricities, anisotropies,
+                                          cyclic_area_indices)
         else:
             super(Domains, self).__init__(*args)
             centers = args[4]
@@ -717,8 +717,10 @@ class Cavities(CavitiesBase):
             asphericities = calculation.asphericities
             acylindricities = calculation.acylindricities
             anisotropies = calculation.anisotropies
+            cyclic_area_indices = calculation.cyclic_area_indices
             super(Cavities, self).__init__(timestamp, volumes, surface_areas, triangles,
-                                           squared_gyration_radii, asphericities, acylindricities, anisotropies)
+                                           squared_gyration_radii, asphericities, acylindricities, anisotropies,
+                                           cyclic_area_indices)
         else:
             super(Cavities, self).__init__(*args)
             multicavities = args[4]

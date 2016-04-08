@@ -11,8 +11,13 @@
 
 <div id="content">
     <div class="headline">Domain Center-based Cavity {{ index+1 }}</div>
-
+    {% if is_cyclic %}
+    <div class="alertbox">
+      <span class="alert">Warning:</span> The center-based cavity is infinite.
+    </div>
+    {% endif %}
     <table class="table_margin_upper_table">
+        {% if not is_cyclic %}
         <tr>
             <td>center:</td>
             <td> {% for domain in domains: %}
@@ -66,6 +71,7 @@
             <td> &nbsp; </td>
             <td><a href="showall:center_cavities">Show all center cavities</a></td>
         </tr>
+        {% endif %}
         <!--<tr>
             <td>atoms: </td>
             <td>todo</td>
