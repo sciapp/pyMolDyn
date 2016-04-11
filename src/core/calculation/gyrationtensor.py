@@ -5,6 +5,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import math
 import numpy as np
 import numpy.linalg as la
 
@@ -20,7 +21,8 @@ def calculate_gyration_tensor_parameters(points):
     """
 
     points = np.array(points, dtype=np.float)
-    points -= np.mean(points, axis=0)
+    mean = np.mean(points, axis=0)
+    points -= mean
 
     gyration_tensor = np.zeros((3, 3))
     for i in range(3):
@@ -36,7 +38,7 @@ def calculate_gyration_tensor_parameters(points):
     asphericity = (eigvals[0] - 0.5 * (eigvals[1] + eigvals[2])) / squared_gyration_radius
     acylindricity = (eigvals[1]-eigvals[2]) / squared_gyration_radius
     anisotropy = (asphericity**2 + 0.75 * acylindricity**2)**0.5
-    return squared_gyration_radius, asphericity, acylindricity, anisotropy
+    return mean, squared_gyration_radius, asphericity, acylindricity, anisotropy
 
 
 # Test code:

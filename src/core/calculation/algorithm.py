@@ -65,6 +65,7 @@ contain the relevant information.
 Author: Florian Rhiem <f.rhiem@fz-juelich.de>
 """
 from math import ceil, floor
+from math import pi as PI
 import itertools
 import sys
 import numpy as np
@@ -130,15 +131,15 @@ class DomainCalculation:
         for domain_index in range(len(self.centers)):
             domain_volume = (self.grid == -(domain_index + 1)).sum() * (self.discretization.s_step ** 3)
             self.domain_volumes.append(domain_volume)
+        self.characteristic_radii = [(0.75 * volume / PI)**(1.0/3.0) for volume in self.domain_volumes]
 
         gyration_tensor_parameters = tuple(calculate_gyration_tensor_parameters(area) for area in translated_areas)
-        print(gyration_tensor_parameters)
         if gyration_tensor_parameters:
-            (self.squared_gyration_radii, self.asphericities,
+            (self.mass_centers, self.squared_gyration_radii, self.asphericities,
              self.acylindricities, self.anisotropies) = zip(*gyration_tensor_parameters)
         else:
-            (self.squared_gyration_radii, self.asphericities,
-             self.acylindricities, self.anisotropies) = 4*([], )
+            (self.mass_centers, self.squared_gyration_radii, self.asphericities,
+             self.acylindricities, self.anisotropies) = 5*([], )
 
         self.triangles()
 
@@ -245,8 +246,8 @@ class CavityCalculation:
         grid_volume = (discretization.grid == 0).sum()
         self.cavity_volumes = []
         for domain_index in range(num_domains):
-            self.cavity_volumes.append(
-                1.0 * (self.grid3 == -(domain_index + 1)).sum() * (discretization.s_step ** 3))
+            self.cavity_volumes.append(1.0 * (self.grid3 == -(domain_index + 1)).sum() * (discretization.s_step ** 3))
+        self.characteristic_radii = [(0.75 * volume / PI)**(1.0/3.0) for volume in self.cavity_volumes]
 
         # step 6
         intersection_table = cavity_intersections(self.grid3, num_domains)
@@ -286,11 +287,11 @@ class CavityCalculation:
         gyration_tensor_parameters = tuple(calculate_gyration_tensor_parameters(area)
                                            for area in sorted_translated_areas)
         if gyration_tensor_parameters:
-            (self.squared_gyration_radii, self.asphericities,
+            (self.mass_centers, self.squared_gyration_radii, self.asphericities,
              self.acylindricities, self.anisotropies) = zip(*gyration_tensor_parameters)
         else:
-            (self.squared_gyration_radii, self.asphericities,
-             self.acylindricities, self.anisotropies) = 4*([], )
+            (self.mass_centers, self.squared_gyration_radii, self.asphericities,
+             self.acylindricities, self.anisotropies) = 5*([], )
 
         self.triangles()
 

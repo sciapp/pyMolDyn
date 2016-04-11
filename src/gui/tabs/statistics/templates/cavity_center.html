@@ -44,6 +44,10 @@
             <td>{{ "%.4f"|format(surface_to_volume_ratio) }} &#x212b;<sup>-1</sup></td>
         </tr>
         <tr>
+            <td>mass center:</td>
+            <td>({{ "%.4f, %.4f, %.4f"|format(mass_center[0], mass_center[1], mass_center[2]) }})</td>
+        </tr>
+        <tr>
             <td>squared gyration radius:</td>
             <td>{{ "%.4f"|format(squared_gyration_radius) }} &#x212b;<sup>2</sup></td>
         </tr>
@@ -58,6 +62,10 @@
         <tr>
             <td>anisotropy:</td>
             <td>{{ "%.4f"|format(anisotropy) }}</td>
+        </tr>
+        <tr>
+            <td>characteristic radius:</td>
+            <td>{{ "%.4f"|format(characteristic_radius) }} &#x212b;</td>
         </tr>
         <tr>
             <td> &nbsp; </td>
