@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from math import floor
+import collections
 import itertools
 import numpy as np
 import h5py
@@ -189,30 +190,75 @@ class Discretization(object):
         combined_translation_vector = self.combined_translation_vectors[combined_translation_vector_index]
         return combined_translation_vector
 
-    def continuous_to_discrete(self, point):
+    def continuous_to_discrete(self, arg, result_inside_volume=False, unit_exponent=1):
         """
-        Transforms a point from continuous to discrete coordinates.
+        Transforms a single value or a point from continuous to discrete coordinates.
+        If a point is given, ``result_inside_volume`` can be set to shift the result into the volume cell if
+        necessary (equivalent point).
+        In case of a single value input, 'unit_exponent' is used as exponent of the scaling factor.
         """
-        if isinstance(point, np.ndarray) and len(point.shape) > 1:
-            s_tilde_bc = np.tile(self.s_tilde, (point.shape[0], 1))
-            return np.array(np.floor((point + s_tilde_bc / 2) / self.s_step + 0.5), dtype=np.int)
-        else:
-            return tuple([int(floor((point[i] + self.s_tilde[i] / 2) / self.s_step + 0.5)) for i in dimensions])
-
-    def discrete_to_continuous(self, point):
-        """
-        Transforms a point from discrete to continuous coordinates.
-        """
-        if isinstance(point, np.ndarray) and len(point.shape) > 1:
-            if NUMEXPR:
+        def transform_point(point, result_inside_volume):
+            if isinstance(point, np.ndarray) and len(point.shape) > 1:
                 s_tilde_bc = np.tile(self.s_tilde, (point.shape[0], 1))
-                s_step = self.s_step
-                return ne.evaluate("point * s_step - s_tilde_bc / 2")
+                result = np.array(np.floor((point + s_tilde_bc / 2) / self.s_step + 0.5), dtype=np.int)
+                if result_inside_volume:
+                    result = np.array(self.get_equivalent_point_in_volume(result))
             else:
-                s_tilde_bc = np.tile(self.s_tilde, (point.shape[0], 1))
-                return point * self.s_step - s_tilde_bc / 2
+                result = tuple(int(floor((point[i] + self.s_tilde[i] / 2) / self.s_step + 0.5)) for i in dimensions)
+                if result_inside_volume:
+                    result = self.get_equivalent_point_in_volume(result)
+            return result
+
+        def transform_value(value, unit_exponent):
+            return int(floor(value / (self.s_step**unit_exponent) + 0.5))
+
+        if isinstance(arg, collections.Iterable):
+            return transform_point(arg, result_inside_volume)
         else:
-            return tuple([point[k] * self.s_step - self.s_tilde[k] / 2 for k in dimensions])
+            return transform_value(arg, unit_exponent)
+
+    def discrete_to_continuous(self, arg, result_inside_volume=False, unit_exponent=1):
+        """
+        Transforms a single value or a point from discrete to continuous coordinates.
+        If a point is given, ``result_inside_volume`` can be set to shift the result into the volume cell if
+        necessary (equivalent point).
+        In case of a single value input, 'unit_exponent' is used as exponent of the scaling factor.
+        """
+        def transform_point(point):
+            if isinstance(point, np.ndarray) and len(point.shape) > 1:
+                if result_inside_volume:
+                    if any(isinstance(c, float) for c in point):
+                        rounded_point = np.around(point)
+                        rounded_diff = point - rounded_point
+                        rounded_point = np.array(self.get_equivalent_point_in_volume(rounded_point))
+                        point = rounded_point + rounded_diff
+                    else:
+                        point = np.array(self.get_equivalent_point_in_volume(point))
+                if NUMEXPR:
+                    s_tilde_bc = np.tile(self.s_tilde, (point.shape[0], 1))
+                    s_step = self.s_step
+                    return ne.evaluate("point * s_step - s_tilde_bc / 2")
+                else:
+                    s_tilde_bc = np.tile(self.s_tilde, (point.shape[0], 1))
+                    return point * self.s_step - s_tilde_bc / 2
+            else:
+                if result_inside_volume:
+                    if any(isinstance(c, float) for c in point):
+                        rounded_point = tuple(round(c) for c in point)
+                        rounded_diff = tuple(c1 - c2 for c1, c2 in zip(point, rounded_point))
+                        rounded_point = self.get_equivalent_point_in_volume(rounded_point)
+                        point = tuple(c1 + c2 for c1, c2 in zip(rounded_point, rounded_diff))
+                    else:
+                        point = self.get_equivalent_point_in_volume(point)
+                return tuple(point[k] * self.s_step - self.s_tilde[k] / 2 for k in dimensions)
+
+        def transform_value(value, unit_exponent):
+            return value * (self.s_step**unit_exponent)
+
+        if isinstance(arg, collections.Iterable):
+            return transform_point(arg)
+        else:
+            return transform_value(arg, unit_exponent)
 
     def __repr__(self):
         return repr(self.volume) + " d_max=%d" % self.d_max

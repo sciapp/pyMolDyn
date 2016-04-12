@@ -137,6 +137,10 @@ class DomainCalculation:
         if gyration_tensor_parameters:
             (self.mass_centers, self.squared_gyration_radii, self.asphericities,
              self.acylindricities, self.anisotropies) = zip(*gyration_tensor_parameters)
+            self.mass_centers = [self.discretization.discrete_to_continuous(point, result_inside_volume=True)
+                                 for point in self.mass_centers]
+            self.squared_gyration_radii = [self.discretization.discrete_to_continuous(value, unit_exponent=2)
+                                           for value in self.squared_gyration_radii]
         else:
             (self.mass_centers, self.squared_gyration_radii, self.asphericities,
              self.acylindricities, self.anisotropies) = 5*([], )
@@ -289,6 +293,10 @@ class CavityCalculation:
         if gyration_tensor_parameters:
             (self.mass_centers, self.squared_gyration_radii, self.asphericities,
              self.acylindricities, self.anisotropies) = zip(*gyration_tensor_parameters)
+            self.mass_centers = [discretization.discrete_to_continuous(point, result_inside_volume=True)
+                                 for point in self.mass_centers]
+            self.squared_gyration_radii = [discretization.discrete_to_continuous(value, unit_exponent=2)
+                                           for value in self.squared_gyration_radii]
         else:
             (self.mass_centers, self.squared_gyration_radii, self.asphericities,
              self.acylindricities, self.anisotropies) = 5*([], )
