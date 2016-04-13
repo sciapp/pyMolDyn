@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"/>
+<meta charset="UTF-8"/>
 
-    <title>{{ title }}</title>
-    <meta name="description" content="{{ description }}"/>
+<title>{{ title }}</title>
+<meta name="description" content="{{ description }}"/>
 </head>
 
 <body>
@@ -13,55 +13,75 @@
     <div class="headline">Cavity (Domain) {{ index+1 }}</div>
     {% if is_cyclic %}
     <div class="alertbox">
-      <span class="alert">Warning:</span> The cavity domain is infinite.
+        <span class="alert">Warning:</span> The cavity domain is infinite.
     </div>
     {% endif %}
     <table class="table_margin_upper_table">
         {% if not is_cyclic %}
         <tr>
             <td>center:</td>
-            <td>({{ "%.4f, %.4f, %.4f"|format(domain_center[0], domain_center[1], domain_center[2]) }})</td>
+            <td>({{ "%.4f, %.4f, %.4f"|format(center[0], center[1], center[2]) }})</td>
         </tr>
+        {% if surface is not none %}
         <tr>
             <td>surface:</td>
             <td>{{ "%.4f"|format(surface) }} &#x212b;<sup>2</sup></td>
         </tr>
+        {% endif %}
+        {% if volume is not none %}
         <tr>
             <td>volume:</td>
             <td>{{ "%.4f"|format(volume) }} &#x212b;<sup>3</sup></td>
         </tr>
+        {% endif %}
+        {% if surface_to_volume_ratio is not none %}
         <tr>
             <td>surface-area-to-volume ratio:</td>
             <td>{{ "%.4f"|format(surface_to_volume_ratio) }} &#x212b;<sup>-1</sup></td>
         </tr>
+        {% endif %}
+        {% if volume_fraction is not none %}
         <tr>
             <td>volume fraction:</td>
             <td>{{ "%.4f"|format(volume_fraction) }} %</td>
         </tr>
+        {% endif %}
+        {% if mass_center is not none %}
         <tr>
             <td>mass center:</td>
             <td>({{ "%.4f, %.4f, %.4f"|format(mass_center[0], mass_center[1], mass_center[2]) }})</td>
         </tr>
+        {% endif %}
+        {% if squared_gyration_radius is not none %}
         <tr>
             <td>squared gyration radius:</td>
             <td>{{ "%.4f"|format(squared_gyration_radius) }} &#x212b;<sup>2</sup></td>
         </tr>
+        {% endif %}
+        {% if asphericity is not none %}
         <tr>
             <td>asphericity:</td>
             <td>{{ "%.4f"|format(asphericity) }}</td>
         </tr>
+        {% endif %}
+        {% if acylindricity is not none %}
         <tr>
             <td>acylindricity:</td>
             <td>{{ "%.4f"|format(acylindricity) }}</td>
         </tr>
+        {% endif %}
+        {% if anisotropy is not none %}
         <tr>
             <td>anisotropy:</td>
             <td>{{ "%.4f"|format(anisotropy) }}</td>
         </tr>
+        {% endif %}
+        {% if characteristic_radius is not none %}
         <tr>
             <td>characteristic radius:</td>
             <td>{{ "%.4f"|format(characteristic_radius) }} &#x212b;</td>
         </tr>
+        {% endif %}
         {% endif %}
         <!--<tr>
             <td>atoms: </td>
@@ -85,7 +105,7 @@
         {%endif %}
         <tr>
             <td> &nbsp; </td>
-            <td><a href="focus:{{domain_center[0]}}:{{domain_center[1]}}:{{domain_center[2]}}">Focus</a></td>
+            <td><a href="focus:{{center[0]}}:{{center[1]}}:{{center[2]}}">Focus</a></td>
         </tr>
         <tr>
             <td> &nbsp; </td>
@@ -100,6 +120,20 @@
             <td><a href="showall:domains">Show all cavities (domains)</a></td>
         </tr>
     </table>
+    {% if missing_values is not none %}
+    <div class="infobox">
+        <span class="info">The following attributes are not available:</span>
+        <ul>
+            {% for key in missing_values %}
+            <li>{{ key|replace('_', ' ') }}</li>
+            {% endfor %}
+        </ul>
+        <p>
+            Attributes are missing since the dataset has been calculated with an older program version.
+            <a href="recalculate">Recalculate</a> to gain a complete data set.
+        </p>
+    </div>
+    {% endif %}
 </div>
 
 </body>

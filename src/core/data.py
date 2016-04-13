@@ -544,21 +544,27 @@ class CavitiesBase(object):
             read the data from this hdf5 group
         """
         if isinstance(args[0], h5py.Group):
+            def getobj_from_h5group(attr):
+                if attr in h5group:
+                    return h5group[attr]
+                else:
+                    return None
+
             h5group = args[0]
             timestamp = dateutil.parser.parse(h5group.attrs["timestamp"])
             number = int(h5group.attrs["number"])
-            volumes = h5group["volumes"]
-            surface_areas = h5group["surface_areas"]
+            volumes = getobj_from_h5group("volumes")
+            surface_areas = getobj_from_h5group("surface_areas")
             triangles = [None] * number
             for i in range(number):
-                triangles[i] = h5group["triangles{}".format(i)]
-            mass_centers = h5group["mass_centers"]
-            squared_gyration_radii = h5group["squared_gyration_radii"]
-            asphericities = h5group["asphericities"]
-            acylindricities = h5group["acylindricities"]
-            anisotropies = h5group["anisotropies"]
-            characteristic_radii = h5group["characteristic_radii"]
-            cyclic_area_indices = h5group["cyclic_area_indices"]
+                triangles[i] = getobj_from_h5group("triangles{}".format(i))
+            mass_centers = getobj_from_h5group("mass_centers")
+            squared_gyration_radii = getobj_from_h5group("squared_gyration_radii")
+            asphericities = getobj_from_h5group("asphericities")
+            acylindricities = getobj_from_h5group("acylindricities")
+            anisotropies = getobj_from_h5group("anisotropies")
+            characteristic_radii = getobj_from_h5group("characteristic_radii")
+            cyclic_area_indices = getobj_from_h5group("cyclic_area_indices")
         else:
                 (timestamp, volumes, surface_areas, triangles,
                  mass_centers, squared_gyration_radii, asphericities, acylindricities, anisotropies,
@@ -577,7 +583,8 @@ class CavitiesBase(object):
         self.acylindricities = np.array(acylindricities, dtype=np.float, copy=False)
         self.anisotropies = np.array(anisotropies, dtype=np.float, copy=False)
         self.characteristic_radii = np.array(characteristic_radii, dtype=np.float, copy=False)
-        self.cyclic_area_indices = np.array(cyclic_area_indices, dtype=np.bool, copy=False)
+        self.cyclic_area_indices = (np.array(cyclic_area_indices, dtype=np.int, copy=False)
+                                    if cyclic_area_indices is not None else np.array([]))
 
     def tohdf(self, h5group, overwrite=True):
         """

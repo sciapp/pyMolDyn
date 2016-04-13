@@ -27,46 +27,67 @@
                 {% endfor %}
             </td>
         </tr>
+        {% if surface is not none %}
         <tr>
             <td>surface:</td>
             <td>{{ "%.4f"|format(surface) }} &#x212b;<sup>2</sup></td>
         </tr>
+        {% endif %}
+        {% if volume is not none %}
         <tr>
             <td>volume:</td>
             <td>{{ "%.4f"|format(volume) }} &#x212b;<sup>3</sup></td>
         </tr>
+        {% endif %}
+        {% if volume_fraction is not none %}
         <tr>
             <td>volume fraction:</td>
             <td>{{ "%.4f"|format(volume_fraction) }}%</td>
         </tr>
+        {% endif %}
+        {% if surface_to_volume_ratio is not none %}
         <tr>
             <td>surface-area-to-volume ratio:</td>
             <td>{{ "%.4f"|format(surface_to_volume_ratio) }} &#x212b;<sup>-1</sup></td>
         </tr>
+        {% endif %}
+        {% if mass_center is not none %}
         <tr>
             <td>mass center:</td>
             <td>({{ "%.4f, %.4f, %.4f"|format(mass_center[0], mass_center[1], mass_center[2]) }})</td>
         </tr>
+        {% endif %}
+        {% if squared_gyration_radius is not none %}
         <tr>
             <td>squared gyration radius:</td>
             <td>{{ "%.4f"|format(squared_gyration_radius) }} &#x212b;<sup>2</sup></td>
         </tr>
+        {% endif %}
+        {% if asphericity is not none %}
         <tr>
             <td>asphericity:</td>
             <td>{{ "%.4f"|format(asphericity) }}</td>
         </tr>
+        {% endif %}
+        {% if acylindricity is not none %}
         <tr>
             <td>acylindricity:</td>
             <td>{{ "%.4f"|format(acylindricity) }}</td>
         </tr>
+        {% endif %}
+        {% if anisotropy is not none %}
         <tr>
             <td>anisotropy:</td>
             <td>{{ "%.4f"|format(anisotropy) }}</td>
         </tr>
+        {% endif %}
+        {% if characteristic_radius is not none %}
         <tr>
             <td>characteristic radius:</td>
             <td>{{ "%.4f"|format(characteristic_radius) }} &#x212b;</td>
         </tr>
+        {% endif %}
+        {% endif %}
         <tr>
             <td> &nbsp; </td>
             <td><a href="hideothers:center_cavity:{{ index+1 }}">Hide all other center cavities</a></td>
@@ -79,12 +100,25 @@
             <td> &nbsp; </td>
             <td><a href="showall:center_cavities">Show all center cavities</a></td>
         </tr>
-        {% endif %}
         <!--<tr>
             <td>atoms: </td>
             <td>todo</td>
         </tr>-->
     </table>
+    {% if missing_values is not none %}
+    <div class="infobox">
+        <span class="info">The following attributes are not available:</span>
+        <ul>
+            {% for key in missing_values %}
+            <li>{{ key|replace('_', ' ') }}</li>
+            {% endfor %}
+        </ul>
+        <p>
+            Attributes are missing since the dataset has been calculated with an older program version.
+            <a href="recalculate">Recalculate</a> to gain a complete data set.
+        </p>
+    </div>
+    {% endif %}
 </div>
 </body>
 </html>

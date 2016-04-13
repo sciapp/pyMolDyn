@@ -133,8 +133,8 @@ class DomainCalculation:
             self.domain_volumes.append(domain_volume)
         self.characteristic_radii = [(0.75 * volume / PI)**(1.0/3.0) for volume in self.domain_volumes]
 
-        gyration_tensor_parameters = tuple(calculate_gyration_tensor_parameters(area) for area in translated_areas)
-        if gyration_tensor_parameters:
+        if translated_areas:
+            gyration_tensor_parameters = tuple(calculate_gyration_tensor_parameters(area) for area in translated_areas)
             (self.mass_centers, self.squared_gyration_radii, self.asphericities,
              self.acylindricities, self.anisotropies) = zip(*gyration_tensor_parameters)
             self.mass_centers = [self.discretization.discrete_to_continuous(point, result_inside_volume=True)
@@ -288,9 +288,9 @@ class CavityCalculation:
                                       if index in cyclic_area_indices]
         self.cyclic_area_indices = sorted_cyclic_area_indices
 
-        gyration_tensor_parameters = tuple(calculate_gyration_tensor_parameters(area)
-                                           for area in sorted_translated_areas)
-        if gyration_tensor_parameters:
+        if sorted_translated_areas:
+            gyration_tensor_parameters = tuple(calculate_gyration_tensor_parameters(area)
+                                               for area in sorted_translated_areas)
             (self.mass_centers, self.squared_gyration_radii, self.asphericities,
              self.acylindricities, self.anisotropies) = zip(*gyration_tensor_parameters)
             self.mass_centers = [discretization.discrete_to_continuous(point, result_inside_volume=True)

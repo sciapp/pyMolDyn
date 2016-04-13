@@ -71,6 +71,7 @@ class FileTab(QtGui.QWidget):
 
         self.init_gui()
         self.guessed_volumes_for = set()
+        self.last_shown_filename_with_frame = None
 
     @QtCore.pyqtSlot(str)
     def _error(self, error_message):
@@ -142,7 +143,7 @@ class FileTab(QtGui.QWidget):
             self.file_list.select_nth(n)
 
     def show_selected_frame(self):
-        self.file_list.show_selected_frame()
+        self.last_shown_filename_with_frame = self.file_list.show_selected_frame()
 
     def selection_changed(self):
         sel = self.file_list.get_selection()
@@ -211,8 +212,9 @@ class FileTab(QtGui.QWidget):
         thread.start()
         self.progress_dialog.exec_()
 
-    def calculate(self):
-        file_frame_dict = self.file_list.get_selection()
+    def calculate(self, file_frame_dict=None):
+        if not file_frame_dict:
+            file_frame_dict = self.file_list.get_selection()
         dia = CalculationSettingsDialog(self, file_frame_dict)
         settings, ok = dia.calculation_settings()
 
@@ -419,6 +421,8 @@ class TreeList(QtGui.QTreeWidget):
         main_window = parent
         image_video_tab = main_window.image_video_dock.image_video_tab
         image_video_tab.screenshot_button.setEnabled(True)
+
+        return filename, frame
 
     def select_all(self):
         self.select_nth(1)
