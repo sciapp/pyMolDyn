@@ -35,9 +35,14 @@ def calculate_gyration_tensor_parameters(points):
     eigvals = list(sorted(la.eigvalsh(gyration_tensor), reverse=True))
 
     squared_gyration_radius = sum(eigvals)
-    asphericity = (eigvals[0] - 0.5 * (eigvals[1] + eigvals[2])) / squared_gyration_radius
-    acylindricity = (eigvals[1]-eigvals[2]) / squared_gyration_radius
-    anisotropy = (asphericity**2 + 0.75 * acylindricity**2)**0.5
+    if squared_gyration_radius > 0:
+        asphericity = (eigvals[0] - 0.5 * (eigvals[1] + eigvals[2])) / squared_gyration_radius
+        acylindricity = (eigvals[1]-eigvals[2]) / squared_gyration_radius
+        anisotropy = (asphericity**2 + 0.75 * acylindricity**2)**0.5
+    else:
+        asphericity = 0
+        acylindricity = 0
+        anisotropy = 0
     return mean, squared_gyration_radius, asphericity, acylindricity, anisotropy
 
 
