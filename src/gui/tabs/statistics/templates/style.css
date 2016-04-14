@@ -37,4 +37,26 @@ body {
 
 }
 
+.alertbox {
+    border: 1px solid black;
+    background-color: #ffeeee;
+    padding: 10px;
+    margin: 20px;
+}
 
+.alert {
+    color: red;
+    font-weight: bold;
+}
+
+.infobox {
+    /* border: 1px solid black; */
+    /* background-color: #ddeeff; */
+    padding: 10px 0px;
+    margin: 20px 0px;
+}
+
+.info {
+    /* color: blue; */
+    font-weight: bold;
+}

@@ -544,16 +544,31 @@ class CavitiesBase(object):
             read the data from this hdf5 group
         """
         if isinstance(args[0], h5py.Group):
+            def getobj_from_h5group(attr):
+                if attr in h5group:
+                    return h5group[attr]
+                else:
+                    return None
+
             h5group = args[0]
             timestamp = dateutil.parser.parse(h5group.attrs["timestamp"])
             number = int(h5group.attrs["number"])
-            volumes = h5group["volumes"]
-            surface_areas = h5group["surface_areas"]
+            volumes = getobj_from_h5group("volumes")
+            surface_areas = getobj_from_h5group("surface_areas")
             triangles = [None] * number
             for i in range(number):
-                triangles[i] = h5group["triangles{}".format(i)]
+                triangles[i] = getobj_from_h5group("triangles{}".format(i))
+            mass_centers = getobj_from_h5group("mass_centers")
+            squared_gyration_radii = getobj_from_h5group("squared_gyration_radii")
+            asphericities = getobj_from_h5group("asphericities")
+            acylindricities = getobj_from_h5group("acylindricities")
+            anisotropies = getobj_from_h5group("anisotropies")
+            characteristic_radii = getobj_from_h5group("characteristic_radii")
+            cyclic_area_indices = getobj_from_h5group("cyclic_area_indices")
         else:
-            timestamp, volumes, surface_areas, triangles = args[:4]
+                (timestamp, volumes, surface_areas, triangles,
+                 mass_centers, squared_gyration_radii, asphericities, acylindricities, anisotropies,
+                 characteristic_radii, cyclic_area_indices) = args[:11]
 
         if not isinstance(timestamp, datetime):
             timestamp = dateutil.parser.parse(str(timestamp))
@@ -561,8 +576,15 @@ class CavitiesBase(object):
         self.volumes = np.array(volumes, dtype=np.float, copy=False)
         self.number = len(volumes)
         self.surface_areas = np.array(surface_areas, dtype=np.float, copy=False)
-        self.triangles = map(lambda x: np.array(x, dtype=np.float,
-                             copy=False), triangles)
+        self.triangles = [np.array(triangle, dtype=np.float, copy=False) for triangle in triangles]
+        self.mass_centers = np.array(mass_centers, dtype=np.float, copy=False)
+        self.squared_gyration_radii = np.array(squared_gyration_radii, dtype=np.float, copy=False)
+        self.asphericities = np.array(asphericities, dtype=np.float, copy=False)
+        self.acylindricities = np.array(acylindricities, dtype=np.float, copy=False)
+        self.anisotropies = np.array(anisotropies, dtype=np.float, copy=False)
+        self.characteristic_radii = np.array(characteristic_radii, dtype=np.float, copy=False)
+        self.cyclic_area_indices = (np.array(cyclic_area_indices, dtype=np.int, copy=False)
+                                    if cyclic_area_indices is not None else np.array([]))
 
     def tohdf(self, h5group, overwrite=True):
         """
@@ -581,6 +603,13 @@ class CavitiesBase(object):
         writedataset(h5group, "surface_areas", self.surface_areas, overwrite)
         for index, triangles in enumerate(self.triangles):
             writedataset(h5group, "triangles{}".format(index), np.array(triangles), overwrite)
+        writedataset(h5group, "mass_centers", self.mass_centers, overwrite)
+        writedataset(h5group, "squared_gyration_radii", self.squared_gyration_radii, overwrite)
+        writedataset(h5group, "asphericities", self.asphericities, overwrite)
+        writedataset(h5group, "acylindricities", self.acylindricities, overwrite)
+        writedataset(h5group, "anisotropies", self.anisotropies, overwrite)
+        writedataset(h5group, "characteristic_radii", self.characteristic_radii, overwrite)
+        writedataset(h5group, "cyclic_area_indices", self.cyclic_area_indices, overwrite)
 
 
 class Domains(CavitiesBase):
@@ -617,8 +646,16 @@ class Domains(CavitiesBase):
             triangles = calculation.domain_triangles
             centers = calculation.centers
             discretization = calculation.discretization
-            super(Domains, self).__init__(timestamp, volumes,
-                                          surface_areas, triangles)
+            mass_centers = calculation.mass_centers
+            squared_gyration_radii = calculation.squared_gyration_radii
+            asphericities = calculation.asphericities
+            acylindricities = calculation.acylindricities
+            anisotropies = calculation.anisotropies
+            characteristic_radii = calculation.characteristic_radii
+            cyclic_area_indices = calculation.cyclic_area_indices
+            super(Domains, self).__init__(timestamp, volumes, surface_areas, triangles,
+                                          mass_centers, squared_gyration_radii, asphericities, acylindricities,
+                                          anisotropies, characteristic_radii, cyclic_area_indices)
         else:
             super(Domains, self).__init__(*args)
             centers = args[4]
@@ -701,8 +738,16 @@ class Cavities(CavitiesBase):
             surface_areas = calculation.cavity_surface_areas
             triangles = calculation.cavity_triangles
             multicavities = calculation.multicavities
-            super(Cavities, self).__init__(timestamp, volumes,
-                                           surface_areas, triangles)
+            mass_centers = calculation.mass_centers
+            squared_gyration_radii = calculation.squared_gyration_radii
+            asphericities = calculation.asphericities
+            acylindricities = calculation.acylindricities
+            anisotropies = calculation.anisotropies
+            characteristic_radii = calculation.characteristic_radii
+            cyclic_area_indices = calculation.cyclic_area_indices
+            super(Cavities, self).__init__(timestamp, volumes, surface_areas, triangles,
+                                           mass_centers, squared_gyration_radii, asphericities, acylindricities,
+                                           anisotropies, characteristic_radii, cyclic_area_indices)
         else:
             super(Cavities, self).__init__(*args)
             multicavities = args[4]
