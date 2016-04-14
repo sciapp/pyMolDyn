@@ -93,10 +93,16 @@ class TreeList(QtGui.QTreeWidget):
         self.atom_list = ["Atom %d" % (i+1) for i in range(self.atoms.number)]
         if self.cavities_center is not None:
             self.cavities_center_list = ["Cavity %d" % (i+1) for i in range(len(self.cavities_center.multicavities))]
+        else:
+            self.cavities_center_list = []
         if self.cavities_surface is not None:
             self.cavities_surface_list = ["Cavity %d" % (i+1) for i in range(len(self.cavities_surface.multicavities))]
+        else:
+            self.cavities_surface_list = []
         if self.domains is not None:
             self.domains_list = ["Cavity %d" % (i+1) for i in range(self.domains.number)]
+        else:
+            self.domains_list = []
         #print dir(atoms)
         #print atoms.positions
         #print atoms.elements

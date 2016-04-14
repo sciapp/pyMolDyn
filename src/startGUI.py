@@ -1,6 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import sys
+import subprocess
+
+
+def start_batch():
+        # The user actually wants to use startBatch.py instead of startGUI.py
+        # This is implemented here as both Linux and OS X use completely
+        # different ways to implement the pymoldyn executable, but both call
+        # startGUI.py.
+        script_directory = os.path.dirname(os.path.abspath(__file__))
+        batch_script_path = os.path.join(script_directory, 'startBatch.py')
+        args = [sys.executable, batch_script_path] + sys.argv[2:]
+        sys.exit(subprocess.call(args))
+
+if __name__ == '__main__' and len(sys.argv) > 1 and sys.argv[1] == '--batch':
+    start_batch()
+
+
 # use pythonic PyQt api (version 2)
 import sip
 API_NAMES = ("QDate", "QDateTime", "QString", "QTextStream", "QTime", "QUrl", "QVariant")
@@ -8,19 +26,17 @@ API_VERSION = 2
 for name in API_NAMES:
     sip.setapi(name, API_VERSION)
 
-import util.colored_exceptions
 from gui import main_window
 from core import volumes
 from core.control import Control
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 import signal
-import sys
 import os
 import core.calculation
 
 
-def main():
+def start_gui():
     os.chdir(os.path.abspath(os.path.dirname(__file__)))
     app = QtGui.QApplication(sys.argv)
     control = Control()
@@ -64,4 +80,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    start_gui()

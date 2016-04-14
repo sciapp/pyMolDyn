@@ -2,8 +2,8 @@ pyMolDyn
 ########
 
 
-pyMolDyn is a molecule viewer capable of computing molecular cavities. It is assumed that the analyzed molecule resides
-in a cell shape corresponding to one of the seven bravais lattice systems.
+pyMolDyn is a viewer for atomic clusters, crystalline and amorphous materials in a unit cell corresponding to one of
+the seven 3D Bravais lattices. The program calculates cavities (vacancies, voids) according to three definitions.
 
 .. image:: https://pgi-jcns.fz-juelich.de/portal/static/images/pymoldyn-gui.png
     :width: 80%
@@ -13,17 +13,18 @@ in a cell shape corresponding to one of the seven bravais lattice systems.
 Features
 ========
 
--   Interactive molecule viewer based on GR3
--   Computation of molecular cavities in all seven Bravais lattice systems
+-   Interactive viewer based on GR3
+-   Computation of cavities in all seven 3D Bravais lattice systems
 -   Creation of high resolution images appropriate for publications
--   Video creation from a set of input frames to analyse cavity changes in materials over time
+-   Video creation from a set of input frames to analyze cavity changes in materials over time
 -   Statistics including
 
     -   Surfaces, volumes and surface volume ratios of cavities and domains
-    -   Radial distribution, bonds, bond (dihedral) angles
+    -   Pair distribution functions (including cavities), bonds, bond (dihedral) angles
+    -   Gyration tensor, asphericity, acylindricity
 
 -   Filter for atoms and cavities
--   Batch mode for processing several input files at once
+-   Batch mode for simultaneous processing of multiple files
 
 
 Documentation

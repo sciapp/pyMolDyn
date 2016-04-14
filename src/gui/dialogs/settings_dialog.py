@@ -6,12 +6,27 @@ from gui.gl_widget import UpdateGLEvent, GLWidget
 from collections import OrderedDict
 
 
-class ColorSettingsPage(QtGui.QWidget):
+class GraphicsSettingsPage(QtGui.QWidget):
 
     def __init__(self, parent, cfg):
         QtGui.QWidget.__init__(self, parent)
 
         self._config = cfg
+        self.values = OrderedDict((('atom_radius', 'atom radius'), ('bond_radius', 'bond radius'), ))
+
+        self.lineedit_dict = {}
+        grid = QtGui.QGridLayout()
+        for i, (attr_str, label) in enumerate(self.values.iteritems()):
+            cfg_comp = getattr(self._config, 'OpenGL')
+
+            l = QtGui.QLabel(label, self)
+            t = QtGui.QLineEdit(self)
+            t.setText(str(getattr(cfg_comp, attr_str)))
+            self.lineedit_dict[attr_str] = t
+            t.textChanged.connect(self.any_change)
+            grid.addWidget(l, i, 0)
+            grid.addWidget(t, i, 1)
+
         self.colors = OrderedDict((('background', 'Background'),
                                   ('bounding_box', 'Bounding Box'),
                                   ('bonds', 'Bonds'),
@@ -32,6 +47,7 @@ class ColorSettingsPage(QtGui.QWidget):
 
             b = QtGui.QPushButton(None, self)
             b.setFixedSize(50, 50)
+            b.setFocusPolicy(QtCore.Qt.StrongFocus)
             self.button_dict[attr_str] = b
             b.clicked.connect(lambda _, arg1=attr_str, arg2=current_color : self.show_color_dialog(arg1, arg2))
             b.setIcon(QtGui.QIcon(pix))
@@ -39,8 +55,21 @@ class ColorSettingsPage(QtGui.QWidget):
             layout.addWidget(b, index, 0)
             layout.addWidget(QtGui.QLabel(btn_str, self), index, 1)
 
-        self.setLayout(layout)
+        box = QtGui.QVBoxLayout()
+        box.addLayout(grid)
+        box.addStretch()
+        box.addLayout(layout)
+        self.setLayout(box)
+        self.setLayout(box)
         self.show()
+
+    def keyPressEvent(self, event):
+        pass
+
+    def any_change(self):
+        cfg_comp = getattr(self._config, 'OpenGL')
+        for i, (attr_str, label) in enumerate(self.values.iteritems()):
+            setattr(cfg_comp, attr_str, float(self.lineedit_dict[attr_str].text()))
 
     def show_color_dialog(self, s, previous_color):
         color = QtGui.QColorDialog.getColor(initial=previous_color)
@@ -135,7 +164,7 @@ class SettingsDialog(QtGui.QDialog):
 
         vbox        = QtGui.QVBoxLayout()
         tab_widget  = QtGui.QTabWidget()
-        color_page  = ColorSettingsPage(tab_widget, self._tmp)
+        graphics_page  = GraphicsSettingsPage(tab_widget, self._tmp)
         path_page   = PathSettingsPage(tab_widget, self._tmp)
         comp_page   = ComputationSettingsPage(tab_widget, self._tmp)
 
@@ -148,7 +177,7 @@ class SettingsDialog(QtGui.QDialog):
         cancel.clicked.connect(self.cancel)
         restore_btn.clicked.connect(self.restore_defaults)
 
-        tab_widget.addTab(color_page, 'colors')
+        tab_widget.addTab(graphics_page, 'graphics')
         tab_widget.addTab(path_page, 'path')
         tab_widget.addTab(comp_page, 'computation')
 
