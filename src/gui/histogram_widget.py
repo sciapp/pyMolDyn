@@ -3,7 +3,7 @@
 from PyQt4 import QtCore, QtGui
 import gr
 from qtgr import GRWidget
-import os
+import csv
 
 from util.logger import Logger
 import sys
@@ -37,7 +37,7 @@ class GrHistogramWidget(GRWidget):
         self.widths = widths
         self.title = title
 
-    def draw(self):
+    def draw(self, wsviewport=None):
         if self.xvalues is not None and self.widths is not None:
             maxidx = np.argmax(self.xvalues)
             rangex = (self.xvalues.min(),
@@ -49,7 +49,10 @@ class GrHistogramWidget(GRWidget):
         else:
             rangey = (0.0, 8.0)
 
-        gr.setwsviewport(0, self.mwidth, 0, self.mheight)
+        if wsviewport is None:
+            gr.setwsviewport(0, self.mwidth, 0, self.mheight)
+        else:
+            gr.setwsviewport(*wsviewport)
         gr.setwswindow(0, self.sizex, 0, self.sizey)
         gr.setviewport(0.075 * self.sizex, 0.95 * self.sizex,
                        0.075 * self.sizey, 0.95 * self.sizey)
@@ -100,6 +103,9 @@ class HistogramWidget(QtGui.QWidget):
         self.datasetlabel.setAlignment(QtCore.Qt.AlignHCenter)
 
         selectbox = QtGui.QHBoxLayout()
+        self.cavity_type_box = QtGui.QComboBox(self)
+        self.cavity_type_box.setMinimumWidth(180)
+        selectbox.addWidget(self.cavity_type_box)
         selectbuttongroup = QtGui.QButtonGroup(self)
         self.volumebutton = QtGui.QRadioButton("Cavity Volume", self)
         selectbox.addWidget(self.volumebutton)
@@ -117,6 +123,7 @@ class HistogramWidget(QtGui.QWidget):
         binbox = QtGui.QHBoxLayout()
         binbox.addWidget(QtGui.QLabel("Number of Bins:", self), 0)
         self.nbins = QtGui.QLineEdit(self)
+        self.nbins.setMinimumWidth(50)
         binbox.addWidget(self.nbins, 0, QtCore.Qt.AlignLeft)
         grid.addLayout(binbox, 0, 2)
 
@@ -126,9 +133,13 @@ class HistogramWidget(QtGui.QWidget):
         buttonbox.addWidget(self.plotbutton)
         self.connect(self.plotbutton, QtCore.SIGNAL("clicked()"), self.draw)
 
-        self.exportbutton = QtGui.QPushButton("Save Image", self)
-        buttonbox.addWidget(self.exportbutton)
-        self.connect(self.exportbutton, QtCore.SIGNAL("clicked()"), self.export)
+        self.export_image_button = QtGui.QPushButton("Save Image", self)
+        buttonbox.addWidget(self.export_image_button)
+        self.connect(self.export_image_button, QtCore.SIGNAL("clicked()"), self.export_image)
+
+        self.export_data_button = QtGui.QPushButton("Export Data", self)
+        buttonbox.addWidget(self.export_data_button)
+        self.connect(self.export_data_button, QtCore.SIGNAL("clicked()"), self.export_data)
         grid.addLayout(buttonbox, 1, 0, 1, 3)
 
         vbox.addWidget(self.gr_widget, stretch=1)
@@ -142,23 +153,29 @@ class HistogramWidget(QtGui.QWidget):
                 or event.key() == QtCore.Qt.Key_Enter:
             self.draw()
 
-    def draw(self):
+    def draw(self, now=False, wsviewport=None):
         xvalues = None
         yvalues = None
         widths = None
         title = None
         if self.results is None:
             self.refresh()
-        if self.results is not None and self.results.surface_cavities is not None:
+        if self.cavity_type_box.currentText():
+            if self.cavity_type_box.currentText() == 'Surface-based Cavities':
+                cavities = self.results.surface_cavities
+            elif self.cavity_type_box.currentText() == 'Center-based Cavities':
+                cavities = self.results.center_cavities
+            elif self.cavity_type_box.currentText() == 'Cavity Domains':
+                cavities = self.results.domains
             nbins = str(self.nbins.text())
             if len(nbins) > 0 and float(nbins) > 0:
                 nbins = float(nbins)
             else:
                 nbins = 50
             if self.volumebutton.isChecked():
-                data = self.results.surface_cavities.volumes
+                data = cavities.volumes
             else:
-                data = self.results.surface_cavities.surface_areas
+                data = cavities.surface_areas
             if len(data) > 0:
                 if self.weightbutton.isChecked():
                     hist, bin_edges = np.histogram(data, bins=nbins, weights=data)
@@ -170,23 +187,53 @@ class HistogramWidget(QtGui.QWidget):
 
         self.gr_widget.setdata(xvalues, yvalues, widths, title)
         self.gr_widget.update()
+        if now:
+            self.gr_widget.draw(wsviewport=wsviewport)
 
-    def export(self):
-        extensions = (".eps", ".ps", ".pdf", ".png", ".bmp", ".jpg", ".jpeg",
-                      ".png", ".tiff", ".fig", ".svg", ".wmf")
+    def export_image(self):
+        extensions = (".pdf", ".png", ".bmp", ".jpg", ".jpeg", ".png",
+                      ".tiff", ".fig", ".svg", ".wmf", ".eps", ".ps")
         qtext = "*" + " *".join(extensions)
         filepath = QtGui.QFileDialog.getSaveFileName(self, "Save Image",
                                                            ".", "Image Files ({})".format(qtext))
         if not filepath:
             return
-        gr.beginprint(filepath)
-        self.draw()
+
+        if filepath.endswith('.eps') or filepath.endswith('.ps'):
+            gr.beginprintext(filepath, 'Color', 'A4', 'Landscape')
+            self.draw(now=True, wsviewport=(0, 0.297*0.9, 0, 0.21*0.95))
+        else:
+            gr.beginprint(filepath)
+            self.draw(now=True)
         gr.endprint()
 
+    def export_data(self):
+        qtext = " *.csv"
+        filepath = QtGui.QFileDialog.getSaveFileName(self, "Save Data",
+                                                     ".", "CSV Files ({})".format(qtext))
+        if len(filepath) == 0:
+            return
+        self.draw()
+        xvalues = self.gr_widget.xvalues
+        yvalues = self.gr_widget.yvalues
+        if xvalues is None or yvalues is None:
+            return
+        with open(filepath, 'wb') as csvfile:
+            csvwriter = csv.writer(csvfile)
+            for x, y in zip(xvalues, yvalues):
+                csvwriter.writerow([x, y])
+
     def refresh(self):
+        self.cavity_type_box.clear()
         results = self.control.results
         if results is not None:
             results = results[-1][-1]
+            if results.surface_cavities is not None:
+                self.cavity_type_box.addItem('Surface-based Cavities')
+            if results.center_cavities is not None:
+                self.cavity_type_box.addItem('Center-based Cavities')
+            if results.domains is not None:
+                self.cavity_type_box.addItem('Cavity Domains')
             if self.results != results:
                 self.results = results
                 self.gr_widget.setdata(None, None, None, None)
