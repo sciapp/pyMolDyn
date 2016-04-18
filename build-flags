@@ -18,6 +18,8 @@ array_contains() {
 python_flags() {
     local DARWIN_LOCAL_FRAMEWORK="/usr/local/Library/Frameworks"
     local DARWIN_FRAMEWORK="/System/Library/Frameworks"
+    local DARWIN_LOCAL_INCLUDE="/usr/local/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7"
+    local DARWIN_INCLUDE="/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7"
     local LINUX_LOCAL_INCLUDE="/usr/local/include/python2.7"
     local LINUX_INCLUDE="/usr/include/python2.7"
     local LINUX_LOCAL_LIB="/usr/local/lib/python2.7"
@@ -28,10 +30,10 @@ python_flags() {
     case "${OS}" in
         Darwin)
             if [ -d "${DARWIN_LOCAL_FRAMEWORK}" ]; then
-                INC_FLAGS="-F${DARWIN_LOCAL_FRAMEWORK}"
+                INC_FLAGS="-F${DARWIN_LOCAL_FRAMEWORK} -I${DARWIN_LOCAL_INCLUDE}"
                 LIB_FLAGS="-F${DARWIN_LOCAL_FRAMEWORK} -framework Python"
             else
-                INC_FLAGS="-F${DARWIN_FRAMEWORK}"
+                INC_FLAGS="-F${DARWIN_FRAMEWORK} -I${DARWIN_INCLUDE}"
                 LIB_FLAGS="-F${DARWIN_FRAMEWORK} -framework Python"
             fi
             ;;
@@ -51,34 +53,22 @@ python_flags() {
 }
 
 numpy_flags() {
-    local DARWIN_LOCAL_INCLUDE="/usr/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages/numpy/core/include"
-    local DARWIN_INCLUDE="/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages/numpy/core/include"
-    local LINUX_LOCAL_INCLUDE="/usr/local/lib/python2.7/site-packages/numpy/core/include"
-    local LINUX_INCLUDE="/usr/lib/python2.7/site-packages/numpy/core/include"
-    local LINUX_ALT_INCLUDE="/usr/lib64/python2.7/site-packages/numpy/core/include"
-    local DEBIAN_INCLUDE="/usr/lib/python2.7/dist-packages/numpy/core/include"
+    local REL_NUMPY_INCLUDE="core/include"
+    local PYTHON_EXEC
     local INC_FLAGS
 
-    case "${OS}" in
-        Darwin)
-            if [ -d "${DARWIN_LOCAL_INCLUDE}" ]; then
-                INC_FLAGS="-I${DARWIN_LOCAL_INCLUDE}"
-            else
-                INC_FLAGS="-I${DARWIN_INCLUDE}"
-            fi
-            ;;
-        Linux)
-            if [ -d "${LINUX_LOCAL_INCLUDE}" ]; then
-                INC_FLAGS="-I${LINUX_LOCAL_INCLUDE}"
-            elif [ -d "${DEBIAN_INCLUDE}" ]; then
-                INC_FLAGS="-I${DEBIAN_INCLUDE}"
-            elif [ -d "${LINUX_INCLUDE}" ]; then
-                INC_FLAGS="-I${LINUX_INCLUDE}"
-            elif [ -d "${LINUX_ALT_INCLUDE}" ]; then
-                INC_FLAGS="-I${LINUX_ALT_INCLUDE}"
-            fi
-            ;;
-    esac
+    if [ -f "/usr/local/bin/python" ]; then
+        PYTHON_EXEC="/usr/local/bin/python"
+    else
+        PYTHON_EXEC=$(which python)
+    fi
+
+    INC_FLAGS=$(${PYTHON_EXEC} <<EOF
+import numpy
+import os.path
+numpy_package_path = os.path.dirname(numpy.__file__)
+print('-I{}'.format(os.path.join(numpy_package_path, 'core/include')))
+EOF)
 
     eval "${1}=\"${INC_FLAGS}\""
     eval "${2}=\"\""

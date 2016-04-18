@@ -107,7 +107,7 @@ class Visualization(object):
                 gr3.drawspheremesh(len(visible_atom_indices),
                                    self.results.atoms.positions[visible_atom_indices],
                                    self.results.atoms.colors[visible_atom_indices],
-                                   [edge_radius * 4] * len(visible_atom_indices))
+                                   np.ones(len(visible_atom_indices))*config.OpenGL.atom_radius)
                 if self.settings.show_bonds:
                     bonds = self.results.atoms.bonds
                     for start_index, target_indices in enumerate(bonds):
@@ -125,7 +125,7 @@ class Visualization(object):
                                              target_positions,
                                              -directions,
                                              [config.Colors.bonds] * self.results.atoms.number,
-                                             np.ones(bond_lengths.shape)*edge_radius,
+                                             np.ones(bond_lengths.shape)*config.OpenGL.bond_radius,
                                              bond_lengths)
 
         if self.results is None:
