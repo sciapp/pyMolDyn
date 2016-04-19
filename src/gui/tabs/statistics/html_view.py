@@ -25,7 +25,7 @@ def render_html_atom_group(atom_number, atom_elements):
     return template.render(template_vars)
 
 
-def render_html_atom(index, atom_fullname, atom_positions, atom_number, covalent_radius, atom_color_rgb, bonds):
+def render_html_atom(index, atom_fullname, atom_positions, atom_number, covalent_radius, cutoff_radius, atom_color_rgb, bonds):
     template_loader = jinja2.FileSystemLoader(searchpath="gui/tabs/statistics/templates")
     template_env = jinja2.Environment(loader=template_loader)
 
@@ -39,6 +39,7 @@ def render_html_atom(index, atom_fullname, atom_positions, atom_number, covalent
                      "atom_positions": atom_positions,
                      "atom_number": atom_number,
                      "covalent_radius": covalent_radius,
+                     "cutoff_radius": cutoff_radius,
                      "atom_color_rgb": atom_color_rgb,
                      "bonds": bonds,
                      }
@@ -341,12 +342,13 @@ class HTMLWindow(QtGui.QWidget):
         atom_positions = self.atoms.positions[index]
         atom_number = core.elements.numbers[atom_name.upper()]
         covalent_radius = self.atoms.covalence_radii[index]
+        cutoff_radius = self.atoms.radii[index]
         bonds = self.atoms.bonds[index]
 
 
         #print dir(self.domains[0])
 
-        self.webview.setHtml(render_html_atom(index, atom_fullname, atom_positions, atom_number, covalent_radius, atom_color_rgb, bonds))
+        self.webview.setHtml(render_html_atom(index, atom_fullname, atom_positions, atom_number, covalent_radius, cutoff_radius, atom_color_rgb, bonds))
 
     def show_center_cavity_group(self):
         number = 0
