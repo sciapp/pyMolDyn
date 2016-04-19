@@ -73,6 +73,7 @@ class CalculationSettings(object):
     def __init__(self,
                  datasets,
                  resolution=config.Computation.std_resolution,
+                 cutoff_radii=config.Computation.std_cutoff_radius,
                  domains=False,
                  surface_cavities=False,
                  center_cavities=False,
@@ -84,6 +85,7 @@ class CalculationSettings(object):
         """
         self.datasets = datasets
         self.resolution = resolution
+        self.cutoff_radii = cutoff_radii
         self.domains = domains
         self.surface_cavities = surface_cavities
         self.center_cavities = center_cavities
@@ -103,6 +105,7 @@ class CalculationSettings(object):
         for filename, frames in self.datasets.iteritems():
             datasets[filename] = [f for f in frames]
         dup = self.__class__(datasets, self.resolution)
+        dup.cutoff_radii = self.cutoff_radii
         dup.domains = self.domains
         dup.surface_cavities = self.surface_cavities
         dup.center_cavities = self.center_cavities
@@ -233,7 +236,8 @@ class Calculation(object):
             results = data.Results(filepath, frame, resolution, inputfile.getatoms(frame), None, None, None)
         return results
 
-    def calculateframe(self, filepath, frame, resolution, domains=False, surface=False, center=False, atoms=None, recalculate=False, last_frame=True):
+    def calculateframe(self, filepath, frame, resolution, cutoff_radii=None, domains=False, surface=False, center=False,
+                       atoms=None, recalculate=False, last_frame=True):
         """
         Get results for the given parameters. They are either loaded from the
         cache or calculated.
@@ -247,6 +251,8 @@ class Calculation(object):
                 resolution of the used discretization
             `domains` :
                 calculate cavitiy domains
+            `cutoff_radii` :
+                dict that maps element symbols to cutoff radii
             `surface` :
                 calculate surface-based cavities
             `center` :
@@ -272,6 +278,7 @@ class Calculation(object):
 
         if atoms is None:
             atoms = inputfile.getatoms(frame)
+        atoms.radii = cutoff_radii
         volume = atoms.volume
         if results is None:
             results = data.Results(filepath, frame, resolution, atoms, None, None, None)
@@ -370,6 +377,7 @@ class Calculation(object):
                     filepath,
                     frame,
                     calcsettings.resolution,
+                    calcsettings.cutoff_radii,
                     domains=calcsettings.domains,
                     surface=calcsettings.surface_cavities,
                     center=calcsettings.center_cavities,

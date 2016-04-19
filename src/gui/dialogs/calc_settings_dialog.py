@@ -24,8 +24,6 @@ class CalculationSettingsDialog(QtGui.QDialog):
         self.filenames = file_frame_dict.keys()
         self.file_frame_dict = file_frame_dict
 
-        print self.file_frame_dict
-
         self.init_gui()
         self.setWindowTitle("Calculation Settings")
 
@@ -90,6 +88,9 @@ class CalculationSettingsDialog(QtGui.QDialog):
 
         self.exportdir_radio_input.setChecked(True)
 
+        covalence_radii_by_element = self.__get_all_covalence_radii_by_element()
+        self.radii_widget = RadiiWidget(covalence_radii_by_element, self)
+
         vbox.addLayout(res_hbox)
         vbox.addWidget(self.table_view)
         vbox.addWidget(self.surf_check)
@@ -103,10 +104,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
         vbox.addLayout(button_hbox)
         hbox.addLayout(vbox)
 
-        covalence_radii_by_element = self.__get_all_covalence_radii_by_element()
-        radii_widget = RadiiWidget(covalence_radii_by_element, self)
-
-        hbox.addWidget(radii_widget)
+        hbox.addWidget(self.radii_widget)
 
         self.setLayout(hbox)
 
@@ -178,7 +176,6 @@ class CalculationSettingsDialog(QtGui.QDialog):
             self.update_table()
         except ValueError:
             pass
-            #print 'Enter a valid number'
 
     def slider_changing(self, value):
         self.lineedit.setText(str(value * self.RES_INTERVAL + self.RES_MIN))
@@ -203,157 +200,156 @@ class CalculationSettingsDialog(QtGui.QDialog):
         self.done(QtGui.QDialog.Rejected)
 
     def calculation_settings(self):
-        ok = self.exec_()
-        surface_based = self.surf_check.isChecked()
-        center_based = self.center_check.isChecked()
-        overwrite = self.overwrite_check.isChecked()
-        exporthdf5 = self.exporthdf5_check.isChecked()
-        exporttext = self.exporttext_check.isChecked()
-        if self.exportdir_radio_config.isChecked():
-            exportdir = config.Path.result_dir
-        else:
-            exportdir = None
+        calc_settings = None
+        while True:
+            ok = self.exec_()
+            if ok != QtGui.QDialog.Accepted:
+                break
+            try:
+                cutoff_radii = self.radii_widget.get_input_from_custom_table()
+                surface_based = self.surf_check.isChecked()
+                center_based = self.center_check.isChecked()
+                overwrite = self.overwrite_check.isChecked()
+                exporthdf5 = self.exporthdf5_check.isChecked()
+                exporttext = self.exporttext_check.isChecked()
+                if self.exportdir_radio_config.isChecked():
+                    exportdir = config.Path.result_dir
+                else:
+                    exportdir = None
+                calc_settings = calculation.CalculationSettings(datasets=self.file_frame_dict,
+                                                                resolution=self.resolution,
+                                                                cutoff_radii=cutoff_radii,
+                                                                domains=True,
+                                                                surface_cavities=surface_based,
+                                                                center_cavities=center_based,
+                                                                recalculate=overwrite,
+                                                                exporthdf5=exporthdf5,
+                                                                exporttext=exporttext,
+                                                                exportdir=exportdir)
+                break
+            except ValueError:
+                pass
 
-        return (calculation.CalculationSettings(datasets=self.file_frame_dict,
-                                                resolution=self.resolution,
-                                                domains=True,
-                                                surface_cavities=surface_based,
-                                                center_cavities=center_based,
-                                                recalculate=overwrite,
-                                                exporthdf5=exporthdf5,
-                                                exporttext=exporttext,
-                                                exportdir=exportdir),
-                ok)
+        return (calc_settings, ok)
 
 
 class RadiiWidget(QtGui.QWidget):
     def __init__(self, radii, parent=None):
-
-        self.radii = radii
-
         super(RadiiWidget, self).__init__(parent)
+        self.radii = radii
+        self.init_ui()
 
-        self.createCovalentTableBox()
-        self.createMenuBox()
+    def init_ui(self):
+        self.create_covalent_table_box()
+        self.create_menu_box()
 
-        mainLayout = QtGui.QGridLayout()
-        mainLayout.addWidget(self.covalentTableBox, 0, 0)
-        mainLayout.addWidget(self.menuBox, 1, 0)
+        main_layout = QtGui.QGridLayout()
+        main_layout.addWidget(self.covalent_table_box, 0, 0)
+        main_layout.addWidget(self.menu_box, 1, 0)
 
-        self.setLayout(mainLayout)
+        self.setLayout(main_layout)
 
-
-    def createMenuBox(self):
-
-        self.menuBox = QtGui.QGroupBox("Menu")
+    def create_menu_box(self):
+        self.menu_box = QtGui.QGroupBox("Menu")
         layout = QtGui.QGridLayout()
 
-        #Fixed Radio Button
+        # Fixed Radio Button
         self.fixed = QtGui.QRadioButton("Fixed Radius:")
         self.fixed.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
-        self.radiusEdit = QtGui.QLineEdit()
-        self.radiusEdit.setMinimumWidth(150)
-        self.radiusEdit.setVisible(False)
-        self.radiusEdit.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
+        self.radius_edit = QtGui.QLineEdit()
+        self.radius_edit.setMinimumWidth(150)
+        self.radius_edit.setVisible(False)
+        self.radius_edit.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
         self.fixed.toggled.connect(self.fixed_clicked)
 
-        #Custom Radio Button
+        # Custom Radio Button
         self.custom = QtGui.QRadioButton("Custom:")
         self.custom.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
-        self.createCustomTable()
-        self.customTable.setVisible(False)
+        self.create_custom_table()
+        self.custom_table.setVisible(False)
         self.custom.toggled.connect(self.custom_clicked)
 
-        #QStackedWidget customTable
+        # QStackedWidget custom_table
         self.tmp1 = QtGui.QWidget()
-        self.stackedWidgetCustomTable = QtGui.QStackedWidget()
-        self.stackedWidgetCustomTable.addWidget(self.customTable)
-        self.stackedWidgetCustomTable.addWidget(self.tmp1)
-        self.stackedWidgetCustomTable.setCurrentIndex(1)
+        self.stacked_widget_custom_table = QtGui.QStackedWidget()
+        self.stacked_widget_custom_table.addWidget(self.custom_table)
+        self.stacked_widget_custom_table.addWidget(self.tmp1)
+        self.stacked_widget_custom_table.setCurrentIndex(1)
 
-        #QStrackedWidget radiusEdit
+        # QStrackedWidget radius_edit
         self.tmp2 = QtGui.QWidget()
-        self.stackedWidgetRadiusEdit = QtGui.QStackedWidget()
-        self.stackedWidgetRadiusEdit.addWidget(self.radiusEdit)
-        self.stackedWidgetRadiusEdit.addWidget(self.tmp2)
-        self.stackedWidgetRadiusEdit.setCurrentIndex(1)
+        self.stacked_widget_radius_edit = QtGui.QStackedWidget()
+        self.stacked_widget_radius_edit.addWidget(self.radius_edit)
+        self.stacked_widget_radius_edit.addWidget(self.tmp2)
+        self.stacked_widget_radius_edit.setCurrentIndex(1)
 
         layout.addWidget(self.fixed, 0, 0, QtCore.Qt.AlignTop)
-        layout.addWidget(self.stackedWidgetRadiusEdit, 0, 1, QtCore.Qt.AlignTop)
+        layout.addWidget(self.stacked_widget_radius_edit, 0, 1, QtCore.Qt.AlignTop)
         layout.addWidget(self.custom, 1, 0, 1, 2, QtCore.Qt.AlignTop)
-        layout.addWidget(self.stackedWidgetCustomTable, 2, 0, 1, 2, QtCore.Qt.AlignTop)
+        layout.addWidget(self.stacked_widget_custom_table, 2, 0, 1, 2, QtCore.Qt.AlignTop)
 
-        self.menuBox.setLayout(layout)
-
+        self.menu_box.setLayout(layout)
 
     def fixed_clicked(self):
-
-        self.stackedWidgetCustomTable.setCurrentIndex(1)
-        self.stackedWidgetRadiusEdit.setCurrentIndex(0)
-
+        self.stacked_widget_custom_table.setCurrentIndex(1)
+        self.stacked_widget_radius_edit.setCurrentIndex(0)
 
     def custom_clicked(self):
+        self.stacked_widget_custom_table.setCurrentIndex(0)
+        self.stacked_widget_radius_edit.setCurrentIndex(1)
 
-        self.stackedWidgetCustomTable.setCurrentIndex(0)
-        self.stackedWidgetRadiusEdit.setCurrentIndex(1)
-
-
-    def createCovalentTableBox(self):
-
-        self.covalentTableBox = QtGui.QGroupBox("Table")
-        layoutTableBox = QtGui.QGridLayout()
-        covalentTable = QtGui.QTableWidget(1, len(self.radii))
-        covalentTable.setMinimumHeight(0)
-        covalentTable.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Maximum)
-        covalentTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
-        covalentTable.setHorizontalHeaderLabels(self.radii.keys())
-        covalentTable.setVerticalHeaderLabels(("Covalent Radius", ))
+    def create_covalent_table_box(self):
+        self.covalent_table_box = QtGui.QGroupBox("Table")
+        layout_table_box = QtGui.QGridLayout()
+        covalent_table = QtGui.QTableWidget(1, len(self.radii))
+        covalent_table.setMinimumHeight(0)
+        covalent_table.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Maximum)
+        covalent_table.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
+        covalent_table.setHorizontalHeaderLabels(self.radii.keys())
+        covalent_table.setVerticalHeaderLabels(("Covalent Radius", ))
 
         for i in range(len(self.radii)):
-            covalentTable.setItem(0, i, QtGui.QTableWidgetItem())
-            covalentTable.item(0, i).setText(str(self.radii.values()[i]))
-        covalentTable.setShowGrid(True)
+            covalent_table.setItem(0, i, QtGui.QTableWidgetItem())
+            covalent_table.item(0, i).setText(str(self.radii.values()[i]))
+        covalent_table.setShowGrid(True)
 
-        layoutTableBox.addWidget(covalentTable, 0, 0)
-        self.covalentTableBox.setLayout(layoutTableBox)
+        layout_table_box.addWidget(covalent_table, 0, 0)
+        self.covalent_table_box.setLayout(layout_table_box)
 
-
-    def __get_input_from_CustomTable(self):
-
-        if self.fixed.isChecked() and hasattr(self, "radiusEdit"):
+    def get_input_from_custom_table(self):
+        if self.fixed.isChecked() and hasattr(self, "radius_edit"):
             try:
-                radius = self.radiusEdit.text()
-                float(radius)
+                radius_as_text = self.radius_edit.text()
+                radius = float(radius_as_text)
                 return radius
             except ValueError:
                 message = QtGui.QMessageBox()
                 message.setStandardButtons(QtGui.QMessageBox.Ok)
-                message.setText("Incorrect Entry")
+                message.setText("Incorrect input: {}".format(radius_as_text))
                 message.exec_()
+                raise
 
         if self.custom.isChecked():
-            customList = []
-            for i in range(len(self.radii)):
+            elem_to_cutoff_radius = {}
+            for i, elem in enumerate(self.radii):
                 try:
-                    custom = self.customTable.cellWidget(0, i).text()
-                    float(custom)
-                    customList.append(custom)
+                    current_radius_as_text = self.custom_table.cellWidget(0, i).text()
+                    current_radius = float(current_radius_as_text)
+                    elem_to_cutoff_radius[elem] = current_radius
                 except ValueError:
                     message = QtGui.QMessageBox()
                     message.setStandardButtons(QtGui.QMessageBox.Ok)
-                    message.setText("Incorrect Entry")
+                    message.setText("Incorrect input: {}".format(current_radius_as_text))
                     message.exec_()
-                    break
-            return customList
+                    raise
+            return elem_to_cutoff_radius
 
-
-    def createCustomTable(self):
-
-        self.customTable = QtGui.QTableWidget(1, len(self.radii))
-        self.customTable.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Maximum)
-        self.customTable.setHorizontalHeaderLabels(self.radii.keys())
-        self.customTable.setVerticalHeaderLabels(("Custom Radius", ))
+    def create_custom_table(self):
+        self.custom_table = QtGui.QTableWidget(1, len(self.radii))
+        self.custom_table.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Maximum)
+        self.custom_table.setHorizontalHeaderLabels(self.radii.keys())
+        self.custom_table.setVerticalHeaderLabels(("Custom Radius", ))
 
         for i in range(len(self.radii)):
-            self.customTable.setCellWidget(0, i, QtGui.QLineEdit())
-        self.customTable.setShowGrid(True)
+            self.custom_table.setCellWidget(0, i, QtGui.QLineEdit())
+        self.custom_table.setShowGrid(True)
