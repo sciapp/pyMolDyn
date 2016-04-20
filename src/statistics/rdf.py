@@ -115,6 +115,8 @@ class RDF(object):
             cutoff = data.max()
         sel = np.where(np.logical_and(data > MINDISTANCE, data <= cutoff))[0]
         sel = data[sel]
+        if h == 0:
+            return sel
         if len(sel) < 2:
             logger.debug("Not enough data for '{}-{}' in cutoff={} range.".format(elem1, elem2, cutoff))
             return None # TODO: raise Exception

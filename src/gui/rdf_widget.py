@@ -184,18 +184,32 @@ class RDFWidget(QtGui.QWidget):
                 cutoff = float(cutoff)
             else:
                 cutoff = None
-            bandwidth = str(self.bandwidth.text())
-            if len(bandwidth) > 0 and float(bandwidth) > 0:
-                bandwidth = float(bandwidth)
-            else:
+            try:
+                bandwidth = float(str(self.bandwidth.text()))
+                if bandwidth < 0:
+                    bandwidth = 0
+                    self.bandwidth.setText('0')
+            except ValueError:
                 bandwidth = None
+                self.bandwidth.setText('')
             kernel = self.kernels.get(self.kernel.currentText(), None)
             f = self.rdf.rdf(elem1, elem2, cutoff=cutoff, h=bandwidth, kernel=kernel)
             if f is not None:
-                xvalues = np.linspace(range1, range2, 400)
-                yvalues = f(xvalues)
-                title = "{} - {}".format(elem1, elem2)
-                datapoints = f.f.x
+                if callable(f):
+                    xvalues = np.linspace(range1, range2, 400)
+                    yvalues = f(xvalues)
+                    title = "{} - {}".format(elem1, elem2)
+                    datapoints = f.f.x
+                else:
+                    peaks = f[np.logical_and(range1 < f, f < range2)]
+                    if len(peaks) > 2:
+                        xvalues = np.zeros(len(peaks) * 3)
+                        xvalues[0::3] = peaks
+                        xvalues[1::3] = peaks
+                        xvalues[2::3] = peaks
+                        yvalues = np.zeros(len(peaks) * 3)
+                        yvalues[1::3] = 1
+                        datapoints = peaks
 
         self.gr_widget.setdata(xvalues, yvalues, title, datapoints)
         self.gr_widget.update()

@@ -275,8 +275,6 @@ class CavityCalculation:
             self.multicavity_volumes.append(sum(self.cavity_volumes[cavity_index] for cavity_index in multicavity))
         print_message("Multicavity volumes:", self.multicavity_volumes)
 
-        print_message("Multicavities:", multicavities)
-
         def key_func(cavity_index):
             cavity_area = non_translated_areas[cavity_index]
             a_single_cavity_index = -self.grid3[cavity_area[0]] - 1
@@ -285,7 +283,7 @@ class CavityCalculation:
         sorted_area_indices = sorted(range(len(self.multicavities)), key=key_func)
         sorted_translated_areas = [translated_areas[i] for i in sorted_area_indices]
         sorted_cyclic_area_indices = [i for i, index in enumerate(sorted_area_indices)
-                                      if index in cyclic_area_indices]
+                                    if index in cyclic_area_indices]
         self.cyclic_area_indices = sorted_cyclic_area_indices
 
         if sorted_translated_areas:
