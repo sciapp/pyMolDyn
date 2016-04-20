@@ -129,6 +129,15 @@ class Cli(object):
                               "default": None,
                               "type": "int",
                               "help": "maximum number of cached files"},
+                             {"special_type": None,
+                              "name": "no cache files",
+                              "short": "",
+                              "long": "--no-cache",
+                              "action": "store_true",
+                              "dest": "no_cache",
+                              "default": False,
+                              "type": None,
+                              "help": "Do not use any unnecessary cache files. One temporary cache file is always necessary."},
 #                             {"special_type": "parameter",
 #                              "name": "bond delta",
 #                              "short": "-b",
@@ -191,6 +200,8 @@ class Cli(object):
             config.Computation.atom_radius = self.options.atom_radius
         if self.options.max_cachefiles is not None:
             config.Computation.max_cachefiles = self.options.max_cachefiles
+        elif self.options.no_cache:
+            config.Computation.max_cachefiles = 1
 
         print 'processing files:'
         print file_list
