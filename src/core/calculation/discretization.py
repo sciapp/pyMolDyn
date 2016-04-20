@@ -228,7 +228,7 @@ class Discretization(object):
             if isinstance(point, np.ndarray) and len(point.shape) > 1:
                 if result_inside_volume:
                     if any(isinstance(c, float) for c in point):
-                        rounded_point = np.around(point)
+                        rounded_point = np.array(np.around(point), dtype=np.int)
                         rounded_diff = point - rounded_point
                         rounded_point = np.array(self.get_equivalent_point_in_volume(rounded_point))
                         point = rounded_point + rounded_diff
@@ -244,7 +244,7 @@ class Discretization(object):
             else:
                 if result_inside_volume:
                     if any(isinstance(c, float) for c in point):
-                        rounded_point = tuple(round(c) for c in point)
+                        rounded_point = tuple(int(round(c)) for c in point)
                         rounded_diff = tuple(c1 - c2 for c1, c2 in zip(point, rounded_point))
                         rounded_point = self.get_equivalent_point_in_volume(rounded_point)
                         point = tuple(c1 + c2 for c1, c2 in zip(rounded_point, rounded_diff))

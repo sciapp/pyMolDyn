@@ -507,34 +507,30 @@ void cavity_intersections(
         int8_t *intersection_table)
 {
     int pos[3];
+    int i;
     int neigh[3];
     int gridindex, neighindex;
     int64_t domain1, domain2;
+    int offsets[13][3] = {{-1, -1, -1}, {-1, -1, 0}, {-1, -1, 1}, {-1, 0, -1}, {-1, 0, 0}, {-1, 0, 1}, {-1, 1, -1}, {-1, 1, 0}, {-1, 1, 1}, {0, -1, -1}, {0, -1, 0}, {0, -1, 1}, {0, 0, -1}};
 
-    for (pos[0] = 0; pos[0] < dimensions[0] - 1; pos[0]++) {
-        for (pos[1] = 0; pos[1] < dimensions[1] - 1; pos[1]++) {
-            for (pos[2] = 0; pos[2] < dimensions[2] - 1; pos[2]++) {
+    for (pos[0] = 1; pos[0] < dimensions[0] - 1; pos[0]++) {
+        for (pos[1] = 1; pos[1] < dimensions[1] - 1; pos[1]++) {
+            for (pos[2] = 1; pos[2] < dimensions[2] - 1; pos[2]++) {
                 gridindex = INDEXGRID(pos[0], pos[1], pos[2]);
                 domain1 = -grid[gridindex] - 1;
                 if (domain1 != -1) {
-                    for (neigh[0] = 0; neigh[0] <= 1; neigh[0]++) {
-                        for (neigh[1] = 0; neigh[1] <= 1; neigh[1]++) {
-                            for (neigh[2] = 0; neigh[2] <= 1; neigh[2]++) {
-                                if (neigh[0] == 0
-                                        && neigh[1] == 0
-                                        && neigh[2] == 0) {
-                                    continue;
-                                }
-                                neighindex = gridindex + INDEXGRID(
-                                        neigh[0], neigh[1], neigh[2]);
-                                domain2 = -grid[neighindex] - 1;
-                                if (domain2 != -1) {
-                                    intersection_table[domain1 * num_domains + domain2] = 1;
-                                    intersection_table[domain2 * num_domains + domain1] = 1;
-                                } /* if domain2 */
-                            } /* for neigh[2] */
-                        } /* for neigh[1] */
-                    } /* for neigh[0] */
+                    for (i = 0; i < 13; i++) {
+                        neigh[0] = offsets[i][0];
+                        neigh[1] = offsets[i][1];
+                        neigh[2] = offsets[i][2];
+                        neighindex = gridindex + INDEXGRID(
+                                neigh[0], neigh[1], neigh[2]);
+                        domain2 = -grid[neighindex] - 1;
+                        if (domain2 != -1) {
+                            intersection_table[domain1 * num_domains + domain2] = 1;
+                            intersection_table[domain2 * num_domains + domain1] = 1;
+                        } /* if domain2 */
+                    } /* for i */
                 } /* if domain1 */
             } /* for pos[2] */
         } /* for pos[1] */
