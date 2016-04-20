@@ -275,23 +275,16 @@ class CavityCalculation:
             self.multicavity_volumes.append(sum(self.cavity_volumes[cavity_index] for cavity_index in multicavity))
         print_message("Multicavity volumes:", self.multicavity_volumes)
 
-        print_message("Multicavities:", multicavities)
-
-        # TODO: len(multicavities) == len(non_translated_areas) MUST be True!
-        if len(multicavities) < len(non_translated_areas):
-            def key_func(cavity_index):
-                cavity_area = non_translated_areas[cavity_index]
-                a_single_cavity_index = -self.grid3[cavity_area[0]] - 1
-                max_neighbor_index = max(cavity_to_neighbors[a_single_cavity_index])
-                return max_neighbor_index
-            sorted_area_indices = sorted(range(len(self.multicavities)), key=key_func)
-            sorted_translated_areas = [translated_areas[i] for i in sorted_area_indices]
-            sorted_cyclic_area_indices = [i for i, index in enumerate(sorted_area_indices)
-                                        if index in cyclic_area_indices]
-            self.cyclic_area_indices = sorted_cyclic_area_indices
-        else:
-            sorted_translated_areas = None
-            self.cyclic_area_indices = None
+        def key_func(cavity_index):
+            cavity_area = non_translated_areas[cavity_index]
+            a_single_cavity_index = -self.grid3[cavity_area[0]] - 1
+            max_neighbor_index = max(cavity_to_neighbors[a_single_cavity_index])
+            return max_neighbor_index
+        sorted_area_indices = sorted(range(len(self.multicavities)), key=key_func)
+        sorted_translated_areas = [translated_areas[i] for i in sorted_area_indices]
+        sorted_cyclic_area_indices = [i for i, index in enumerate(sorted_area_indices)
+                                    if index in cyclic_area_indices]
+        self.cyclic_area_indices = sorted_cyclic_area_indices
 
         if sorted_translated_areas:
             gyration_tensor_parameters = tuple(calculate_gyration_tensor_parameters(area)
