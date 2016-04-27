@@ -2,11 +2,17 @@
 
 
 from gui.dialogs.util.calc_table import CalculationTable, TableModel
+from gui.dialogs.cutoff_history_dialog import CutoffHistoryDialog
+from gui.util.labeled_combobox import LabeledComboBox
 from core import calculation
 from core import file
+import collections
+import datetime
 import os.path
 import itertools as it
 from config.configuration import config
+from config.cutoff_history import cutoff_history
+from config.cutoff_history import HistoryEntry
 from PyQt4 import QtGui, QtCore
 
 
@@ -29,8 +35,9 @@ class CalculationSettingsDialog(QtGui.QDialog):
 
     def init_gui(self):
 
-        hbox            = QtGui.QHBoxLayout()
         vbox            = QtGui.QVBoxLayout()
+        hbox            = QtGui.QHBoxLayout()
+        inner_layout    = QtGui.QVBoxLayout()
         button_hbox     = QtGui.QHBoxLayout()
         res_hbox        = QtGui.QHBoxLayout()
 
@@ -89,35 +96,84 @@ class CalculationSettingsDialog(QtGui.QDialog):
         self.exportdir_radio_input.setChecked(True)
 
         covalence_radii_by_element = self.__get_all_covalence_radii_by_element()
-        self.radii_widget = RadiiWidget(covalence_radii_by_element, self)
+        self.radii_widget = RadiiWidget(covalence_radii_by_element, self.file_frame_dict, self)
 
-        vbox.addLayout(res_hbox)
-        vbox.addWidget(self.table_view)
-        vbox.addWidget(self.surf_check)
-        vbox.addWidget(self.center_check)
-        vbox.addWidget(self.overwrite_check)
-        vbox.addWidget(self.exporthdf5_check)
-        vbox.addWidget(self.exporttext_check)
-        vbox.addWidget(self.exportdir_radio_input)
-        vbox.addWidget(self.exportdir_radio_config)
+        inner_layout.addLayout(res_hbox)
+        inner_layout.addWidget(self.table_view)
+        inner_layout.addWidget(self.surf_check)
+        inner_layout.addWidget(self.center_check)
+        inner_layout.addWidget(self.overwrite_check)
+        inner_layout.addWidget(self.exporthdf5_check)
+        inner_layout.addWidget(self.exporttext_check)
+        inner_layout.addWidget(self.exportdir_radio_input)
+        inner_layout.addWidget(self.exportdir_radio_config)
 
-        vbox.addLayout(button_hbox)
-        hbox.addLayout(vbox)
-
+        hbox.addLayout(inner_layout)
         hbox.addWidget(self.radii_widget)
 
-        self.setLayout(hbox)
+        vbox.addLayout(hbox)
+        vbox.addLayout(button_hbox)
+
+        self.setLayout(vbox)
 
     def __get_all_covalence_radii_by_element(self):
-        radii = {}
+        covalence_radii_by_element, elements_by_frame, element_combinations = self.__read_atom_info()
+        return covalence_radii_by_element
+
+    def __get_elements_by_frame(self):
+        covalence_radii_by_element, elements_by_frame, element_combinations = self.__read_atom_info()
+        return elements_by_frame
+
+    def __get_element_combinations(self):
+        covalence_radii_by_element, elements_by_frame, element_combinations = self.__read_atom_info()
+        return element_combinations
+
+    def __read_atom_info(self):
+        method = self.__read_atom_info.__func__
+        for attr in ('covalence_radii_by_element', 'elements_by_frame', 'element_combinations'):
+            if not hasattr(method, attr):
+                setattr(method, attr, None)
+
+        if (method.covalence_radii_by_element is None or
+            method.elements_by_frame is None or
+            method.element_combinations is None):
+            radii = {}
+            elements_by_frame = {}
+            element_combinations = set()
+            for filepath, frames in self.file_frame_dict.iteritems():
+                elements_by_frame[filepath] = {}
+                inputfile = file.File.open(filepath)
+                if frames == (-1, ):
+                    frames = range(inputfile.info.num_frames)
+                for frame in frames:
+                    atoms = inputfile.getatoms(frame)
+                    current_radii = atoms.covalence_radii_by_element
+                    current_elements = atoms.elements
+                    radii.update(current_radii)
+                    elements_by_frame[filepath][frame] = current_elements
+                    element_combinations.add(tuple(current_elements))
+            method.covalence_radii_by_element = radii
+            method.elements_by_frame = elements_by_frame
+        return (method.covalence_radii_by_element, method.elements_by_frame, method.element_combinations)
+
+    def __update_cutoff_history(self):
+        timestamp = datetime.datetime.now()
+        user_cutoff_radii = self.radii_widget.get_input_from_custom_table()
+        elements = self.__get_all_covalence_radii_by_element().keys()
+        if not isinstance(user_cutoff_radii, collections.Iterable):
+            user_cutoff_radii = dict((elem, user_cutoff_radii) for elem in elements)
+        elements_by_frame = self.__get_elements_by_frame()
+        new_history = []
         for filepath, frames in self.file_frame_dict.iteritems():
-            inputfile = file.File.open(filepath)
-            if frames == (-1, ):
-                frames = range(inputfile.info.num_frames)
+            filename = os.path.basename(filepath)
+            file_elements = elements_by_frame[filepath]
             for frame in frames:
-                current_radii = inputfile.getatoms(frame).covalence_radii_by_element
-                radii.update(current_radii)
-        return radii
+                elements = file_elements[frame]
+                frame_cutoff_radii = dict((elem, user_cutoff_radii[elem]) for elem in elements)
+                history_entry = HistoryEntry(filename, frame, timestamp, frame_cutoff_radii)
+                new_history.append(history_entry)
+        cutoff_history.extend(new_history)
+        cutoff_history.save()
 
     def update_table(self):
         # get timestamps for selected frames for each file
@@ -194,6 +250,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
 
     def ok(self):
         self.lineedit_return()
+        self.__update_cutoff_history()
         self.done(QtGui.QDialog.Accepted)
 
     def cancel(self):
@@ -234,92 +291,124 @@ class CalculationSettingsDialog(QtGui.QDialog):
 
 
 class RadiiWidget(QtGui.QWidget):
-    def __init__(self, radii, parent=None):
+    def __init__(self, radii, file_frame_dict, parent=None):
         super(RadiiWidget, self).__init__(parent)
-        self.radii = radii
-        self.init_ui()
+        self._radii = radii
+        self._file_frame_dict = file_frame_dict
+        self._preferred_filenames_with_frames = dict((os.path.basename(filepath), frames)
+                                                     for filepath, frames in self._file_frame_dict.iteritems())
+        self._init_ui()
+        self._init_cutoff_radii()
 
-    def init_ui(self):
-        self.create_covalent_table_box()
-        self.create_menu_box()
-
-        main_layout = QtGui.QGridLayout()
-        main_layout.addWidget(self.covalent_table_box, 0, 0)
-        main_layout.addWidget(self.menu_box, 1, 0)
-
-        self.setLayout(main_layout)
-
-    def create_menu_box(self):
-        self.menu_box = QtGui.QGroupBox("Menu")
-        layout = QtGui.QGridLayout()
+    def _init_ui(self):
+        # self.setStyleSheet("background-color: white;")
+        # self.setAttribute(QtCore.Qt.WA_StyledBackground, True)
 
         # Fixed Radio Button
-        self.fixed = QtGui.QRadioButton("Fixed Radius:")
-        self.fixed.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
-        self.radius_edit = QtGui.QLineEdit()
-        self.radius_edit.setMinimumWidth(150)
-        self.radius_edit.setVisible(False)
-        self.radius_edit.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
-        self.fixed.toggled.connect(self.fixed_clicked)
+        self.rb_fixed = QtGui.QRadioButton("Fixed Radius:")
+        self.le_fixed = QtGui.QLineEdit()
+        self.le_fixed.setMinimumWidth(150)
+        self.le_fixed.setVisible(False)
+        self.rb_fixed.toggled.connect(self.rb_fixed_clicked)
 
-        # Custom Radio Button
-        self.custom = QtGui.QRadioButton("Custom:")
-        self.custom.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
-        self.create_custom_table()
-        self.custom_table.setVisible(False)
-        self.custom.toggled.connect(self.custom_clicked)
-
-        # QStackedWidget custom_table
+        # QStackedWidget le_fixed
         self.tmp1 = QtGui.QWidget()
-        self.stacked_widget_custom_table = QtGui.QStackedWidget()
-        self.stacked_widget_custom_table.addWidget(self.custom_table)
-        self.stacked_widget_custom_table.addWidget(self.tmp1)
-        self.stacked_widget_custom_table.setCurrentIndex(1)
+        self.sw_fixed = QtGui.QStackedWidget()
+        self.sw_fixed.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
+        self.sw_fixed.addWidget(self.le_fixed)
+        self.sw_fixed.addWidget(self.tmp1)
+        self.sw_fixed.setCurrentIndex(1)
 
-        # QStrackedWidget radius_edit
-        self.tmp2 = QtGui.QWidget()
-        self.stacked_widget_radius_edit = QtGui.QStackedWidget()
-        self.stacked_widget_radius_edit.addWidget(self.radius_edit)
-        self.stacked_widget_radius_edit.addWidget(self.tmp2)
-        self.stacked_widget_radius_edit.setCurrentIndex(1)
+        # Custom Radio Button + Table
+        self.rb_custom = QtGui.QRadioButton("Custom:")
+        self.tw_cutoff = QtGui.QTableWidget(len(self._radii), 2)
+        self.tw_cutoff.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        self.tw_cutoff.setHorizontalHeaderLabels(("Covalent Radius", "Cutoff Radius"))
+        self.tw_cutoff.setVerticalHeaderLabels(self._radii.keys())
+        for i in range(len(self._radii)):
+            self.tw_cutoff.setItem(i, 0, QtGui.QTableWidgetItem())
+            self.tw_cutoff.item(i, 0).setText(str(self._radii.values()[i]))
+            self.tw_cutoff.setCellWidget(i, 1, QtGui.QLineEdit())
+        self.tw_cutoff.setShowGrid(True)
+        self.rb_custom.toggled.connect(self.rb_custom_clicked)
 
-        layout.addWidget(self.fixed, 0, 0, QtCore.Qt.AlignTop)
-        layout.addWidget(self.stacked_widget_radius_edit, 0, 1, QtCore.Qt.AlignTop)
-        layout.addWidget(self.custom, 1, 0, 1, 2, QtCore.Qt.AlignTop)
-        layout.addWidget(self.stacked_widget_custom_table, 2, 0, 1, 2, QtCore.Qt.AlignTop)
+        # Preset Combo Box
+        self.cb_preset = LabeledComboBox("Preset")
+        self.cb_preset.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
 
-        self.menu_box.setLayout(layout)
+        # History button
+        self.pb_history = QtGui.QPushButton("History", self)
+        self.pb_history.setMinimumWidth(0)
+        self.pb_history.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
+        self.pb_history.clicked.connect(self.pb_history_clicked)
 
-    def fixed_clicked(self):
-        self.stacked_widget_custom_table.setCurrentIndex(1)
-        self.stacked_widget_radius_edit.setCurrentIndex(0)
+        # Preset save
+        self.cb_preset_save = QtGui.QCheckBox("Save as Preset", self)
+        self.te_preset_save = QtGui.QLineEdit()
+        self.te_preset_save.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
 
-    def custom_clicked(self):
-        self.stacked_widget_custom_table.setCurrentIndex(0)
-        self.stacked_widget_radius_edit.setCurrentIndex(1)
+        self.la_main = QtGui.QGridLayout()
+        self.la_main.setContentsMargins(0, 0, 0, 0)
+        self.la_fixed = QtGui.QHBoxLayout()
+        self.la_fixed.setContentsMargins(0, 0, 0, 0)
+        self.la_custom = QtGui.QHBoxLayout()
+        self.la_custom.setContentsMargins(0, 0, 0, 0)
+        self.la_preset_save = QtGui.QHBoxLayout()
+        self.la_preset_save.setContentsMargins(0, 0, 0, 0)
 
-    def create_covalent_table_box(self):
-        self.covalent_table_box = QtGui.QGroupBox("Table")
-        layout_table_box = QtGui.QGridLayout()
-        covalent_table = QtGui.QTableWidget(1, len(self.radii))
-        covalent_table.setMinimumHeight(0)
-        covalent_table.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Maximum)
-        covalent_table.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
-        covalent_table.setHorizontalHeaderLabels(self.radii.keys())
-        covalent_table.setVerticalHeaderLabels(("Covalent Radius", ))
+        self.la_fixed.addWidget(self.rb_fixed)
+        self.la_fixed.addWidget(self.sw_fixed)
+        self.la_main.addLayout(self.la_fixed, 0, 0, 1, 2)
+        self.la_custom.addWidget(self.rb_custom)
+        self.la_main.addLayout(self.la_custom, 1, 0, 1, 2)
+        self.la_main.addWidget(self.tw_cutoff, 2, 0, 1, 2)
+        self.la_main.addWidget(self.cb_preset, 3, 0, 1, 1)
+        self.la_main.addWidget(self.pb_history, 3, 1, 1, 1)
+        self.la_preset_save.addWidget(self.cb_preset_save)
+        self.la_preset_save.addWidget(self.te_preset_save)
+        self.la_main.addLayout(self.la_preset_save, 4, 0, 1, 2)
 
-        for i in range(len(self.radii)):
-            covalent_table.setItem(0, i, QtGui.QTableWidgetItem())
-            covalent_table.item(0, i).setText(str(self.radii.values()[i]))
-        covalent_table.setShowGrid(True)
+        self.setLayout(self.la_main)
 
-        layout_table_box.addWidget(covalent_table, 0, 0)
-        self.covalent_table_box.setLayout(layout_table_box)
+        self.rb_fixed.toggle()
+
+    def _init_cutoff_radii(self, cutoff_radii=None):
+        elements = self._radii.keys()
+        if cutoff_radii is None:
+            filtered_history = cutoff_history.filtered_history(elements, preferred_filenames_with_frames=
+                                                               self._preferred_filenames_with_frames)
+            if not filtered_history:
+                cutoff_radii = config.Computation.std_cutoff_radius
+            else:
+                cutoff_radii = filtered_history[0].radii
+        if not isinstance(cutoff_radii, collections.Iterable):
+            cutoff_radii = dict((elem, float(cutoff_radii)) for elem in elements)
+        # Check if all cutoff radii are equal
+        if len(set(cutoff_radii.values())) == 1:
+            self.rb_fixed.toggle()
+            self.le_fixed.setText(str(cutoff_radii.values()[0]))
+        else:
+            self.rb_custom.toggle()
+            for i, elem in enumerate(self._radii):
+                self.tw_cutoff.cellWidget(i, 1).setText(str(cutoff_radii[elem]))
+
+    def rb_fixed_clicked(self):
+        self.sw_fixed.setCurrentIndex(0)
+
+    def rb_custom_clicked(self):
+        self.sw_fixed.setCurrentIndex(1)
+
+    def pb_history_clicked(self):
+        cutoff_history_dialog = CutoffHistoryDialog(self, self._radii.keys(), self._preferred_filenames_with_frames)
+        return_value = cutoff_history_dialog.exec_()
+        if return_value == QtGui.QDialog.Rejected:
+            return
+        self._init_cutoff_radii(cutoff_history_dialog.selected_radii)
 
     def get_input_from_custom_table(self):
-        if self.fixed.isChecked() and hasattr(self, "radius_edit"):
+        if self.rb_fixed.isChecked() and hasattr(self, "le_fixed"):
             try:
-                radius_as_text = self.radius_edit.text()
+                radius_as_text = self.le_fixed.text()
                 radius = float(radius_as_text)
                 return radius
             except ValueError:
@@ -329,11 +418,11 @@ class RadiiWidget(QtGui.QWidget):
                 message.exec_()
                 raise
 
-        if self.custom.isChecked():
+        if self.rb_custom.isChecked():
             elem_to_cutoff_radius = {}
-            for i, elem in enumerate(self.radii):
+            for i, elem in enumerate(self._radii):
                 try:
-                    current_radius_as_text = self.custom_table.cellWidget(0, i).text()
+                    current_radius_as_text = self.tw_cutoff.cellWidget(i, 1).text()
                     current_radius = float(current_radius_as_text)
                     elem_to_cutoff_radius[elem] = current_radius
                 except ValueError:
@@ -343,13 +432,3 @@ class RadiiWidget(QtGui.QWidget):
                     message.exec_()
                     raise
             return elem_to_cutoff_radius
-
-    def create_custom_table(self):
-        self.custom_table = QtGui.QTableWidget(1, len(self.radii))
-        self.custom_table.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Maximum)
-        self.custom_table.setHorizontalHeaderLabels(self.radii.keys())
-        self.custom_table.setVerticalHeaderLabels(("Custom Radius", ))
-
-        for i in range(len(self.radii)):
-            self.custom_table.setCellWidget(0, i, QtGui.QLineEdit())
-        self.custom_table.setShowGrid(True)

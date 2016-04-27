@@ -87,7 +87,7 @@ class ComputationSettingsPage(QtGui.QWidget):
     def __init__(self, parent, cfg):
         QtGui.QWidget.__init__(self, parent)
         self._config = cfg
-        self.values = OrderedDict((('atom_radius', 'atom radius'), ))
+        self.values = OrderedDict((('std_cutoff_radius', 'cutoff radius'), ))
 
         self.lineedit_dict = {}
         box  = QtGui.QVBoxLayout()

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
+
 from PyQt4 import QtCore, QtGui
 import gr
 from qtgr import GRWidget

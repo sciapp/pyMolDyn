@@ -487,7 +487,7 @@ class Atoms(object):
     @radii.setter
     def radii(self, values):
         if values is None:
-            self._radii = np.ones((self.number), dtype=np.float) * config.Computation.atom_radius
+            self._radii = np.ones((self.number), dtype=np.float) * config.Computation.std_cutoff_radius
         elif isinstance(values, collections.Mapping):
             radii = [values[elem] for elem in self.elements]
             self._radii = np.array(radii, dtype=np.float, copy=False)
