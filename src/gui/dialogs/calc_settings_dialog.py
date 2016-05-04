@@ -25,11 +25,11 @@ class CalculationSettingsDialog(QtGui.QDialog):
 
         self.init_gui()
         self.setWindowTitle("Calculation Settings")
-    
+
     def init_gui(self):
 
-        vbox            = QtGui.QVBoxLayout() 
-        button_hbox     = QtGui.QHBoxLayout() 
+        vbox            = QtGui.QVBoxLayout()
+        button_hbox     = QtGui.QHBoxLayout()
         res_hbox        = QtGui.QHBoxLayout()
 
         self.res_slider = QtGui.QSlider(QtCore.Qt.Horizontal, self)
@@ -78,6 +78,8 @@ class CalculationSettingsDialog(QtGui.QDialog):
         self.surf_check = QtGui.QCheckBox('calculate surface based cavities', self)
         self.surf_check.setChecked(True)
         self.center_check = QtGui.QCheckBox('calculate center based cavities', self)
+        self.gyration_tensor_check = QtGui.QCheckBox('calculate gyration tensor parameters', self)
+        self.gyration_tensor_check.setToolTip('squared_gyration_radius, asphericity, acylindricity, anisotropy')
         self.overwrite_check = QtGui.QCheckBox('overwrite existing results', self)
         self.exporthdf5_check = QtGui.QCheckBox('export results as HDF5 files', self)
         self.exporttext_check = QtGui.QCheckBox('export results as text files', self)
@@ -90,6 +92,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
         vbox.addWidget(self.table_view)
         vbox.addWidget(self.surf_check)
         vbox.addWidget(self.center_check)
+        vbox.addWidget(self.gyration_tensor_check)
         vbox.addWidget(self.overwrite_check)
         vbox.addWidget(self.exporthdf5_check)
         vbox.addWidget(self.exporttext_check)
@@ -184,6 +187,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
         ok = self.exec_()
         surface_based = self.surf_check.isChecked()
         center_based = self.center_check.isChecked()
+        gyration_tensor = self.gyration_tensor_check.isChecked()
         overwrite = self.overwrite_check.isChecked()
         exporthdf5 = self.exporthdf5_check.isChecked()
         exporttext = self.exporttext_check.isChecked()
@@ -197,6 +201,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
                                                 domains=True,
                                                 surface_cavities=surface_based,
                                                 center_cavities=center_based,
+                                                gyration_tensor=gyration_tensor,
                                                 recalculate=overwrite,
                                                 exporthdf5=exporthdf5,
                                                 exporttext=exporttext,

@@ -210,7 +210,7 @@ class CavityCalculation:
     the domain centers instead of the domain surface points.
     """
 
-    def __init__(self, domain_calculation, use_surface_points=True):
+    def __init__(self, domain_calculation, use_surface_points=True, gyration_tensor_parameters=False):
         self.domain_calculation = domain_calculation
         if use_surface_points:
             self.grid = self.domain_calculation.grid
@@ -238,13 +238,14 @@ class CavityCalculation:
                                    domain_seed_point_lists,
                                    use_surface_points)
 
-        result = start_split_and_merge_pipeline(self.grid3,
-                                                discretization.grid,
-                                                atom_discretization.discrete_positions,
-                                                discretization.combined_translation_vectors,
-                                                discretization.get_translation_vector,
-                                                ObjectType.CAVITY)
-        translated_areas, non_translated_areas, cyclic_area_indices = result
+        if gyration_tensor_parameters:
+            result = start_split_and_merge_pipeline(self.grid3,
+                                                    discretization.grid,
+                                                    atom_discretization.discrete_positions,
+                                                    discretization.combined_translation_vectors,
+                                                    discretization.get_translation_vector,
+                                                    ObjectType.CAVITY)
+            translated_areas, non_translated_areas, cyclic_area_indices = result
 
         num_domains = len(self.domain_calculation.centers)
         grid_volume = (discretization.grid == 0).sum()
@@ -275,29 +276,30 @@ class CavityCalculation:
             self.multicavity_volumes.append(sum(self.cavity_volumes[cavity_index] for cavity_index in multicavity))
         print_message("Multicavity volumes:", self.multicavity_volumes)
 
-        def key_func(cavity_index):
-            cavity_area = non_translated_areas[cavity_index]
-            a_single_cavity_index = -self.grid3[cavity_area[0]] - 1
-            max_neighbor_index = max(cavity_to_neighbors[a_single_cavity_index])
-            return max_neighbor_index
-        sorted_area_indices = sorted(range(len(self.multicavities)), key=key_func)
-        sorted_translated_areas = [translated_areas[i] for i in sorted_area_indices]
-        sorted_cyclic_area_indices = [i for i, index in enumerate(sorted_area_indices)
-                                    if index in cyclic_area_indices]
-        self.cyclic_area_indices = sorted_cyclic_area_indices
+        if gyration_tensor_parameters:
+            def key_func(cavity_index):
+                cavity_area = non_translated_areas[cavity_index]
+                a_single_cavity_index = -self.grid3[cavity_area[0]] - 1
+                max_neighbor_index = max(cavity_to_neighbors[a_single_cavity_index])
+                return max_neighbor_index
+            sorted_area_indices = sorted(range(len(self.multicavities)), key=key_func)
+            sorted_translated_areas = [translated_areas[i] for i in sorted_area_indices]
+            sorted_cyclic_area_indices = [i for i, index in enumerate(sorted_area_indices)
+                                        if index in cyclic_area_indices]
+            self.cyclic_area_indices = sorted_cyclic_area_indices
 
-        if sorted_translated_areas:
-            gyration_tensor_parameters = tuple(calculate_gyration_tensor_parameters(area)
-                                               for area in sorted_translated_areas)
-            (self.mass_centers, self.squared_gyration_radii, self.asphericities,
-             self.acylindricities, self.anisotropies) = zip(*gyration_tensor_parameters)
-            self.mass_centers = [discretization.discrete_to_continuous(point, result_inside_volume=True)
-                                 for point in self.mass_centers]
-            self.squared_gyration_radii = [discretization.discrete_to_continuous(value, unit_exponent=2)
-                                           for value in self.squared_gyration_radii]
-        else:
-            (self.mass_centers, self.squared_gyration_radii, self.asphericities,
-             self.acylindricities, self.anisotropies) = 5*([], )
+            if sorted_translated_areas:
+                gyration_tensor_parameters = tuple(calculate_gyration_tensor_parameters(area)
+                                                for area in sorted_translated_areas)
+                (self.mass_centers, self.squared_gyration_radii, self.asphericities,
+                self.acylindricities, self.anisotropies) = zip(*gyration_tensor_parameters)
+                self.mass_centers = [discretization.discrete_to_continuous(point, result_inside_volume=True)
+                                    for point in self.mass_centers]
+                self.squared_gyration_radii = [discretization.discrete_to_continuous(value, unit_exponent=2)
+                                            for value in self.squared_gyration_radii]
+            else:
+                (self.mass_centers, self.squared_gyration_radii, self.asphericities,
+                self.acylindricities, self.anisotropies) = 5*([], )
 
         self.triangles()
 
@@ -331,6 +333,14 @@ class CavityCalculation:
         self.cavity_triangles = triangles
         self.cavity_surface_areas = surface_areas
         return cavity_triangles
+
+    def __getattr__(self, attr):
+        optional_attributes = ('mass_centers', 'squared_gyration_radii', 'asphericities', 'acylindricities',
+                               'anisotropies', 'characteristic_radii', 'cyclic_area_indices')
+        if attr in optional_attributes:
+            return None
+        else:
+            return super(CavityCalculation, self).__getattr__(attr)
 
 
 class FakeDomainCalculation(object):
