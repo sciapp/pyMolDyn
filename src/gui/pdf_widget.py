@@ -8,12 +8,12 @@ import csv
 
 from util.logger import Logger
 import sys
-from statistics.rdf import RDF, Kernels
+from statistics.pdf import PDF, Kernels
 import numpy as np
 import os
 
 
-logger = Logger("gui.rdf_widget")
+logger = Logger("gui.pdf_widget")
 logger.setstream("default", sys.stdout, Logger.DEBUG)
 
 
@@ -80,14 +80,14 @@ class GrPlotWidget(GRWidget):
             gr.text(0.8 * self.sizex, 0.9 * self.sizey, self.title)
 
 
-class RDFWidget(QtGui.QWidget):
+class PDFWidget(QtGui.QWidget):
 
     def __init__(self, parent):
         QtGui.QWidget.__init__(self, parent)
 
         self.control = parent.control
         self.results = None
-        self.rdf = None
+        self.pdf = None
 
         self.init_gui()
 
@@ -168,9 +168,9 @@ class RDFWidget(QtGui.QWidget):
         yvalues = None
         title = None
         datapoints = None
-        if self.rdf is None:
+        if self.pdf is None:
             self.refresh()
-        if self.rdf is not None:
+        if self.pdf is not None:
             elem1 = str(self.elem1.currentText())
             if elem1 == "cavity domain centers":
                 elem1 = "cav"
@@ -193,7 +193,7 @@ class RDFWidget(QtGui.QWidget):
                 bandwidth = None
                 self.bandwidth.setText('')
             kernel = self.kernels.get(self.kernel.currentText(), None)
-            f = self.rdf.rdf(elem1, elem2, cutoff=cutoff, h=bandwidth, kernel=kernel)
+            f = self.pdf.pdf(elem1, elem2, cutoff=cutoff, h=bandwidth, kernel=kernel)
             if f is not None:
                 if callable(f):
                     xvalues = np.linspace(range1, range2, 400)
@@ -253,9 +253,9 @@ class RDFWidget(QtGui.QWidget):
         results = self.control.results
         if results is not None:
             results = results[-1][-1]
-            if self.results != results or self.rdf is None:
+            if self.results != results or self.pdf is None:
                 self.results = results
-                self.rdf = RDF(results)
+                self.pdf = PDF(results)
                 e = np.unique(results.atoms.elements).tolist()
                 if results.domains is not None \
                         and len(results.domains.centers) > 0 \

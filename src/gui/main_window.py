@@ -315,7 +315,7 @@ class CentralWidget(QtGui.QWidget):
         self.setWindowTitle('pyMolDyn 2')
         self.widget_titles = (
                 "3D View",
-                "Radial Distribution",
+                "Pair Distribution Functions",
                 "Cavity Histograms")
         self.init_gui()
 
