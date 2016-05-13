@@ -3,14 +3,17 @@
 
 from gui.dialogs.util.calc_table import CalculationTable, TableModel
 from gui.dialogs.cutoff_history_dialog import CutoffHistoryDialog
-from gui.util.labeled_combobox import LabeledComboBox
+from gui.cutoff_preset_combobox import CutoffPresetComboBox
 from core import calculation
 from core import file
 import collections
 import datetime
 import os.path
 import itertools as it
+import re
 from config.configuration import config
+from config.cutoff_presets import cutoff_presets
+from config.cutoff_presets import Preset
 from config.cutoff_history import cutoff_history
 from config.cutoff_history import HistoryEntry
 from PyQt4 import QtGui, QtCore
@@ -158,7 +161,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
 
     def __update_cutoff_history(self):
         timestamp = datetime.datetime.now()
-        user_cutoff_radii = self.radii_widget.get_input_from_custom_table()
+        user_cutoff_radii = self.radii_widget.cutoff_radii
         elements = self.__get_all_covalence_radii_by_element().keys()
         if not isinstance(user_cutoff_radii, collections.Iterable):
             user_cutoff_radii = dict((elem, user_cutoff_radii) for elem in elements)
@@ -174,6 +177,12 @@ class CalculationSettingsDialog(QtGui.QDialog):
                 new_history.append(history_entry)
         cutoff_history.extend(new_history)
         cutoff_history.save()
+
+    def __update_cutoff_presets(self):
+        save_preset_name = self.radii_widget.save_preset_name
+        user_cutoff_radii = self.radii_widget.cutoff_radii
+        cutoff_presets.add(Preset(save_preset_name, user_cutoff_radii))
+        cutoff_presets.save()
 
     def update_table(self):
         # get timestamps for selected frames for each file
@@ -251,6 +260,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
     def ok(self):
         self.lineedit_return()
         self.__update_cutoff_history()
+        self.__update_cutoff_presets()
         self.done(QtGui.QDialog.Accepted)
 
     def cancel(self):
@@ -263,7 +273,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
             if ok != QtGui.QDialog.Accepted:
                 break
             try:
-                cutoff_radii = self.radii_widget.get_input_from_custom_table()
+                cutoff_radii = self.radii_widget.cutoff_radii
                 surface_based = self.surf_check.isChecked()
                 center_based = self.center_check.isChecked()
                 overwrite = self.overwrite_check.isChecked()
@@ -291,25 +301,29 @@ class CalculationSettingsDialog(QtGui.QDialog):
 
 
 class RadiiWidget(QtGui.QWidget):
+    class RadiiType:
+        FIXED = 0
+        CUSTOM = 1
+
     def __init__(self, radii, file_frame_dict, parent=None):
         super(RadiiWidget, self).__init__(parent)
         self._radii = radii
         self._file_frame_dict = file_frame_dict
         self._preferred_filenames_with_frames = dict((os.path.basename(filepath), frames)
                                                      for filepath, frames in self._file_frame_dict.iteritems())
+        self._discard_preset_choice_on_next_rb_click = True     # Default value is True
+        self._selected_radii_type = RadiiWidget.RadiiType.FIXED
         self._init_ui()
         self._init_cutoff_radii()
 
     def _init_ui(self):
-        # self.setStyleSheet("background-color: white;")
-        # self.setAttribute(QtCore.Qt.WA_StyledBackground, True)
-
         # Fixed Radio Button
         self.rb_fixed = QtGui.QRadioButton("Fixed Radius:")
         self.le_fixed = QtGui.QLineEdit()
         self.le_fixed.setMinimumWidth(150)
         self.le_fixed.setVisible(False)
-        self.rb_fixed.toggled.connect(self.rb_fixed_clicked)
+        self.le_fixed.textEdited.connect(self.le_fixed_text_edited)
+        self.rb_fixed.clicked.connect(self.rb_fixed_clicked)
 
         # QStackedWidget le_fixed
         self.tmp1 = QtGui.QWidget()
@@ -328,13 +342,16 @@ class RadiiWidget(QtGui.QWidget):
         for i in range(len(self._radii)):
             self.tw_cutoff.setItem(i, 0, QtGui.QTableWidgetItem())
             self.tw_cutoff.item(i, 0).setText(str(self._radii.values()[i]))
-            self.tw_cutoff.setCellWidget(i, 1, QtGui.QLineEdit())
+            current_line_edit = QtGui.QLineEdit()
+            current_line_edit.textEdited.connect(self.tw_cutoff_text_edited)
+            self.tw_cutoff.setCellWidget(i, 1, current_line_edit)
         self.tw_cutoff.setShowGrid(True)
-        self.rb_custom.toggled.connect(self.rb_custom_clicked)
+        self.rb_custom.clicked.connect(self.rb_custom_clicked)
 
         # Preset Combo Box
-        self.cb_preset = LabeledComboBox("Preset")
+        self.cb_preset = CutoffPresetComboBox()
         self.cb_preset.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
+        self.cb_preset.preset_selected.connect(self.cb_preset_selected)
 
         # History button
         self.pb_history = QtGui.QPushButton("History", self)
@@ -344,8 +361,9 @@ class RadiiWidget(QtGui.QWidget):
 
         # Preset save
         self.cb_preset_save = QtGui.QCheckBox("Save as Preset", self)
-        self.te_preset_save = QtGui.QLineEdit()
-        self.te_preset_save.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
+        self.le_preset_save = QtGui.QLineEdit()
+        self.le_preset_save.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
+        self.le_preset_save.textChanged.connect(self.le_preset_save_changed)
 
         self.la_main = QtGui.QGridLayout()
         self.la_main.setContentsMargins(0, 0, 0, 0)
@@ -365,12 +383,12 @@ class RadiiWidget(QtGui.QWidget):
         self.la_main.addWidget(self.cb_preset, 3, 0, 1, 1)
         self.la_main.addWidget(self.pb_history, 3, 1, 1, 1)
         self.la_preset_save.addWidget(self.cb_preset_save)
-        self.la_preset_save.addWidget(self.te_preset_save)
+        self.la_preset_save.addWidget(self.le_preset_save)
         self.la_main.addLayout(self.la_preset_save, 4, 0, 1, 2)
 
         self.setLayout(self.la_main)
 
-        self.rb_fixed.toggle()
+        self.rb_fixed.click()
 
     def _init_cutoff_radii(self, cutoff_radii=None):
         elements = self._radii.keys()
@@ -381,22 +399,29 @@ class RadiiWidget(QtGui.QWidget):
                 cutoff_radii = config.Computation.std_cutoff_radius
             else:
                 cutoff_radii = filtered_history[0].radii
-        if not isinstance(cutoff_radii, collections.Iterable):
-            cutoff_radii = dict((elem, float(cutoff_radii)) for elem in elements)
-        # Check if all cutoff radii are equal
-        if len(set(cutoff_radii.values())) == 1:
-            self.rb_fixed.toggle()
-            self.le_fixed.setText(str(cutoff_radii.values()[0]))
-        else:
-            self.rb_custom.toggle()
-            for i, elem in enumerate(self._radii):
-                self.tw_cutoff.cellWidget(i, 1).setText(str(cutoff_radii[elem]))
+        self.cutoff_radii = cutoff_radii
 
     def rb_fixed_clicked(self):
         self.sw_fixed.setCurrentIndex(0)
+        if self._selected_radii_type != RadiiWidget.RadiiType.FIXED and self._discard_preset_choice_on_next_rb_click:
+            self.cb_preset.discard_preset_choice()
+            self._selected_radii_type = RadiiWidget.RadiiType.FIXED
+        self._discard_preset_choice_on_next_rb_click = True
 
     def rb_custom_clicked(self):
         self.sw_fixed.setCurrentIndex(1)
+        if self._selected_radii_type != RadiiWidget.RadiiType.CUSTOM and self._discard_preset_choice_on_next_rb_click:
+            self.cb_preset.discard_preset_choice()
+            self._selected_radii_type = RadiiWidget.RadiiType.CUSTOM
+        self._discard_preset_choice_on_next_rb_click = True
+
+    def le_fixed_text_edited(self):
+        self.cb_preset.discard_preset_choice()
+
+    def tw_cutoff_text_edited(self):
+        self.cb_preset.discard_preset_choice()
+        self.rb_custom.click()
+        self.cb_preset.discard_preset_choice()
 
     def pb_history_clicked(self):
         cutoff_history_dialog = CutoffHistoryDialog(self, self._radii.keys(), self._preferred_filenames_with_frames)
@@ -405,7 +430,29 @@ class RadiiWidget(QtGui.QWidget):
             return
         self._init_cutoff_radii(cutoff_history_dialog.selected_radii)
 
-    def get_input_from_custom_table(self):
+    def le_preset_save_changed(self, text):
+        self.cb_preset_save.setChecked(text.strip() != '')
+
+    def cb_preset_selected(self, selected_preset):
+        self.cutoff_radii = selected_preset.radii
+
+    @property
+    def save_preset_name(self):
+        if not self.cb_preset_save.isChecked():
+            return None
+        preset_name = self.le_preset_save.text().strip()
+        if not re.match('[a-zA-Z0-9_]+', preset_name):
+            message = QtGui.QMessageBox()
+            message.setStandardButtons(QtGui.QMessageBox.Ok)
+            message.setText("{} is not valid preset name. Only A-Z, a-z, 0-9 and _ are valid characters".format(
+                preset_name)
+            )
+            message.exec_()
+            return None
+        return preset_name
+
+    @property
+    def cutoff_radii(self):
         if self.rb_fixed.isChecked() and hasattr(self, "le_fixed"):
             try:
                 radius_as_text = self.le_fixed.text()
@@ -432,3 +479,19 @@ class RadiiWidget(QtGui.QWidget):
                     message.exec_()
                     raise
             return elem_to_cutoff_radius
+
+    @cutoff_radii.setter
+    def cutoff_radii(self, cutoff_radii):
+        elements = self._radii.keys()
+        if not isinstance(cutoff_radii, collections.Iterable):
+            cutoff_radii = dict((elem, float(cutoff_radii)) for elem in elements)
+        # Check if all cutoff radii are equal
+        if len(set(cutoff_radii.values())) == 1:
+            self._discard_preset_choice_on_next_rb_click = False
+            self.rb_fixed.click()
+            self.le_fixed.setText(str(cutoff_radii.values()[0]))
+        else:
+            self._discard_preset_choice_on_next_rb_click = False
+            self.rb_custom.click()
+            for i, elem in enumerate(self._radii):
+                self.tw_cutoff.cellWidget(i, 1).setText(str(cutoff_radii[elem]))

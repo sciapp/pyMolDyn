@@ -11,7 +11,7 @@ import sys
 from .configuration import CONFIG_DIRECTORY
 from util.logger import Logger
 
-logger = Logger("core.calculation")
+logger = Logger("config.cutoff_history")
 logger.setstream("default", sys.stdout, Logger.WARNING)
 
 
@@ -32,6 +32,10 @@ class HistoryEntry(collections.namedtuple('HistoryEntry', ['filename', 'frame', 
 
         def __repr__(self):
             return self._date.strftime('%m/%d/%y, %H:%M')
+
+        @property
+        def datetime_obj(self):
+            return self._date
 
     def __new__(cls, filename, frame, time, radii):
         if isinstance(time, datetime.datetime):
@@ -58,9 +62,10 @@ class CutoffHistory(object):
 
     def save(self):
         def serialization_helper(obj):
-            if isinstance(obj, datetime.datetime):
-                return obj.isoformat()
+            if isinstance(obj, HistoryEntry.Date):
+                return obj.datetime_obj.isoformat()
             else:
+                print(type(obj))
                 raise TypeError
         try:
             with open(self._config_filepath, 'w') as f:

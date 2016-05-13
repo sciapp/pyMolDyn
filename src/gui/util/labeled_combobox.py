@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 
 
 from PyQt4 import QtCore, QtGui
@@ -28,7 +25,7 @@ class LabeledComboBox(QtGui.QComboBox):
     def __init__(self, label, parent=None):
         super(LabeledComboBox, self).__init__(parent)
         self._label = label
-        self._init_ui()
+        LabeledComboBox._init_ui(self)  # Emulate static binding
 
     def _init_ui(self):
         self.setItemDelegate(LabeledComboBox.Delegate(self))
