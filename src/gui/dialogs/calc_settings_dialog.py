@@ -3,6 +3,7 @@
 
 from gui.dialogs.util.calc_table import CalculationTable, TableModel
 from gui.dialogs.cutoff_history_dialog import CutoffHistoryDialog
+from gui.cutoff_table_widget import CutoffTableWidget
 from gui.cutoff_preset_combobox import CutoffPresetComboBox
 from core import calculation
 from core import file
@@ -335,17 +336,8 @@ class RadiiWidget(QtGui.QWidget):
 
         # Custom Radio Button + Table
         self.rb_custom = QtGui.QRadioButton("Custom:")
-        self.tw_cutoff = QtGui.QTableWidget(len(self._radii), 2)
-        self.tw_cutoff.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
-        self.tw_cutoff.setHorizontalHeaderLabels(("Covalent Radius", "Cutoff Radius"))
-        self.tw_cutoff.setVerticalHeaderLabels(self._radii.keys())
-        for i in range(len(self._radii)):
-            self.tw_cutoff.setItem(i, 0, QtGui.QTableWidgetItem())
-            self.tw_cutoff.item(i, 0).setText(str(self._radii.values()[i]))
-            current_line_edit = QtGui.QLineEdit()
-            current_line_edit.textEdited.connect(self.tw_cutoff_text_edited)
-            self.tw_cutoff.setCellWidget(i, 1, current_line_edit)
-        self.tw_cutoff.setShowGrid(True)
+        self.tw_cutoff = CutoffTableWidget(self._radii)
+        self.tw_cutoff.text_edited.connect(self.tw_cutoff_text_edited)
         self.rb_custom.clicked.connect(self.rb_custom_clicked)
 
         # Preset Combo Box
@@ -357,6 +349,7 @@ class RadiiWidget(QtGui.QWidget):
         self.pb_history = QtGui.QPushButton("History", self)
         self.pb_history.setMinimumWidth(0)
         self.pb_history.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
+        self.pb_history.setAutoDefault(False)
         self.pb_history.clicked.connect(self.pb_history_clicked)
 
         # Preset save
