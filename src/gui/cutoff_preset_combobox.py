@@ -20,6 +20,8 @@ class CutoffPresetComboBox(LabeledComboBox):
         for preset in self._presets:
             self.insertItem(len(self._presets), preset.name)
         self.activated.connect(self._on_entry_activated)
+        if len(cutoff_presets.presets) == 0:
+            self.setVisible(False)
 
     def discard_preset_choice(self):
         self.setCurrentIndex(0)

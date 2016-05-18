@@ -1,9 +1,11 @@
 from PyQt4 import QtCore, QtGui
 import sys
+from collections import OrderedDict
 import functools
 from config.configuration import config, Configuration
 from gui.gl_widget import UpdateGLEvent, GLWidget
-from collections import OrderedDict
+from gui.cutoff_history_table import CutoffHistoryTable
+from config.cutoff_history import cutoff_history
 
 
 class GraphicsSettingsPage(QtGui.QWidget):
@@ -87,7 +89,7 @@ class ComputationSettingsPage(QtGui.QWidget):
     def __init__(self, parent, cfg):
         QtGui.QWidget.__init__(self, parent)
         self._config = cfg
-        self.values = OrderedDict((('std_cutoff_radius', 'cutoff radius'), ))
+        self.values = OrderedDict((('std_cutoff_radius', 'default cutoff radius'), ))
 
         self.lineedit_dict = {}
         box  = QtGui.QVBoxLayout()
@@ -104,7 +106,12 @@ class ComputationSettingsPage(QtGui.QWidget):
             t.textChanged.connect(self.any_change)
             grid.addWidget(l, i, 0)
             grid.addWidget(t, i, 1)
+
+        self.tw_cutoff = CutoffHistoryTable(cutoff_history.history)
+        if len(cutoff_history.history) == 0:
+            self.tw_cutoff.setVisible(False)
         box.addLayout(grid)
+        box.addWidget(self.tw_cutoff)
         box.addStretch()
         self.setLayout(box)
         self.show()
@@ -167,6 +174,7 @@ class SettingsDialog(QtGui.QDialog):
         graphics_page  = GraphicsSettingsPage(tab_widget, self._tmp)
         path_page   = PathSettingsPage(tab_widget, self._tmp)
         comp_page   = ComputationSettingsPage(tab_widget, self._tmp)
+        self.cutoff_history_entries_for_deletion = lambda: comp_page.tw_cutoff.history_entries_for_deletion
 
         # Ok, Cancel and Restore defaults Buttons
         ok          = QtGui.QPushButton('Ok', self)
@@ -201,6 +209,8 @@ class SettingsDialog(QtGui.QDialog):
         global config
         self._tmp.save()
         config.read()
+        cutoff_history.remove_list(self.cutoff_history_entries_for_deletion())
+        cutoff_history.save()
         self.accept()
         for widget in QtGui.QApplication.topLevelWidgets():
             for gl_widget in widget.findChildren(GLWidget):

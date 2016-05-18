@@ -111,5 +111,12 @@ class CutoffHistory(object):
         for entry in entry_list:
             self.add(entry)
 
+    def remove(self, entry):
+        self._history.remove(entry)
+
+    def remove_list(self, entry_list):
+        for entry in entry_list:
+            self.remove(entry)
+
 
 cutoff_history = CutoffHistory()

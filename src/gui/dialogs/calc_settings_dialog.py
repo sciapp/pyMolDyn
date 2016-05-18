@@ -351,6 +351,9 @@ class RadiiWidget(QtGui.QWidget):
         self.pb_history.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
         self.pb_history.setAutoDefault(False)
         self.pb_history.clicked.connect(self.pb_history_clicked)
+        if len(cutoff_history.filtered_history(self._radii.keys(), preferred_filenames_with_frames=\
+                                               self._preferred_filenames_with_frames)) == 0:
+            self.pb_history.setVisible(False)
 
         # Preset save
         self.cb_preset_save = QtGui.QCheckBox("Save as Preset", self)
