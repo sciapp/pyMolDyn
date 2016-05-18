@@ -77,6 +77,7 @@ class CalculationSettings(object):
                  domains=False,
                  surface_cavities=False,
                  center_cavities=False,
+                 gyration_tensor=False,
                  recalculate=False,
                  exporthdf5=False,
                  exporttext=False,
@@ -89,6 +90,7 @@ class CalculationSettings(object):
         self.domains = domains
         self.surface_cavities = surface_cavities
         self.center_cavities = center_cavities
+        self.gyration_tensor = gyration_tensor
         self.recalculate = recalculate
         self.exporthdf5 = exporthdf5
         self.exporttext = exporttext
@@ -109,6 +111,7 @@ class CalculationSettings(object):
         dup.domains = self.domains
         dup.surface_cavities = self.surface_cavities
         dup.center_cavities = self.center_cavities
+        dup.gyration_tensor = self.gyration_tensor
         dup.recalculate = self.recalculate
         dup.exporthdf5 = self.exporthdf5
         dup.exporttext = self.exporttext
@@ -237,7 +240,7 @@ class Calculation(object):
         return results
 
     def calculateframe(self, filepath, frame, resolution, cutoff_radii=None, domains=False, surface=False, center=False,
-                       atoms=None, recalculate=False, last_frame=True):
+                       atoms=None, gyration_tensor_parameters=False, recalculate=False, last_frame=True):
         """
         Get results for the given parameters. They are either loaded from the
         cache or calculated.
@@ -257,12 +260,17 @@ class Calculation(object):
                 calculate surface-based cavities
             `center` :
                 calculate center-based cavities
+            `gyration_tensor_parameters` :
+                gyration tensor parameters will be calculated for cavities (they are always calculated for
+                cavity domains)
             `recalculate` :
                 results will be calculated even if cached results exists
 
         **Returns:**
             A :class:`core.data.Results` object.
         """
+        # always recalculate if gyration tensor parameters shall be computed for center or surface based cavities
+        recalculate = recalculate or (gyration_tensor_parameters and (center or surface))
         message.progress(0)
         inputfile = File.open(filepath)
         # TODO: error handling
@@ -309,14 +317,16 @@ class Calculation(object):
 
             if surface and results.surface_cavities is None:
                 message.print_message("Calculating surface-based cavities")
-                cavity_calculation = CavityCalculation(domain_calculation, use_surface_points=True)
+                cavity_calculation = CavityCalculation(domain_calculation, use_surface_points=True,
+                                                       gyration_tensor_parameters=gyration_tensor_parameters)
                 results.surface_cavities = data.Cavities(cavity_calculation)
             message.progress(70)
 
             if center and results.center_cavities is None:
                 message.print_message("Calculating center-based cavities")
                 domain_calculation = FakeDomainCalculation(discretization, atom_discretization, results)
-                cavity_calculation = CavityCalculation(domain_calculation, use_surface_points=False)
+                cavity_calculation = CavityCalculation(domain_calculation, use_surface_points=False,
+                                                       gyration_tensor_parameters=gyration_tensor_parameters)
                 results.center_cavities = data.Cavities(cavity_calculation)
             resultfile.addresults(results, overwrite=recalculate)
 
@@ -381,6 +391,7 @@ class Calculation(object):
                     domains=calcsettings.domains,
                     surface=calcsettings.surface_cavities,
                     center=calcsettings.center_cavities,
+                    gyration_tensor_parameters=calcsettings.gyration_tensor,
                     recalculate=calcsettings.recalculate,
                     last_frame=last_frame)
                 # export to text file

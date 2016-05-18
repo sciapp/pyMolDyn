@@ -198,12 +198,8 @@ class FileTab(QtGui.QWidget):
         filenames = QtGui.QFileDialog.getOpenFileNames(self, 'Open dataset', self.most_recent_path)
         for path in filenames:
             if path:
-                #print path
-
-                #print self.main_window.recent_files_submenu.actions()
                 self.disable_files_in_menu_and_open(path)
                 self.main_window.update_submenu_recent_files()
-
 
     def calculationcallback(self, func, settings):
         thread = CalculationThread(self, func, settings)
@@ -221,6 +217,9 @@ class FileTab(QtGui.QWidget):
         if ok:
             self.control.calculationcallback = self.calculationcallback
             self.control.calculate(settings)
+            self.last_shown_filename_with_frame = (file_frame_dict.keys()[-1],
+                                                   file_frame_dict.values()[-1][-1])
+
 
 class TreeList(QtGui.QTreeWidget):
 
