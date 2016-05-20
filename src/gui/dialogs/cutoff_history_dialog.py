@@ -20,7 +20,6 @@ class CutoffHistoryDialog(QtGui.QDialog):
     def _init_ui(self, history):
         self.gb_history = QtGui.QGroupBox('History')
         self.tw_cutoff = CutoffHistoryTable(history)
-        self.pb_clear_all = QtGui.QPushButton(self.style().standardIcon(QtGui.QStyle.SP_TrashIcon), 'Clear All')
         self.pb_ok = QtGui.QPushButton('Ok')
         self.pb_ok.setEnabled(False)
         self.pb_cancel = QtGui.QPushButton('Cancel')
@@ -30,7 +29,6 @@ class CutoffHistoryDialog(QtGui.QDialog):
         self.la_ok_cancel = QtGui.QHBoxLayout()
         self.la_main.addWidget(self.gb_history)
         self.la_history.addWidget(self.tw_cutoff)
-        self.la_history.addWidget(self.pb_clear_all, 0, QtCore.Qt.AlignRight)
         self.la_ok_cancel.addStretch()
         self.la_ok_cancel.addWidget(self.pb_ok)
         self.la_ok_cancel.addStretch()
@@ -45,7 +43,6 @@ class CutoffHistoryDialog(QtGui.QDialog):
         self.tw_cutoff.itemSelectionChanged.connect(
             lambda *args: self.pb_ok.setEnabled(len(self.tw_cutoff.selectedIndexes()) > 0)
         )
-        self.pb_clear_all.clicked.connect(lambda event: self.tw_cutoff.clear_history())
         self.pb_ok.clicked.connect(lambda event: self.accept())
         self.pb_cancel.clicked.connect(lambda event: self.reject())
 

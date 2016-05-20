@@ -52,5 +52,12 @@ class CutoffPresets(object):
         for entry in entry_list:
             self.add(entry)
 
+    def remove(self, entry):
+        self._presets.remove(entry)
+
+    def remove_list(self, entry_list):
+        for entry in entry_list:
+            self.remove(entry)
+
 
 cutoff_presets = CutoffPresets()

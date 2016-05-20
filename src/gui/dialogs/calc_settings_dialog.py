@@ -184,9 +184,10 @@ class CalculationSettingsDialog(QtGui.QDialog):
 
     def __update_cutoff_presets(self):
         save_preset_name = self.radii_widget.save_preset_name
-        user_cutoff_radii = self.radii_widget.cutoff_radii
-        cutoff_presets.add(Preset(save_preset_name, user_cutoff_radii))
-        cutoff_presets.save()
+        if save_preset_name is not None:
+            user_cutoff_radii = self.radii_widget.cutoff_radii
+            cutoff_presets.add(Preset(save_preset_name, user_cutoff_radii))
+            cutoff_presets.save()
 
     def update_table(self):
         # get timestamps for selected frames for each file
