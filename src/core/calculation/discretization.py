@@ -270,8 +270,8 @@ class AtomDiscretization:
     """
 
     def __init__(self, atoms, discretization):
-        self.discretization = discretization
         self.atoms = atoms
+        self.discretization = discretization
         self.sorted_discrete_radii = []
         self.discrete_radii = []
         self.discrete_positions = []

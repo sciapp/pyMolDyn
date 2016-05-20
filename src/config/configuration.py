@@ -51,7 +51,7 @@ class Configuration(ConfigNode):
 
     class Computation(ConfigNode):
         def __init__(self):
-            self.atom_radius = 2.8
+            self.std_cutoff_radius = 2.8
             self.std_resolution = 64
             self.max_cachefiles = 0
 

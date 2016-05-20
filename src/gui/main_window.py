@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 
 import os
 import sys
@@ -12,7 +13,7 @@ from gui.dialogs.settings_dialog import SettingsDialog
 from gui.dialogs.about_dialog import AboutDialog
 from gui.gl_widget import UpdateGLEvent
 from util import message
-from gl_stack import GLStack
+from gui.gl_stack import GLStack
 from _version import __version__
 import functools
 import os.path

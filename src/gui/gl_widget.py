@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+
+from __future__ import absolute_import
+
 import numpy as np
 import numpy.linalg as la
 from PyQt4 import QtCore, QtGui, QtOpenGL

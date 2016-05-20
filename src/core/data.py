@@ -5,6 +5,7 @@ Most of them can be read and written to hdf5 files.
 """
 
 
+import collections
 import numpy as np
 import sys
 import os
@@ -435,29 +436,11 @@ class Atoms(object):
         self.volume = volume
         self.positions = np.array(positions, dtype=np.float, copy=False)
         self.number = self.positions.shape[0]
-        if radii is not None:
-            self.radii = np.array(radii, dtype=np.float, copy=False)
-        else:
-            self.radii = np.ones((self.number), dtype=np.float) \
-                         * config.Computation.atom_radius
         self.elements = np.array(elements, dtype="|S4", copy=False)
-
-        # old code:
-        # self.sorted_radii = sorted(list(set(self.radii)), reverse=True)
-        # self.radii_as_indices = []
-        # self.sorted_positions = []
-        # for index, radius in enumerate(self.sorted_radii):
-        #     for atom_index,atom_radius in enumerate(self.radii):
-        #         if radius == atom_radius:
-        #             self.radii_as_indices.append(index)
-        #             self.sorted_positions.append(self.positions[atom_index])
-        indices = np.argsort(-self.radii, kind="mergesort")
-        self.sorted_positions = self.positions[indices]
-        unique_radii, indices = np.unique(-self.radii, return_inverse=True)
-        self.sorted_radii = -unique_radii
-        self.radii_as_indices = np.sort(indices)
+        self.radii = radii
 
         self._covalence_radii = None
+        self._covalence_radii_by_element = None
         self._bonds = None
         self._colors = None
 
@@ -470,6 +453,15 @@ class Atoms(object):
                 covalence_radii[i] = core.elements.radii[element_number]
             self._covalence_radii = covalence_radii
         return self._covalence_radii
+
+    @property
+    def covalence_radii_by_element(self):
+        covalence_radii = self.covalence_radii
+        if self._covalence_radii_by_element is None:
+            self._covalence_radii_by_element = dict((element, covalence_radius)
+                                                    for element, covalence_radius
+                                                    in zip(self.elements, covalence_radii))
+        return self._covalence_radii_by_element
 
     @property
     def bonds(self):
@@ -487,6 +479,27 @@ class Atoms(object):
                 colors[i] = core.elements.colors[element_number]
             self._colors = colors/255
         return self._colors
+
+    @property
+    def radii(self):
+        return self._radii
+
+    @radii.setter
+    def radii(self, values):
+        if values is None:
+            self._radii = np.ones((self.number), dtype=np.float) * config.Computation.std_cutoff_radius
+        elif isinstance(values, collections.Mapping):
+            radii = [values[elem] for elem in self.elements]
+            self._radii = np.array(radii, dtype=np.float, copy=False)
+        elif isinstance(values, collections.Iterable):
+            self._radii = np.array(values, dtype=np.float, copy=False)
+        else:
+            self._radii = np.ones((self.number), dtype=np.float) * values
+        indices = np.argsort(-self._radii, kind="mergesort")
+        self.sorted_positions = self.positions[indices]
+        unique_radii, indices = np.unique(-self._radii, return_inverse=True)
+        self.sorted_radii = -unique_radii
+        self.radii_as_indices = np.sort(indices)
 
     def tohdf(self, h5group, overwrite=True):
         """
