@@ -9,7 +9,6 @@ import os
 import core.data as data
 import core.file
 from core.file import File
-from datetime import datetime
 from algorithm import CavityCalculation, DomainCalculation, FakeDomainCalculation
 from discretization import DiscretizationCache, AtomDiscretization
 import util.message as message
@@ -17,7 +16,6 @@ from hashlib import sha256
 from config.configuration import config
 from util.logger import Logger
 import sys
-import numpy as np
 import core.bonds
 
 __all__ = ["Calculation",
@@ -311,6 +309,14 @@ class Calculation(object):
                 # CavityCalculation depends on DomainCalculation
                 message.print_message("Calculating domains")
                 domain_calculation = DomainCalculation(discretization, atom_discretization)
+                if domain_calculation.critical_domains:
+                    logger.warn('Found {:d} critical domains in file {}, frame {:d}. Domain indices: {}'.format(
+                        len(domain_calculation.critical_domains), os.path.basename(filepath), frame,
+                        domain_calculation.critical_domains
+                    ))
+                    message.log('Found {:d} critical domains in file {}, frame {:d}'.format(
+                        len(domain_calculation.critical_domains), os.path.basename(filepath), frame + 1,
+                    ))
             if results.domains is None:
                 results.domains = data.Domains(domain_calculation)
             message.progress(40)

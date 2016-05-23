@@ -65,17 +65,11 @@ class FileTab(QtGui.QWidget):
         self.progress_dialog = ProgressDialog(self)
         self.most_recent_path = "~"
 
-        p = self.progress_dialog
-        self.main_window.set_output_callbacks(p.progress, p.print_step, p.calculation_finished, lambda e: QtCore.QMetaObject.invokeMethod(self, '_error', QtCore.Qt.QueuedConnection, QtCore.Q_ARG(str, e.message)))
         self.control = main_window.control
 
         self.init_gui()
         self.guessed_volumes_for = set()
         self.last_shown_filename_with_frame = None
-
-    @QtCore.pyqtSlot(str)
-    def _error(self, error_message):
-        QtGui.QMessageBox.information(self, 'Information', error_message, QtGui.QMessageBox.Ok)
 
     def init_gui(self):
         self.vbox = QtGui.QVBoxLayout()

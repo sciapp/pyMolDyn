@@ -64,22 +64,14 @@ contain the relevant information.
 
 Author: Florian Rhiem <f.rhiem@fz-juelich.de>
 """
-from math import ceil, floor
 from math import pi as PI
-import itertools
 import sys
 import numpy as np
-import numpy.linalg as la
-import h5py
-from gr3 import triangulate
-from config.configuration import config
 
-import os
 from computation.split_and_merge.pipeline import start_split_and_merge_pipeline
 from computation.split_and_merge.algorithm import ObjectType
 from core.calculation.gyrationtensor import calculate_gyration_tensor_parameters
-import time
-from util.message import print_message, progress, finish
+from util.message import print_message
 from extension import atomstogrid, mark_cavities, cavity_triangles, cavity_intersections
 
 
@@ -128,9 +120,14 @@ class DomainCalculation:
         print_message("Number of domains:", len(self.centers))
 
         self.domain_volumes = []
+        self.critical_domains = []   # count of very small domains -> domains that can disappear on cutoff radius changes
         for domain_index in range(len(self.centers)):
-            domain_volume = (self.grid == -(domain_index + 1)).sum() * (self.discretization.s_step ** 3)
+            current_cell_sum = (self.grid == -(domain_index + 1)).sum()
+            if current_cell_sum == 1:
+                self.critical_domains.append(domain_index)
+            domain_volume = current_cell_sum * (self.discretization.s_step ** 3)
             self.domain_volumes.append(domain_volume)
+
         self.characteristic_radii = [(0.75 * volume / PI)**(1.0/3.0) for volume in self.domain_volumes]
 
         if translated_areas:
