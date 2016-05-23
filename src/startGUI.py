@@ -79,5 +79,10 @@ def start_gui():
     sys.exit(app.exec_())
 
 
+def main():
+    """A main function is required by shallow-appify"""
+    start_gui()
+
+
 if __name__ == '__main__':
     start_gui()
