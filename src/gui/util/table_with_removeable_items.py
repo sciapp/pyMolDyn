@@ -39,6 +39,7 @@ class TableWithRemoveableEntries(QtGui.QTableWidget, TableFitMixin):
 
     def _init_ui(self):
         self.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Expanding)
+        self.setMaximumHeight(300)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setHorizontalHeaderLabels(self._header_labels + ('', ))
         self.setVerticalHeaderLabels(map(str, range(self.entry_count())))
