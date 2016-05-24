@@ -146,21 +146,12 @@ class MainWindow(QtGui.QMainWindow):
         help_menu.addAction(about_action)
 
     def show_error(self, error_message):
-        class ErrorWrapper(QtCore.QObject):
-            """
-            Class that is used as wrapper for queued (synchronized) call to the Qt library.
-            """
-            def __init__():
-                super(ErrorWrapper, self)
-
-            @QtCore.pyqtSlot(str)
-            def show_error(self, error_message):
-                QtGui.QMessageBox.information(self, 'Information', error_message, QtGui.QMessageBox.Ok)
-
-        if self._error_wrapper is None:
-            self._error_wrapper = ErrorWrapper()
-        QtCore.QMetaObject.invokeMethod(self._error_wrapper, 'show_error', QtCore.Qt.QueuedConnection,
+        QtCore.QMetaObject.invokeMethod(self, '_show_error', QtCore.Qt.QueuedConnection,
                                         QtCore.Q_ARG(str, error_message))
+
+    @QtCore.pyqtSlot(str)
+    def _show_error(self, error_message):
+        QtGui.QMessageBox.information(self, 'Information', error_message)
 
     def show_settings(self):
         SettingsDialog()

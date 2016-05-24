@@ -49,7 +49,7 @@ class CalculationThread(QtCore.QThread):
             self.func(self.settings)
         except Exception as e:
             self._exited_with_errors = True
-            message.error(e)
+            message.error(e.message)
             message.finish()
             raise
 

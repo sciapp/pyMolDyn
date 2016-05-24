@@ -286,7 +286,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
                 exporthdf5 = self.exporthdf5_check.isChecked()
                 exporttext = self.exporttext_check.isChecked()
                 if self.exportdir_radio_config.isChecked():
-                    exportdir = config.Path.result_dir
+                    exportdir = os.path.expanduser(config.Path.result_dir)
                 else:
                     exportdir = None
                 calc_settings = calculation.CalculationSettings(datasets=self.file_frame_dict,
