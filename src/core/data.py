@@ -624,6 +624,64 @@ class CavitiesBase(object):
         writedataset(h5group, "characteristic_radii", self.characteristic_radii, overwrite)
         writedataset(h5group, "cyclic_area_indices", self.cyclic_area_indices, overwrite)
 
+    def _export_gyration_parameters(self, fmt):
+        mass_centers_file_name = fmt.format(property="centers_of_mass")
+        squared_gyration_radii_file_name = fmt.format(property="squared_gyration_radii")
+        asphericities_file_name = fmt.format(property="asphericities")
+        acylindricities_file_name = fmt.format(property="acylindricities")
+        anisotropies_file_name = fmt.format(property="anisotropies")
+        characteristic_radii_file_name = fmt.format(property="characteristic_radii")
+
+        mass_centers = self.getattr_normalized('mass_centers')
+        squared_gyration_radii = self.getattr_normalized('squared_gyration_radii')
+        asphericities = self.getattr_normalized('asphericities')
+        acylindricities = self.getattr_normalized('acylindricities')
+        anisotropies = self.getattr_normalized('anisotropies')
+        characteristic_radii = self.getattr_normalized('characteristic_radii')
+
+        export_filenames = []
+
+        if mass_centers is not None:
+            with open(mass_centers_file_name, 'w') as outfile:
+                for index, mass_center in enumerate(mass_centers, start=1):
+                    outfile.write("{} {}\n".format(index, mass_center))
+            export_filenames.append(mass_centers_file_name)
+        if squared_gyration_radii is not None:
+            with open(squared_gyration_radii_file_name, 'w') as outfile:
+                for index, squared_gyration_radius in enumerate(squared_gyration_radii, start=1):
+                    outfile.write("{} {}\n".format(index, squared_gyration_radius))
+            export_filenames.append(squared_gyration_radii_file_name)
+        if asphericities is not None:
+            with open(asphericities_file_name, 'w') as outfile:
+                for index, asphericity in enumerate(asphericities, start=1):
+                    outfile.write("{} {}\n".format(index, asphericity))
+            export_filenames.append(asphericities_file_name)
+        if acylindricities is not None:
+            with open(acylindricities_file_name, 'w') as outfile:
+                for index, acylindricity in enumerate(acylindricities, start=1):
+                    outfile.write("{} {}\n".format(index, acylindricity))
+            export_filenames.append(acylindricities_file_name)
+        if anisotropies is not None:
+            with open(anisotropies_file_name, 'w') as outfile:
+                for index, anisotropy in enumerate(anisotropies, start=1):
+                    outfile.write("{} {}\n".format(index, anisotropy))
+            export_filenames.append(anisotropies_file_name)
+        if characteristic_radii is not None:
+            with open(characteristic_radii_file_name, 'w') as outfile:
+                for index, characteristic_radius in enumerate(characteristic_radii, start=1):
+                    outfile.write("{} {}\n".format(index, characteristic_radius))
+            export_filenames.append(characteristic_radii_file_name)
+
+        return export_filenames
+
+    def getattr_normalized(self, attr):
+        if hasattr(self, attr):
+            value = getattr(self, attr)
+            is_numpy_array = isinstance(value, np.ndarray)
+            if (is_numpy_array and len(value.shape) > 0) or (not is_numpy_array and len(value) > 0):
+                return value
+        return None
+
 
 class Domains(CavitiesBase):
     """
@@ -698,6 +756,9 @@ class Domains(CavitiesBase):
         domain_volume_file_name = fmt.format(property="volumes")
         domain_surface_to_volume_ratio_file_name = fmt.format(property="surface_area_to_volume_ratios")
 
+        export_filenames = [domain_center_file_name, domain_surface_file_name, domain_volume_file_name,
+                            domain_surface_to_volume_ratio_file_name]
+
         with open(domain_surface_file_name, 'w') as outfile:
             for index, surface_area in enumerate(self.surface_areas, start=1):
                 outfile.write("{} {}\n".format(index, surface_area))
@@ -708,13 +769,17 @@ class Domains(CavitiesBase):
             for index, t in enumerate(zip(self.volumes, self.surface_areas), start=1):
                 volume, surface_area = t
                 outfile.write("{} {}\n".format(index, surface_area/volume))
-        if hasattr(self, 'continuous_centers'):
+        continuous_centers = self.getattr_normalized('continuous_centers')
+        if continuous_centers is not None:
             with open(domain_center_file_name, 'w') as outfile:
-                for index, continuous_center in enumerate(self.continuous_centers, start=1):
+                for index, continuous_center in enumerate(continuous_centers, start=1):
                     outfile.write("{} {} {} {}\n".format(index, continuous_center[0], continuous_center[1], continuous_center[2]))
         else:
             raise ValueError('No discretization present -> can only access discrete domain centers, no conversion to continuous space possible.')
-        return domain_center_file_name, domain_volume_file_name, domain_surface_file_name, domain_surface_to_volume_ratio_file_name
+
+        export_filenames.extend(self._export_gyration_parameters(fmt))
+
+        return export_filenames
 
 class Cavities(CavitiesBase):
     """
@@ -794,6 +859,9 @@ class Cavities(CavitiesBase):
         cavity_domains_file_name = fmt.format(property="domain_indices")
         cavity_surface_to_volume_ratio_file_name = fmt.format(property="surface_area_to_volume_ratios")
 
+        export_filenames = [cavity_surface_file_name, cavity_surface_file_name, cavity_volume_file_name,
+                            cavity_surface_to_volume_ratio_file_name]
+
         with open(cavity_domains_file_name, 'w') as outfile:
             for index, multicavity in enumerate(self.multicavities, start=1):
                 outfile.write("{}".format(index))
@@ -810,7 +878,11 @@ class Cavities(CavitiesBase):
             for index, t in enumerate(zip(self.volumes, self.surface_areas), start=1):
                 volume, surface_area = t
                 outfile.write("{} {}\n".format(index, surface_area/volume))
-        return cavity_domains_file_name, cavity_volume_file_name, cavity_surface_file_name, cavity_surface_to_volume_ratio_file_name
+
+        export_filenames.extend(self._export_gyration_parameters(fmt))
+
+        return export_filenames
+
 
 class Results(object):
     """
