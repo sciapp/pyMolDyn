@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Calculate radial distribution functions.
+Calculate pair distribution functions.
 """
 
 
 MINDISTANCE = 2.0 # shorter distances are ignored
-RDFCUTOFF = 1.0   # g(r) = 0 if r < RDFCUTOFF
+PDFCUTOFF = 1.0   # g(r) = 0 if r < PDFCUTOFF
 
 
-__all__ = ["RDF"]
+__all__ = ["PDF"]
 
 
 import numpy as np
@@ -21,26 +21,26 @@ import os.path
 from config.configuration import config
 
 
-logger = Logger("statistics.rdf")
+logger = Logger("statistics.pdf")
 logger.setstream("default", sys.stdout, Logger.DEBUG)
 
 
-class RDF(object):
+class PDF(object):
     """
-    Calculate radial distribution functions for atoms and cavities.
+    Calculate pair distribution functions for atoms and cavities.
     """
 
     def __init__(self, *args):
         """
         Create a sample from atom and cavity positions and smooth them to
-        get the RDFs
+        get the PDFs
 
         The constructor can be called in two ways:
 
-        - ``RDF(results)`` :
+        - ``PDF(results)`` :
             retrieve the data from :class:`core.data.Results`
 
-        - ``RDF(positions, elements, cavitycenters, volume)`` :
+        - ``PDF(positions, elements, cavitycenters, volume)`` :
             use the given arrays and the volume object
         """
         if len(args) == 1:
@@ -60,7 +60,7 @@ class RDF(object):
         elif len(args) == 4:
             positions, elements, centers, volume = args
         else:
-            raise TypeError("RDF expects 1 or 4 parameters")
+            raise TypeError("PDF expects 1 or 4 parameters")
 
         self.positions = np.array(positions, copy=False)
         self.elements = np.array(elements, dtype="|S4", copy=False)
@@ -74,9 +74,9 @@ class RDF(object):
                                     self.centers,
                                     self.volume)
 
-    def rdf(self, elem1, elem2, cutoff=None, h=None, kernel=None):
+    def pdf(self, elem1, elem2, cutoff=None, h=None, kernel=None):
         """
-        Calculate a smoothed radial distribution function between the elements
+        Calculate a smoothed pair distribution function between the elements
         `elem1` and `elem2`.
 
         **Parameters:**
@@ -91,7 +91,7 @@ class RDF(object):
                 Smoothing kernel
 
         **Returns:**
-            Python function that represents the radial distribution function.
+            Python function that represents the pair distribution function.
             It also accepts Numpy arrays as input.
             Returns `None` if the given elements do not exist or if there is
             not enough data to create the function.
@@ -115,6 +115,8 @@ class RDF(object):
             cutoff = data.max()
         sel = np.where(np.logical_and(data > MINDISTANCE, data <= cutoff))[0]
         sel = data[sel]
+        if h == 0:
+            return sel
         if len(sel) < 2:
             logger.debug("Not enough data for '{}-{}' in cutoff={} range.".format(elem1, elem2, cutoff))
             return None # TODO: raise Exception
@@ -132,7 +134,7 @@ class RDF(object):
 
         def wfunc(r):
             y = np.zeros_like(r)
-            i = np.where(np.abs(r) > RDFCUTOFF)[0]
+            i = np.where(np.abs(r) > PDFCUTOFF)[0]
             y[i] = self.volume.volume / (data.size * 4 * math.pi * r[i]**2)
             return y
 
@@ -355,7 +357,7 @@ class Kernels(object):
         return (4.0 / 3.0 * n) ** (-1.0 / (d + 4.0))
 
 
-class _TestRDF(object):
+class _TestPDF(object):
     @staticmethod
     def continuous_coordinates(coords, volume, resolution):
         cachedir = os.path.expanduser(config.Path.cache_dir)
@@ -366,20 +368,20 @@ class _TestRDF(object):
         return np.array(map(disc.discrete_to_continuous, coords))
 
     @staticmethod
-    def plotfunc(rdf, e1, e2, px, h, *args):
-        gr = rdf.rdf(e1, e2, h=h)
+    def plotfunc(pdf, e1, e2, px, h, *args):
+        gr = pdf.pdf(e1, e2, h=h)
         plt.plot(px, gr(px), *args, label=str(h))
         py = gr(px)
         m = np.argmax(py)
         print "h={}, xi={}, g({}) = {}".format(gr.f.h, gr.f.x.min(), px[m], py[m])
 
     @classmethod
-    def plotrdf(cls, rdf, e1, e2):
+    def plotpdf(cls, pdf, e1, e2):
         px = np.linspace(0, 2, 1000)
         plt.figure()
-        cls.plotfunc(rdf, e1, e2, px, 0.25, "g--")
-        cls.plotfunc(rdf, e1, e2, px, 0.5, "r-")
-        #cls.plotfunc(rdf, e1, e2, px, 1.0, "b--")
+        cls.plotfunc(pdf, e1, e2, px, 0.25, "g--")
+        cls.plotfunc(pdf, e1, e2, px, 0.5, "r-")
+        #cls.plotfunc(pdf, e1, e2, px, 1.0, "b--")
         plt.legend(loc=0)
         plt.title("{}-{}".format(e1, e2))
 
@@ -399,23 +401,23 @@ class _TestRDF(object):
         print "calculating..."
         res = calc.calculate(settings)[0][0]
         print "generating statistics..."
-        rdf = RDF(res)
+        pdf = PDF(res)
         #centers = cls.continuous_coordinates(res.domains.centers,
         #                                     res.atoms.volume,
         #                                     res.resolution)
-        #rdf = RDF(res.atoms.positions, res.atoms.elements,
+        #pdf = PDF(res.atoms.positions, res.atoms.elements,
         #                  centers, res.atoms.volume)
 
         print "plotting..."
-        #cls.plotrdf(rdf, "Ge", "Ge")
-        #cls.plotrdf(rdf, "Ge", "Te")
-        cls.plotrdf(rdf, "cav", "cav")
+        #cls.plotpdf(pdf, "Ge", "Ge")
+        #cls.plotpdf(pdf, "Ge", "Te")
+        cls.plotpdf(pdf, "cav", "cav")
         plt.show()
 
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
-    _TestRDF.run()
+    _TestPDF.run()
     #x = np.linspace(-2, 2, 200)
     #plt.plot(x, Kernels.gauss(x))
     #plt.plot(x, Kernels.compact(x))

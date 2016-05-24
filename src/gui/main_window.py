@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 
 import os
 import sys
@@ -7,12 +8,13 @@ from gui.tabs.file_tab import FileTabDock
 from gui.tabs.view_tab import ViewTabDock
 from gui.tabs.image_video_tab import ImageVideoTabDock
 from gui.tabs.statistics_tab import StatisticsTabDock
+from gui.tabs.log_tab import LogTabDock
 from PyQt4 import QtCore, QtGui
 from gui.dialogs.settings_dialog import SettingsDialog
 from gui.dialogs.about_dialog import AboutDialog
 from gui.gl_widget import UpdateGLEvent
 from util import message
-from gl_stack import GLStack
+from gui.gl_stack import GLStack
 from _version import __version__
 import functools
 import os.path
@@ -22,7 +24,9 @@ import core.bonds
 import core.control
 #from core.data import Results
 
+
 WEBSITE_URL = 'https://pgi-jcns.fz-juelich.de/portal/pages/pymoldyn-doc.html'
+
 
 class MainWindow(QtGui.QMainWindow):
     def __init__(self, control):
@@ -35,6 +39,12 @@ class MainWindow(QtGui.QMainWindow):
         self.view_dock.setVisible(False)
         self.image_video_dock = ImageVideoTabDock(self)
         self.statistics_dock = StatisticsTabDock(self)
+        self.log_dock = LogTabDock(self)
+        self._error_wrapper = None
+
+        p = self.file_dock.file_tab.progress_dialog
+        self.set_output_callbacks(p.progress, p.print_step, p.calculation_finished,
+                                  self.show_error, self.log_dock.append_log)
 
         self.docks = []
 
@@ -42,22 +52,15 @@ class MainWindow(QtGui.QMainWindow):
 
         self.setTabPosition(QtCore.Qt.RightDockWidgetArea, QtGui.QTabWidget.North)
 
-        for dock in (self.file_dock, self.view_dock, self.image_video_dock, self.statistics_dock):
+        self.setCentralWidget(self.center)
+
+        for dock in (self.file_dock, self.view_dock, self.image_video_dock, self.statistics_dock, self.log_dock):
+            self.addDockWidget(QtCore.Qt.RightDockWidgetArea,
+                               dock, QtCore.Qt.Vertical)
             self.docks.append(dock)
 
-        self.setCentralWidget(self.center)
-        self.addDockWidget(QtCore.Qt.RightDockWidgetArea,
-                           self.file_dock, QtCore.Qt.Vertical)
-        self.addDockWidget(QtCore.Qt.RightDockWidgetArea,
-                           self.view_dock, QtCore.Qt.Vertical)
-        self.addDockWidget(QtCore.Qt.RightDockWidgetArea,
-                           self.image_video_dock, QtCore.Qt.Vertical)
-        self.addDockWidget(QtCore.Qt.RightDockWidgetArea,
-                           self.statistics_dock, QtCore.Qt.Vertical)
-
-        for dock in self.docks[1:]:
-            if not dock == self.image_video_dock:
-                self.tabifyDockWidget(self.file_dock, dock)
+        for dock in (self.view_dock, self.statistics_dock):
+            self.tabifyDockWidget(self.file_dock, dock)
 
         # this variable is used to open the FileDialog in the propper path
         self.file_dock.file_tab.most_recent_path = "~"
@@ -137,11 +140,18 @@ class MainWindow(QtGui.QMainWindow):
         export_submenu.addAction(export_surface_cavities_action)
         export_submenu.addAction(export_center_cavities_action)
 
-
         help_menu = self.menubar.addMenu('&Help')
         help_menu.addAction(website_action)
         help_menu.addSeparator()
         help_menu.addAction(about_action)
+
+    def show_error(self, error_message):
+        QtCore.QMetaObject.invokeMethod(self, '_show_error', QtCore.Qt.QueuedConnection,
+                                        QtCore.Q_ARG(str, error_message))
+
+    @QtCore.pyqtSlot(str)
+    def _show_error(self, error_message):
+        QtGui.QMessageBox.information(self, 'Information', error_message)
 
     def show_settings(self):
         SettingsDialog()
@@ -281,8 +291,8 @@ class MainWindow(QtGui.QMainWindow):
                     dock.show()
                 self.showNormal()
 
-    def set_output_callbacks(self, progress_func, print_func, finish_func, error_func):
-        message.set_output_callbacks(progress_func, print_func, finish_func, error_func)
+    def set_output_callbacks(self, progress_func, print_func, finish_func, error_func, log_func):
+        message.set_output_callbacks(progress_func, print_func, finish_func, error_func, log_func)
 
     def updatestatus(self, was_successful=lambda : True):
         if was_successful and self.control.results is not None:
@@ -315,7 +325,7 @@ class CentralWidget(QtGui.QWidget):
         self.setWindowTitle('pyMolDyn 2')
         self.widget_titles = (
                 "3D View",
-                "Radial Distribution",
+                "Pair Distribution Functions",
                 "Cavity Histograms")
         self.init_gui()
 

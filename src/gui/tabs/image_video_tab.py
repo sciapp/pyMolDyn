@@ -26,6 +26,7 @@ class ImageVideoTabDock(QtGui.QDockWidget):
         self.widget().setLayout(self.layout)
 
         self.setFeatures(QtGui.QDockWidget.DockWidgetMovable | QtGui.QDockWidget.DockWidgetFloatable)
+        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
 
 
 class ImageVideoTab(QtGui.QWidget):
@@ -57,6 +58,8 @@ class ImageVideoTab(QtGui.QWidget):
         self.vbox.addWidget(self.video_button)
         self.vbox.addStretch()
         self.setLayout(self.vbox)
+
+        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
 
     def save_screenshot(self):
         file_name = QtGui.QFileDialog.getSaveFileName(self,

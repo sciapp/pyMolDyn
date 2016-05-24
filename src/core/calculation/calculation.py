@@ -9,7 +9,6 @@ import os
 import core.data as data
 import core.file
 from core.file import File
-from datetime import datetime
 from algorithm import CavityCalculation, DomainCalculation, FakeDomainCalculation
 from discretization import DiscretizationCache, AtomDiscretization
 import util.message as message
@@ -17,7 +16,6 @@ from hashlib import sha256
 from config.configuration import config
 from util.logger import Logger
 import sys
-import numpy as np
 import core.bonds
 
 __all__ = ["Calculation",
@@ -73,9 +71,11 @@ class CalculationSettings(object):
     def __init__(self,
                  datasets,
                  resolution=config.Computation.std_resolution,
+                 cutoff_radii=config.Computation.std_cutoff_radius,
                  domains=False,
                  surface_cavities=False,
                  center_cavities=False,
+                 gyration_tensor=False,
                  recalculate=False,
                  exporthdf5=False,
                  exporttext=False,
@@ -84,9 +84,11 @@ class CalculationSettings(object):
         """
         self.datasets = datasets
         self.resolution = resolution
+        self.cutoff_radii = cutoff_radii
         self.domains = domains
         self.surface_cavities = surface_cavities
         self.center_cavities = center_cavities
+        self.gyration_tensor = gyration_tensor
         self.recalculate = recalculate
         self.exporthdf5 = exporthdf5
         self.exporttext = exporttext
@@ -103,9 +105,11 @@ class CalculationSettings(object):
         for filename, frames in self.datasets.iteritems():
             datasets[filename] = [f for f in frames]
         dup = self.__class__(datasets, self.resolution)
+        dup.cutoff_radii = self.cutoff_radii
         dup.domains = self.domains
         dup.surface_cavities = self.surface_cavities
         dup.center_cavities = self.center_cavities
+        dup.gyration_tensor = self.gyration_tensor
         dup.recalculate = self.recalculate
         dup.exporthdf5 = self.exporthdf5
         dup.exporttext = self.exporttext
@@ -233,7 +237,8 @@ class Calculation(object):
             results = data.Results(filepath, frame, resolution, inputfile.getatoms(frame), None, None, None)
         return results
 
-    def calculateframe(self, filepath, frame, resolution, domains=False, surface=False, center=False, atoms=None, recalculate=False, last_frame=True):
+    def calculateframe(self, filepath, frame, resolution, cutoff_radii=None, domains=False, surface=False, center=False,
+                       atoms=None, gyration_tensor_parameters=False, recalculate=False, last_frame=True):
         """
         Get results for the given parameters. They are either loaded from the
         cache or calculated.
@@ -247,16 +252,23 @@ class Calculation(object):
                 resolution of the used discretization
             `domains` :
                 calculate cavitiy domains
+            `cutoff_radii` :
+                dict that maps element symbols to cutoff radii
             `surface` :
                 calculate surface-based cavities
             `center` :
                 calculate center-based cavities
+            `gyration_tensor_parameters` :
+                gyration tensor parameters will be calculated for cavities (they are always calculated for
+                cavity domains)
             `recalculate` :
                 results will be calculated even if cached results exists
 
         **Returns:**
             A :class:`core.data.Results` object.
         """
+        # always recalculate if gyration tensor parameters shall be computed for center or surface based cavities
+        recalculate = recalculate or (gyration_tensor_parameters and (center or surface))
         message.progress(0)
         inputfile = File.open(filepath)
         # TODO: error handling
@@ -272,6 +284,7 @@ class Calculation(object):
 
         if atoms is None:
             atoms = inputfile.getatoms(frame)
+        atoms.radii = cutoff_radii
         volume = atoms.volume
         if results is None:
             results = data.Results(filepath, frame, resolution, atoms, None, None, None)
@@ -296,20 +309,30 @@ class Calculation(object):
                 # CavityCalculation depends on DomainCalculation
                 message.print_message("Calculating domains")
                 domain_calculation = DomainCalculation(discretization, atom_discretization)
+                if domain_calculation.critical_domains:
+                    logger.warn('Found {:d} critical domains in file {}, frame {:d}. Domain indices: {}'.format(
+                        len(domain_calculation.critical_domains), os.path.basename(filepath), frame,
+                        domain_calculation.critical_domains
+                    ))
+                    message.log('Found {:d} critical domains in file {}, frame {:d}'.format(
+                        len(domain_calculation.critical_domains), os.path.basename(filepath), frame + 1,
+                    ))
             if results.domains is None:
                 results.domains = data.Domains(domain_calculation)
             message.progress(40)
 
             if surface and results.surface_cavities is None:
                 message.print_message("Calculating surface-based cavities")
-                cavity_calculation = CavityCalculation(domain_calculation, use_surface_points=True)
+                cavity_calculation = CavityCalculation(domain_calculation, use_surface_points=True,
+                                                       gyration_tensor_parameters=gyration_tensor_parameters)
                 results.surface_cavities = data.Cavities(cavity_calculation)
             message.progress(70)
 
             if center and results.center_cavities is None:
                 message.print_message("Calculating center-based cavities")
                 domain_calculation = FakeDomainCalculation(discretization, atom_discretization, results)
-                cavity_calculation = CavityCalculation(domain_calculation, use_surface_points=False)
+                cavity_calculation = CavityCalculation(domain_calculation, use_surface_points=False,
+                                                       gyration_tensor_parameters=gyration_tensor_parameters)
                 results.center_cavities = data.Cavities(cavity_calculation)
             resultfile.addresults(results, overwrite=recalculate)
 
@@ -370,9 +393,11 @@ class Calculation(object):
                     filepath,
                     frame,
                     calcsettings.resolution,
+                    calcsettings.cutoff_radii,
                     domains=calcsettings.domains,
                     surface=calcsettings.surface_cavities,
                     center=calcsettings.center_cavities,
+                    gyration_tensor_parameters=calcsettings.gyration_tensor,
                     recalculate=calcsettings.recalculate,
                     last_frame=last_frame)
                 # export to text file

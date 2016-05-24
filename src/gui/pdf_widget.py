@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 
 from PyQt4 import QtCore, QtGui
 import gr
@@ -8,12 +9,12 @@ import csv
 
 from util.logger import Logger
 import sys
-from statistics.rdf import RDF
+from statistics.pdf import PDF, Kernels
 import numpy as np
 import os
 
 
-logger = Logger("gui.rdf_widget")
+logger = Logger("gui.pdf_widget")
 logger.setstream("default", sys.stdout, Logger.DEBUG)
 
 
@@ -80,14 +81,14 @@ class GrPlotWidget(GRWidget):
             gr.text(0.8 * self.sizex, 0.9 * self.sizey, self.title)
 
 
-class RDFWidget(QtGui.QWidget):
+class PDFWidget(QtGui.QWidget):
 
     def __init__(self, parent):
         QtGui.QWidget.__init__(self, parent)
 
         self.control = parent.control
         self.results = None
-        self.rdf = None
+        self.pdf = None
 
         self.init_gui()
 
@@ -121,6 +122,12 @@ class RDFWidget(QtGui.QWidget):
         grid.addLayout(rangebox, 0, 1)
 
         cutoffbox = QtGui.QHBoxLayout()
+        cutoffbox.addWidget(QtGui.QLabel("Kernel:", self))
+        self.kernels = {"Gaussian": Kernels.gauss, "Epanechnikov": Kernels.epanechnikov, "Compact": Kernels.compact, "Triangular": Kernels.triang, "Box": Kernels.quad, "Right Box": Kernels.posquad, "Left Box": Kernels.negquad}
+        self.kernel = QtGui.QComboBox(self)
+        self.kernel .setMinimumWidth(130)
+        self.kernel.addItems(["Gaussian", "Epanechnikov", "Compact", "Triangular", "Box", "Right Box", "Left Box"])
+        cutoffbox.addWidget(self.kernel)
         cutoffbox.addWidget(QtGui.QLabel("Cutoff:", self))
         self.cutoff = QtGui.QLineEdit("12", self)
         self.cutoff.setMinimumWidth(30)
@@ -162,9 +169,9 @@ class RDFWidget(QtGui.QWidget):
         yvalues = None
         title = None
         datapoints = None
-        if self.rdf is None:
+        if self.pdf is None:
             self.refresh()
-        if self.rdf is not None:
+        if self.pdf is not None:
             elem1 = str(self.elem1.currentText())
             if elem1 == "cavity domain centers":
                 elem1 = "cav"
@@ -178,17 +185,32 @@ class RDFWidget(QtGui.QWidget):
                 cutoff = float(cutoff)
             else:
                 cutoff = None
-            bandwidth = str(self.bandwidth.text())
-            if len(bandwidth) > 0 and float(bandwidth) > 0:
-                bandwidth = float(bandwidth)
-            else:
+            try:
+                bandwidth = float(str(self.bandwidth.text()))
+                if bandwidth < 0:
+                    bandwidth = 0
+                    self.bandwidth.setText('0')
+            except ValueError:
                 bandwidth = None
-            f = self.rdf.rdf(elem1, elem2, cutoff=cutoff, h=bandwidth)
+                self.bandwidth.setText('')
+            kernel = self.kernels.get(self.kernel.currentText(), None)
+            f = self.pdf.pdf(elem1, elem2, cutoff=cutoff, h=bandwidth, kernel=kernel)
             if f is not None:
-                xvalues = np.linspace(range1, range2, 400)
-                yvalues = f(xvalues)
-                title = "{} - {}".format(elem1, elem2)
-                datapoints = f.f.x
+                if callable(f):
+                    xvalues = np.linspace(range1, range2, 400)
+                    yvalues = f(xvalues)
+                    title = "{} - {}".format(elem1, elem2)
+                    datapoints = f.f.x
+                else:
+                    peaks = f[np.logical_and(range1 < f, f < range2)]
+                    if len(peaks) > 2:
+                        xvalues = np.zeros(len(peaks) * 3)
+                        xvalues[0::3] = peaks
+                        xvalues[1::3] = peaks
+                        xvalues[2::3] = peaks
+                        yvalues = np.zeros(len(peaks) * 3)
+                        yvalues[1::3] = 1
+                        datapoints = peaks
 
         self.gr_widget.setdata(xvalues, yvalues, title, datapoints)
         self.gr_widget.update()
@@ -232,9 +254,9 @@ class RDFWidget(QtGui.QWidget):
         results = self.control.results
         if results is not None:
             results = results[-1][-1]
-            if self.results != results or self.rdf is None:
+            if self.results != results or self.pdf is None:
                 self.results = results
-                self.rdf = RDF(results)
+                self.pdf = PDF(results)
                 e = np.unique(results.atoms.elements).tolist()
                 if results.domains is not None \
                         and len(results.domains.centers) > 0 \

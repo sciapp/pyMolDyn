@@ -3,7 +3,7 @@
 # platform: osx-64
 dateutil=2.4.1=py27_0
 freetype=2.5.2=2
-gr=0.17.1=py27_0
+gr=0.18.0=py27_0
 h5py=2.5.0=np19py27_3
 hdf5=1.8.15.1=1
 jinja2=2.8=py27_0

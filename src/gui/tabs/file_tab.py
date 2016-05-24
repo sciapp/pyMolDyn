@@ -49,8 +49,9 @@ class CalculationThread(QtCore.QThread):
             self.func(self.settings)
         except Exception as e:
             self._exited_with_errors = True
-            message.error(e)
+            message.error(e.message)
             message.finish()
+            raise
 
 
 class FileTab(QtGui.QWidget):
@@ -64,16 +65,11 @@ class FileTab(QtGui.QWidget):
         self.progress_dialog = ProgressDialog(self)
         self.most_recent_path = "~"
 
-        p = self.progress_dialog
-        self.main_window.set_output_callbacks(p.progress, p.print_step, p.calculation_finished, lambda e: QtCore.QMetaObject.invokeMethod(self, '_error', QtCore.Qt.QueuedConnection, QtCore.Q_ARG(str, e.message)))
         self.control = main_window.control
 
         self.init_gui()
         self.guessed_volumes_for = set()
-
-    @QtCore.pyqtSlot(str)
-    def _error(self, error_message):
-        QtGui.QMessageBox.information(self, 'Information', error_message, QtGui.QMessageBox.Ok)
+        self.last_shown_filename_with_frame = None
 
     def init_gui(self):
         self.vbox = QtGui.QVBoxLayout()
@@ -141,7 +137,7 @@ class FileTab(QtGui.QWidget):
             self.file_list.select_nth(n)
 
     def show_selected_frame(self):
-        self.file_list.show_selected_frame()
+        self.last_shown_filename_with_frame = self.file_list.show_selected_frame()
 
     def selection_changed(self):
         sel = self.file_list.get_selection()
@@ -196,12 +192,8 @@ class FileTab(QtGui.QWidget):
         filenames = QtGui.QFileDialog.getOpenFileNames(self, 'Open dataset', self.most_recent_path)
         for path in filenames:
             if path:
-                #print path
-
-                #print self.main_window.recent_files_submenu.actions()
                 self.disable_files_in_menu_and_open(path)
                 self.main_window.update_submenu_recent_files()
-
 
     def calculationcallback(self, func, settings):
         thread = CalculationThread(self, func, settings)
@@ -210,14 +202,18 @@ class FileTab(QtGui.QWidget):
         thread.start()
         self.progress_dialog.exec_()
 
-    def calculate(self):
-        file_frame_dict = self.file_list.get_selection()
+    def calculate(self, file_frame_dict=None):
+        if not file_frame_dict:
+            file_frame_dict = self.file_list.get_selection()
         dia = CalculationSettingsDialog(self, file_frame_dict)
         settings, ok = dia.calculation_settings()
 
         if ok:
             self.control.calculationcallback = self.calculationcallback
             self.control.calculate(settings)
+            self.last_shown_filename_with_frame = (file_frame_dict.keys()[-1],
+                                                   file_frame_dict.values()[-1][-1])
+
 
 class TreeList(QtGui.QTreeWidget):
 
@@ -418,6 +414,8 @@ class TreeList(QtGui.QTreeWidget):
         main_window = parent
         image_video_tab = main_window.image_video_dock.image_video_tab
         image_video_tab.screenshot_button.setEnabled(True)
+
+        return filename, frame
 
     def select_all(self):
         self.select_nth(1)

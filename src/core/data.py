@@ -5,6 +5,7 @@ Most of them can be read and written to hdf5 files.
 """
 
 
+import collections
 import numpy as np
 import sys
 import os
@@ -435,29 +436,11 @@ class Atoms(object):
         self.volume = volume
         self.positions = np.array(positions, dtype=np.float, copy=False)
         self.number = self.positions.shape[0]
-        if radii is not None:
-            self.radii = np.array(radii, dtype=np.float, copy=False)
-        else:
-            self.radii = np.ones((self.number), dtype=np.float) \
-                         * config.Computation.atom_radius
         self.elements = np.array(elements, dtype="|S4", copy=False)
-
-        # old code:
-        # self.sorted_radii = sorted(list(set(self.radii)), reverse=True)
-        # self.radii_as_indices = []
-        # self.sorted_positions = []
-        # for index, radius in enumerate(self.sorted_radii):
-        #     for atom_index,atom_radius in enumerate(self.radii):
-        #         if radius == atom_radius:
-        #             self.radii_as_indices.append(index)
-        #             self.sorted_positions.append(self.positions[atom_index])
-        indices = np.argsort(-self.radii, kind="mergesort")
-        self.sorted_positions = self.positions[indices]
-        unique_radii, indices = np.unique(-self.radii, return_inverse=True)
-        self.sorted_radii = -unique_radii
-        self.radii_as_indices = np.sort(indices)
+        self.radii = radii
 
         self._covalence_radii = None
+        self._covalence_radii_by_element = None
         self._bonds = None
         self._colors = None
 
@@ -470,6 +453,15 @@ class Atoms(object):
                 covalence_radii[i] = core.elements.radii[element_number]
             self._covalence_radii = covalence_radii
         return self._covalence_radii
+
+    @property
+    def covalence_radii_by_element(self):
+        covalence_radii = self.covalence_radii
+        if self._covalence_radii_by_element is None:
+            self._covalence_radii_by_element = dict((element, covalence_radius)
+                                                    for element, covalence_radius
+                                                    in zip(self.elements, covalence_radii))
+        return self._covalence_radii_by_element
 
     @property
     def bonds(self):
@@ -487,6 +479,27 @@ class Atoms(object):
                 colors[i] = core.elements.colors[element_number]
             self._colors = colors/255
         return self._colors
+
+    @property
+    def radii(self):
+        return self._radii
+
+    @radii.setter
+    def radii(self, values):
+        if values is None:
+            self._radii = np.ones((self.number), dtype=np.float) * config.Computation.std_cutoff_radius
+        elif isinstance(values, collections.Mapping):
+            radii = [values[elem] for elem in self.elements]
+            self._radii = np.array(radii, dtype=np.float, copy=False)
+        elif isinstance(values, collections.Iterable):
+            self._radii = np.array(values, dtype=np.float, copy=False)
+        else:
+            self._radii = np.ones((self.number), dtype=np.float) * values
+        indices = np.argsort(-self._radii, kind="mergesort")
+        self.sorted_positions = self.positions[indices]
+        unique_radii, indices = np.unique(-self._radii, return_inverse=True)
+        self.sorted_radii = -unique_radii
+        self.radii_as_indices = np.sort(indices)
 
     def tohdf(self, h5group, overwrite=True):
         """
@@ -544,16 +557,31 @@ class CavitiesBase(object):
             read the data from this hdf5 group
         """
         if isinstance(args[0], h5py.Group):
+            def getobj_from_h5group(attr):
+                if attr in h5group:
+                    return h5group[attr]
+                else:
+                    return None
+
             h5group = args[0]
             timestamp = dateutil.parser.parse(h5group.attrs["timestamp"])
             number = int(h5group.attrs["number"])
-            volumes = h5group["volumes"]
-            surface_areas = h5group["surface_areas"]
+            volumes = getobj_from_h5group("volumes")
+            surface_areas = getobj_from_h5group("surface_areas")
             triangles = [None] * number
             for i in range(number):
-                triangles[i] = h5group["triangles{}".format(i)]
+                triangles[i] = getobj_from_h5group("triangles{}".format(i))
+            mass_centers = getobj_from_h5group("mass_centers")
+            squared_gyration_radii = getobj_from_h5group("squared_gyration_radii")
+            asphericities = getobj_from_h5group("asphericities")
+            acylindricities = getobj_from_h5group("acylindricities")
+            anisotropies = getobj_from_h5group("anisotropies")
+            characteristic_radii = getobj_from_h5group("characteristic_radii")
+            cyclic_area_indices = getobj_from_h5group("cyclic_area_indices")
         else:
-            timestamp, volumes, surface_areas, triangles = args[:4]
+                (timestamp, volumes, surface_areas, triangles,
+                 mass_centers, squared_gyration_radii, asphericities, acylindricities, anisotropies,
+                 characteristic_radii, cyclic_area_indices) = args[:11]
 
         if not isinstance(timestamp, datetime):
             timestamp = dateutil.parser.parse(str(timestamp))
@@ -561,8 +589,15 @@ class CavitiesBase(object):
         self.volumes = np.array(volumes, dtype=np.float, copy=False)
         self.number = len(volumes)
         self.surface_areas = np.array(surface_areas, dtype=np.float, copy=False)
-        self.triangles = map(lambda x: np.array(x, dtype=np.float,
-                             copy=False), triangles)
+        self.triangles = [np.array(triangle, dtype=np.float, copy=False) for triangle in triangles]
+        self.mass_centers = np.array(mass_centers, dtype=np.float, copy=False)
+        self.squared_gyration_radii = np.array(squared_gyration_radii, dtype=np.float, copy=False)
+        self.asphericities = np.array(asphericities, dtype=np.float, copy=False)
+        self.acylindricities = np.array(acylindricities, dtype=np.float, copy=False)
+        self.anisotropies = np.array(anisotropies, dtype=np.float, copy=False)
+        self.characteristic_radii = np.array(characteristic_radii, dtype=np.float, copy=False)
+        self.cyclic_area_indices = (np.array(cyclic_area_indices, dtype=np.int, copy=False)
+                                    if cyclic_area_indices is not None else np.array([]))
 
     def tohdf(self, h5group, overwrite=True):
         """
@@ -581,6 +616,71 @@ class CavitiesBase(object):
         writedataset(h5group, "surface_areas", self.surface_areas, overwrite)
         for index, triangles in enumerate(self.triangles):
             writedataset(h5group, "triangles{}".format(index), np.array(triangles), overwrite)
+        writedataset(h5group, "mass_centers", self.mass_centers, overwrite)
+        writedataset(h5group, "squared_gyration_radii", self.squared_gyration_radii, overwrite)
+        writedataset(h5group, "asphericities", self.asphericities, overwrite)
+        writedataset(h5group, "acylindricities", self.acylindricities, overwrite)
+        writedataset(h5group, "anisotropies", self.anisotropies, overwrite)
+        writedataset(h5group, "characteristic_radii", self.characteristic_radii, overwrite)
+        writedataset(h5group, "cyclic_area_indices", self.cyclic_area_indices, overwrite)
+
+    def _export_gyration_parameters(self, fmt):
+        mass_centers_file_name = fmt.format(property="centers_of_mass")
+        squared_gyration_radii_file_name = fmt.format(property="squared_gyration_radii")
+        asphericities_file_name = fmt.format(property="asphericities")
+        acylindricities_file_name = fmt.format(property="acylindricities")
+        anisotropies_file_name = fmt.format(property="anisotropies")
+        characteristic_radii_file_name = fmt.format(property="characteristic_radii")
+
+        mass_centers = self.getattr_normalized('mass_centers')
+        squared_gyration_radii = self.getattr_normalized('squared_gyration_radii')
+        asphericities = self.getattr_normalized('asphericities')
+        acylindricities = self.getattr_normalized('acylindricities')
+        anisotropies = self.getattr_normalized('anisotropies')
+        characteristic_radii = self.getattr_normalized('characteristic_radii')
+
+        export_filenames = []
+
+        if mass_centers is not None:
+            with open(mass_centers_file_name, 'w') as outfile:
+                for index, mass_center in enumerate(mass_centers, start=1):
+                    outfile.write("{} {}\n".format(index, mass_center))
+            export_filenames.append(mass_centers_file_name)
+        if squared_gyration_radii is not None:
+            with open(squared_gyration_radii_file_name, 'w') as outfile:
+                for index, squared_gyration_radius in enumerate(squared_gyration_radii, start=1):
+                    outfile.write("{} {}\n".format(index, squared_gyration_radius))
+            export_filenames.append(squared_gyration_radii_file_name)
+        if asphericities is not None:
+            with open(asphericities_file_name, 'w') as outfile:
+                for index, asphericity in enumerate(asphericities, start=1):
+                    outfile.write("{} {}\n".format(index, asphericity))
+            export_filenames.append(asphericities_file_name)
+        if acylindricities is not None:
+            with open(acylindricities_file_name, 'w') as outfile:
+                for index, acylindricity in enumerate(acylindricities, start=1):
+                    outfile.write("{} {}\n".format(index, acylindricity))
+            export_filenames.append(acylindricities_file_name)
+        if anisotropies is not None:
+            with open(anisotropies_file_name, 'w') as outfile:
+                for index, anisotropy in enumerate(anisotropies, start=1):
+                    outfile.write("{} {}\n".format(index, anisotropy))
+            export_filenames.append(anisotropies_file_name)
+        if characteristic_radii is not None:
+            with open(characteristic_radii_file_name, 'w') as outfile:
+                for index, characteristic_radius in enumerate(characteristic_radii, start=1):
+                    outfile.write("{} {}\n".format(index, characteristic_radius))
+            export_filenames.append(characteristic_radii_file_name)
+
+        return export_filenames
+
+    def getattr_normalized(self, attr):
+        if hasattr(self, attr):
+            value = getattr(self, attr)
+            is_numpy_array = isinstance(value, np.ndarray)
+            if (is_numpy_array and len(value.shape) > 0) or (not is_numpy_array and len(value) > 0):
+                return value
+        return None
 
 
 class Domains(CavitiesBase):
@@ -617,8 +717,16 @@ class Domains(CavitiesBase):
             triangles = calculation.domain_triangles
             centers = calculation.centers
             discretization = calculation.discretization
-            super(Domains, self).__init__(timestamp, volumes,
-                                          surface_areas, triangles)
+            mass_centers = calculation.mass_centers
+            squared_gyration_radii = calculation.squared_gyration_radii
+            asphericities = calculation.asphericities
+            acylindricities = calculation.acylindricities
+            anisotropies = calculation.anisotropies
+            characteristic_radii = calculation.characteristic_radii
+            cyclic_area_indices = calculation.cyclic_area_indices
+            super(Domains, self).__init__(timestamp, volumes, surface_areas, triangles,
+                                          mass_centers, squared_gyration_radii, asphericities, acylindricities,
+                                          anisotropies, characteristic_radii, cyclic_area_indices)
         else:
             super(Domains, self).__init__(*args)
             centers = args[4]
@@ -648,6 +756,9 @@ class Domains(CavitiesBase):
         domain_volume_file_name = fmt.format(property="volumes")
         domain_surface_to_volume_ratio_file_name = fmt.format(property="surface_area_to_volume_ratios")
 
+        export_filenames = [domain_center_file_name, domain_surface_file_name, domain_volume_file_name,
+                            domain_surface_to_volume_ratio_file_name]
+
         with open(domain_surface_file_name, 'w') as outfile:
             for index, surface_area in enumerate(self.surface_areas, start=1):
                 outfile.write("{} {}\n".format(index, surface_area))
@@ -658,13 +769,17 @@ class Domains(CavitiesBase):
             for index, t in enumerate(zip(self.volumes, self.surface_areas), start=1):
                 volume, surface_area = t
                 outfile.write("{} {}\n".format(index, surface_area/volume))
-        if hasattr(self, 'continuous_centers'):
+        continuous_centers = self.getattr_normalized('continuous_centers')
+        if continuous_centers is not None:
             with open(domain_center_file_name, 'w') as outfile:
-                for index, continuous_center in enumerate(self.continuous_centers, start=1):
+                for index, continuous_center in enumerate(continuous_centers, start=1):
                     outfile.write("{} {} {} {}\n".format(index, continuous_center[0], continuous_center[1], continuous_center[2]))
         else:
             raise ValueError('No discretization present -> can only access discrete domain centers, no conversion to continuous space possible.')
-        return domain_center_file_name, domain_volume_file_name, domain_surface_file_name, domain_surface_to_volume_ratio_file_name
+
+        export_filenames.extend(self._export_gyration_parameters(fmt))
+
+        return export_filenames
 
 class Cavities(CavitiesBase):
     """
@@ -701,8 +816,16 @@ class Cavities(CavitiesBase):
             surface_areas = calculation.cavity_surface_areas
             triangles = calculation.cavity_triangles
             multicavities = calculation.multicavities
-            super(Cavities, self).__init__(timestamp, volumes,
-                                           surface_areas, triangles)
+            mass_centers = calculation.mass_centers
+            squared_gyration_radii = calculation.squared_gyration_radii
+            asphericities = calculation.asphericities
+            acylindricities = calculation.acylindricities
+            anisotropies = calculation.anisotropies
+            characteristic_radii = calculation.characteristic_radii
+            cyclic_area_indices = calculation.cyclic_area_indices
+            super(Cavities, self).__init__(timestamp, volumes, surface_areas, triangles,
+                                           mass_centers, squared_gyration_radii, asphericities, acylindricities,
+                                           anisotropies, characteristic_radii, cyclic_area_indices)
         else:
             super(Cavities, self).__init__(*args)
             multicavities = args[4]
@@ -736,6 +859,9 @@ class Cavities(CavitiesBase):
         cavity_domains_file_name = fmt.format(property="domain_indices")
         cavity_surface_to_volume_ratio_file_name = fmt.format(property="surface_area_to_volume_ratios")
 
+        export_filenames = [cavity_surface_file_name, cavity_surface_file_name, cavity_volume_file_name,
+                            cavity_surface_to_volume_ratio_file_name]
+
         with open(cavity_domains_file_name, 'w') as outfile:
             for index, multicavity in enumerate(self.multicavities, start=1):
                 outfile.write("{}".format(index))
@@ -752,7 +878,11 @@ class Cavities(CavitiesBase):
             for index, t in enumerate(zip(self.volumes, self.surface_areas), start=1):
                 volume, surface_area = t
                 outfile.write("{} {}\n".format(index, surface_area/volume))
-        return cavity_domains_file_name, cavity_volume_file_name, cavity_surface_file_name, cavity_surface_to_volume_ratio_file_name
+
+        export_filenames.extend(self._export_gyration_parameters(fmt))
+
+        return export_filenames
+
 
 class Results(object):
     """
