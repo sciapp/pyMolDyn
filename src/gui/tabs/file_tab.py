@@ -196,9 +196,17 @@ class FileTab(QtGui.QWidget):
                 self.main_window.update_submenu_recent_files()
 
     def calculationcallback(self, func, settings):
+        def enable_screenshot_button_on_success(self, was_successful):
+            if was_successful():
+                self.file_list._enable_screenshot_button()
+
         thread = CalculationThread(self, func, settings)
-        thread.finished.connect(functools.partial(self.control.update, was_successful=lambda : thread.exited_with_errors))
-        thread.finished.connect(functools.partial(self.main_window.updatestatus, was_successful=lambda : thread.exited_with_errors))
+        thread.finished.connect(functools.partial(self.control.update,
+                                                  was_successful=lambda: not thread.exited_with_errors))
+        thread.finished.connect(functools.partial(self.main_window.updatestatus,
+                                                  was_successful=lambda: not thread.exited_with_errors))
+        thread.finished.connect(functools.partial(enable_screenshot_button_on_success, self,
+                                                  was_successful=lambda: not thread.exited_with_errors))
         thread.start()
         self.progress_dialog.exec_()
 
@@ -408,14 +416,17 @@ class TreeList(QtGui.QTreeWidget):
                 gl_widget.update_needed = True
                 QtGui.QApplication.postEvent(gl_widget, UpdateGLEvent())
 
+        self._enable_screenshot_button()
+
+        return filename, frame
+
+    def _enable_screenshot_button(self, enable=True):
         parent = self.parent()
         while parent.parent():
             parent = parent.parent()
         main_window = parent
         image_video_tab = main_window.image_video_dock.image_video_tab
-        image_video_tab.screenshot_button.setEnabled(True)
-
-        return filename, frame
+        image_video_tab.screenshot_button.setEnabled(enable)
 
     def select_all(self):
         self.select_nth(1)
