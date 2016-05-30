@@ -2,9 +2,9 @@
 
 from PyQt4 import QtGui
 from PyQt4.QtCore import QTimer, QProcess
+import gr3
 from gui.gl_widget import GLWidget
 from core import file
-import gr3
 import os.path
 import shutil
 import tempfile
