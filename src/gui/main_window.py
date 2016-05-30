@@ -4,6 +4,10 @@ from __future__ import absolute_import
 
 import os
 import sys
+
+import core.bonds
+import core.control
+
 from gui.tabs.file_tab import FileTabDock
 from gui.tabs.view_tab import ViewTabDock
 from gui.tabs.image_video_tab import ImageVideoTabDock
@@ -19,10 +23,6 @@ from _version import __version__
 import functools
 import os.path
 from config.configuration import config
-
-import core.bonds
-import core.control
-#from core.data import Results
 
 
 WEBSITE_URL = 'https://pgi-jcns.fz-juelich.de/portal/pages/pymoldyn-doc.html'
