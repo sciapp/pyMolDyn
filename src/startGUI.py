@@ -27,6 +27,7 @@ for name in API_NAMES:
     sip.setapi(name, API_VERSION)
 
 from gui import main_window
+import core.file
 from core import volumes
 from core.control import Control
 from PyQt4 import QtGui
@@ -37,6 +38,7 @@ import core.calculation
 
 
 def start_gui():
+    core.file.SEARCH_PATH = os.getcwd()
     os.chdir(os.path.abspath(os.path.dirname(__file__)))
     app = QtGui.QApplication(sys.argv)
     control = Control()

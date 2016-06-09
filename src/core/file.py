@@ -31,6 +31,23 @@ __all__ = ["File",
 logger = Logger("core.file")
 logger.setstream("default", sys.stdout, Logger.WARNING)
 
+SEARCH_PATH = None
+
+
+def get_abspath(path):
+    """
+    Return an absolute path for an input file. The difference to abspath from
+    os.path is that this function uses SEARCH_PATH instead of the current
+    working directory
+    """
+    global SEARCH_PATH
+    if not os.path.isabs(path) and SEARCH_PATH is not None:
+        # relative paths use the SEARCH_PATH instead of the current working
+        # directory, as that is modified at startup. The SEARCH_PATH is set
+        # to the initial cwd in startBatch and startGUI.
+        path = os.path.join(SEARCH_PATH, path)
+    return os.path.abspath(path)
+
 
 class FileError(Exception):
     """
@@ -63,7 +80,7 @@ class InputFile(object):
             `path` :
                 absolute path to the file
         """
-        self.path = path
+        self.path = get_abspath(path)
         self._info = data.FileInfo()
         self.inforead = False
 

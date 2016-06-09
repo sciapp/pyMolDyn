@@ -12,6 +12,7 @@ import logging
 from datetime import datetime
 from core.control import Control
 from core.calculation import Calculation, CalculationSettings
+import core.file
 from config.configuration import config
 
 
@@ -299,6 +300,7 @@ Note: Because the cutoff radius is stored in the global configuration, it cannot
                                     self.options.output_directory)
         for input_file in input_file_list:
             try:
+                input_file = core.file.get_abspath(input_file)
                 with open(input_file) as f:
                     resolution = None
                     atom_radius = None
