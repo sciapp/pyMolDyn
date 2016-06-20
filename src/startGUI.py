@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
 import sys
 import subprocess
 
@@ -10,7 +11,7 @@ def start_batch():
         # This is implemented here as both Linux and OS X use completely
         # different ways to implement the pymoldyn executable, but both call
         # startGUI.py.
-        script_directory = os.path.dirname(os.path.abspath(__file__))
+        script_directory = os.path.dirname(os.path.realpath(__file__))
         batch_script_path = os.path.join(script_directory, 'startBatch.py')
         args = [sys.executable, batch_script_path] + sys.argv[2:]
         sys.exit(subprocess.call(args))
@@ -33,7 +34,6 @@ from core.control import Control
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 import signal
-import os
 import core.calculation
 
 
