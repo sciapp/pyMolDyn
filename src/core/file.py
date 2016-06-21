@@ -540,7 +540,7 @@ class File(object):
         if e not in cls.types:
             raise ValueError("Unknown file format")
         FileClass = cls.types[e]
-        return FileClass(os.path.abspath(filepath))
+        return FileClass(filepath)
 
     @classmethod
     def exists(cls, filepath):
@@ -555,5 +555,6 @@ class File(object):
             `True` if the file exists and there is a subclass of :class:`InputFile`
             associated with the filename ending.
         """
+        filepath = get_abspath(filepath)
         name = os.path.basename(filepath)
         return os.path.isfile(filepath) and name.split(".")[-1] in cls.types

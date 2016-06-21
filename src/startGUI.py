@@ -39,7 +39,7 @@ import core.calculation
 
 def start_gui():
     core.file.SEARCH_PATH = os.getcwd()
-    os.chdir(os.path.abspath(os.path.dirname(__file__)))
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))
     app = QtGui.QApplication(sys.argv)
     control = Control()
     window = main_window.MainWindow(control)

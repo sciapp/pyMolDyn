@@ -256,7 +256,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
 
     def timestamps(self, center_based=False):
         return [self.control.calculation.calculatedframes(
-                os.path.abspath(fn),
+                file.get_abspath(fn),
                 self.resolution,
                 not center_based,
                 center_based).prettystrings()
