@@ -358,10 +358,10 @@ class Calculation(object):
         """
         allresults = []
         for filename, frames in calcsettings.datasets.iteritems():
-            filepath = os.path.abspath(filename)
+            filepath = core.file.get_abspath(filename)
             fileprefix = os.path.basename(filename).rsplit(".", 1)[0]
             if calcsettings.exportdir is not None:
-                exportdir = os.path.abspath(calcsettings.exportdir)
+                exportdir = core.file.get_abspath(calcsettings.exportdir)
                 # replace asterisks with directories
                 dirlist = os.path.dirname(filepath).split("/")
                 while "*" in exportdir:
@@ -374,7 +374,7 @@ class Calculation(object):
                 exportdir = os.path.dirname(filepath)
             if calcsettings.exporthdf5:
                 efpath = os.path.join(exportdir, fileprefix + ".hdf5")
-                efpath = os.path.abspath(efpath)
+                efpath = core.file.get_abspath(efpath)
                 # copy atoms into HDF5 file
                 exportfile = core.file.HDF5File.fromInputFile(efpath, filepath)
                 # use HDF5 file as input
@@ -457,7 +457,7 @@ class CalculationCache(object):
         **Returns:**
             If a cache file for the given input file exists.
         """
-        sourcefilepath = os.path.abspath(filepath)
+        sourcefilepath = core.file.get_abspath(filepath)
         cachefilepath = self.abspath(self.cachefile(sourcefilepath))
         return os.path.isfile(cachefilepath)
 
@@ -473,7 +473,7 @@ class CalculationCache(object):
             A :class:`core.file.HDF5File` object.
             If no cache file exist for the input file, a new one is created.
         """
-        sourcefilepath = os.path.abspath(filepath)
+        sourcefilepath = core.file.get_abspath(filepath)
         cachefilepath = self.abspath(self.cachefile(sourcefilepath))
         if sourcefilepath not in self.index:
             self.index[sourcefilepath] = cachefilepath
@@ -483,7 +483,7 @@ class CalculationCache(object):
         return cachefile
 
     def abspath(self, filename):
-        return os.path.abspath(os.path.join(self.directory, filename))
+        return os.path.abspath(os.path.join(core.file.get_abspath(self.directory), filename))
 
     def cachefile(self, filepath):
         return sha256(filepath).hexdigest() + ".hdf5"
