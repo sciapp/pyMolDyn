@@ -178,6 +178,27 @@ class Discretization(object):
         point which is inside of the volume and is equivalent to the given
         point.
         """
+        # If the point cannot be translated directly, shift it in the direction of the cell center by
+        # applying one of the discrete translation vectors in each step until the point is inside the
+        # discretization grid
+        cell_center = None
+        while not all(0 <= p < s for p, s in zip(point, self.grid.shape)):
+            if cell_center is None:
+                cell_center = np.array(self.grid.shape, dtype=np.int) / 2
+                translation_vectors = np.array(self.translation_vectors)
+                normalized_translation_vectors = (translation_vectors.T /
+                                                  np.linalg.norm(translation_vectors, axis=1)).T
+            vector_to_cell_center = cell_center - np.array(point, dtype=np.int)
+            vector_to_cell_center = vector_to_cell_center / np.linalg.norm(vector_to_cell_center)
+            dot_products = np.dot(normalized_translation_vectors, vector_to_cell_center)
+            rounded_dot_products = np.array(np.round(dot_products), dtype=np.int)
+            needed_translation_vector_index = np.argmax(np.abs(dot_products))
+            needed_translation_vector = (rounded_dot_products[needed_translation_vector_index] *
+                                         translation_vectors[needed_translation_vector_index])
+            next_point = tuple(p + t for p, t in zip(point, needed_translation_vector))
+            if next_point == point:
+                raise ArithmeticError('Could not determine an equivalent point inside the volume')
+            point = next_point
         if self.grid[point] == 0:
             return point
         else:
