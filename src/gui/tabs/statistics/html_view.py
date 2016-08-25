@@ -435,7 +435,7 @@ class HTMLWindow(QtGui.QWidget):
         data['squared_gyration_radius'] = attrs.squared_gyration_radii
         data['asphericity'] = attrs.asphericities
         data['acylindricity'] = attrs.acylindricities
-        data['anisotropy'] = attrs.acylindricities
+        data['anisotropy'] = attrs.anisotropies
         data['characteristic_radius'] = attrs.characteristic_radii
         data['is_cyclic'] = index in self.cavities_surface.cyclic_area_indices
 
