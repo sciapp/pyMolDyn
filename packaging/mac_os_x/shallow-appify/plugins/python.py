@@ -200,19 +200,32 @@ def setup_startup(app_path, executable_path, app_executable_path, executable_roo
                     shutil.copy(real_filepath, os.path.join(root_path, os.path.basename(link_filepath)))
 
         def fix_activate_script():
-            SEARCHED_LINE_START = '_THIS_DIR='
-            INSERT_LINE = 'export PATH=${_THIS_DIR}:${PATH}'
+            DELETE_LINE_PART = 'checkenv'
+            DELETE_LINE_COUNT = 5
+            REPLACE_LINE_PART = '_NEW_PART='
+            REPLACE_LINE_INSERT = '_NEW_PART=$_CONDA_DIR'
             full_conda_activate_path = '{env_path}/{conda_activate_path}'.format(env_path=env_path,
                                                                                  conda_activate_path=CONDA_ACTIVATE_PATH)
-            found_line = False
+            found_line_to_delete = False
+            found_line_to_replace = False
+            skip_line_num = 0
             new_lines = []
             with open(full_conda_activate_path, 'r') as f:
                 for line in f:
+                    if skip_line_num > 0:
+                        skip_line_num -= 1
+                        continue
+                    if not found_line_to_delete:
+                        if DELETE_LINE_PART in line:
+                            found_line_to_delete = True
+                            skip_line_num = DELETE_LINE_COUNT - 1
+                            continue
+                    if not found_line_to_replace:
+                        if REPLACE_LINE_PART in line:
+                            found_line_to_replace = True
+                            new_lines.append('{}\n'.format(REPLACE_LINE_INSERT))
+                            continue
                     new_lines.append(line)
-                    if not found_line:
-                        if line.startswith(SEARCHED_LINE_START):
-                            new_lines.append(INSERT_LINE)
-                            found_line = True
             with open(full_conda_activate_path, 'w') as f:
                 f.writelines(new_lines)
 
