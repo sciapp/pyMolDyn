@@ -31,8 +31,7 @@ from gui import main_window
 import core.file
 from core import volumes
 from core.control import Control
-from PyQt4 import QtGui
-from PyQt4 import QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 import signal
 import core.calculation
 
@@ -40,7 +39,14 @@ import core.calculation
 def start_gui():
     core.file.SEARCH_PATH = os.getcwd()
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
-    app = QtGui.QApplication(sys.argv)
+
+    format = QtGui.QSurfaceFormat()
+    format.setMajorVersion(2)
+    format.setMinorVersion(1)
+    format.setProfile(QtGui.QSurfaceFormat.CompatibilityProfile)
+    QtGui.QSurfaceFormat.setDefaultFormat(format)
+
+    app = QtWidgets.QApplication(sys.argv)
     control = Control()
     window = main_window.MainWindow(control)
 
@@ -78,6 +84,9 @@ def start_gui():
         if filename:
             window.file_dock.file_tab.disable_files_in_menu_and_open(filename)
             window.update_submenu_recent_files()
+    screen_geom = QtWidgets.QDesktopWidget().screenGeometry()
+    window.setGeometry((screen_geom.width() - window.width()) / 2, (screen_geom.height() - window.height()) / 2,
+                       window.width(), window.height())
     sys.exit(app.exec_())
 
 

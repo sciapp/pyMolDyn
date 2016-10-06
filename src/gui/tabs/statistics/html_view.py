@@ -1,12 +1,13 @@
 import jinja2
 import numpy as np
-from PyQt4 import QtWebKit, QtGui, QtCore
+from PyQt5 import QtCore, QtWidgets
 import os.path
 import core.elements
 import core.bonds
 from collections import Counter
 from core.calculation.discretization import Discretization
 from gui.tabs.statistics.tree_list import TreeList
+from gui.util.webview import WebWidget
 
 
 def render_html_atom_group(atom_number, atom_elements):
@@ -192,12 +193,14 @@ def render_html_cavity_domain(**kwargs):
     return template.render(template_vars)
 
 
-class HTMLWindow(QtGui.QWidget):
+class HTMLWindow(QtWidgets.QWidget):
 
     def __init__(self):
-        QtGui.QWidget.__init__(self)
-        box = QtGui.QVBoxLayout()
-        self.webview = QtWebKit.QWebView()
+        QtWidgets.QWidget.__init__(self)
+        box = QtWidgets.QVBoxLayout()
+        with open('gui/tabs/statistics/templates/style.css') as f:
+            css = f.read()
+        self.webview = WebWidget(css)
 
         self.atoms = None
         self.cavities_center = None
@@ -206,25 +209,27 @@ class HTMLWindow(QtGui.QWidget):
         self.discretization = None
 
         self.tree_list = None
-        self.webview.setHtml(None)
-        self.webview.page().setLinkDelegationPolicy(QtWebKit.QWebPage.DelegateAllLinks)
-        self.webview.linkClicked.connect(self.link_clicked)
-        path = os.path.dirname(__file__)       # get dir from this file and add it to stylesheet path
-        self.webview.settings().setUserStyleSheetUrl(QtCore.QUrl.fromLocalFile(path + '/templates/style.css'))
+        self.webview.set_gui_html(None)
+        self.webview.page().gui_link_clicked.connect(self.link_clicked)
 
         box.addWidget(self.webview)
         self.setLayout(box)
         box.setContentsMargins(5, 0, 0, 0)
         self.show()
 
-    def link_clicked(self, data):
+    def minimumSizeHint(self):
+        return QtCore.QSize(150, -1)
+
+    def sizeHint(self):
+        return QtCore.QSize(250, -1)
+
+    def link_clicked(self, value):
         '''
         examines the data of the given link by *data* an calls the specific method to render the new HTML page
         :param data: Value of the link clicked in Webview
         :return: None
         '''
-        value = data.toString()
-        value = value.split(":")
+        value = value.split("/")
         if value[0] == "surface_cavity":
             self.show_surface_cavity(int(value[1])-1)
         elif value[0] == "center_cavity":
@@ -326,7 +331,7 @@ class HTMLWindow(QtGui.QWidget):
         atom_number = self.atoms.number
         atom_elements = Counter(self.atoms.elements)
 
-        self.webview.setHtml(render_html_atom_group(atom_number, atom_elements))
+        self.webview.set_gui_html(render_html_atom_group(atom_number, atom_elements))
 
     def show_atom(self, index):
         if self.tree_list is not None:
@@ -348,7 +353,7 @@ class HTMLWindow(QtGui.QWidget):
 
         #print dir(self.domains[0])
 
-        self.webview.setHtml(render_html_atom(index, atom_fullname, atom_positions, atom_number, covalent_radius, cutoff_radius, atom_color_rgb, bonds))
+        self.webview.set_gui_html(render_html_atom(index, atom_fullname, atom_positions, atom_number, covalent_radius, cutoff_radius, atom_color_rgb, bonds))
 
     def show_center_cavity_group(self):
         number = 0
@@ -356,7 +361,7 @@ class HTMLWindow(QtGui.QWidget):
         volumes = 0.0
         volume_fraction = 0.0
         if self.cavities_center is None:
-            self.webview.setHtml(render_html_cavity_center_group_unknown())
+            self.webview.set_gui_html(render_html_cavity_center_group_unknown())
             return
         number = self.cavities_center.number
         for sf in self.cavities_center.surface_areas:
@@ -367,7 +372,7 @@ class HTMLWindow(QtGui.QWidget):
         if self.atoms.volume is not None:
             volume_fraction = (volumes/self.atoms.volume.volume)*100
 
-        self.webview.setHtml(render_html_cavity_center_group(number, surface_area, volumes, volume_fraction))
+        self.webview.set_gui_html(render_html_cavity_center_group(number, surface_area, volumes, volume_fraction))
 
     def show_center_cavity(self, index):
         if self.tree_list is not None:
@@ -395,7 +400,7 @@ class HTMLWindow(QtGui.QWidget):
         if self.atoms.volume is not None:
             data['volume_fraction'] = (data['volume']/self.atoms.volume.volume)*100
 
-        self.webview.setHtml(render_html_cavity_center(**data))
+        self.webview.set_gui_html(render_html_cavity_center(**data))
 
     def show_surface_cavity_group(self):
         number = 0
@@ -403,7 +408,7 @@ class HTMLWindow(QtGui.QWidget):
         volumes = 0.0
         volume_fraction = 0.0
         if self.cavities_surface is None:
-            self.webview.setHtml(render_html_cavity_surface_group_unknown())
+            self.webview.set_gui_html(render_html_cavity_surface_group_unknown())
             return
         number = self.cavities_surface.number
         for sf in self.cavities_surface.surface_areas:
@@ -414,7 +419,7 @@ class HTMLWindow(QtGui.QWidget):
         if self.atoms.volume is not None:
             volume_fraction = (volumes/self.atoms.volume.volume)*100
 
-        self.webview.setHtml(render_html_cavity_surface_group(number, surface_area, volumes, volume_fraction))
+        self.webview.set_gui_html(render_html_cavity_surface_group(number, surface_area, volumes, volume_fraction))
 
     def show_surface_cavity(self, index):
         if self.tree_list is not None:
@@ -442,7 +447,7 @@ class HTMLWindow(QtGui.QWidget):
         if self.atoms.volume is not None:
             data['volume_fraction'] = (data['volume']/self.atoms.volume.volume)*100
 
-        self.webview.setHtml(render_html_cavity_surface(**data))
+        self.webview.set_gui_html(render_html_cavity_surface(**data))
 
     def show_domain_group(self):
         number = 0
@@ -451,7 +456,7 @@ class HTMLWindow(QtGui.QWidget):
         volume_fraction = 0.0
 
         if self.domains is None:
-            self.webview.setHtml(render_html_cavity_domain_group_unknown())
+            self.webview.set_gui_html(render_html_cavity_domain_group_unknown())
             return
         number = self.domains.number
         for sf in self.domains.surface_areas:
@@ -462,7 +467,7 @@ class HTMLWindow(QtGui.QWidget):
         if self.atoms.volume is not None:
             volume_fraction = (volumes/self.atoms.volume.volume)*100
 
-        self.webview.setHtml(render_html_cavity_domain_group(number, surface, volumes, volume_fraction))
+        self.webview.set_gui_html(render_html_cavity_domain_group(number, surface, volumes, volume_fraction))
 
     def show_domain(self, index):
         if self.tree_list is not None:
@@ -498,7 +503,7 @@ class HTMLWindow(QtGui.QWidget):
                     data['center_cavity_index'] = i+1
                     break
 
-        self.webview.setHtml(render_html_cavity_domain(**data))
+        self.webview.set_gui_html(render_html_cavity_domain(**data))
 
     @staticmethod
     def _create_attr_getter(obj, index):

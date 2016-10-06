@@ -4,7 +4,7 @@ from __future__ import absolute_import
 
 import numpy as np
 import numpy.linalg as la
-from PyQt4 import QtCore, QtGui, QtOpenGL
+from PyQt5 import QtCore, QtWidgets
 from config.configuration import config
 from OpenGL.GL import glReadPixels, GL_FLOAT, GL_DEPTH_COMPONENT
 
@@ -17,14 +17,15 @@ class UpdateGLEvent(QtCore.QEvent):
         QtCore.QEvent.__init__(self, QtCore.QEvent.Type(t))
 
 
-class GLWidget(QtOpenGL.QGLWidget):
+class GLWidget(QtWidgets.QOpenGLWidget):
     """
     OpenGL widget to show the 3D-scene
     """
 
     def __init__(self, parent, main_window):
-        QtOpenGL.QGLWidget.__init__(self, QtOpenGL.QGLFormat(QtOpenGL.QGL.SampleBuffers), parent)
+        QtWidgets.QOpenGLWidget.__init__(self, parent)
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.update_needed = False
         self.dataset_loaded = False
         self.control = parent.control
@@ -39,7 +40,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         pass
 
     def minimumSizeHint(self):
-        return QtCore.QSize(config.OpenGL.gl_window_size[0], config.OpenGL.gl_window_size[1])
+        return QtCore.QSize(400, 400)
 
     def sizeHint(self):
         return QtCore.QSize(config.OpenGL.gl_window_size[0], config.OpenGL.gl_window_size[1])
@@ -54,13 +55,13 @@ class GLWidget(QtOpenGL.QGLWidget):
                 self.vis.rotate_mouse(dx, dy)
         self.x = e.x()
         self.y = e.y()
-        self.updateGL()
+        self.update()
 
     def wheelEvent(self, e):
         self.update_needed = True
         if e.modifiers() != QtCore.Qt.ShiftModifier:
-            if e.orientation() == QtCore.Qt.Vertical:
-                self.vis.zoom(e.delta())
+            if e.pixelDelta().y() != 0:
+                self.vis.zoom(-e.pixelDelta().y())
         else:
             rot_v = 0.1
             if e.orientation() == QtCore.Qt.Horizontal:
@@ -68,7 +69,7 @@ class GLWidget(QtOpenGL.QGLWidget):
             else:
                 self.vis.rotate_mouse(0, e.delta() * rot_v)
 
-        QtGui.QApplication.postEvent(self, UpdateGLEvent())
+        QtWidgets.QApplication.postEvent(self, UpdateGLEvent())
 
     def mousePressEvent(self, e):
         if e.buttons() and QtCore.Qt.LeftButton:
@@ -105,18 +106,18 @@ class GLWidget(QtOpenGL.QGLWidget):
                 elif object_type == 'center cavity':
                     self.window().statistics_dock.statistics_tab.html_view.show_center_cavity(object_index)
                 self.window().statistics_dock.raise_()
-            self.updateGL()
+            self.update()
 
     def customEvent(self, e):
         if self.update_needed:
             self.setDisabled(False)
-            self.updateGL()
+            self.update()
             self.update_needed = False
 
 #     def create_scene(self, show_box, show_atoms, show_domains, show_cavities=True, center_based_cavities=False):
     def create_scene(self):
         self.vis.create_scene()
-        self.updateGL()
+        self.update()
 
     def keyPressEvent(self, e):
         """
@@ -153,13 +154,13 @@ class GLWidget(QtOpenGL.QGLWidget):
             self.vis.reset_view()
         else:
             e.ignore()
-        self.updateGL()
+        self.update()
 
     def paintGL(self):
         """
         Refresh scene
         """
-        self.vis.paint(self.geometry().width(), self.geometry().height())
+        self.vis.paint(self.width(), self.height())
 
     def activate(self):
         pass

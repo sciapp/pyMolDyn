@@ -17,17 +17,17 @@ from config.cutoff_presets import cutoff_presets
 from config.cutoff_presets import Preset
 from config.cutoff_history import cutoff_history
 from config.cutoff_history import HistoryEntry
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtWidgets
 
 
-class CalculationSettingsDialog(QtGui.QDialog):
+class CalculationSettingsDialog(QtWidgets.QDialog):
 
     RES_MIN = 32
     RES_MAX = 1024
     RES_INTERVAL = 32
 
     def __init__(self, parent, file_frame_dict):
-        QtGui.QDialog.__init__(self, parent)
+        QtWidgets.QDialog.__init__(self, parent)
 
         self.control = parent.control
         self.resolution = config.Computation.std_resolution
@@ -39,27 +39,27 @@ class CalculationSettingsDialog(QtGui.QDialog):
 
     def init_gui(self):
 
-        vbox            = QtGui.QVBoxLayout()
-        hbox            = QtGui.QHBoxLayout()
-        inner_layout    = QtGui.QVBoxLayout()
-        button_hbox     = QtGui.QHBoxLayout()
-        res_hbox        = QtGui.QHBoxLayout()
+        vbox            = QtWidgets.QVBoxLayout()
+        hbox            = QtWidgets.QHBoxLayout()
+        inner_layout    = QtWidgets.QVBoxLayout()
+        button_hbox     = QtWidgets.QHBoxLayout()
+        res_hbox        = QtWidgets.QHBoxLayout()
 
-        self.res_slider = QtGui.QSlider(QtCore.Qt.Horizontal, self)
+        self.res_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
         self.res_slider.setMinimum(0)
         self.res_slider.setMaximum((self.RES_MAX - self.RES_MIN) / self.RES_INTERVAL)
         # self.res_slider.setTickInterval(1)
-        # self.res_slider.setTickPosition(QtGui.QSlider.TicksBelow)
+        # self.res_slider.setTickPosition(QtWidgets.QSlider.TicksBelow)
         self.res_slider.valueChanged[int].connect(self.slider_changing)
         self.res_slider.sliderReleased.connect(self.slider_released)
 
-        self.lineedit   = QtGui.QLineEdit(self)
+        self.lineedit   = QtWidgets.QLineEdit(self)
         self.lineedit.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.lineedit.setMinimumSize(30, 1)
         self.lineedit.setMaximumSize(40, 40)
         self.lineedit.returnPressed.connect(self.lineedit_return)
 
-        res_hbox.addWidget(QtGui.QLabel('resolution:', self))
+        res_hbox.addWidget(QtWidgets.QLabel('resolution:', self))
         res_hbox.addWidget(self.res_slider)
         res_hbox.addWidget(self.lineedit)
 
@@ -70,11 +70,11 @@ class CalculationSettingsDialog(QtGui.QDialog):
         # enable sortingq
 #        table_view.setSortingEnabled(True)
 
-        ok_button = QtGui.QPushButton('Ok', self)
+        ok_button = QtWidgets.QPushButton('Ok', self)
         ok_button.setAutoDefault(False)
         ok_button.clicked.connect(self.ok)
 
-        cancel_button = QtGui.QPushButton('Cancel', self)
+        cancel_button = QtWidgets.QPushButton('Cancel', self)
         cancel_button.setAutoDefault(False)
         cancel_button.clicked.connect(self.cancel)
 
@@ -88,16 +88,16 @@ class CalculationSettingsDialog(QtGui.QDialog):
         self.res_slider.setValue((self.resolution-self.RES_MIN)/self.RES_INTERVAL)
         self.update_table()
 
-        self.surf_check = QtGui.QCheckBox('calculate surface based cavities', self)
+        self.surf_check = QtWidgets.QCheckBox('calculate surface based cavities', self)
         self.surf_check.setChecked(True)
-        self.center_check = QtGui.QCheckBox('calculate center based cavities', self)
-        self.gyration_tensor_check = QtGui.QCheckBox('calculate gyration tensor parameters', self)
+        self.center_check = QtWidgets.QCheckBox('calculate center based cavities', self)
+        self.gyration_tensor_check = QtWidgets.QCheckBox('calculate gyration tensor parameters', self)
         self.gyration_tensor_check.setToolTip('squared_gyration_radius, asphericity, acylindricity, anisotropy')
-        self.overwrite_check = QtGui.QCheckBox('overwrite existing results', self)
-        self.exporthdf5_check = QtGui.QCheckBox('export results as HDF5 files', self)
-        self.exporttext_check = QtGui.QCheckBox('export results as text files', self)
-        self.exportdir_radio_input = QtGui.QRadioButton('export to the directory of the input files', self)
-        self.exportdir_radio_config = QtGui.QRadioButton('export to %s' % config.Path.result_dir, self)
+        self.overwrite_check = QtWidgets.QCheckBox('overwrite existing results', self)
+        self.exporthdf5_check = QtWidgets.QCheckBox('export results as HDF5 files', self)
+        self.exporttext_check = QtWidgets.QCheckBox('export results as text files', self)
+        self.exportdir_radio_input = QtWidgets.QRadioButton('export to the directory of the input files', self)
+        self.exportdir_radio_config = QtWidgets.QRadioButton('export to %s' % config.Path.result_dir, self)
 
         self.exportdir_radio_input.setChecked(True)
 
@@ -266,16 +266,16 @@ class CalculationSettingsDialog(QtGui.QDialog):
         self.lineedit_return()
         self.__update_cutoff_history()
         self.__update_cutoff_presets()
-        self.done(QtGui.QDialog.Accepted)
+        self.done(QtWidgets.QDialog.Accepted)
 
     def cancel(self):
-        self.done(QtGui.QDialog.Rejected)
+        self.done(QtWidgets.QDialog.Rejected)
 
     def calculation_settings(self):
         calc_settings = None
         while True:
             ok = self.exec_()
-            if ok != QtGui.QDialog.Accepted:
+            if ok != QtWidgets.QDialog.Accepted:
                 break
             try:
                 cutoff_radii = self.radii_widget.cutoff_radii
@@ -307,7 +307,7 @@ class CalculationSettingsDialog(QtGui.QDialog):
         return (calc_settings, ok)
 
 
-class RadiiWidget(QtGui.QWidget):
+class RadiiWidget(QtWidgets.QWidget):
     class RadiiType:
         FIXED = 0
         CUSTOM = 1
@@ -325,36 +325,36 @@ class RadiiWidget(QtGui.QWidget):
 
     def _init_ui(self):
         # Fixed Radio Button
-        self.rb_fixed = QtGui.QRadioButton("Fixed Radius:")
-        self.le_fixed = QtGui.QLineEdit()
+        self.rb_fixed = QtWidgets.QRadioButton("Fixed Radius:")
+        self.le_fixed = QtWidgets.QLineEdit()
         self.le_fixed.setMinimumWidth(150)
         self.le_fixed.setVisible(False)
         self.le_fixed.textEdited.connect(self.le_fixed_text_edited)
         self.rb_fixed.clicked.connect(self.rb_fixed_clicked)
 
         # QStackedWidget le_fixed
-        self.tmp1 = QtGui.QWidget()
-        self.sw_fixed = QtGui.QStackedWidget()
-        self.sw_fixed.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
+        self.tmp1 = QtWidgets.QWidget()
+        self.sw_fixed = QtWidgets.QStackedWidget()
+        self.sw_fixed.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.sw_fixed.addWidget(self.le_fixed)
         self.sw_fixed.addWidget(self.tmp1)
         self.sw_fixed.setCurrentIndex(1)
 
         # Custom Radio Button + Table
-        self.rb_custom = QtGui.QRadioButton("Custom:")
+        self.rb_custom = QtWidgets.QRadioButton("Custom:")
         self.tw_cutoff = CutoffTableWidget(self._radii)
         self.tw_cutoff.text_edited.connect(self.tw_cutoff_text_edited)
         self.rb_custom.clicked.connect(self.rb_custom_clicked)
 
         # Preset Combo Box
         self.cb_preset = CutoffPresetComboBox()
-        self.cb_preset.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
+        self.cb_preset.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.cb_preset.preset_selected.connect(self.cb_preset_selected)
 
         # History button
-        self.pb_history = QtGui.QPushButton("History", self)
+        self.pb_history = QtWidgets.QPushButton("History", self)
         self.pb_history.setMinimumWidth(0)
-        self.pb_history.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
+        self.pb_history.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.pb_history.setAutoDefault(False)
         self.pb_history.clicked.connect(self.pb_history_clicked)
         if len(cutoff_history.filtered_history(self._radii.keys(), preferred_filenames_with_frames=\
@@ -362,18 +362,18 @@ class RadiiWidget(QtGui.QWidget):
             self.pb_history.setVisible(False)
 
         # Preset save
-        self.cb_preset_save = QtGui.QCheckBox("Save as Preset", self)
-        self.le_preset_save = QtGui.QLineEdit()
-        self.le_preset_save.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
+        self.cb_preset_save = QtWidgets.QCheckBox("Save as Preset", self)
+        self.le_preset_save = QtWidgets.QLineEdit()
+        self.le_preset_save.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.le_preset_save.textChanged.connect(self.le_preset_save_changed)
 
-        self.la_main = QtGui.QGridLayout()
+        self.la_main = QtWidgets.QGridLayout()
         self.la_main.setContentsMargins(0, 0, 0, 0)
-        self.la_fixed = QtGui.QHBoxLayout()
+        self.la_fixed = QtWidgets.QHBoxLayout()
         self.la_fixed.setContentsMargins(0, 0, 0, 0)
-        self.la_custom = QtGui.QHBoxLayout()
+        self.la_custom = QtWidgets.QHBoxLayout()
         self.la_custom.setContentsMargins(0, 0, 0, 0)
-        self.la_preset_save = QtGui.QHBoxLayout()
+        self.la_preset_save = QtWidgets.QHBoxLayout()
         self.la_preset_save.setContentsMargins(0, 0, 0, 0)
 
         self.la_fixed.addWidget(self.rb_fixed)
@@ -428,7 +428,7 @@ class RadiiWidget(QtGui.QWidget):
     def pb_history_clicked(self):
         cutoff_history_dialog = CutoffHistoryDialog(self, self._radii.keys(), self._preferred_filenames_with_frames)
         return_value = cutoff_history_dialog.exec_()
-        if return_value == QtGui.QDialog.Rejected:
+        if return_value == QtWidgets.QDialog.Rejected:
             return
         self._init_cutoff_radii(cutoff_history_dialog.selected_radii)
 
@@ -444,8 +444,8 @@ class RadiiWidget(QtGui.QWidget):
             return None
         preset_name = self.le_preset_save.text().strip()
         if not re.match('[a-zA-Z0-9_]+', preset_name):
-            message = QtGui.QMessageBox()
-            message.setStandardButtons(QtGui.QMessageBox.Ok)
+            message = QtWidgets.QMessageBox()
+            message.setStandardButtons(QtWidgets.QMessageBox.Ok)
             message.setText("{} is not valid preset name. Only A-Z, a-z, 0-9 and _ are valid characters".format(
                 preset_name)
             )
@@ -461,8 +461,8 @@ class RadiiWidget(QtGui.QWidget):
                 radius = float(radius_as_text)
                 return radius
             except ValueError:
-                message = QtGui.QMessageBox()
-                message.setStandardButtons(QtGui.QMessageBox.Ok)
+                message = QtWidgets.QMessageBox()
+                message.setStandardButtons(QtWidgets.QMessageBox.Ok)
                 message.setText("Incorrect input: {}".format(radius_as_text))
                 message.exec_()
                 raise
@@ -475,8 +475,8 @@ class RadiiWidget(QtGui.QWidget):
                     current_radius = float(current_radius_as_text)
                     elem_to_cutoff_radius[elem] = current_radius
                 except ValueError:
-                    message = QtGui.QMessageBox()
-                    message.setStandardButtons(QtGui.QMessageBox.Ok)
+                    message = QtWidgets.QMessageBox()
+                    message.setStandardButtons(QtWidgets.QMessageBox.Ok)
                     message.setText("Incorrect input: {}".format(current_radius_as_text))
                     message.exec_()
                     raise

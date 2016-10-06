@@ -1,9 +1,9 @@
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtWidgets
 from collections import Counter, OrderedDict
 
-class TreeList(QtGui.QTreeWidget):
+class TreeList(QtWidgets.QTreeWidget):
     def __init__(self, html_view):
-        QtGui.QTreeWidget.__init__(self)
+        QtWidgets.QTreeWidget.__init__(self)
         self.setColumnCount(1)
         #todo dynamic list generation from results
 
@@ -28,7 +28,7 @@ class TreeList(QtGui.QTreeWidget):
 
         # expand all items per default
         for item in self.items:
-            self.setItemExpanded(item, True)
+            item.setExpanded(True)
 
         self.adjustSize()
         self.updateGeometry()
@@ -125,6 +125,6 @@ class TreeList(QtGui.QTreeWidget):
 
         self.items = []
         for root, sib in src.iteritems():
-            self.items.append(QtGui.QTreeWidgetItem(self, [root]))
+            self.items.append(QtWidgets.QTreeWidgetItem(self, [root]))
             if sib:
-                self.items[-1].addChildren([QtGui.QTreeWidgetItem(self.items[-1], [s]) for s in sib])
+                self.items[-1].addChildren([QtWidgets.QTreeWidgetItem(self.items[-1], [s]) for s in sib])

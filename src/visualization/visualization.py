@@ -223,6 +223,7 @@ class Visualization(object):
         self.width = width
         self.height = height
         self.set_camera(width, height)
+        gr3.usecurrentframebuffer()
         gr3.drawimage(0, width, 0, height, width, height, gr3.GR3_Drawable.GR3_DRAWABLE_OPENGL)
 
     def save_screenshot(self, file_name, width=3840, height=2160):

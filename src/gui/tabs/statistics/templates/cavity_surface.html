@@ -21,7 +21,7 @@
         <tr>
             <td>center:</td>
             <td> {% for domain in domains: %}
-                <a href="domain:{{domain[0]}}">({{ "%.4f, %.4f, %.4f"|format(domain[1][0], domain[1][1], domain[1][2]) }})</a>
+                <a href="gui:domain/{{domain[0]}}">({{ "%.4f, %.4f, %.4f"|format(domain[1][0], domain[1][1], domain[1][2]) }})</a>
                 <br/>
 
                 {% endfor %}
@@ -90,15 +90,15 @@
         {% endif %}
         <tr>
             <td> &nbsp; </td>
-            <td><a href="hideothers:surface_cavity:{{ index+1 }}">Hide all other surface cavities</a></td>
+            <td><a href="gui:hideothers/surface_cavity/{{ index+1 }}">Hide all other surface cavities</a></td>
         </tr>
         <tr>
             <td> &nbsp; </td>
-            <td><a href="addtovisible:surface_cavity:{{ index+1 }}">Add to list of visible surface cavities</a></td>
+            <td><a href="gui:addtovisible/surface_cavity/{{ index+1 }}">Add to list of visible surface cavities</a></td>
         </tr>
         <tr>
             <td> &nbsp; </td>
-            <td><a href="showall:surface_cavities">Show all surface cavities</a></td>
+            <td><a href="gui:showall/surface_cavities">Show all surface cavities</a></td>
         </tr>
         <!--<tr>
             <td>atoms: </td>
@@ -115,7 +115,7 @@
         </ul>
         <p>
             Attributes are missing since the dataset has been calculated with an older program version.
-            <a href="recalculate">Recalculate</a> to gain a complete data set.
+            <a href="gui:recalculate">Recalculate</a> to gain a complete data set.
         </p>
     </div>
     {% endif %}

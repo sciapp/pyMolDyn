@@ -5,12 +5,12 @@ from __future__ import absolute_import
 
 
 import collections
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 from gui.util.table_fit_mixin import TableFitMixin
 
 
-class TableWithRemoveableEntries(QtGui.QTableWidget, TableFitMixin):
-    class EntryActionWidget(QtGui.QWidget):
+class TableWithRemoveableEntries(QtWidgets.QTableWidget, TableFitMixin):
+    class EntryActionWidget(QtWidgets.QWidget):
 
         remove = QtCore.pyqtSignal()
 
@@ -19,17 +19,17 @@ class TableWithRemoveableEntries(QtGui.QTableWidget, TableFitMixin):
             self._init_ui()
 
         def _init_ui(self):
-            self.bt_remove = QtGui.QPushButton(self.style().standardIcon(QtGui.QStyle.SP_TitleBarCloseButton), '')
+            self.bt_remove = QtWidgets.QPushButton(self.style().standardIcon(QtWidgets.QStyle.SP_TitleBarCloseButton), '')
             self.bt_remove.setFixedSize(30, 30)
             self.bt_remove.setFlat(True)
             self.bt_remove.clicked.connect(lambda event: self.remove.emit())
-            self.la_main = QtGui.QHBoxLayout()
+            self.la_main = QtWidgets.QHBoxLayout()
             self.la_main.addWidget(self.bt_remove)
             self.la_main.setContentsMargins(15, 0, 15, 0)
             self.setLayout(self.la_main)
 
     def __init__(self, header_labels, entry_count):
-        QtGui.QTableWidget.__init__(self, entry_count, len(header_labels) + 1)
+        QtWidgets.QTableWidget.__init__(self, entry_count, len(header_labels) + 1)
         TableFitMixin.__init__(self, size_hint_only=True, scrollbar_extra_space=(-1, 2))
         self._header_labels = header_labels
         self._row_index_to_entry_index = range(entry_count)
@@ -38,18 +38,18 @@ class TableWithRemoveableEntries(QtGui.QTableWidget, TableFitMixin):
         TableWithRemoveableEntries._init_ui(self)   # Emulate static binding
 
     def _init_ui(self):
-        self.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Expanding)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Expanding)
         self.setMaximumHeight(300)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setHorizontalHeaderLabels(self._header_labels + ('', ))
         self.setVerticalHeaderLabels(map(str, range(self.entry_count())))
         self.setShowGrid(True)
-        self.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
-        self.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
+        self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
 
         for i, entry in enumerate(self.entries()):
             for j, item in enumerate(entry):
-                if isinstance(item,  QtGui.QTableWidgetItem):
+                if isinstance(item,  QtWidgets.QTableWidgetItem):
                     self.setItem(i, j, item)
                 else:
                     # item is an arbitrary widget that should be set as cell widget

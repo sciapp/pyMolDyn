@@ -2,7 +2,7 @@
 
 from __future__ import absolute_import
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtWidgets
 import gr
 from qtgr import GRWidget
 import csv
@@ -22,16 +22,10 @@ class GrPlotWidget(GRWidget):
     def __init__(self, *args, **kwargs):
         super(GrPlotWidget, self).__init__(*args, **kwargs)
 
-        self.init_gui(self)
-
         self.xvalues = None
         self.yvalues = None
         self.title = None
         self.datapoints = None
-
-    def init_gui(self, form):
-        form.resize(QtCore.QSize(500, 500).expandedTo(form.minimumSizeHint()))
-        QtCore.QMetaObject.connectSlotsByName(form)
 
     def quit(self):
         gr.emergencyclosegks()
@@ -81,10 +75,10 @@ class GrPlotWidget(GRWidget):
             gr.text(0.8 * self.sizex, 0.9 * self.sizey, self.title)
 
 
-class PDFWidget(QtGui.QWidget):
+class PDFWidget(QtWidgets.QWidget):
 
     def __init__(self, parent):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
 
         self.control = parent.control
         self.results = None
@@ -93,64 +87,64 @@ class PDFWidget(QtGui.QWidget):
         self.init_gui()
 
     def init_gui(self):
-        vbox = QtGui.QVBoxLayout()
-        grid = QtGui.QGridLayout()
+        vbox = QtWidgets.QVBoxLayout()
+        grid = QtWidgets.QGridLayout()
         self.gr_widget = GrPlotWidget()
 
-        self.datasetlabel = QtGui.QLabel("No data loaded.", self)
+        self.datasetlabel = QtWidgets.QLabel("No data loaded.", self)
         self.datasetlabel.setAlignment(QtCore.Qt.AlignHCenter)
 
-        elembox = QtGui.QHBoxLayout()
-        elembox.addWidget(QtGui.QLabel("Elements:", self), 0)
-        self.elem1 = QtGui.QComboBox(self)
+        elembox = QtWidgets.QHBoxLayout()
+        elembox.addWidget(QtWidgets.QLabel("Elements:", self), 0)
+        self.elem1 = QtWidgets.QComboBox(self)
         self.elem1.setMinimumWidth(170)
         elembox.addWidget(self.elem1, 0, QtCore.Qt.AlignLeft)
-        self.elem2 = QtGui.QComboBox(self)
+        self.elem2 = QtWidgets.QComboBox(self)
         self.elem2.setMinimumWidth(170)
         elembox.addWidget(self.elem2, 0, QtCore.Qt.AlignRight)
         grid.addLayout(elembox, 0, 0)
 
-        rangebox = QtGui.QHBoxLayout()
-        rangebox.addWidget(QtGui.QLabel("Plot range:", self))
-        self.range1 = QtGui.QLineEdit("0", self)
+        rangebox = QtWidgets.QHBoxLayout()
+        rangebox.addWidget(QtWidgets.QLabel("Plot range:", self))
+        self.range1 = QtWidgets.QLineEdit("0", self)
         self.range1.setMinimumWidth(30)
         rangebox.addWidget(self.range1)
-        rangebox.addWidget(QtGui.QLabel("-", self))
-        self.range2 = QtGui.QLineEdit("8", self)
+        rangebox.addWidget(QtWidgets.QLabel("-", self))
+        self.range2 = QtWidgets.QLineEdit("8", self)
         self.range2.setMinimumWidth(30)
         rangebox.addWidget(self.range2)
         grid.addLayout(rangebox, 0, 1)
 
-        cutoffbox = QtGui.QHBoxLayout()
-        cutoffbox.addWidget(QtGui.QLabel("Kernel:", self))
+        cutoffbox = QtWidgets.QHBoxLayout()
+        cutoffbox.addWidget(QtWidgets.QLabel("Kernel:", self))
         self.kernels = {"Gaussian": Kernels.gauss, "Epanechnikov": Kernels.epanechnikov, "Compact": Kernels.compact, "Triangular": Kernels.triang, "Box": Kernels.quad, "Right Box": Kernels.posquad, "Left Box": Kernels.negquad}
-        self.kernel = QtGui.QComboBox(self)
+        self.kernel = QtWidgets.QComboBox(self)
         self.kernel .setMinimumWidth(130)
         self.kernel.addItems(["Gaussian", "Epanechnikov", "Compact", "Triangular", "Box", "Right Box", "Left Box"])
         cutoffbox.addWidget(self.kernel)
-        cutoffbox.addWidget(QtGui.QLabel("Cutoff:", self))
-        self.cutoff = QtGui.QLineEdit("12", self)
+        cutoffbox.addWidget(QtWidgets.QLabel("Cutoff:", self))
+        self.cutoff = QtWidgets.QLineEdit("12", self)
         self.cutoff.setMinimumWidth(30)
         cutoffbox.addWidget(self.cutoff)
-        cutoffbox.addWidget(QtGui.QLabel("Bandwidth:", self))
-        self.bandwidth = QtGui.QLineEdit("", self)
+        cutoffbox.addWidget(QtWidgets.QLabel("Bandwidth:", self))
+        self.bandwidth = QtWidgets.QLineEdit("", self)
         self.bandwidth.setMinimumWidth(30)
         cutoffbox.addWidget(self.bandwidth)
         grid.addLayout(cutoffbox, 0, 2)
 
-        buttonbox = QtGui.QHBoxLayout()
+        buttonbox = QtWidgets.QHBoxLayout()
 
-        self.plotbutton = QtGui.QPushButton("Plot", self)
+        self.plotbutton = QtWidgets.QPushButton("Plot", self)
         buttonbox.addWidget(self.plotbutton)
-        self.connect(self.plotbutton, QtCore.SIGNAL("clicked()"), self.draw)
+        self.plotbutton.clicked.connect(self.draw)
 
-        self.export_image_button = QtGui.QPushButton("Save Image", self)
+        self.export_image_button = QtWidgets.QPushButton("Save Image", self)
         buttonbox.addWidget(self.export_image_button)
-        self.connect(self.export_image_button, QtCore.SIGNAL("clicked()"), self.export_image)
+        self.export_image_button.clicked.connect(self.export_image)
 
-        self.export_data_button = QtGui.QPushButton("Export Data", self)
+        self.export_data_button = QtWidgets.QPushButton("Export Data", self)
         buttonbox.addWidget(self.export_data_button)
-        self.connect(self.export_data_button, QtCore.SIGNAL("clicked()"), self.export_data)
+        self.export_data_button.clicked.connect(self.export_data)
         grid.addLayout(buttonbox, 1, 0, 1, 3)
 
         vbox.addWidget(self.gr_widget, stretch=1)
@@ -221,7 +215,7 @@ class PDFWidget(QtGui.QWidget):
         extensions = (".pdf", ".png", ".bmp", ".jpg", ".jpeg", ".png",
                       ".tiff", ".fig", ".svg", ".wmf", ".eps", ".ps")
         qtext = "*" + " *".join(extensions)
-        filepath = QtGui.QFileDialog.getSaveFileName(self, "Save Image",
+        filepath = QtWidgets.QFileDialog.getSaveFileName(self, "Save Image",
                                                      ".", "Image Files ({})".format(qtext))
         if len(filepath) == 0:
             return
@@ -236,7 +230,7 @@ class PDFWidget(QtGui.QWidget):
 
     def export_data(self):
         qtext = " *.csv"
-        filepath = QtGui.QFileDialog.getSaveFileName(self, "Save Data",
+        filepath = QtWidgets.QFileDialog.getSaveFileName(self, "Save Data",
                                                      ".", "CSV Files ({})".format(qtext))
         if len(filepath) == 0:
             return
