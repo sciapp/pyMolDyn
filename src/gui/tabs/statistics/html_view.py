@@ -198,9 +198,7 @@ class HTMLWindow(QtWidgets.QWidget):
     def __init__(self):
         QtWidgets.QWidget.__init__(self)
         box = QtWidgets.QVBoxLayout()
-        with open('gui/tabs/statistics/templates/style.css') as f:
-            css = f.read()
-        self.webview = WebWidget(css)
+        self.webview = WebWidget(css_filepath='gui/tabs/statistics/templates/style.css')
 
         self.atoms = None
         self.cavities_center = None
@@ -210,7 +208,7 @@ class HTMLWindow(QtWidgets.QWidget):
 
         self.tree_list = None
         self.webview.set_gui_html(None)
-        self.webview.page().gui_link_clicked.connect(self.link_clicked)
+        self.webview.gui_link_clicked.connect(self.link_clicked)
 
         box.addWidget(self.webview)
         self.setLayout(box)
