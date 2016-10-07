@@ -5,6 +5,13 @@ from __future__ import absolute_import
 import numpy as np
 import numpy.linalg as la
 from PyQt5 import QtCore, QtWidgets
+try:
+    from PyQt5.QtWidgets import QOpenGLWidget
+    has_qopenglwidget = True
+except ImportError:
+    from PyQt5 import QtOpenGL
+    from PyQt5.QtOpenGL import QGLWidget
+    has_qopenglwidget = False
 from config.configuration import config
 from OpenGL.GL import glReadPixels, GL_FLOAT, GL_DEPTH_COMPONENT
 
@@ -17,13 +24,16 @@ class UpdateGLEvent(QtCore.QEvent):
         QtCore.QEvent.__init__(self, QtCore.QEvent.Type(t))
 
 
-class GLWidget(QtWidgets.QOpenGLWidget):
+class GLWidget(QOpenGLWidget if has_qopenglwidget else QGLWidget):
     """
     OpenGL widget to show the 3D-scene
     """
 
     def __init__(self, parent, main_window):
-        QtWidgets.QOpenGLWidget.__init__(self, parent)
+        if has_qopenglwidget:
+            super(GLWidget, self).__init__(parent)
+        else:
+            super(GLWidget, self).__init__(QtOpenGL.QGLFormat(QtOpenGL.QGL.SampleBuffers), parent)
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.update_needed = False
@@ -55,7 +65,7 @@ class GLWidget(QtWidgets.QOpenGLWidget):
                 self.vis.rotate_mouse(dx, dy)
         self.x = e.x()
         self.y = e.y()
-        self.update()
+        self.updateGL()
 
     def wheelEvent(self, e):
         self.update_needed = True
@@ -106,18 +116,18 @@ class GLWidget(QtWidgets.QOpenGLWidget):
                 elif object_type == 'center cavity':
                     self.window().statistics_dock.statistics_tab.html_view.show_center_cavity(object_index)
                 self.window().statistics_dock.raise_()
-            self.update()
+            self.updateGL()
 
     def customEvent(self, e):
         if self.update_needed:
             self.setDisabled(False)
-            self.update()
+            self.updateGL()
             self.update_needed = False
 
 #     def create_scene(self, show_box, show_atoms, show_domains, show_cavities=True, center_based_cavities=False):
     def create_scene(self):
         self.vis.create_scene()
-        self.update()
+        self.updateGL()
 
     def keyPressEvent(self, e):
         """
@@ -154,13 +164,19 @@ class GLWidget(QtWidgets.QOpenGLWidget):
             self.vis.reset_view()
         else:
             e.ignore()
-        self.update()
+        self.updateGL()
 
     def paintGL(self):
         """
         Refresh scene
         """
-        self.vis.paint(self.width(), self.height())
+        self.vis.paint(self.width(), self.height(), has_qopenglwidget)
+
+    def updateGL(self):
+        if has_qopenglwidget:
+            self.update()
+        else:
+            super(GLWidget, self).updateGL()
 
     def activate(self):
         pass
