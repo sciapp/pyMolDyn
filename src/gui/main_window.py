@@ -233,7 +233,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.update_submenu_recent_files()
 
     def wrapper_export_bonds(self):
-        filename = QtWidgets.QFileDialog.getSaveFileName(self, "Export Bonds", "bonds.txt")
+        filename = QtWidgets.QFileDialog.getSaveFileName(self, "Export Bonds", "bonds.txt")[0]
         if filename:
             core.bonds.export_bonds(filename, self.control.visualization.results.atoms)
             QtWidgets.QMessageBox.information(self,
@@ -241,7 +241,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                           "Saved to filename: %s" % (filename))
 
     def wrapper_export_bond_angles(self):
-        filename = QtWidgets.QFileDialog.getSaveFileName(self, "Export Bond Angles", "bond_angles.txt")
+        filename = QtWidgets.QFileDialog.getSaveFileName(self, "Export Bond Angles", "bond_angles.txt")[0]
         if filename:
             core.bonds.export_bond_angles(filename, self.control.visualization.results.atoms)
             QtWidgets.QMessageBox.information(self,
@@ -249,7 +249,8 @@ class MainWindow(QtWidgets.QMainWindow):
                                           "Saved to filename: %s" % (filename))
 
     def wrapper_export_bond_dihedral_angles(self):
-        filename = QtWidgets.QFileDialog.getSaveFileName(self, "Export Bond Dihedral Angles", "bond_dihedral_angles.txt")
+        filename = QtWidgets.QFileDialog.getSaveFileName(self, "Export Bond Dihedral Angles",
+                                                         "bond_dihedral_angles.txt")[0]
         if filename:
             core.bonds.export_bond_dihedral_angles(filename, self.control.visualization.results.atoms)
             QtWidgets.QMessageBox.information(self,
@@ -257,7 +258,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                           "Saved to filename: %s" % (filename))
 
     def wrapper_export_domains(self):
-        filename = QtWidgets.QFileDialog.getSaveFileName(self, "Export Cavity Information (domains)", "domains")
+        filename = QtWidgets.QFileDialog.getSaveFileName(self, "Export Cavity Information (domains)", "domains")[0]
         if filename:
             filenames = self.control.visualization.results.domains.totxt(filename + '_{property}.txt')
             QtWidgets.QMessageBox.information(self,
@@ -265,7 +266,8 @@ class MainWindow(QtWidgets.QMainWindow):
                                           "Saved to filenames: %s" % (', '.join(filenames)))
 
     def wrapper_export_surface_cavities(self):
-        filename = QtWidgets.QFileDialog.getSaveFileName(self, "Export Cavity Information (surface method)", "surface_cavities")
+        filename = QtWidgets.QFileDialog.getSaveFileName(self, "Export Cavity Information (surface method)",
+                                                         "surface_cavities")[0]
         if filename:
             filenames = self.control.visualization.results.surface_cavities.totxt(filename + '_{property}.txt')
             QtWidgets.QMessageBox.information(self,
@@ -273,7 +275,8 @@ class MainWindow(QtWidgets.QMainWindow):
                                           "Saved to filenames: %s" % (', '.join(filenames)))
 
     def wrapper_export_center_cavities(self):
-        filename = QtWidgets.QFileDialog.getSaveFileName(self, "Export Cavity Information (center method)", "center_cavities")
+        filename = QtWidgets.QFileDialog.getSaveFileName(self, "Export Cavity Information (center method)",
+                                                         "center_cavities")[0]
         if filename:
             filenames = self.control.visualization.results.center_cavities.totxt(filename + '_{property}.txt')
             QtWidgets.QMessageBox.information(self,

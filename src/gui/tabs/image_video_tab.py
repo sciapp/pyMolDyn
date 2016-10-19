@@ -63,8 +63,11 @@ class ImageVideoTab(QtWidgets.QWidget):
 
     def save_screenshot(self):
         file_name = QtWidgets.QFileDialog.getSaveFileName(self,
-            'Save screenshot...', filter='Portable Network Graphics (*.png)')
+            'Save screenshot...', filter='Portable Network Graphics (*.png)')[0]
         if file_name:
+            ext = os.path.splitext(file_name)[1]
+            if not ext:
+                file_name += '.png'
             for widget in QtWidgets.QApplication.topLevelWidgets():
                 for gl_widget in widget.findChildren(GLWidget):
                     gl_widget.vis.save_screenshot(file_name)
@@ -92,8 +95,11 @@ class ImageVideoTab(QtWidgets.QWidget):
         if not frames_to_write:
             return
         file_name = QtWidgets.QFileDialog.getSaveFileName(self,
-            'Save video...', filter='QuickTime Movie (*.mov)')
+            'Save video...', filter='QuickTime Movie (*.mov)')[0]
         if file_name:
+            ext = os.path.splitext(file_name)[1]
+            if not ext:
+                file_name += '.mov'
             dialog = MassScreenshotAndVideoDialog(self, frames_to_write, should_save_video=True, video_file_name=file_name)
             dialog.show()
             return

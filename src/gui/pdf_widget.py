@@ -216,7 +216,7 @@ class PDFWidget(QtWidgets.QWidget):
                       ".tiff", ".fig", ".svg", ".wmf", ".eps", ".ps")
         qtext = "*" + " *".join(extensions)
         filepath = QtWidgets.QFileDialog.getSaveFileName(self, "Save Image",
-                                                     ".", "Image Files ({})".format(qtext))
+                                                     ".", "Image Files ({})".format(qtext))[0]
         if len(filepath) == 0:
             return
 
@@ -231,7 +231,7 @@ class PDFWidget(QtWidgets.QWidget):
     def export_data(self):
         qtext = " *.csv"
         filepath = QtWidgets.QFileDialog.getSaveFileName(self, "Save Data",
-                                                     ".", "CSV Files ({})".format(qtext))
+                                                     ".", "CSV Files ({})".format(qtext))[0]
         if len(filepath) == 0:
             return
         self.draw()
