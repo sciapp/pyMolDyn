@@ -12,12 +12,12 @@ class GLStack(QtWidgets.QStackedWidget):
         self.parent = parent
         self.control = parent.control
         self.gl_widget = GLWidget(self, main_window)
-        # self.pdf_widget = PDFWidget(self)
-        # self.histogram_widget = HistogramWidget(self)
+        self.pdf_widget = PDFWidget(self)
+        self.histogram_widget = HistogramWidget(self)
 
         self.addWidget(self.gl_widget)
-        # self.addWidget(self.pdf_widget)
-        # self.addWidget(self.histogram_widget)
+        self.addWidget(self.pdf_widget)
+        self.addWidget(self.histogram_widget)
 
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
