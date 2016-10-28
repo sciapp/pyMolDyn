@@ -79,7 +79,7 @@ create_directory_structure_for_suse() {
 
 install_numpy() {
     local NUMPY_VERSION="1.11.2"
-    local NUMPY_SRC_LINK="https://pypi.python.org/packages/source/n/numpy/numpy-${NUMPY_VERSION}.tar.gz"
+    local NUMPY_SRC_LINK="https://github.com/numpy/numpy/archive/v${NUMPY_VERSION}.tar.gz"
     local NUMPY_INSTALL_LOCATION="${TMP_INSTALL}/lib64/python2.7/site-packages/numpy"
 
     pushd "${TMP_INSTALL}"
