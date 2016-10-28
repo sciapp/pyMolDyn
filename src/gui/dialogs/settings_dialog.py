@@ -1,4 +1,4 @@
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 import sys
 from collections import OrderedDict
 import functools
@@ -10,21 +10,21 @@ from config.cutoff_history import cutoff_history
 from config.cutoff_presets import cutoff_presets
 
 
-class GraphicsSettingsPage(QtGui.QWidget):
+class GraphicsSettingsPage(QtWidgets.QWidget):
 
     def __init__(self, parent, cfg):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
 
         self._config = cfg
         self.values = OrderedDict((('atom_radius', 'atom radius'), ('bond_radius', 'bond radius'), ))
 
         self.lineedit_dict = {}
-        grid = QtGui.QGridLayout()
+        grid = QtWidgets.QGridLayout()
         for i, (attr_str, label) in enumerate(self.values.iteritems()):
             cfg_comp = getattr(self._config, 'OpenGL')
 
-            l = QtGui.QLabel(label, self)
-            t = QtGui.QLineEdit(self)
+            l = QtWidgets.QLabel(label, self)
+            t = QtWidgets.QLineEdit(self)
             t.setText(str(getattr(cfg_comp, attr_str)))
             self.lineedit_dict[attr_str] = t
             t.textChanged.connect(self.any_change)
@@ -39,7 +39,7 @@ class GraphicsSettingsPage(QtGui.QWidget):
                                   ('center_cavity', 'Cavity (Center method)')))
 
         self.button_dict = {}
-        layout = QtGui.QGridLayout()
+        layout = QtWidgets.QGridLayout()
         layout.setSpacing(5)
         for index, (attr_str, btn_str) in enumerate(self.colors.iteritems()):
 
@@ -49,7 +49,7 @@ class GraphicsSettingsPage(QtGui.QWidget):
             current_color = QtGui.QColor(*tmp)
             pix.fill(current_color)
 
-            b = QtGui.QPushButton(None, self)
+            b = QtWidgets.QPushButton(None, self)
             b.setFixedSize(50, 50)
             b.setFocusPolicy(QtCore.Qt.StrongFocus)
             self.button_dict[attr_str] = b
@@ -57,9 +57,9 @@ class GraphicsSettingsPage(QtGui.QWidget):
             b.setIcon(QtGui.QIcon(pix))
 
             layout.addWidget(b, index, 0)
-            layout.addWidget(QtGui.QLabel(btn_str, self), index, 1)
+            layout.addWidget(QtWidgets.QLabel(btn_str, self), index, 1)
 
-        box = QtGui.QVBoxLayout()
+        box = QtWidgets.QVBoxLayout()
         box.addLayout(grid)
         box.addStretch()
         box.addLayout(layout)
@@ -76,7 +76,7 @@ class GraphicsSettingsPage(QtGui.QWidget):
             setattr(cfg_comp, attr_str, float(self.lineedit_dict[attr_str].text()))
 
     def show_color_dialog(self, s, previous_color):
-        color = QtGui.QColorDialog.getColor(initial=previous_color)
+        color = QtWidgets.QColorDialog.getColor(initial=previous_color)
         if color.isValid():
             pix = QtGui.QPixmap(50, 50)
             pix.fill(color)
@@ -86,21 +86,21 @@ class GraphicsSettingsPage(QtGui.QWidget):
                 getattr(tmp_cfg_clr, s)[i] = clr_val / 255.
 
 
-class ComputationSettingsPage(QtGui.QWidget):
+class ComputationSettingsPage(QtWidgets.QWidget):
 
     def __init__(self, parent, cfg):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
         self._config = cfg
         self.values = OrderedDict((('std_cutoff_radius', 'default cutoff radius'), ))
 
         self.lineedit_dict = {}
-        box = QtGui.QVBoxLayout()
-        grid = QtGui.QGridLayout()
+        box = QtWidgets.QVBoxLayout()
+        grid = QtWidgets.QGridLayout()
         for i, (attr_str, label) in enumerate(self.values.iteritems()):
             cfg_comp = getattr(self._config, 'Computation')
 
-            l = QtGui.QLabel(label, self)
-            t = QtGui.QLineEdit(self)
+            l = QtWidgets.QLabel(label, self)
+            t = QtWidgets.QLineEdit(self)
             t.setText(str(getattr(cfg_comp, attr_str)))
             self.lineedit_dict[attr_str] = t
 
@@ -110,7 +110,7 @@ class ComputationSettingsPage(QtGui.QWidget):
             grid.addWidget(t, i, 1)
 
         self.tw_cutoff_history = CutoffHistoryTable(cutoff_history.history)
-        pb_clear_cutoff_history = QtGui.QPushButton(self.style().standardIcon(QtGui.QStyle.SP_TrashIcon),
+        pb_clear_cutoff_history = QtWidgets.QPushButton(self.style().standardIcon(QtWidgets.QStyle.SP_TrashIcon),
                                                     'Clear cutoff history')
         pb_clear_cutoff_history.clicked.connect(self.clear_cutoff_history_requested)
         if len(cutoff_history.history) == 0:
@@ -118,7 +118,7 @@ class ComputationSettingsPage(QtGui.QWidget):
             pb_clear_cutoff_history.setVisible(False)
 
         self.tw_cutoff_presets = CutoffPresetTable(cutoff_presets.presets)
-        pb_clear_cutoff_presets = QtGui.QPushButton(self.style().standardIcon(QtGui.QStyle.SP_TrashIcon),
+        pb_clear_cutoff_presets = QtWidgets.QPushButton(self.style().standardIcon(QtWidgets.QStyle.SP_TrashIcon),
                                                     'Clear cutoff presets')
         pb_clear_cutoff_presets.clicked.connect(self.clear_cutoff_presets_requested)
         if len(cutoff_presets.presets) == 0:
@@ -135,21 +135,21 @@ class ComputationSettingsPage(QtGui.QWidget):
         self.show()
 
     def clear_cutoff_history_requested(self):
-        message = QtGui.QMessageBox()
-        message.setStandardButtons(QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+        message = QtWidgets.QMessageBox()
+        message.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         message.setText('Do you really want to clear the cutoff radii history for all previous done calculations?\n\n' +
                         '(The history data will be cleared when you hit the ok button of the settings dialog.)')
         answer = message.exec_()
-        if answer == QtGui.QMessageBox.Yes:
+        if answer == QtWidgets.QMessageBox.Yes:
             self.tw_cutoff_history.clear_entries()
 
     def clear_cutoff_presets_requested(self):
-        message = QtGui.QMessageBox()
-        message.setStandardButtons(QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+        message = QtWidgets.QMessageBox()
+        message.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         message.setText('Do you really want to delete all cutoff presets?\n\n' +
                         '(The presets will be removed irrevocably when you hit the ok button of the settings dialog.)')
         answer = message.exec_()
-        if answer == QtGui.QMessageBox.Yes:
+        if answer == QtWidgets.QMessageBox.Yes:
             self.tw_cutoff_presets.clear_entries()
 
     def any_change(self):
@@ -162,10 +162,10 @@ class ComputationSettingsPage(QtGui.QWidget):
     #     print 'VALUE EDITED'
 
 
-class PathSettingsPage(QtGui.QWidget):
+class PathSettingsPage(QtWidgets.QWidget):
 
     def __init__(self, parent, cfg):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
 
         self._config = cfg
         self.path = OrderedDict((('cache_dir', 'Cache directory'),
@@ -173,17 +173,17 @@ class PathSettingsPage(QtGui.QWidget):
                                 ('ffmpeg', 'ffmpeg path')))
 
         self.lineedit_dict = {}
-        box  = QtGui.QVBoxLayout()
-        grid = QtGui.QGridLayout()
+        box  = QtWidgets.QVBoxLayout()
+        grid = QtWidgets.QGridLayout()
         for i, (attr_str, label) in enumerate(self.path.iteritems()):
             cfg_path = getattr(self._config, 'Path')
 
-            l = QtGui.QLabel(label, self)
-            t = QtGui.QLineEdit(self)
+            l = QtWidgets.QLabel(label, self)
+            t = QtWidgets.QLineEdit(self)
             t.setText(getattr(cfg_path, attr_str))
             self.lineedit_dict[attr_str] = t
 
-            self.connect(t, QtCore.SIGNAL("editingFinished()"), lambda who=attr_str: self.path_edited(who))
+            self.connect(t, QtCore.pyqtSignal("editingFinished()"), lambda who=attr_str: self.path_edited(who))
             grid.addWidget(l, i, 0)
             grid.addWidget(t, i, 1)
         box.addLayout(grid)
@@ -196,17 +196,17 @@ class PathSettingsPage(QtGui.QWidget):
         setattr(cfg_path, s, str(self.lineedit_dict[s].text()))
 
 
-class SettingsDialog(QtGui.QDialog):
+class SettingsDialog(QtWidgets.QDialog):
 
     def __init__(self, parent=None):
-        QtGui.QDialog.__init__(self, parent)
+        QtWidgets.QDialog.__init__(self, parent)
 
         # temporary Configuration which saves the current changes
         self._tmp   = Configuration()
         self._tmp.read()
 
-        vbox        = QtGui.QVBoxLayout()
-        tab_widget  = QtGui.QTabWidget()
+        vbox        = QtWidgets.QVBoxLayout()
+        tab_widget  = QtWidgets.QTabWidget()
         graphics_page  = GraphicsSettingsPage(tab_widget, self._tmp)
         path_page   = PathSettingsPage(tab_widget, self._tmp)
         comp_page   = ComputationSettingsPage(tab_widget, self._tmp)
@@ -214,9 +214,9 @@ class SettingsDialog(QtGui.QDialog):
         self.cutoff_preset_entries_for_deletion = lambda: comp_page.tw_cutoff_presets.preset_entries_for_deletion
 
         # Ok, Cancel and Restore defaults Buttons
-        ok          = QtGui.QPushButton('Ok', self)
-        cancel      = QtGui.QPushButton('Cancel', self)
-        restore_btn = QtGui.QPushButton('Restore defaults', self)
+        ok          = QtWidgets.QPushButton('Ok', self)
+        cancel      = QtWidgets.QPushButton('Cancel', self)
+        restore_btn = QtWidgets.QPushButton('Restore defaults', self)
 
         ok.clicked.connect(self.ok)
         cancel.clicked.connect(self.cancel)
@@ -228,7 +228,7 @@ class SettingsDialog(QtGui.QDialog):
 
         vbox.addWidget(tab_widget)
 
-        hbox    = QtGui.QHBoxLayout()
+        hbox    = QtWidgets.QHBoxLayout()
         hbox.addStretch()
         hbox.addWidget(ok)
         hbox.addStretch()
@@ -251,16 +251,16 @@ class SettingsDialog(QtGui.QDialog):
         cutoff_presets.remove_list(self.cutoff_preset_entries_for_deletion())
         cutoff_presets.save()
         self.accept()
-        for widget in QtGui.QApplication.topLevelWidgets():
+        for widget in QtWidgets.QApplication.topLevelWidgets():
             for gl_widget in widget.findChildren(GLWidget):
                 gl_widget.update_needed = True
-                QtGui.QApplication.postEvent(gl_widget, UpdateGLEvent())
+                QtWidgets.QApplication.postEvent(gl_widget, UpdateGLEvent())
 
     def restore_defaults(self):
-        reply = QtGui.QMessageBox.question(self, 'Message',
-                                           "Are you sure to restore the defaults?", QtGui.QMessageBox.Yes |
-                                           QtGui.QMessageBox.No, QtGui.QMessageBox.No)
-        if reply == QtGui.QMessageBox.Yes:
+        reply = QtWidgets.QMessageBox.question(self, 'Message',
+                                               "Are you sure to restore the defaults?", QtWidgets.QMessageBox.Yes |
+                                               QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+        if reply == QtWidgets.QMessageBox.Yes:
             self._tmp = Configuration()
             self._tmp.save()
             config.read()
@@ -271,7 +271,7 @@ class SettingsDialog(QtGui.QDialog):
 
 
 if __name__ == '__main__':
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     config.read()
     dia = SettingsDialog()
     sys.exit(app.exec_())

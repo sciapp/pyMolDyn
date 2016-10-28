@@ -13,7 +13,7 @@ from gui.tabs.view_tab import ViewTabDock
 from gui.tabs.image_video_tab import ImageVideoTabDock
 from gui.tabs.statistics_tab import StatisticsTabDock
 from gui.tabs.log_tab import LogTabDock
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from gui.dialogs.settings_dialog import SettingsDialog
 from gui.dialogs.about_dialog import AboutDialog
 from gui.gl_widget import UpdateGLEvent
@@ -28,9 +28,9 @@ from config.configuration import config
 WEBSITE_URL = 'https://pgi-jcns.fz-juelich.de/portal/pages/pymoldyn-doc.html'
 
 
-class MainWindow(QtGui.QMainWindow):
+class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, control):
-        QtGui.QMainWindow.__init__(self, None)
+        QtWidgets.QMainWindow.__init__(self, None)
 
         self.control = control
         self.center = CentralWidget(self)
@@ -50,7 +50,7 @@ class MainWindow(QtGui.QMainWindow):
 
         self.shown_dataset = None
 
-        self.setTabPosition(QtCore.Qt.RightDockWidgetArea, QtGui.QTabWidget.North)
+        self.setTabPosition(QtCore.Qt.RightDockWidgetArea, QtWidgets.QTabWidget.North)
 
         self.setCentralWidget(self.center)
 
@@ -79,49 +79,49 @@ class MainWindow(QtGui.QMainWindow):
         self.file_dock.raise_()
 
         # another workaround to do the same
-        # tabbars = self.findChildren(QtGui.QTabBar)
+        # tabbars = self.findChildren(QtWidgets.QTabBar)
         # tabbars[0].setCurrentIndex(0)
 
     def init_menu(self):
-        open_action = QtGui.QAction('&Open dataset', self)
+        open_action = QtWidgets.QAction('&Open dataset', self)
         open_action.setShortcut('Ctrl+O')
         open_action.triggered.connect(self.file_dock.file_tab.open_file_dialog)
 
-        settings_action = QtGui.QAction('&Settings', self)
+        settings_action = QtWidgets.QAction('&Settings', self)
         settings_action.setShortcut('Ctrl+I')
         settings_action.triggered.connect(self.show_settings)
 
-        export_submenu = QtGui.QMenu("&Export", self)
+        export_submenu = QtWidgets.QMenu("&Export", self)
 
-        export_bonds_action = QtGui.QAction('Export &Bonds', self)
+        export_bonds_action = QtWidgets.QAction('Export &Bonds', self)
         export_bonds_action.setShortcut('Ctrl+1')
         export_bonds_action.triggered.connect(self.wrapper_export_bonds)
 
-        export_bond_angles_action = QtGui.QAction('Export Bond &Angles', self)
+        export_bond_angles_action = QtWidgets.QAction('Export Bond &Angles', self)
         export_bond_angles_action.setShortcut('Ctrl+2')
         export_bond_angles_action.triggered.connect(self.wrapper_export_bond_angles)
 
-        export_bond_dihedral_angles_action = QtGui.QAction('Export Bond &Dihedral Angles', self)
+        export_bond_dihedral_angles_action = QtWidgets.QAction('Export Bond &Dihedral Angles', self)
         export_bond_dihedral_angles_action.setShortcut('Ctrl+3')
         export_bond_dihedral_angles_action.triggered.connect(self.wrapper_export_bond_dihedral_angles)
 
-        export_domains_action = QtGui.QAction('Export Cavity Information (domains)', self)
+        export_domains_action = QtWidgets.QAction('Export Cavity Information (domains)', self)
         export_domains_action.setShortcut('Ctrl+4')
         export_domains_action.triggered.connect(self.wrapper_export_domains)
 
-        export_surface_cavities_action = QtGui.QAction('Export Cavity Information (surface method)', self)
+        export_surface_cavities_action = QtWidgets.QAction('Export Cavity Information (surface method)', self)
         export_surface_cavities_action.setShortcut('Ctrl+5')
         export_surface_cavities_action.triggered.connect(self.wrapper_export_surface_cavities)
 
-        export_center_cavities_action = QtGui.QAction('Export Cavity Information (center method)', self)
+        export_center_cavities_action = QtWidgets.QAction('Export Cavity Information (center method)', self)
         export_center_cavities_action.setShortcut('Ctrl+6')
         export_center_cavities_action.triggered.connect(self.wrapper_export_center_cavities)
 
-        website_action = QtGui.QAction('&pyMolDyn website', self)
+        website_action = QtWidgets.QAction('&pyMolDyn website', self)
         website_action.setShortcut('F1')
         website_action.triggered.connect(self.show_website)
 
-        about_action = QtGui.QAction('&About', self)
+        about_action = QtWidgets.QAction('&About', self)
         about_action.triggered.connect(self.show_about_box)
 
         self.menubar = self.menuBar()
@@ -151,7 +151,7 @@ class MainWindow(QtGui.QMainWindow):
 
     @QtCore.pyqtSlot(str)
     def _show_error(self, error_message):
-        QtGui.QMessageBox.information(self, 'Information', error_message)
+        QtWidgets.QMessageBox.information(self, 'Information', error_message)
 
     def show_settings(self):
         SettingsDialog()
@@ -171,13 +171,13 @@ class MainWindow(QtGui.QMainWindow):
                      ('Florian Macherey', 'f.macherey@fz-juelich.de'))).show()
 
     def init_submenu_recent_files(self):
-        self.recent_files_submenu = QtGui.QMenu("&Recent files", self)
+        self.recent_files_submenu = QtWidgets.QMenu("&Recent files", self)
         if (not config.recent_files) or (config.recent_files == ['']):
             self.recent_files_submenu.setDisabled(True)
         else:
             self.recent_files_submenu.setEnabled(True)
             for f in config.recent_files:
-                f_action = QtGui.QAction(f, self)
+                f_action = QtWidgets.QAction(f, self)
                 f_action.triggered.connect(functools.partial(self.wrapper_recent_files, f))
                 self.recent_files_submenu.addAction(f_action)
 
@@ -203,7 +203,7 @@ class MainWindow(QtGui.QMainWindow):
             self.recent_files_submenu.removeAction(actions_in_menu[index])
             self.recent_files_submenu.insertAction(actions_in_menu[0], actions_in_menu[index])
         else:
-            new_action = QtGui.QAction(most_recent_file, self)
+            new_action = QtWidgets.QAction(most_recent_file, self)
             new_action.triggered.connect(functools.partial(self.wrapper_recent_files, most_recent_file))
 
             if not actions_in_menu:
@@ -233,50 +233,53 @@ class MainWindow(QtGui.QMainWindow):
             self.update_submenu_recent_files()
 
     def wrapper_export_bonds(self):
-        filename = QtGui.QFileDialog.getSaveFileName(self, "Export Bonds", "bonds.txt")
+        filename = QtWidgets.QFileDialog.getSaveFileName(self, "Export Bonds", "bonds.txt")[0]
         if filename:
             core.bonds.export_bonds(filename, self.control.visualization.results.atoms)
-            QtGui.QMessageBox.information(self,
+            QtWidgets.QMessageBox.information(self,
                                           'Export Bonds',
                                           "Saved to filename: %s" % (filename))
 
     def wrapper_export_bond_angles(self):
-        filename = QtGui.QFileDialog.getSaveFileName(self, "Export Bond Angles", "bond_angles.txt")
+        filename = QtWidgets.QFileDialog.getSaveFileName(self, "Export Bond Angles", "bond_angles.txt")[0]
         if filename:
             core.bonds.export_bond_angles(filename, self.control.visualization.results.atoms)
-            QtGui.QMessageBox.information(self,
+            QtWidgets.QMessageBox.information(self,
                                           'Export Bond Angles',
                                           "Saved to filename: %s" % (filename))
 
     def wrapper_export_bond_dihedral_angles(self):
-        filename = QtGui.QFileDialog.getSaveFileName(self, "Export Bond Dihedral Angles", "bond_dihedral_angles.txt")
+        filename = QtWidgets.QFileDialog.getSaveFileName(self, "Export Bond Dihedral Angles",
+                                                         "bond_dihedral_angles.txt")[0]
         if filename:
             core.bonds.export_bond_dihedral_angles(filename, self.control.visualization.results.atoms)
-            QtGui.QMessageBox.information(self,
+            QtWidgets.QMessageBox.information(self,
                                           'Export Bond Dihedral Angles',
                                           "Saved to filename: %s" % (filename))
 
     def wrapper_export_domains(self):
-        filename = QtGui.QFileDialog.getSaveFileName(self, "Export Cavity Information (domains)", "domains")
+        filename = QtWidgets.QFileDialog.getSaveFileName(self, "Export Cavity Information (domains)", "domains")[0]
         if filename:
             filenames = self.control.visualization.results.domains.totxt(filename + '_{property}.txt')
-            QtGui.QMessageBox.information(self,
+            QtWidgets.QMessageBox.information(self,
                                           'Export Cavity Information (domains)',
                                           "Saved to filenames: %s" % (', '.join(filenames)))
 
     def wrapper_export_surface_cavities(self):
-        filename = QtGui.QFileDialog.getSaveFileName(self, "Export Cavity Information (surface method)", "surface_cavities")
+        filename = QtWidgets.QFileDialog.getSaveFileName(self, "Export Cavity Information (surface method)",
+                                                         "surface_cavities")[0]
         if filename:
             filenames = self.control.visualization.results.surface_cavities.totxt(filename + '_{property}.txt')
-            QtGui.QMessageBox.information(self,
+            QtWidgets.QMessageBox.information(self,
                                           'Export Cavity Information (surface method)',
                                           "Saved to filenames: %s" % (', '.join(filenames)))
 
     def wrapper_export_center_cavities(self):
-        filename = QtGui.QFileDialog.getSaveFileName(self, "Export Cavity Information (center method)", "center_cavities")
+        filename = QtWidgets.QFileDialog.getSaveFileName(self, "Export Cavity Information (center method)",
+                                                         "center_cavities")[0]
         if filename:
             filenames = self.control.visualization.results.center_cavities.totxt(filename + '_{property}.txt')
-            QtGui.QMessageBox.information(self,
+            QtWidgets.QMessageBox.information(self,
                                           'Export Cavity Information (center method)',
                                           "Saved to filenames: %s" % (', '.join(filenames)))
 
@@ -305,22 +308,22 @@ class MainWindow(QtGui.QMainWindow):
             self.view_dock.setVisible(True)
             self.view_dock.view_tab.update_cavity_buttons(self.control.visualization.results, None)
             self.center.gl_stack.updatestatus()
-            QtGui.QApplication.postEvent(self.center.gl_stack.gl_widget, UpdateGLEvent())
+            QtWidgets.QApplication.postEvent(self.center.gl_stack.gl_widget, UpdateGLEvent())
 
 #    def closeEvent(self, event):
-#        reply = QtGui.QMessageBox.question(self, 'Message',
-#            "Are you sure to quit?", QtGui.QMessageBox.Yes |
-#            QtGui.QMessageBox.No, QtGui.QMessageBox.No)
-#        if reply == QtGui.QMessageBox.Yes:
+#        reply = QtWidgets.QMessageBox.question(self, 'Message',
+#            "Are you sure to quit?", QtWidgets.QMessageBox.Yes |
+#            QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+#        if reply == QtWidgets.QMessageBox.Yes:
 #            event.accept()
 #        else:
 #            event.ignore()
 
 
-class CentralWidget(QtGui.QWidget):
+class CentralWidget(QtWidgets.QWidget):
 
     def __init__(self, parent):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
         self.control = parent.control
         self.setWindowTitle('pyMolDyn 2')
         self.widget_titles = (
@@ -332,12 +335,12 @@ class CentralWidget(QtGui.QWidget):
     def init_gui(self):
         self.gl_stack = GLStack(self, self.parent())
         self.gl_widget = self.gl_stack.gl_widget
-        self.combo = QtGui.QComboBox()
+        self.combo = QtWidgets.QComboBox()
         for title in self.widget_titles:
             self.combo.addItem(title)
         self.combo.activated[str].connect(self.on_combo)
 
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.gl_stack)
         layout.addWidget(self.combo)
 

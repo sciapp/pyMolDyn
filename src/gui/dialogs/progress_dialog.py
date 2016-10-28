@@ -1,21 +1,21 @@
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtWidgets
 
-class ProgressDialog(QtGui.QDialog):
+class ProgressDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
-        QtGui.QDialog.__init__(self, parent)
+        QtWidgets.QDialog.__init__(self, parent)
         self.finished = False
 
         self.initUI()
 
     def initUI(self):
-        hbox = QtGui.QVBoxLayout()
-        self.label = QtGui.QLabel('starting calculation', self)
-        self.progressbar = QtGui.QProgressBar(self)
-        # self.cancel_btn = QtGui.QPushButton('Cancel', self)
+        hbox = QtWidgets.QVBoxLayout()
+        self.label = QtWidgets.QLabel('starting calculation', self)
+        self.progressbar = QtWidgets.QProgressBar(self)
+        # self.cancel_btn = QtWidgets.QPushButton('Cancel', self)
         # self.cancel_btn.clicked.connect(self.cancel)
         self.setMinimumSize(300,100)
 
-        vbox = QtGui.QHBoxLayout()
+        vbox = QtWidgets.QHBoxLayout()
 
         vbox.addStretch()
         # vbox.addWidget(self.cancel_btn)
@@ -37,9 +37,9 @@ class ProgressDialog(QtGui.QDialog):
     @QtCore.pyqtSlot()
     def close_dialog(self):
         if self.finished:
-            self.done(QtGui.QDialog.Accepted)
+            self.done(QtWidgets.QDialog.Accepted)
         else:
-            self.done(QtGui.QDialog.Rejected)
+            self.done(QtWidgets.QDialog.Rejected)
         pass
 
     def print_step(self, *text):

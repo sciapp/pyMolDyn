@@ -1,10 +1,10 @@
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtWidgets
 
 
-class CalculationTable(QtGui.QTableView):
+class CalculationTable(QtWidgets.QTableView):
     def __init__(self, parent):
-        QtGui.QTableView.__init__(self,parent)
-        self.setSelectionMode(QtGui.QAbstractItemView.NoSelection)
+        QtWidgets.QTableView.__init__(self,parent)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
 
 
 class TableModel(QtCore.QAbstractTableModel):

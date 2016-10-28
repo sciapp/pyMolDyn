@@ -3,7 +3,7 @@
 from __future__ import absolute_import
 
 import sys
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore
 from gui.util.labeled_combobox import LabeledComboBox
 from config.cutoff_presets import cutoff_presets
 

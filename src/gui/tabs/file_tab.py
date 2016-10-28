@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtWidgets
 import os.path
 import functools
 from core import calculation, volumes, file
@@ -13,21 +13,21 @@ from core.file import File
 from util import message
 
 
-class FileTabDock(QtGui.QDockWidget):
+class FileTabDock(QtWidgets.QDockWidget):
     """
         DockWidget for the 'file'-tab
     """
     def __init__(self, parent):
-        QtGui.QDockWidget.__init__(self, "file", parent)
-        self.setWidget(QtGui.QWidget(self))
+        QtWidgets.QDockWidget.__init__(self, "file", parent)
+        self.setWidget(QtWidgets.QWidget(self))
 
-        self.layout     = QtGui.QHBoxLayout()
+        self.layout     = QtWidgets.QHBoxLayout()
         self.file_tab   = FileTab(self.widget(), parent)
 
         self.layout.addWidget(self.file_tab)
         self.widget().setLayout(self.layout)
 
-        self.setFeatures(QtGui.QDockWidget.DockWidgetMovable | QtGui.QDockWidget.DockWidgetFloatable)
+        self.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable | QtWidgets.QDockWidget.DockWidgetFloatable)
 
 
 class CalculationThread(QtCore.QThread):
@@ -54,13 +54,13 @@ class CalculationThread(QtCore.QThread):
             raise
 
 
-class FileTab(QtGui.QWidget):
+class FileTab(QtWidgets.QWidget):
     """
         tab 'file' in the main widget
     """
 
     def __init__(self, parent, main_window):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
         self.main_window = main_window
         self.progress_dialog = ProgressDialog(self)
         self.most_recent_path = "~"
@@ -72,42 +72,42 @@ class FileTab(QtGui.QWidget):
         self.last_shown_filename_with_frame = None
 
     def init_gui(self):
-        self.vbox = QtGui.QVBoxLayout()
+        self.vbox = QtWidgets.QVBoxLayout()
         self.vbox.setSpacing(0)
-        self.button_hbox = QtGui.QHBoxLayout()
+        self.button_hbox = QtWidgets.QHBoxLayout()
         self.button_hbox.setSpacing(10)
 
-        self.file_button = QtGui.QPushButton('Open', self)
+        self.file_button = QtWidgets.QPushButton('Open', self)
         self.file_button.setDefault(True)
         self.file_button.clicked.connect(self.open_file_dialog)
         self.button_hbox.addWidget(self.file_button)
 
-        self.delete_button = QtGui.QPushButton('Delete', self)
+        self.delete_button = QtWidgets.QPushButton('Delete', self)
         self.delete_button.clicked.connect(self.remove_selected_files)
         self.delete_button.setDisabled(True)
         self.button_hbox.addWidget(self.delete_button)
 
-        self.calculate_button = QtGui.QPushButton('Calculate', self)
+        self.calculate_button = QtWidgets.QPushButton('Calculate', self)
         self.calculate_button.clicked.connect(self.calculate)
         self.calculate_button.setDisabled(True)
         self.button_hbox.addWidget(self.calculate_button)
 
-        self.show_button = QtGui.QPushButton('Show', self)
+        self.show_button = QtWidgets.QPushButton('Show', self)
         self.show_button.clicked.connect(self.show_selected_frame)
         self.show_button.setDisabled(True)
         self.button_hbox.addWidget(self.show_button)
 
         self.vbox.addLayout(self.button_hbox)
 
-        self.button2_hbox = QtGui.QHBoxLayout()
+        self.button2_hbox = QtWidgets.QHBoxLayout()
         self.button2_hbox.setSpacing(10)
 
-        self.select_all_button = QtGui.QPushButton('Select all frames', self)
+        self.select_all_button = QtWidgets.QPushButton('Select all frames', self)
         self.select_all_button.clicked.connect(self.select_all)
         self.select_all_button.setDisabled(True)
         self.button2_hbox.addWidget(self.select_all_button)
 
-        self.select_nth_button = QtGui.QPushButton('Select every nth frame...', self)
+        self.select_nth_button = QtWidgets.QPushButton('Select every nth frame...', self)
         self.select_nth_button.clicked.connect(self.select_nth)
         self.select_nth_button.setDisabled(True)
         self.button2_hbox.addWidget(self.select_nth_button)
@@ -132,7 +132,7 @@ class FileTab(QtGui.QWidget):
         self.file_list.select_all()
 
     def select_nth(self):
-        n, okay = QtGui.QInputDialog.getInt(self, "Set n", "", 1, 1)
+        n, okay = QtWidgets.QInputDialog.getInt(self, "Set n", "", 1, 1)
         if okay:
             self.file_list.select_nth(n)
 
@@ -185,11 +185,11 @@ class FileTab(QtGui.QWidget):
         try:
             self.file_list.add_file(path)
         except ValueError as e:
-            QtGui.QMessageBox.information(self, 'Information', e.message, QtGui.QMessageBox.Ok)
+            QtWidgets.QMessageBox.information(self, 'Information', e.message, QtWidgets.QMessageBox.Ok)
             return
 
     def open_file_dialog(self):
-        filenames = QtGui.QFileDialog.getOpenFileNames(self, 'Open dataset', self.most_recent_path)
+        filenames = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open dataset', self.most_recent_path)[0]
         for path in filenames:
             if path:
                 self.disable_files_in_menu_and_open(path)
@@ -223,10 +223,10 @@ class FileTab(QtGui.QWidget):
                                                    file_frame_dict.values()[-1][-1])
 
 
-class TreeList(QtGui.QTreeWidget):
+class TreeList(QtWidgets.QTreeWidget):
 
     def __init__(self, parent, data={}):
-        QtGui.QTreeWidget.__init__(self, parent)
+        QtWidgets.QTreeWidget.__init__(self, parent)
 
         self.control = parent.control
         self.setColumnCount(1)
@@ -236,19 +236,19 @@ class TreeList(QtGui.QTreeWidget):
             self.append_item(root, sib)
 
         self.setHeaderHidden(True)
-        self.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
-        self.setSelectionBehavior(QtGui.QAbstractItemView.SelectItems)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectItems)
         self.setAcceptDrops(True)
         self.setDropIndicatorShown(True)
         self.setMouseTracking(True)
         self.itemSelectionChanged.connect(self.selection_changed)
 
     def append_item(self, root, sib):
-        item = QtGui.QTreeWidgetItem(self)
+        item = QtWidgets.QTreeWidgetItem(self)
         item.setText(0, root)
         if sib:
             for s in sib:
-                tmp = QtGui.QTreeWidgetItem(item)
+                tmp = QtWidgets.QTreeWidgetItem(item)
                 tmp.setText(0, s)
                 item.addChild(tmp)
         self.addTopLevelItem(item)
@@ -385,7 +385,7 @@ class TreeList(QtGui.QTreeWidget):
 
         f = file.File.open(filename)
         if filename not in self.parent().guessed_volumes_for and f.info.volume_guessed:
-            msgBox = QtGui.QMessageBox(self)
+            msgBox = QtWidgets.QMessageBox(self)
             msgBox.setWindowTitle("Missing cell shape description")
             msgBox.setTextFormat(QtCore.Qt.RichText)
             msgBox.setText("This file does not contain information about the "
@@ -394,12 +394,12 @@ class TreeList(QtGui.QTreeWidget):
                            "You can find information about the different cell "
                            "shapes shapes in the "
                            "<a href=\"https://pgi-jcns.fz-juelich.de/portal/pages/pymoldyn-doc.html#cell-shape-description\">pyMolDyn documentation</a>")
-            msgBox.addButton(QtGui.QMessageBox.Yes)
-            msgBox.addButton(QtGui.QMessageBox.No)
-            msgBox.setDefaultButton(QtGui.QMessageBox.Yes)
-            msgBox.setEscapeButton(QtGui.QMessageBox.No)
+            msgBox.addButton(QtWidgets.QMessageBox.Yes)
+            msgBox.addButton(QtWidgets.QMessageBox.No)
+            msgBox.setDefaultButton(QtWidgets.QMessageBox.Yes)
+            msgBox.setEscapeButton(QtWidgets.QMessageBox.No)
             response = msgBox.exec_()
-            if response == QtGui.QMessageBox.No:
+            if response == QtWidgets.QMessageBox.No:
                 return
             self.parent().guessed_volumes_for.add(filename)
 
@@ -411,10 +411,10 @@ class TreeList(QtGui.QTreeWidget):
         widget.updatestatus()
 
         # update GL scene
-        for widget in QtGui.QApplication.topLevelWidgets():
+        for widget in QtWidgets.QApplication.topLevelWidgets():
             for gl_widget in widget.findChildren(GLWidget):
                 gl_widget.update_needed = True
-                QtGui.QApplication.postEvent(gl_widget, UpdateGLEvent())
+                QtWidgets.QApplication.postEvent(gl_widget, UpdateGLEvent())
 
         self._enable_screenshot_button()
 

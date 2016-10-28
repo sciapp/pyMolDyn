@@ -4,15 +4,15 @@
 # TODO: fix frame indexing. it should start at 0 for everything, except in the strings that are displayed in the widgets
 
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class LabeledFrameChooser(QtGui.QWidget):
-    value_changed = QtCore.Signal()
+class LabeledFrameChooser(QtWidgets.QWidget):
+    value_changed = QtCore.pyqtSignal()
 
     def __init__(self, parent, num_frames, calculated, text):
-        QtGui.QWidget.__init__(self, parent)
-        
+        QtWidgets.QWidget.__init__(self, parent)
+
         self.framebar   = FrameBar(self, num_frames, calculated)
         self.text       = text
         self.num_frames = num_frames
@@ -20,29 +20,29 @@ class LabeledFrameChooser(QtGui.QWidget):
         self.init_gui()
 
     def init_gui(self):
-        
-        hbox = QtGui.QHBoxLayout()
-        vbox = QtGui.QVBoxLayout()
-    
-        self.lineedit = QtGui.QLineEdit(self)
+
+        hbox = QtWidgets.QHBoxLayout()
+        vbox = QtWidgets.QVBoxLayout()
+
+        self.lineedit = QtWidgets.QLineEdit(self)
 
 #        self.lineedit.setMinimumSize(30, 1)
 #        self.lineedit.setMaximumSize(40, 40)
-        
+
         self.update_lineedit()
         self.lineedit.setAlignment(QtCore.Qt.AlignRight)
-        self.lineedit.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)        
+        self.lineedit.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
 
-        hbox.addWidget(QtGui.QLabel(self.text+':', self), 0)
+        hbox.addWidget(QtWidgets.QLabel(self.text+':', self), 0)
         hbox.addWidget(self.lineedit, 1)
-        #hbox.addWidget(QtGui.QLabel('/'+str(self.maxf), self))
+        #hbox.addWidget(QtWidgets.QLabel('/'+str(self.maxf), self))
         #hbox.addStretch()
 
         vbox.addLayout(hbox)
         vbox.addWidget(self.framebar)
 
         self.lineedit.returnPressed.connect(self.lineedit_return_pressed)
-        
+
         self.setLayout(vbox)
         self.show()
 
@@ -58,7 +58,7 @@ class LabeledFrameChooser(QtGui.QWidget):
     def lineedit_return_pressed(self):
         try:
             l_1 = [int(i.strip()) for i in str(self.lineedit.text()).split(',')]
-            # translate indices from human to machine 
+            # translate indices from human to machine
             l = [i - 1 for i in l_1]
         except ValueError:
             print 'Enter a valid number'
@@ -80,18 +80,18 @@ class LabeledFrameChooser(QtGui.QWidget):
     def value(self):
         return self.framebar.get_selection()
 
-class FrameBar(QtGui.QWidget):
+class FrameBar(QtWidgets.QWidget):
 
     def __init__(self, parent, num_frames, calculated):
-        QtGui.QWidget.__init__(self, parent)
-        
+        QtWidgets.QWidget.__init__(self, parent)
+
         self.parent         = parent
         self.num_frames     = num_frames
         self.calculated     = calculated
         self.width          = 300
-        self.height         = 10 
+        self.height         = 10
         self.selection      = [0]
-        self.last_clicked   = 0 
+        self.last_clicked   = 0
 
         self.setMinimumSize(self.width+5, self.height+5)
 
@@ -102,7 +102,7 @@ class FrameBar(QtGui.QWidget):
         self.h  = float(self.width)/(self.num_frames)
 
         p = self.painter
-        
+
         p.setPen(QtCore.Qt.NoPen)
 
         p.setBrush(red)

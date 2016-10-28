@@ -3,19 +3,19 @@
 from __future__ import absolute_import
 
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class LabeledComboBox(QtGui.QComboBox):
+class LabeledComboBox(QtWidgets.QComboBox):
 
-    class Delegate(QtGui.QItemDelegate):
+    class Delegate(QtWidgets.QItemDelegate):
         def __init__(self, parent):
             super(LabeledComboBox.Delegate, self).__init__(parent)
 
         def paint(self, painter, option, index):
             role = index.data(QtCore.Qt.AccessibleDescriptionRole)
             if role == "parent":
-                option.state |= QtGui.QStyle.State_Enabled
+                option.state |= QtWidgets.QStyle.State_Enabled
             else:
                 indent = option.fontMetrics.width(2*' ')
                 option.rect.adjust(indent, 0, 0, 0)

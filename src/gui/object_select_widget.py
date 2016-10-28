@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import re
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class ObjectSelectWidget(QtGui.QWidget):
+class ObjectSelectWidget(QtWidgets.QWidget):
     state_changed = QtCore.pyqtSignal(bool)
     selection_indices_changed = QtCore.pyqtSignal(object)
 
@@ -14,13 +14,13 @@ class ObjectSelectWidget(QtGui.QWidget):
         self._has_index_selector = add_index_selector
 
         # Widgets
-        self._activation_checkbox = QtGui.QCheckBox(text, self)
+        self._activation_checkbox = QtWidgets.QCheckBox(text, self)
         if self._has_index_selector:
-            self._selection_checkbox = QtGui.QCheckBox('only selected indices', self)
+            self._selection_checkbox = QtWidgets.QCheckBox('only selected indices', self)
             self._index_selection = IndexSelectLineEdit(self)
 
         # Layout
-        layout = QtGui.QGridLayout()
+        layout = QtWidgets.QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setColumnMinimumWidth(0, 8)
         layout.addWidget(self._activation_checkbox, 0, 0, 1, 3)
@@ -81,7 +81,7 @@ class ObjectSelectWidget(QtGui.QWidget):
             self.selection_indices_changed.emit(indices)
 
 
-class IndexSelectLineEdit(QtGui.QLineEdit):
+class IndexSelectLineEdit(QtWidgets.QLineEdit):
     indices_changed = QtCore.pyqtSignal(object)
     TIMER_INTERVAL = 1000
 

@@ -1,5 +1,5 @@
 SUBDIRS=$(shell find . -mindepth 1 -maxdepth 1 -type d)
-ALL_DISTROS = centos centos6 debian suse
+ALL_DISTROS = debian centos fedora suse
 ifeq ($(DISTROS),all)
 	override DISTROS = $(ALL_DISTROS)
 endif
@@ -13,7 +13,7 @@ ifndef DISTROS
 	@./create_package.sh
 else
 	@for DISTRO in $(DISTROS); do \
-		./create_package.sh "$${DISTRO}"; \
+		./create_package.sh "$${DISTRO}" || break; \
 	done
 endif
 

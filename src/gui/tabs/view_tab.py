@@ -2,7 +2,7 @@
 
 from functools import partial
 import itertools
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtWidgets
 from gui.object_select_widget import ObjectSelectWidget
 
 counter = itertools.count(0)
@@ -15,41 +15,41 @@ class ObjectTypeId(object):
 del counter
 
 
-class ViewTabDock(QtGui.QDockWidget):
+class ViewTabDock(QtWidgets.QDockWidget):
     """
         DockWidget for the 'view'-tab
     """
 
     def __init__(self, parent):
-        QtGui.QDockWidget.__init__(self, "view", parent)
-        self.setWidget(QtGui.QWidget())
+        QtWidgets.QDockWidget.__init__(self, "view", parent)
+        self.setWidget(QtWidgets.QWidget())
 
-        self.layout = QtGui.QHBoxLayout()
+        self.layout = QtWidgets.QHBoxLayout()
         self.view_tab = ViewTab(self.widget(), parent)
 
         self.layout.addWidget(self.view_tab)
         self.widget().setLayout(self.layout)
 
-        self.setFeatures(QtGui.QDockWidget.DockWidgetMovable
-                         | QtGui.QDockWidget.DockWidgetFloatable)
+        self.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable
+                         | QtWidgets.QDockWidget.DockWidgetFloatable)
 
 
-class ViewTab(QtGui.QWidget):
+class ViewTab(QtWidgets.QWidget):
     """
         tab 'view' in the main widget
     """
 
     def __init__(self, parent, main_window):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
         self.gl_widget = main_window.center.gl_widget
         #self.vis_settings = self.gl_widget.vis.settings
         self.results = None
         self.init_gui()
 
     def init_gui(self):
-        vbox = QtGui.QVBoxLayout()
-        group_box = QtGui.QGroupBox('view settings', self)
-        view_layout = QtGui.QVBoxLayout()
+        vbox = QtWidgets.QVBoxLayout()
+        group_box = QtWidgets.QGroupBox('view settings', self)
+        view_layout = QtWidgets.QVBoxLayout()
 
         # normal checkboxes are not used to prevent alignment problems between the different check box types
         self.box_check = ObjectSelectWidget('show bounding box', self, add_index_selector=False)
@@ -182,7 +182,7 @@ class ViewTab(QtGui.QWidget):
         # If no further check event was triggered, all settings are refreshed and the scene can be redrawn
         if not has_triggered_check_event:
             self.gl_widget.create_scene()
-            self.topLevelWidget().updatestatus()
+            self.window().updatestatus()
 
     def object_indices_changed(self, indices, object_type_id, update_scene=True):
         object_type_id2attribute_name = {

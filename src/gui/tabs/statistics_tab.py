@@ -1,25 +1,25 @@
-from PyQt4 import QtGui
-from PyQt4.QtCore import QTimer
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtCore import QTimer
 from gui.tabs.statistics.tree_list import TreeList
 from gui.tabs.statistics.html_view import HTMLWindow
 
-class StatisticsTabDock(QtGui.QDockWidget):
+class StatisticsTabDock(QtWidgets.QDockWidget):
     """
         DockWidget for the 'statistics'-tab
     """
 
     def __init__(self, parent):
-        QtGui.QDockWidget.__init__(self, "statistics", parent)
-        self.setWidget(QtGui.QWidget())
+        QtWidgets.QDockWidget.__init__(self, "statistics", parent)
+        self.setWidget(QtWidgets.QWidget())
 
-        self.layout             = QtGui.QHBoxLayout()
+        self.layout             = QtWidgets.QHBoxLayout()
         self.statistics_tab     = StatisticsTab(self.widget())
 
         self.layout.addWidget(self.statistics_tab)
         self.widget().setLayout(self.layout)
 
-        self.setFeatures(QtGui.QDockWidget.DockWidgetMovable | QtGui.QDockWidget.DockWidgetFloatable)
-        QTimer.singleShot(0, lambda *args: self.setVisible(False))
+        self.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable | QtWidgets.QDockWidget.DockWidgetFloatable)
+        self.setVisible(False)
         self.setMinimumWidth(350)
 
     def update_results(self, results):
@@ -28,20 +28,20 @@ class StatisticsTabDock(QtGui.QDockWidget):
             self.statistics_tab.update_results(results)
 
 
-class StatisticsTab(QtGui.QWidget):
+class StatisticsTab(QtWidgets.QWidget):
 
     def __init__(self, parent):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
         self.control = None
-        hbox = QtGui.QHBoxLayout()
+        hbox = QtWidgets.QHBoxLayout()
 
         self.html_view = HTMLWindow()
         self.tree_list = TreeList(self.html_view)
+
         self.html_view.tree_list = self.tree_list
         self.tree_list.setMinimumWidth(150)
         hbox.addWidget(self.tree_list)
         hbox.addWidget(self.html_view)
-        self.adjustSize()
         self.setLayout(hbox)
         hbox.setContentsMargins(0, 0, 0, 0)
         self.show()

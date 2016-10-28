@@ -4,7 +4,7 @@
 from __future__ import absolute_import
 
 
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtWidgets
 from gui.util.table_with_removeable_items import TableWithRemoveableEntries
 from gui.util.cutoff_preview_table import CutoffPreviewTable
 
@@ -38,12 +38,12 @@ class CutoffPresetTable(TableWithRemoveableEntries):
         for i, presets_entry in enumerate(self._presets):
             current_row = []
             for j, value in enumerate((presets_entry.name, )):
-                item = QtGui.QTableWidgetItem(str(value))
+                item = QtWidgets.QTableWidgetItem(str(value))
                 item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
                 current_row.append(item)
             if isinstance(presets_entry.radii, float):
                 cutoff_fixed_value = presets_entry.radii
-                item = QtGui.QTableWidgetItem(str(cutoff_fixed_value))
+                item = QtWidgets.QTableWidgetItem(str(cutoff_fixed_value))
                 item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
                 current_row.append(item)

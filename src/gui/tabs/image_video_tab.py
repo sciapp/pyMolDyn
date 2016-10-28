@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from PyQt4 import QtGui
-from PyQt4.QtCore import QTimer, QProcess
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import QTimer, QProcess
 import gr3
 from gui.gl_widget import GLWidget
 from core import file
@@ -10,41 +10,41 @@ import shutil
 import tempfile
 
 
-class ImageVideoTabDock(QtGui.QDockWidget):
+class ImageVideoTabDock(QtWidgets.QDockWidget):
     """
         DockWidget for the 'image/video'-tab
     """
 
     def __init__(self, parent):
-        QtGui.QDockWidget.__init__(self, "image/video", parent)
-        self.setWidget(QtGui.QWidget())
+        QtWidgets.QDockWidget.__init__(self, "image/video", parent)
+        self.setWidget(QtWidgets.QWidget())
 
-        self.layout             = QtGui.QHBoxLayout()
+        self.layout             = QtWidgets.QHBoxLayout()
         self.image_video_tab    = ImageVideoTab(self.widget(), parent)
 
         self.layout.addWidget(self.image_video_tab)
         self.widget().setLayout(self.layout)
 
-        self.setFeatures(QtGui.QDockWidget.DockWidgetMovable | QtGui.QDockWidget.DockWidgetFloatable)
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
+        self.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable | QtWidgets.QDockWidget.DockWidgetFloatable)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
 
 
-class ImageVideoTab(QtGui.QWidget):
+class ImageVideoTab(QtWidgets.QWidget):
     """
         tab 'image/video' in the main widget
     """
 
     def __init__(self, parent, main_window):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
         self.main_window = main_window
         self.init_gui()
 
     def init_gui(self):
-        self.vbox = QtGui.QVBoxLayout()
+        self.vbox = QtWidgets.QVBoxLayout()
 
-        self.screenshot_button = QtGui.QPushButton('Save screenshot for the current frame', self)
-        self.video_button = QtGui.QPushButton('Save video for all selected frames', self)
-        self.mass_screenshot_button = QtGui.QPushButton('Save screenshot for all selected frames', self)
+        self.screenshot_button = QtWidgets.QPushButton('Save screenshot for the current frame', self)
+        self.video_button = QtWidgets.QPushButton('Save video for all selected frames', self)
+        self.mass_screenshot_button = QtWidgets.QPushButton('Save screenshot for all selected frames', self)
 
         self.screenshot_button.clicked.connect(self.save_screenshot)
         self.screenshot_button.setDisabled(True)
@@ -59,13 +59,16 @@ class ImageVideoTab(QtGui.QWidget):
         self.vbox.addStretch()
         self.setLayout(self.vbox)
 
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
 
     def save_screenshot(self):
-        file_name = QtGui.QFileDialog.getSaveFileName(self,
-            'Save screenshot...', filter='Portable Network Graphics (*.png)')
+        file_name = QtWidgets.QFileDialog.getSaveFileName(self,
+            'Save screenshot...', filter='Portable Network Graphics (*.png)')[0]
         if file_name:
-            for widget in QtGui.QApplication.topLevelWidgets():
+            ext = os.path.splitext(file_name)[1]
+            if not ext:
+                file_name += '.png'
+            for widget in QtWidgets.QApplication.topLevelWidgets():
                 for gl_widget in widget.findChildren(GLWidget):
                     gl_widget.vis.save_screenshot(file_name)
 
@@ -73,7 +76,8 @@ class ImageVideoTab(QtGui.QWidget):
         file_list = self.main_window.file_dock.file_tab.file_list
         selection = file_list.get_selection()
         if not selection:
-            QtGui.QMessageBox.information(self, "No frame selected", "Please use the file tab to select at least one frame.", QtGui.QMessageBox.Ok, QtGui.QMessageBox.NoButton)
+            QtWidgets.QMessageBox.information(self, "No frame selected", "Please use the file tab to select at least one frame.",
+                                              QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.NoButton)
             return
 
 
@@ -90,9 +94,12 @@ class ImageVideoTab(QtGui.QWidget):
         frames_to_write = self.get_selected_frames()
         if not frames_to_write:
             return
-        file_name = QtGui.QFileDialog.getSaveFileName(self,
-            'Save video...', filter='QuickTime Movie (*.mov)')
+        file_name = QtWidgets.QFileDialog.getSaveFileName(self,
+            'Save video...', filter='QuickTime Movie (*.mov)')[0]
         if file_name:
+            ext = os.path.splitext(file_name)[1]
+            if not ext:
+                file_name += '.mov'
             dialog = MassScreenshotAndVideoDialog(self, frames_to_write, should_save_video=True, video_file_name=file_name)
             dialog.show()
             return
@@ -101,14 +108,14 @@ class ImageVideoTab(QtGui.QWidget):
         frames_to_write = self.get_selected_frames()
         if not frames_to_write:
             return
-        dir_name = QtGui.QFileDialog.getExistingDirectory(self, 'Save screenshots to folder...')
+        dir_name = QtWidgets.QFileDialog.getExistingDirectory(self, 'Save screenshots to folder...')
         if dir_name:
             dialog = MassScreenshotAndVideoDialog(self, frames_to_write, dir_name)
             dialog.show()
             return
 
 
-class MassScreenshotAndVideoDialog(QtGui.QDialog):
+class MassScreenshotAndVideoDialog(QtWidgets.QDialog):
     def __init__(self, parent, frames_to_write, dir_name=None, should_save_video=False, video_file_name=None):
         super(MassScreenshotAndVideoDialog, self).__init__(parent)
         self.control = parent.main_window.control
@@ -123,8 +130,8 @@ class MassScreenshotAndVideoDialog(QtGui.QDialog):
         self.dir_name = dir_name
         self.should_save_video = should_save_video
         self.video_file_name = video_file_name
-        self.vbox = QtGui.QVBoxLayout()
-        self.progress_bar = QtGui.QProgressBar(self)
+        self.vbox = QtWidgets.QVBoxLayout()
+        self.progress_bar = QtWidgets.QProgressBar(self)
         self.progress_bar.setValue(0)
         self.progress_bar.setMinimum(0)
         if self.should_save_video:
