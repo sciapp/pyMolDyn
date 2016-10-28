@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from PyQt4 import QtGui
+from PyQt5 import QtWidgets
 from gui.gl_widget import GLWidget
 from gui.pdf_widget import PDFWidget
 from gui.histogram_widget import HistogramWidget
 
 
-class GLStack(QtGui.QStackedWidget):
+class GLStack(QtWidgets.QStackedWidget):
     def __init__(self, parent, main_window):
-        QtGui.QStackedWidget.__init__(self, parent)
+        QtWidgets.QStackedWidget.__init__(self, parent)
         self.parent = parent
         self.control = parent.control
         self.gl_widget = GLWidget(self, main_window)
@@ -18,6 +18,8 @@ class GLStack(QtGui.QStackedWidget):
         self.addWidget(self.gl_widget)
         self.addWidget(self.pdf_widget)
         self.addWidget(self.histogram_widget)
+
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
         self.show()
 

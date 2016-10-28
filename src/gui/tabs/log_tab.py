@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 import datetime
 import logging
 
@@ -25,42 +25,42 @@ STYLE_SHEET = '''
 '''
 
 
-class LogTabDock(QtGui.QDockWidget):
+class LogTabDock(QtWidgets.QDockWidget):
     """
         DockWidget for the 'log'-tab
     """
 
     def __init__(self, parent):
-        QtGui.QDockWidget.__init__(self, "logging", parent)
-        self.setWidget(QtGui.QWidget())
+        QtWidgets.QDockWidget.__init__(self, "logging", parent)
+        self.setWidget(QtWidgets.QWidget())
 
-        self.layout = QtGui.QHBoxLayout()
+        self.layout = QtWidgets.QHBoxLayout()
         self.log_tab = LogTab(self.widget(), parent)
 
         self.layout.addWidget(self.log_tab)
         self.widget().setLayout(self.layout)
 
-        self.setFeatures(QtGui.QDockWidget.DockWidgetMovable | QtGui.QDockWidget.DockWidgetFloatable)
+        self.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable | QtWidgets.QDockWidget.DockWidgetFloatable)
 
     def append_log(self, message, level=logging.WARNING):
         QtCore.QMetaObject.invokeMethod(self.log_tab, 'append_log', QtCore.Qt.QueuedConnection,
                                         QtCore.Q_ARG(str, message), QtCore.Q_ARG(int, level))
 
 
-class LogTab(QtGui.QWidget):
+class LogTab(QtWidgets.QWidget):
     """
         tab 'log' in the main widget
     """
 
     def __init__(self, parent, main_window):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
         self.main_window = main_window
         self.init_gui()
 
     def init_gui(self):
-        self.vbox = QtGui.QVBoxLayout()
+        self.vbox = QtWidgets.QVBoxLayout()
 
-        self.log_area = QtGui.QTextEdit()
+        self.log_area = QtWidgets.QTextEdit()
         self.log_area.setReadOnly(True)
         self.log_area.document().setDefaultStyleSheet(STYLE_SHEET)
 

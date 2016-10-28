@@ -4,7 +4,7 @@
 from __future__ import absolute_import
 
 
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtWidgets
 from gui.util.table_with_removeable_items import TableWithRemoveableEntries
 from gui.util.cutoff_preview_table import CutoffPreviewTable
 
@@ -38,7 +38,7 @@ class CutoffHistoryTable(TableWithRemoveableEntries):
         for i, history_entry in enumerate(self._history):
             current_row = []
             for j, value in enumerate((history_entry.filename, history_entry.frame + 1, history_entry.time)):
-                item = QtGui.QTableWidgetItem(str(value))
+                item = QtWidgets.QTableWidgetItem(str(value))
                 item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
                 current_row.append(item)
             cutoff_table = CutoffPreviewTable(history_entry.radii)

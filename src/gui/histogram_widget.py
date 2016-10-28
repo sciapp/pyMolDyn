@@ -2,7 +2,7 @@
 
 from __future__ import absolute_import
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtWidgets
 import gr
 from qtgr import GRWidget
 import csv
@@ -22,16 +22,10 @@ class GrHistogramWidget(GRWidget):
     def __init__(self, *args, **kwargs):
         super(GrHistogramWidget, self).__init__(*args, **kwargs)
 
-        self.init_gui(self)
-
         self.xvalues = None
         self.yvalues = None
         self.title = None
         self.datapoints = None
-
-    def init_gui(self, form):
-        form.resize(QtCore.QSize(500, 500).expandedTo(form.minimumSizeHint()))
-        QtCore.QMetaObject.connectSlotsByName(form)
 
     def setdata(self, xvalues, yvalues, widths, title):
         self.xvalues = xvalues
@@ -86,10 +80,10 @@ class GrHistogramWidget(GRWidget):
             gr.text(0.8 * self.sizex, 0.9 * self.sizey, self.title)
 
 
-class HistogramWidget(QtGui.QWidget):
+class HistogramWidget(QtWidgets.QWidget):
 
     def __init__(self, parent):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
 
         self.control = parent.control
         self.results = None
@@ -97,51 +91,51 @@ class HistogramWidget(QtGui.QWidget):
         self.init_gui()
 
     def init_gui(self):
-        vbox = QtGui.QVBoxLayout()
-        grid = QtGui.QGridLayout()
+        vbox = QtWidgets.QVBoxLayout()
+        grid = QtWidgets.QGridLayout()
         self.gr_widget = GrHistogramWidget()
 
-        self.datasetlabel = QtGui.QLabel("No data loaded.", self)
+        self.datasetlabel = QtWidgets.QLabel("No data loaded.", self)
         self.datasetlabel.setAlignment(QtCore.Qt.AlignHCenter)
 
-        selectbox = QtGui.QHBoxLayout()
-        self.cavity_type_box = QtGui.QComboBox(self)
+        selectbox = QtWidgets.QHBoxLayout()
+        self.cavity_type_box = QtWidgets.QComboBox(self)
         self.cavity_type_box.setMinimumWidth(180)
         selectbox.addWidget(self.cavity_type_box)
-        selectbuttongroup = QtGui.QButtonGroup(self)
-        self.volumebutton = QtGui.QRadioButton("Cavity Volume", self)
+        selectbuttongroup = QtWidgets.QButtonGroup(self)
+        self.volumebutton = QtWidgets.QRadioButton("Cavity Volume", self)
         selectbox.addWidget(self.volumebutton)
         selectbuttongroup.addButton(self.volumebutton)
-        self.areabutton = QtGui.QRadioButton("Surface Area", self)
+        self.areabutton = QtWidgets.QRadioButton("Surface Area", self)
         selectbox.addWidget(self.areabutton)
         selectbuttongroup.addButton(self.areabutton)
         self.volumebutton.setChecked(True)
         grid.addLayout(selectbox, 0, 0)
 
-        self.weightbutton = QtGui.QCheckBox("Weighted Histogram", self)
+        self.weightbutton = QtWidgets.QCheckBox("Weighted Histogram", self)
         self.weightbutton.setChecked(True)
         grid.addWidget(self.weightbutton, 0, 1)
 
-        binbox = QtGui.QHBoxLayout()
-        binbox.addWidget(QtGui.QLabel("Number of Bins:", self), 0)
-        self.nbins = QtGui.QLineEdit(self)
+        binbox = QtWidgets.QHBoxLayout()
+        binbox.addWidget(QtWidgets.QLabel("Number of Bins:", self), 0)
+        self.nbins = QtWidgets.QLineEdit(self)
         self.nbins.setMinimumWidth(50)
         binbox.addWidget(self.nbins, 0, QtCore.Qt.AlignLeft)
         grid.addLayout(binbox, 0, 2)
 
-        buttonbox = QtGui.QHBoxLayout()
+        buttonbox = QtWidgets.QHBoxLayout()
 
-        self.plotbutton = QtGui.QPushButton("Plot", self)
+        self.plotbutton = QtWidgets.QPushButton("Plot", self)
         buttonbox.addWidget(self.plotbutton)
-        self.connect(self.plotbutton, QtCore.SIGNAL("clicked()"), self.draw)
+        self.plotbutton.clicked.connect(self.draw)
 
-        self.export_image_button = QtGui.QPushButton("Save Image", self)
+        self.export_image_button = QtWidgets.QPushButton("Save Image", self)
         buttonbox.addWidget(self.export_image_button)
-        self.connect(self.export_image_button, QtCore.SIGNAL("clicked()"), self.export_image)
+        self.export_image_button.clicked.connect(self.export_image)
 
-        self.export_data_button = QtGui.QPushButton("Export Data", self)
+        self.export_data_button = QtWidgets.QPushButton("Export Data", self)
         buttonbox.addWidget(self.export_data_button)
-        self.connect(self.export_data_button, QtCore.SIGNAL("clicked()"), self.export_data)
+        self.export_data_button.clicked.connect(self.export_data)
         grid.addLayout(buttonbox, 1, 0, 1, 3)
 
         vbox.addWidget(self.gr_widget, stretch=1)
@@ -196,8 +190,8 @@ class HistogramWidget(QtGui.QWidget):
         extensions = (".pdf", ".png", ".bmp", ".jpg", ".jpeg", ".png",
                       ".tiff", ".fig", ".svg", ".wmf", ".eps", ".ps")
         qtext = "*" + " *".join(extensions)
-        filepath = QtGui.QFileDialog.getSaveFileName(self, "Save Image",
-                                                           ".", "Image Files ({})".format(qtext))
+        filepath = QtWidgets.QFileDialog.getSaveFileName(self, "Save Image",
+                                                           ".", "Image Files ({})".format(qtext))[0]
         if not filepath:
             return
 
@@ -211,8 +205,8 @@ class HistogramWidget(QtGui.QWidget):
 
     def export_data(self):
         qtext = " *.csv"
-        filepath = QtGui.QFileDialog.getSaveFileName(self, "Save Data",
-                                                     ".", "CSV Files ({})".format(qtext))
+        filepath = QtWidgets.QFileDialog.getSaveFileName(self, "Save Data",
+                                                     ".", "CSV Files ({})".format(qtext))[0]
         if len(filepath) == 0:
             return
         self.draw()

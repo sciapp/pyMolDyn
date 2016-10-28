@@ -45,23 +45,23 @@
         </tr>-->
         <tr>
             <td> &nbsp; </td>
-            <td><a href="focus:{{atom_positions[0]}}:{{atom_positions[1]}}:{{atom_positions[2]}}">Focus</a></td>
+            <td><a href="gui:focus/{{atom_positions[0]}}/{{atom_positions[1]}}/{{atom_positions[2]}}">Focus</a></td>
         </tr>
         <tr>
             <td> &nbsp; </td>
-            <td><a href="hideothers:atom:{{ index+1 }}">Hide all other atoms</a></td>
+            <td><a href="gui:hideothers/atom/{{ index+1 }}">Hide all other atoms</a></td>
         </tr>
         <tr>
             <td> &nbsp; </td>
-            <td><a href="hideothers:element:{{ atom_number }}">Hide all atoms of a different element</a></td>
+            <td><a href="gui:hideothers/element/{{ atom_number }}">Hide all atoms of a different element</a></td>
         </tr>
         <tr>
             <td> &nbsp; </td>
-            <td><a href="addtovisible:atom:{{ index+1 }}">Add to list of visible atoms</a></td>
+            <td><a href="gui:addtovisible/atom/{{ index+1 }}">Add to list of visible atoms</a></td>
         </tr>
         <tr>
             <td> &nbsp; </td>
-            <td><a href="showall:atoms">Show all atoms</a></td>
+            <td><a href="gui:showall/atoms">Show all atoms</a></td>
         </tr>
         <tr>
             <td> &nbsp; </td>
@@ -99,7 +99,7 @@
         </tr>
         {% for bond in bonds %}
         <tr>
-            <td><a href="atom:{{bond}}">Atom {{ bond+1 }}</a></td>
+            <td><a href="gui:atom/{{bond}}">Atom {{ bond+1 }}</a></td>
             <!--<td>todo</td>
             <td>todo</td>-->
         </tr>

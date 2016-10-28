@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
+    <meta charset="UTF-8"/>
 
-<title>{{ title }}</title>
-<meta name="description" content="{{ description }}"/>
+    <title>{{ title }}</title>
+    <meta name="description" content="{{ description }}"/>
 </head>
 
 <body>
@@ -91,7 +91,7 @@
         <tr>
             <td>surface cavity:</td>
             <td>
-                <a href="surface_cavity:{{surface_cavity_index}}">{{ "Cavity %3d"|format(surface_cavity_index) }}</a>
+                <a href="gui:surface_cavity/{{surface_cavity_index}}">{{ "Cavity %3d"|format(surface_cavity_index) }}</a>
             </td>
         </tr>
         {%endif %}
@@ -99,25 +99,25 @@
         <tr>
             <td>center cavity:</td>
             <td>
-                <a href="center_cavity:{{center_cavity_index}}">{{ "Cavity %3d"|format(center_cavity_index) }}</a>
+                <a href="gui:center_cavity/{{center_cavity_index}}">{{ "Cavity %3d"|format(center_cavity_index) }}</a>
             </td>
         </tr>
         {%endif %}
         <tr>
             <td> &nbsp; </td>
-            <td><a href="focus:{{center[0]}}:{{center[1]}}:{{center[2]}}">Focus</a></td>
+            <td><a href="gui:focus/{{center[0]}}/{{center[1]}}/{{center[2]}}">Focus</a></td>
         </tr>
         <tr>
             <td> &nbsp; </td>
-            <td><a href="hideothers:domain:{{ index+1 }}">Hide all other cavities (domains)</a></td>
+            <td><a href="gui:hideothers/domain/{{ index+1 }}">Hide all other cavities (domains)</a></td>
         </tr>
         <tr>
             <td> &nbsp; </td>
-            <td><a href="addtovisible:domain:{{ index+1 }}">Add to list of visible cavities (domains)</a></td>
+            <td><a href="gui:addtovisible/domain/{{ index+1 }}">Add to list of visible cavities (domains)</a></td>
         </tr>
         <tr>
             <td> &nbsp; </td>
-            <td><a href="showall:domains">Show all cavities (domains)</a></td>
+            <td><a href="gui:showall/domains">Show all cavities (domains)</a></td>
         </tr>
     </table>
     {% if missing_values is not none %}
@@ -130,7 +130,7 @@
         </ul>
         <p>
             Attributes are missing since the dataset has been calculated with an older program version.
-            <a href="recalculate">Recalculate</a> to gain a complete data set.
+            <a href="gui:recalculate">Recalculate</a> to gain a complete data set.
         </p>
     </div>
     {% endif %}

@@ -5,11 +5,11 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtWidgets
 
 
-class CutoffTableWidget(QtGui.QTableWidget):
-    class CutoffLineEdit(QtGui.QLineEdit):
+class CutoffTableWidget(QtWidgets.QTableWidget):
+    class CutoffLineEdit(QtWidgets.QLineEdit):
         focus_in = QtCore.pyqtSignal()
 
         def __init__(self, *args, **kwargs):
@@ -27,11 +27,11 @@ class CutoffTableWidget(QtGui.QTableWidget):
         self._init_ui()
 
     def _init_ui(self):
-        self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.setHorizontalHeaderLabels(("Covalent Radius", "Cutoff Radius"))
         self.setVerticalHeaderLabels(self._radii.keys())
         for i in range(len(self._radii)):
-            self.setItem(i, 0, QtGui.QTableWidgetItem())
+            self.setItem(i, 0, QtWidgets.QTableWidgetItem())
             self.item(i, 0).setText(str(self._radii.values()[i]))
             current_line_edit = CutoffTableWidget.CutoffLineEdit()
             current_line_edit.textEdited.connect(self.text_edited)

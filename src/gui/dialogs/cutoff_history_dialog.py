@@ -4,13 +4,13 @@
 from __future__ import absolute_import
 
 
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtWidgets
 from config.cutoff_history import cutoff_history
 from config.cutoff_history import HistoryEntry
 from gui.cutoff_history_table import CutoffHistoryTable
 
 
-class CutoffHistoryDialog(QtGui.QDialog):
+class CutoffHistoryDialog(QtWidgets.QDialog):
     def __init__(self, parent, elements, preferred_filenames_with_frames=None):
         super(CutoffHistoryDialog, self).__init__(parent)
         history = cutoff_history.filtered_history(elements,
@@ -18,15 +18,15 @@ class CutoffHistoryDialog(QtGui.QDialog):
         self._init_ui(history)
 
     def _init_ui(self, history):
-        self.gb_history = QtGui.QGroupBox('History')
+        self.gb_history = QtWidgets.QGroupBox('History')
         self.tw_cutoff = CutoffHistoryTable(history)
-        self.pb_ok = QtGui.QPushButton('Ok')
+        self.pb_ok = QtWidgets.QPushButton('Ok')
         self.pb_ok.setEnabled(False)
-        self.pb_cancel = QtGui.QPushButton('Cancel')
+        self.pb_cancel = QtWidgets.QPushButton('Cancel')
 
-        self.la_main = QtGui.QVBoxLayout()
-        self.la_history = QtGui.QVBoxLayout()
-        self.la_ok_cancel = QtGui.QHBoxLayout()
+        self.la_main = QtWidgets.QVBoxLayout()
+        self.la_history = QtWidgets.QVBoxLayout()
+        self.la_ok_cancel = QtWidgets.QHBoxLayout()
         self.la_main.addWidget(self.gb_history)
         self.la_history.addWidget(self.tw_cutoff)
         self.la_ok_cancel.addStretch()
@@ -36,7 +36,7 @@ class CutoffHistoryDialog(QtGui.QDialog):
         self.la_ok_cancel.addStretch()
         self.la_ok_cancel.setContentsMargins(0, 0, 0, 0)
         self.la_main.addLayout(self.la_ok_cancel)
-        self.la_main.setSizeConstraint(QtGui.QLayout.SetFixedSize)
+        self.la_main.setSizeConstraint(QtWidgets.QLayout.SetFixedSize)
         self.gb_history.setLayout(self.la_history)
         self.setLayout(self.la_main)
 
