@@ -207,11 +207,18 @@ install_additional_python_packages() {
 }
 
 copy_src_and_setup_startup() {
+    local SETUP_RETURN_CODE
     cp -r ${SRC_DIR}/* ".${PYTHON_DEST_DIR}/"
     ln -s "${PYTHON_DEST_DIR}/${MAIN_SCRIPT}" ".${BIN_DIR}/${NAME}"
     create_desktop_file ".${DESKTOP_ENTRY_DIR}/${NAME}.desktop" && \
-        install_additional_python_packages && \
-        python -m compileall ".${PYTHON_DEST_DIR}/"
+        install_additional_python_packages
+    SETUP_RETURN_CODE=$?
+    if [ ${SETUP_RETURN_CODE} -ne 0 ]; then
+        return ${SETUP_RETURN_CODE}
+    fi
+    python -m compileall ".${PYTHON_DEST_DIR}/"
+    # ignore the compilation return code since single failures are ok... (i.e. for python 3 code)
+    true
 }
 
 create_desktop_file() {
