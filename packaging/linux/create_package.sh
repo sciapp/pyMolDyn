@@ -42,7 +42,7 @@ get_dependencies() {
         DEPENDENCIES=( "python-numpy" "python-qt5" "python-dateutil" "python-h5py" "python-opengl" "python-Jinja2" "gr" )
         ;;
     *)
-        echo "${DISTRO} is an invalid distribution string! => No package dependencies set!"
+        echo "${DISTRO} is an invalid distribution string! => No package dependencies set!" >&2
         ;;
     esac
 }
@@ -83,10 +83,15 @@ install_numpy() {
     local NUMPY_INSTALL_LOCATION="${TMP_INSTALL}/lib64/python2.7/site-packages/numpy"
 
     pushd "${TMP_INSTALL}"
-    curl -o numpy.tar.gz "${NUMPY_SRC_LINK}"
+    curl -L -o numpy.tar.gz "${NUMPY_SRC_LINK}"
     tar -xf numpy.tar.gz
     pushd "numpy-${NUMPY_VERSION}"
     python setup.py build install --prefix "${TMP_INSTALL}"
+    if [ $? -ne 0 ]; then
+        popd
+        popd
+        return 1
+    fi
     popd
     popd
     cp -r "${NUMPY_INSTALL_LOCATION}" ".${PYTHON_DEST_DIR}/"
@@ -106,8 +111,12 @@ install_pyqt5() (
         curl -L -o sip.tar.gz "${SIP_SRC_LINK}"
         tar -xf sip.tar.gz
         pushd "sip-${SIP_VERSION}"
-        python configure.py -b "${TMP_BIN_DIR}" -d "${TMP_PYTHON_DIR}" -e "${TMP_INCLUDE_DIR}" -v "${TMP_SHARE_DIR}/sip" --pyidir="${TMP_PYTHON_DIR}"
-        make && make install
+        python configure.py -b "${TMP_BIN_DIR}" -d "${TMP_PYTHON_DIR}" -e "${TMP_INCLUDE_DIR}" -v "${TMP_SHARE_DIR}/sip" --pyidir="${TMP_PYTHON_DIR}" && \
+            make && make install
+        if [ $? -ne 0 ]; then
+            popd
+            return 1
+        fi
         popd
         cp -r ${TMP_PYTHON_DIR}/*sip* "..${PYTHON_DEST_DIR}/"
     }
@@ -149,19 +158,28 @@ install_pyqt5() (
 
     pushd "${TMP_INSTALL}"
 
-    get_sip
+    if ! get_sip; then
+        popd
+        return 1
+    fi
 
     curl -L -o pyqt5.tar.gz "${PYQT_SRC_LINK}"
     tar -xf pyqt5.tar.gz
     pushd "PyQt5_gpl-${PYQT_VERSION}"
-    python configure.py -d "${TMP_PYTHON_DIR}" --stubsdir="${PYQT_INSTALL_LOCATION}" --qmake="${QT_QMAKE_PATH}" --sip-incdir="${TMP_INCLUDE_DIR}" --designer-plugindir="${TMP_PLUGIN_DIR}/designer" --qml-plugindir="${TMP_PLUGIN_DIR}/PyQt5" --no-sip-files --no-tools --confirm-license
-    make && make install
+    python configure.py -d "${TMP_PYTHON_DIR}" --stubsdir="${PYQT_INSTALL_LOCATION}" --qmake="${QT_QMAKE_PATH}" --sip-incdir="${TMP_INCLUDE_DIR}" --designer-plugindir="${TMP_PLUGIN_DIR}/designer" --qml-plugindir="${TMP_PLUGIN_DIR}/PyQt5" --no-sip-files --no-tools --confirm-license && \
+        make && make install
+    if [ $? -ne 0 ]; then
+        popd
+        popd
+        return 1
+    fi
     popd
     popd
     cp -r "${PYQT_INSTALL_LOCATION}" ".${PYTHON_DEST_DIR}/"
 )
 
 install_additional_python_packages() {
+    local INSTALL_RETURN_CODE
     TMP_INSTALL="$(pwd)/tmp"
     mkdir -p "${TMP_INSTALL}"
 
@@ -169,28 +187,31 @@ install_additional_python_packages() {
     debian)
         ;;
     centos)
-        install_numpy
-        install_pyqt5
+        install_numpy && \
+            install_pyqt5
         ;;
     fedora)
         ;;
     suse)
         ;;
     *)
-        echo "${DISTRO} is an invalid distribution string! => No addtional python packages are installed!"
+        echo "${DISTRO} is an invalid distribution string! => No addtional python packages are installed!" >&2
         ;;
     esac
+    INSTALL_RETURN_CODE=$?
 
     rm -rf "${TMP_INSTALL}"
     unset TMP_INSTALL
+
+    return ${INSTALL_RETURN_CODE}
 }
 
 copy_src_and_setup_startup() {
     cp -r ${SRC_DIR}/* ".${PYTHON_DEST_DIR}/"
     ln -s "${PYTHON_DEST_DIR}/${MAIN_SCRIPT}" ".${BIN_DIR}/${NAME}"
-    create_desktop_file ".${DESKTOP_ENTRY_DIR}/${NAME}.desktop"
-    install_additional_python_packages
-    python -m compileall ".${PYTHON_DEST_DIR}/"
+    create_desktop_file ".${DESKTOP_ENTRY_DIR}/${NAME}.desktop" && \
+        install_additional_python_packages && \
+        python -m compileall ".${PYTHON_DEST_DIR}/"
 }
 
 create_desktop_file() {
@@ -222,8 +243,10 @@ create_package() {
 
     fpm -s dir -t "${PACKAGE_FORMAT}" -n "${NAME}" -v "${VERSION}" --directories ${PYTHON_DEST_DIR} ${DEPENDENCIES_STRING} ${FPM_PACKAGE_DIRS}
 
-    mkdir "${DISTRO}"
-    mv *.${PACKAGE_FORMAT} "${DISTRO}/"
+    if [ $? -eq 0 ]; then
+        mkdir "${DISTRO}"
+        mv *.${PACKAGE_FORMAT} "${DISTRO}/"
+    fi
 }
 
 create_package_for_debian() {
@@ -280,10 +303,11 @@ get_running_distro() {
 }
 
 main() {
+    local PACKAGING_RETURN_CODE
     DISTRO="${1}"
     if [ ! -z "${DISTRO}" ]; then
         if ! array_contains "${DISTRO}" "${VALID_DISTROS[@]}"; then
-            echo "The first parameter (${DISTRO}) is no valid linux distribution name."
+            echo "The first parameter (${DISTRO}) is no valid linux distribution name." >&2
             exit 1
         fi
     else
@@ -293,11 +317,19 @@ main() {
 
     get_dependencies
 
-    eval "create_directory_structure_for_${DISTRO}"
-    copy_src_and_setup_startup
-    eval "create_package_for_${DISTRO}"
+    eval "create_directory_structure_for_${DISTRO}" && \
+        copy_src_and_setup_startup \ &&
+        eval "create_package_for_${DISTRO}"
+
+    PACKAGING_RETURN_CODE=$?
 
     cleanup
+
+    if [ ${PACKAGING_RETURN_CODE} -ne 0 ]; then
+        echo "Errors occured, could not build packages for ${DISTRO}" >&2
+    fi
+
+    return ${PACKAGING_RETURN_CODE}
 }
 
 main "$@"

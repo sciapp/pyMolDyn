@@ -13,7 +13,7 @@ ifndef DISTROS
 	@./create_package.sh
 else
 	@for DISTRO in $(DISTROS); do \
-		./create_package.sh "$${DISTRO}"; \
+		./create_package.sh "$${DISTRO}" || break; \
 	done
 endif
 
