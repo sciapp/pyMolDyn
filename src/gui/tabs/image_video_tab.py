@@ -7,6 +7,7 @@ from gui.gl_widget import GLWidget
 from core import file
 import os.path
 import shutil
+import sys
 import tempfile
 
 
@@ -173,6 +174,7 @@ class MassScreenshotAndVideoDialog(QtWidgets.QDialog):
         self.process = QProcess()
         self.process.start('gr', ['util/video_output.py', self.video_file_name] + self.images_written)
         self.process.readyReadStandardOutput.connect(self.process_output)
+        self.process.readyReadStandardError.connect(self.process_error)
         self.process.finished.connect(lambda *args: self.finished_video())
 
     def finished_video(self):
@@ -189,6 +191,10 @@ class MassScreenshotAndVideoDialog(QtWidgets.QDialog):
                 pass
             else:
                 self.progress_bar.setValue(len(self.images_written)+number)
+
+    def process_error(self):
+        output = self.process.readAllStandardError()
+        sys.stderr.write(output)
 
     def reject(self):
         self.is_rejected = True
