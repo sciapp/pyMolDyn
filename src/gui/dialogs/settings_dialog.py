@@ -183,7 +183,7 @@ class PathSettingsPage(QtWidgets.QWidget):
             t.setText(getattr(cfg_path, attr_str))
             self.lineedit_dict[attr_str] = t
 
-            self.connect(t, QtCore.pyqtSignal("editingFinished()"), lambda who=attr_str: self.path_edited(who))
+            t.editingFinished.connect(lambda who=attr_str: self.path_edited(who))
             grid.addWidget(l, i, 0)
             grid.addWidget(t, i, 1)
         box.addLayout(grid)
