@@ -3,10 +3,7 @@
 
 import os
 import sys
-try:
-    import Image
-except ImportError:
-    from PIL import Image
+from PIL import Image
 import gr
 import numpy as np
 
