@@ -77,7 +77,7 @@ def start_gui():
     timer.start(50)
     timer.timeout.connect(lambda: None)
     # ... to allow it to quit the application on SIGINT (Ctrl-C)
-    signal.signal(signal.SIGINT, lambda *args: app.quit())
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 
     filenames = sys.argv[1:]
