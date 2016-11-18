@@ -217,7 +217,7 @@ class Visualization(object):
         self.lookat_mat = create_look_at_matrix(pt + t, t, upt)
         gr3.cameralookat(pt[0] + t[0], pt[1] + t[1], pt[2] + t[2], t[0], t[1], t[2], upt[0], upt[1], upt[2])
 
-    def paint(self, width, height, usecurrentframebuffer=None):
+    def paint(self, width, height, usecurrentframebuffer=None, device_pixel_ratio=1):
         """
         Refresh the OpenGL scene.
         """
@@ -228,7 +228,8 @@ class Visualization(object):
             self.usecurrentframebuffer = usecurrentframebuffer
         if self.usecurrentframebuffer:
             gr3.usecurrentframebuffer()
-        gr3.drawimage(0, width, 0, height, width, height, gr3.GR3_Drawable.GR3_DRAWABLE_OPENGL)
+        gr3.drawimage(0, width*device_pixel_ratio, 0, height*device_pixel_ratio,
+                      width, height, gr3.GR3_Drawable.GR3_DRAWABLE_OPENGL)
 
     def save_screenshot(self, file_name, width=3840, height=2160):
         """
