@@ -170,7 +170,7 @@ class GLWidget(QOpenGLWidget if has_qopenglwidget else QGLWidget):
         """
         Refresh scene
         """
-        self.vis.paint(self.width(), self.height(), has_qopenglwidget)
+        self.vis.paint(self.width(), self.height(), has_qopenglwidget, self.devicePixelRatio())
 
     def updateGL(self):
         if has_qopenglwidget:
