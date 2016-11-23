@@ -40,13 +40,6 @@ def start_gui():
     core.file.SEARCH_PATH = os.getcwd()
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
-    if int(QtCore.QT_VERSION_STR.split('.')[1]) >= 4:   # we have at least Qt 5.4
-        format = QtGui.QSurfaceFormat()
-        format.setMajorVersion(2)
-        format.setMinorVersion(1)
-        format.setProfile(QtGui.QSurfaceFormat.CompatibilityProfile)
-        QtGui.QSurfaceFormat.setDefaultFormat(format)
-
     app = QtWidgets.QApplication(sys.argv)
     control = Control()
     window = main_window.MainWindow(control)
