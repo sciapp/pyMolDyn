@@ -100,6 +100,7 @@ _create_conda_env = False
 _requirements_file = None
 _conda_channels = None
 _extension_makefile = None
+_conda_gr_included = False
 
 
 class CondaError(Exception):
@@ -132,7 +133,12 @@ def get_command_line_arguments():
 
 
 def parse_command_line_arguments(args):
-    global _create_conda_env, _requirements_file, _conda_channels, _extension_makefile
+    global _create_conda_env, _requirements_file, _conda_channels, _extension_makefile, _conda_gr_included
+
+    def is_gr_in_conda_requirements(requirements_file):
+        with open(requirements_file, 'r') as f:
+            found_gr = any((line.startswith('gr=') for line in f))
+        return found_gr
 
     checked_args = {}
     if args.conda_req_file is not None:
@@ -143,6 +149,7 @@ def parse_command_line_arguments(args):
             _conda_channels = args.conda_channels
         if args.extension_makefile is not None:
             _extension_makefile = args.extension_makefile
+        _conda_gr_included = is_gr_in_conda_requirements(_requirements_file)
     return checked_args
 
 
@@ -300,6 +307,18 @@ def setup_startup(app_path, executable_path, app_executable_path, executable_roo
         copy_missing_conda_packages()
         fix_application_path_prefix()
 
+    def fix_conda_gr(env_path):
+        def create_missing_library_links():
+            library_directory = '{env_path}/lib'.format(env_path=env_path)
+            site_package_directory = '{env_path}/lib/python2.7/site-packages'.format(env_path=env_path)
+            for rel_lib_path in ('gr/libGR.so', 'gr3/libGR3.so'):
+                os.symlink(os.path.relpath('{site_packages}/{lib}'.format(site_packages=site_package_directory,
+                                                                          lib=rel_lib_path),
+                                           library_directory),
+                           '{lib}/{name}'.format(lib=library_directory, name=os.path.basename(rel_lib_path)))
+
+        create_missing_library_links()
+
     def build_extension_modules(env_path):
         def get_makefile_path():
             if executable_root_path is not None and \
@@ -330,6 +349,8 @@ def setup_startup(app_path, executable_path, app_executable_path, executable_roo
     if _create_conda_env:
         env_path = create_conda_env()
         make_conda_portable(env_path)
+        if _conda_gr_included:
+            fix_conda_gr(env_path)
         if _extension_makefile is not None:
             build_extension_modules(env_path)
         env_startup_script = PY_PRE_STARTUP_CONDA_SETUP
