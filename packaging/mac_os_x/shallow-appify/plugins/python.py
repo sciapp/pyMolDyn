@@ -180,7 +180,7 @@ def setup_startup(app_path, executable_path, app_executable_path, executable_roo
     def make_conda_portable(env_path):
         CONDA_BIN_PATH = 'bin/conda'
         CONDA_ACTIVATE_PATH = 'bin/activate'
-        CONDA_MISSING_PACKAGES = ('conda', )
+        CONDA_MISSING_PACKAGES = ('conda', 'enum', 'ruamel_yaml', 'requests')
 
         def fix_links_to_system_files():
             for root_path, dirnames, filenames in os.walk(env_path):
