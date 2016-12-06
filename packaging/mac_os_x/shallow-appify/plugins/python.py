@@ -23,6 +23,26 @@ PY_PRE_STARTUP_CONDA_SETUP = '''
 #!/bin/bash
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 cd ${SCRIPT_DIR}
+
+function fix_prefix {
+    local SAVED_PREFIX
+    local REAL_PREFIX
+
+    SAVED_PREFIX=$(sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' <../Resources/application_path_prefix)
+    REAL_PREFIX=$(cd ../.. && pwd | tr -d '\\n')
+
+    if [ "${SAVED_PREFIX}" != "${REAL_PREFIX}" ]; then
+        if [ -w "../Resources/application_path_prefix" ]; then
+            >&2 echo "INFO: Replacing application prefix ${SAVED_PREFIX} with ${REAL_PREFIX} ..."
+            grep -rlI "${SAVED_PREFIX}" ../Resources/conda_env | xargs sed -i '' "s!${SAVED_PREFIX}!${REAL_PREFIX}!g"
+            echo "${REAL_PREFIX}">../Resources/application_path_prefix
+        else
+            >&2 echo "WARNING: The app has no write permissions to change location prefixes!"
+        fi
+    fi
+}
+
+fix_prefix
 source ../Resources/conda_env/bin/activate ../Resources/conda_env
 python __startup__.py
 '''.strip()
@@ -263,10 +283,22 @@ def setup_startup(app_path, executable_path, app_executable_path, executable_roo
                 shutil.copytree('{system_anaconda_packages_root_path}/{package}'.format(system_anaconda_packages_root_path=full_anaconda_python_packages_path, package=package),
                                 '{condaenv_packages_root_path}/{package}'.format(condaenv_packages_root_path=full_condaenv_python_packages_path, package=package))
 
+        def fix_application_path_prefix():
+            target_application_path_prefix = '/Applications/pyMolDyn.app'
+            current_application_path_prefix = os.path.abspath('{env_path}/../../..'.format(env_path=env_path))
+            matching_files = subprocess.check_output(['grep', '-rlI', current_application_path_prefix, env_path]).strip().split('\n')
+            for matching_file in matching_files:
+                sed_pattern = 's!{current_prefix}!{target_prefix}!g'.format(current_prefix=current_application_path_prefix,
+                                                                            target_prefix=target_application_path_prefix)
+                subprocess.check_call(['sed', '-i', '', sed_pattern, matching_file])
+            with open('{env_path}/../application_path_prefix'.format(env_path=env_path), 'w') as f:
+                f.write(target_application_path_prefix)
+
         fix_links_to_system_files()
         fix_activate_script()
         fix_conda_shebang()
         copy_missing_conda_packages()
+        fix_application_path_prefix()
 
     def build_extension_modules(env_path):
         def get_makefile_path():
