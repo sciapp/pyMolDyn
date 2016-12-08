@@ -13,6 +13,7 @@ import shutil
 import subprocess
 from jinja2 import Template
 from .util import command
+from .util.binary_replace import binary_replace
 
 
 __author__ = 'Ingo Heimbach'
@@ -34,7 +35,13 @@ function fix_prefix {
     if [ "${SAVED_PREFIX}" != "${REAL_PREFIX}" ]; then
         if [ -w "../Resources/application_path_prefix" ]; then
             >&2 echo "INFO: Replacing application prefix ${SAVED_PREFIX} with ${REAL_PREFIX} ..."
-            grep -rlI "${SAVED_PREFIX}" ../Resources/conda_env | xargs sed -i '' "s!${SAVED_PREFIX}!${REAL_PREFIX}!g"
+            while read -r MATCHING_FILE ; do
+                if file --mime "${MATCHING_FILE}" | grep -q "charset=binary"; then
+                    ../Resources/binary_replace.py "${MATCHING_FILE}" "${SAVED_PREFIX}" "${REAL_PREFIX}"
+                else
+                    sed -i '' "s!${SAVED_PREFIX}!${REAL_PREFIX}!g" "${MATCHING_FILE}"
+                fi
+            done < <(grep -rl --exclude='*.pyc' "${SAVED_PREFIX}" ../Resources/conda_env)
             echo "${REAL_PREFIX}">../Resources/application_path_prefix
         else
             >&2 echo "WARNING: The app has no write permissions to change location prefixes!"
@@ -293,11 +300,20 @@ def setup_startup(app_path, executable_path, app_executable_path, executable_roo
         def fix_application_path_prefix():
             target_application_path_prefix = '/Applications/pyMolDyn.app'
             current_application_path_prefix = os.path.abspath('{env_path}/../../..'.format(env_path=env_path))
-            matching_files = subprocess.check_output(['grep', '-rlI', current_application_path_prefix, env_path]).strip().split('\n')
+            matching_files = subprocess.check_output(['grep', '-rl', "--exclude='*.pyc'", current_application_path_prefix, env_path]).strip().split('\n')
+            text_files = []
+            binary_files = []
             for matching_file in matching_files:
+                if 'charset=binary' in subprocess.check_output(['file', '--mime', matching_file]):
+                    binary_files.append(matching_file)
+                else:
+                    text_files.append(matching_file)
+            for text_file in text_files:
                 sed_pattern = 's!{current_prefix}!{target_prefix}!g'.format(current_prefix=current_application_path_prefix,
                                                                             target_prefix=target_application_path_prefix)
-                subprocess.check_call(['sed', '-i', '', sed_pattern, matching_file])
+                subprocess.check_call(['sed', '-i', '', sed_pattern, text_file])
+            for binary_file in binary_files:
+                binary_replace(binary_file, current_application_path_prefix, target_application_path_prefix)
             with open('{env_path}/../application_path_prefix'.format(env_path=env_path), 'w') as f:
                 f.write(target_application_path_prefix)
 
@@ -356,6 +372,8 @@ def setup_startup(app_path, executable_path, app_executable_path, executable_roo
         env_startup_script = PY_PRE_STARTUP_CONDA_SETUP
         with open('{macos}/{startup}'.format(macos=macos_path, startup=_ENV_STARTUP_SCRIPT_NAME), 'w') as f:
             f.writelines(env_startup_script.encode('utf-8'))
+        shutil.copy('{base_dir}/util/binary_replace.py'.format(base_dir=os.path.dirname(__file__)),
+                    '{resources}/binary_replace.py'.format(resources=resources_path))
         new_executable_path = _ENV_STARTUP_SCRIPT_NAME
     else:
         new_executable_path = _PY_STARTUP_SCRIPT_NAME
