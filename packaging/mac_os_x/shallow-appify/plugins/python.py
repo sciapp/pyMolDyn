@@ -13,6 +13,7 @@ import shutil
 import subprocess
 from jinja2 import Template
 from .util import command
+from .util.binary_replace import binary_replace
 
 
 __author__ = 'Ingo Heimbach'
@@ -23,6 +24,32 @@ PY_PRE_STARTUP_CONDA_SETUP = '''
 #!/bin/bash
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 cd ${SCRIPT_DIR}
+
+function fix_prefix {
+    local SAVED_PREFIX
+    local REAL_PREFIX
+
+    SAVED_PREFIX=$(sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' <../Resources/application_path_prefix)
+    REAL_PREFIX=$(cd ../.. && pwd | tr -d '\\n')
+
+    if [ "${SAVED_PREFIX}" != "${REAL_PREFIX}" ]; then
+        if [ -w "../Resources/application_path_prefix" ]; then
+            >&2 echo "INFO: Replacing application prefix ${SAVED_PREFIX} with ${REAL_PREFIX} ..."
+            while read -r MATCHING_FILE ; do
+                if file --mime "${MATCHING_FILE}" | grep -q "charset=binary"; then
+                    ../Resources/binary_replace.py "${MATCHING_FILE}" "${SAVED_PREFIX}" "${REAL_PREFIX}"
+                else
+                    sed -i '' "s!${SAVED_PREFIX}!${REAL_PREFIX}!g" "${MATCHING_FILE}"
+                fi
+            done < <(grep -rl --exclude='*.pyc' "${SAVED_PREFIX}" ../Resources/conda_env)
+            echo "${REAL_PREFIX}">../Resources/application_path_prefix
+        else
+            >&2 echo "WARNING: The app has no write permissions to change location prefixes!"
+        fi
+    fi
+}
+
+fix_prefix
 source ../Resources/conda_env/bin/activate ../Resources/conda_env
 python __startup__.py
 '''.strip()
@@ -80,6 +107,7 @@ _create_conda_env = False
 _requirements_file = None
 _conda_channels = None
 _extension_makefile = None
+_conda_gr_included = False
 
 
 class CondaError(Exception):
@@ -87,6 +115,10 @@ class CondaError(Exception):
 
 
 class LibPatchingError(Exception):
+    pass
+
+
+class PrecompileError(Exception):
     pass
 
 
@@ -112,7 +144,12 @@ def get_command_line_arguments():
 
 
 def parse_command_line_arguments(args):
-    global _create_conda_env, _requirements_file, _conda_channels, _extension_makefile
+    global _create_conda_env, _requirements_file, _conda_channels, _extension_makefile, _conda_gr_included
+
+    def is_gr_in_conda_requirements(requirements_file):
+        with open(requirements_file, 'r') as f:
+            found_gr = any((line.startswith('gr=') for line in f))
+        return found_gr
 
     checked_args = {}
     if args.conda_req_file is not None:
@@ -123,6 +160,7 @@ def parse_command_line_arguments(args):
             _conda_channels = args.conda_channels
         if args.extension_makefile is not None:
             _extension_makefile = args.extension_makefile
+        _conda_gr_included = is_gr_in_conda_requirements(_requirements_file)
     return checked_args
 
 
@@ -180,7 +218,7 @@ def setup_startup(app_path, executable_path, app_executable_path, executable_roo
     def make_conda_portable(env_path):
         CONDA_BIN_PATH = 'bin/conda'
         CONDA_ACTIVATE_PATH = 'bin/activate'
-        CONDA_MISSING_PACKAGES = ('conda', )
+        CONDA_MISSING_PACKAGES = ('conda', 'enum', 'ruamel_yaml', 'requests')
 
         def fix_links_to_system_files():
             for root_path, dirnames, filenames in os.walk(env_path):
@@ -263,10 +301,51 @@ def setup_startup(app_path, executable_path, app_executable_path, executable_roo
                 shutil.copytree('{system_anaconda_packages_root_path}/{package}'.format(system_anaconda_packages_root_path=full_anaconda_python_packages_path, package=package),
                                 '{condaenv_packages_root_path}/{package}'.format(condaenv_packages_root_path=full_condaenv_python_packages_path, package=package))
 
+        def fix_application_path_prefix():
+            target_application_path_prefix = '/Applications/pyMolDyn.app'
+            current_application_path_prefix = os.path.abspath('{env_path}/../../..'.format(env_path=env_path))
+            matching_files = subprocess.check_output(['grep', '-rl', "--exclude='*.pyc'", current_application_path_prefix, env_path]).strip().split('\n')
+            text_files = []
+            binary_files = []
+            for matching_file in matching_files:
+                if 'charset=binary' in subprocess.check_output(['file', '--mime', matching_file]):
+                    binary_files.append(matching_file)
+                else:
+                    text_files.append(matching_file)
+            for text_file in text_files:
+                sed_pattern = 's!{current_prefix}!{target_prefix}!g'.format(current_prefix=current_application_path_prefix,
+                                                                            target_prefix=target_application_path_prefix)
+                subprocess.check_call(['sed', '-i', '', sed_pattern, text_file])
+            for binary_file in binary_files:
+                binary_replace(binary_file, current_application_path_prefix, target_application_path_prefix)
+            with open('{env_path}/../application_path_prefix'.format(env_path=env_path), 'w') as f:
+                f.write(target_application_path_prefix)
+
         fix_links_to_system_files()
         fix_activate_script()
         fix_conda_shebang()
         copy_missing_conda_packages()
+        fix_application_path_prefix()
+
+    def fix_conda_gr(env_path):
+        def create_missing_library_links():
+            library_directory = '{env_path}/lib'.format(env_path=env_path)
+            site_package_directory = '{env_path}/lib/python2.7/site-packages'.format(env_path=env_path)
+            for rel_lib_path in ('gr/libGR.so', 'gr3/libGR3.so'):
+                os.symlink(os.path.relpath('{site_packages}/{lib}'.format(site_packages=site_package_directory,
+                                                                          lib=rel_lib_path),
+                                           library_directory),
+                           '{lib}/{name}'.format(lib=library_directory, name=os.path.basename(rel_lib_path)))
+
+        create_missing_library_links()
+
+    def precompile_python_files():
+        with open(os.devnull, 'w') as dummy:
+            try:
+                subprocess.check_call(['python', '-m', 'compileall', macos_path],
+                                      stdout=dummy, stderr=dummy)
+            except subprocess.CalledProcessError:
+                raise PrecompileError('Python modules could not be precompiled.')
 
     def build_extension_modules(env_path):
         def get_makefile_path():
@@ -298,11 +377,16 @@ def setup_startup(app_path, executable_path, app_executable_path, executable_roo
     if _create_conda_env:
         env_path = create_conda_env()
         make_conda_portable(env_path)
+        if _conda_gr_included:
+            fix_conda_gr(env_path)
+        precompile_python_files()
         if _extension_makefile is not None:
             build_extension_modules(env_path)
         env_startup_script = PY_PRE_STARTUP_CONDA_SETUP
         with open('{macos}/{startup}'.format(macos=macos_path, startup=_ENV_STARTUP_SCRIPT_NAME), 'w') as f:
             f.writelines(env_startup_script.encode('utf-8'))
+        shutil.copy('{base_dir}/util/binary_replace.py'.format(base_dir=os.path.dirname(__file__)),
+                    '{resources}/binary_replace.py'.format(resources=resources_path))
         new_executable_path = _ENV_STARTUP_SCRIPT_NAME
     else:
         new_executable_path = _PY_STARTUP_SCRIPT_NAME
