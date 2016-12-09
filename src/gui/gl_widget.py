@@ -47,7 +47,7 @@ class GLWidget(QOpenGLWidget if has_qopenglwidget else QGLWidget):
         return self.control.visualization
 
     def initializeGL(self):
-        pass
+        self.vis.assign_opengl_context(self)
 
     def minimumSizeHint(self):
         return QtCore.QSize(400, 400)
