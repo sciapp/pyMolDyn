@@ -32,6 +32,7 @@ class Visualization(object):
         self.width = 0
         self.height = 0
         self.usecurrentframebuffer = False
+        self.assigned_opengl_context = None
 
         self.results = None
         self.settings = VisualizationSettings()
@@ -217,7 +218,14 @@ class Visualization(object):
         self.lookat_mat = create_look_at_matrix(pt + t, t, upt)
         gr3.cameralookat(pt[0] + t[0], pt[1] + t[1], pt[2] + t[2], t[0], t[1], t[2], upt[0], upt[1], upt[2])
 
-    def paint(self, width, height, usecurrentframebuffer=None):
+    def assign_opengl_context(self, context):
+        """
+        Assigns an opengl context object that is set as current opengl context before rendering.
+        The object must have have ``makeCurrent`` and ``doneCurrent`` methods as an interface.
+        """
+        self.assigned_opengl_context = context
+
+    def paint(self, width, height, usecurrentframebuffer=None, device_pixel_ratio=1):
         """
         Refresh the OpenGL scene.
         """
@@ -228,13 +236,20 @@ class Visualization(object):
             self.usecurrentframebuffer = usecurrentframebuffer
         if self.usecurrentframebuffer:
             gr3.usecurrentframebuffer()
-        gr3.drawimage(0, width, 0, height, width, height, gr3.GR3_Drawable.GR3_DRAWABLE_OPENGL)
+        gr3.drawimage(0, width*device_pixel_ratio, 0, height*device_pixel_ratio,
+                      width, height, gr3.GR3_Drawable.GR3_DRAWABLE_OPENGL)
 
-    def save_screenshot(self, file_name, width=3840, height=2160):
+    def save_screenshot(self, file_name, width=3840, height=2160, first=True, last=True):
         """
         Save a screenshot in the given resolution.
+        ``first`` and ``last`` can be used to indicate if the first or last screenshot is taken when
+        multiple images are saved in a loop for example.
         """
+        if first and self.assigned_opengl_context is not None:
+            self.assigned_opengl_context.makeCurrent()
         gr3.export(file_name, width, height)
+        if last and self.assigned_opengl_context is not None:
+            self.assigned_opengl_context.doneCurrent()
 
     def get_object_at_2dposition(self, x, y):
         oid = gr3.c_int(0)

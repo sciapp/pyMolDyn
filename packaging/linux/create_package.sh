@@ -30,16 +30,16 @@ array_contains() {
 get_dependencies() {
     case ${DISTRO} in
     debian)
-        DEPENDENCIES=( "python-numpy" "python-pyqt5" "python-pyqt5.qtopengl" "python-pyqt5.qtwebkit"  "python-dateutil" "python-h5py" "python-opengl" "python-jinja2" "gr" )
+        DEPENDENCIES=( "python-numpy" "python-pyqt5" "python-pyqt5.qtopengl" "python-pyqt5.qtwebkit"  "python-dateutil" "python-h5py" "python-opengl" "python-jinja2" "python-pil" "gr" )
         ;;
     centos)
-        DEPENDENCIES=( "numpy" "qt5-qtdeclarative-devel" "qt5-qtwebkit-devel" "python-dateutil" "h5py" "PyOpenGL" "python-jinja2" "gr" )
+        DEPENDENCIES=( "numpy" "openblas" "qt5-qtdeclarative-devel" "qt5-qtwebkit-devel" "python-dateutil" "h5py" "PyOpenGL" "python-jinja2" "python-pillow" "gr" )
         ;;
     fedora)
-        DEPENDENCIES=( "numpy" "python-qt5" "python-qt5-webengine" "python-dateutil" "h5py" "PyOpenGL" "python-jinja2" "gr" )
+        DEPENDENCIES=( "numpy" "python-qt5" "python-qt5-webengine" "python-dateutil" "h5py" "PyOpenGL" "python-jinja2" "python-pillow" "gr" )
         ;;
     suse)
-        DEPENDENCIES=( "python-numpy" "python-qt5" "python-dateutil" "python-h5py" "python-opengl" "python-Jinja2" "gr" )
+        DEPENDENCIES=( "python-numpy" "python-qt5" "python-dateutil" "python-h5py" "python-opengl" "python-Jinja2" "python-Pillow" "gr" )
         ;;
     *)
         echo "${DISTRO} is an invalid distribution string! => No package dependencies set!" >&2

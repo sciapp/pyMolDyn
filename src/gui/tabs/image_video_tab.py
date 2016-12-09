@@ -7,6 +7,7 @@ from gui.gl_widget import GLWidget
 from core import file
 import os.path
 import shutil
+import sys
 import tempfile
 
 
@@ -68,9 +69,7 @@ class ImageVideoTab(QtWidgets.QWidget):
             ext = os.path.splitext(file_name)[1]
             if not ext:
                 file_name += '.png'
-            for widget in QtWidgets.QApplication.topLevelWidgets():
-                for gl_widget in widget.findChildren(GLWidget):
-                    gl_widget.vis.save_screenshot(file_name)
+            self.main_window.control.visualization.save_screenshot(file_name)
 
     def get_selected_frames(self):
         file_list = self.main_window.file_dock.file_tab.file_list
@@ -142,6 +141,7 @@ class MassScreenshotAndVideoDialog(QtWidgets.QDialog):
         self.setLayout(self.vbox)
         self.is_rejected = False
         self.process = None
+        self.is_first_frame = True
         if self.should_save_video:
             self.setWindowTitle("Saving video...")
         else:
@@ -158,8 +158,10 @@ class MassScreenshotAndVideoDialog(QtWidgets.QDialog):
         image_file_name = os.path.join(self.dir_name, "{}.{:06d}.png".format(os.path.basename(file_name), frame_number+1))
         self.control.visualize(file_name, frame_number)
         self.control.visualization.create_scene()
-        gr3.export(image_file_name, width, height)
+        self.control.visualization.save_screenshot(image_file_name, width, height,
+                                                   self.is_first_frame, not self.frames_to_write)
         self.images_written.append(image_file_name)
+        self.is_first_frame = False
         if self.frames_to_write:
             self.progress_bar.setValue(len(self.images_written))
             self.update()
@@ -173,6 +175,7 @@ class MassScreenshotAndVideoDialog(QtWidgets.QDialog):
         self.process = QProcess()
         self.process.start('gr', ['util/video_output.py', self.video_file_name] + self.images_written)
         self.process.readyReadStandardOutput.connect(self.process_output)
+        self.process.readyReadStandardError.connect(self.process_error)
         self.process.finished.connect(lambda *args: self.finished_video())
 
     def finished_video(self):
@@ -189,6 +192,10 @@ class MassScreenshotAndVideoDialog(QtWidgets.QDialog):
                 pass
             else:
                 self.progress_bar.setValue(len(self.images_written)+number)
+
+    def process_error(self):
+        output = self.process.readAllStandardError()
+        sys.stderr.write(output)
 
     def reject(self):
         self.is_rejected = True

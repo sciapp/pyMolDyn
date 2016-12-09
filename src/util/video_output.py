@@ -3,17 +3,20 @@
 
 import os
 import sys
-import Image
+from PIL import Image
 import gr
 import numpy as np
+
 
 class GRVideoOutput(object):
     def __init__(self):
         self.is_recording = False
 
-    def begin(self):
+    def begin(self, outfile_name=None):
         self.is_recording = True
         os.environ['GKS_WSTYPE'] = "mov"
+        if outfile_name is not None:
+            os.environ['GKS_FILEPATH'] = os.path.abspath(outfile_name)
 
     def write(self, image, device_pixel_ratio=1):
         height, width = image.shape[:2]
@@ -28,7 +31,8 @@ class GRVideoOutput(object):
         metric_width, metric_height, pixel_width, pixel_height = gr.inqdspsize()
         meter_per_horizontal_pixel = metric_width/pixel_width
         meter_per_vertical_pixel = metric_height/pixel_height
-        gr.setwsviewport(0, meter_per_horizontal_pixel*width*device_pixel_ratio, 0, meter_per_vertical_pixel*height*device_pixel_ratio)
+        gr.setwsviewport(0, meter_per_horizontal_pixel*width*device_pixel_ratio, 0,
+                         meter_per_vertical_pixel*height*device_pixel_ratio)
         gr.setwswindow(0, xmax, 0, ymax)
         gr.setviewport(0, xmax, 0, ymax)
         gr.setwindow(0, xmax, 0, ymax)
@@ -49,14 +53,13 @@ def main(argv):
     frame_file_names = argv[1:]
     os.chdir(os.path.dirname(frame_file_names[0]))
     video_output = GRVideoOutput()
-    video_output.begin()
+    video_output.begin(outfile_name)
     for frame_index, frame_file_name in enumerate(frame_file_names):
         image = np.array(Image.open(frame_file_name))
         video_output.write(image)
         print(frame_index)
         sys.stdout.flush()
     video_output.end()
-    os.rename('gks.mov', outfile_name)
 
 if __name__ == '__main__':
     main(sys.argv)
