@@ -229,6 +229,7 @@ class Visualization(object):
         """
         Refresh the OpenGL scene.
         """
+        self.assigned_opengl_context.makeCurrent()
         self.width = width
         self.height = height
         self.set_camera(width, height)
@@ -238,6 +239,7 @@ class Visualization(object):
             gr3.usecurrentframebuffer()
         gr3.drawimage(0, width*device_pixel_ratio, 0, height*device_pixel_ratio,
                       width, height, gr3.GR3_Drawable.GR3_DRAWABLE_OPENGL)
+        self.assigned_opengl_context.doneCurrent()
 
     def save_screenshot(self, file_name, width=3840, height=2160, first=True, last=True):
         """
