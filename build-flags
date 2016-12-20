@@ -73,7 +73,8 @@ import numpy
 import os.path
 numpy_package_path = os.path.dirname(numpy.__file__)
 print('-I{}'.format(os.path.join(numpy_package_path, 'core/include')))
-EOF)
+EOF
+)
 
     eval "${1}=\"${INC_FLAGS}\""
     eval "${2}=\"\""

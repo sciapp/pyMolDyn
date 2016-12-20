@@ -98,10 +98,10 @@ class PDFWidget(QtWidgets.QWidget):
         elembox.addWidget(QtWidgets.QLabel("Elements:", self), 0)
         self.elem1 = QtWidgets.QComboBox(self)
         self.elem1.setMinimumWidth(170)
-        elembox.addWidget(self.elem1, 0, QtCore.Qt.AlignLeft)
+        elembox.addWidget(self.elem1, 1)
         self.elem2 = QtWidgets.QComboBox(self)
         self.elem2.setMinimumWidth(170)
-        elembox.addWidget(self.elem2, 0, QtCore.Qt.AlignRight)
+        elembox.addWidget(self.elem2, 1)
         grid.addLayout(elembox, 0, 0)
 
         rangebox = QtWidgets.QHBoxLayout()
@@ -113,7 +113,7 @@ class PDFWidget(QtWidgets.QWidget):
         self.range2 = QtWidgets.QLineEdit("8", self)
         self.range2.setMinimumWidth(30)
         rangebox.addWidget(self.range2)
-        grid.addLayout(rangebox, 0, 1)
+        grid.addLayout(rangebox, 1, 0)
 
         cutoffbox = QtWidgets.QHBoxLayout()
         cutoffbox.addWidget(QtWidgets.QLabel("Kernel:", self))
@@ -130,7 +130,7 @@ class PDFWidget(QtWidgets.QWidget):
         self.bandwidth = QtWidgets.QLineEdit("", self)
         self.bandwidth.setMinimumWidth(30)
         cutoffbox.addWidget(self.bandwidth)
-        grid.addLayout(cutoffbox, 0, 2)
+        grid.addLayout(cutoffbox, 2, 0)
 
         buttonbox = QtWidgets.QHBoxLayout()
 
@@ -145,7 +145,7 @@ class PDFWidget(QtWidgets.QWidget):
         self.export_data_button = QtWidgets.QPushButton("Export Data", self)
         buttonbox.addWidget(self.export_data_button)
         self.export_data_button.clicked.connect(self.export_data)
-        grid.addLayout(buttonbox, 1, 0, 1, 3)
+        grid.addLayout(buttonbox, 3, 0)
 
         vbox.addWidget(self.gr_widget, stretch=1)
         vbox.addWidget(self.datasetlabel, stretch=0)
