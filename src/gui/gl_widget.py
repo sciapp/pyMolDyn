@@ -69,15 +69,13 @@ class GLWidget(QOpenGLWidget if has_qopenglwidget else QGLWidget):
 
     def wheelEvent(self, e):
         self.update_needed = True
-        if e.modifiers() != QtCore.Qt.ShiftModifier:
-            if e.pixelDelta().y() != 0:
-                self.vis.zoom(-e.pixelDelta().y())
+	rot_v = 0.1
+        if e.modifiers() == QtCore.Qt.ShiftModifier:
+            if (e.angleDelta().x() != 0) or (e.angleDelta().y() != 0):
+                self.vis.rotate_mouse(e.angleDelta().x() * rot_v, e.angleDelta().y() * rot_v)
         else:
-            rot_v = 0.1
-            if e.orientation() == QtCore.Qt.Horizontal:
-                self.vis.rotate_mouse(e.delta() * rot_v, 0)
-            else:
-                self.vis.rotate_mouse(0, e.delta() * rot_v)
+            if e.angleDelta().y() != 0:
+                self.vis.zoom(e.angleDelta().y())
 
         QtWidgets.QApplication.postEvent(self, UpdateGLEvent())
 
