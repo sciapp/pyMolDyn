@@ -72,10 +72,10 @@ class GLWidget(QOpenGLWidget if has_qopenglwidget else QGLWidget):
 	rot_v = 0.1
         if e.modifiers() == QtCore.Qt.ShiftModifier:
             if (e.angleDelta().x() != 0) or (e.angleDelta().y() != 0):
-                self.vis.rotate_mouse(e.angleDelta().x() * rot_v, e.angleDelta().y() * rot_v)
+                self.vis.rotate_mouse(-e.angleDelta().x() * rot_v, -e.angleDelta().y() * rot_v)
         else:
             if e.angleDelta().y() != 0:
-                self.vis.zoom(e.angleDelta().y())
+                self.vis.zoom(-e.angleDelta().y())
 
         QtWidgets.QApplication.postEvent(self, UpdateGLEvent())
 
