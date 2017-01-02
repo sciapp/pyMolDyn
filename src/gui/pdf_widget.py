@@ -156,7 +156,7 @@ class PDFWidget(QtWidgets.QWidget):
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Return \
                 or event.key() == QtCore.Qt.Key_Enter:
-            self.draw()
+            self.update()
 
     def draw(self, now=False, wsviewport=None):
         xvalues = None
@@ -234,7 +234,7 @@ class PDFWidget(QtWidgets.QWidget):
                                                      ".", "CSV Files ({})".format(qtext))[0]
         if len(filepath) == 0:
             return
-        self.draw()
+        self.update()
         xvalues = self.gr_widget.xvalues
         yvalues = self.gr_widget.yvalues
         if xvalues is None or yvalues is None:
@@ -261,7 +261,7 @@ class PDFWidget(QtWidgets.QWidget):
                 self.elem2.clear()
                 self.elem2.addItems(e)
                 self.gr_widget.setdata(None, None, None)
-                self.gr_widget.draw()
+                self.gr_widget.update()
             self.datasetlabel.setText(str(results))
         else:
             self.datasetlabel.setText("")
