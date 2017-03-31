@@ -120,7 +120,7 @@ class Cli(object):
                               "long": "--resolution",
                               "action": "store",
                               "dest": "resolution",
-                              "default": None,
+                              "default": 128,
                               "type": "int",
                               "help": "vacancy resolution"},
                              {"special_type": "parameter",
@@ -160,14 +160,23 @@ class Cli(object):
 #                              "type": "float",
 #                              "help": "constant bond delta (when no parameter is given, radii sum criterion (1.15) is used)"},
                              {"special_type": "disable_target",
-                              "name": "no alternative cavities",
+                              "name": "no surface based cavities",
                               "short": "",
-                              "long": "--noalternativecavities",
+                              "long": "--nosurfacebasedcavities",
                               "action": "store_true",
-                              "dest": "no_alternative_cavities",
+                              "dest": "no_surface_based_cavities",
                               "default": False,
                               "type": None,
-                              "help": "Alternative (center based) cavities are not calculated."},
+                              "help": "Surface based cavities are not calculated."},
+                             {"special_type": "disable_target",
+                              "name": "no center based cavities",
+                              "short": "",
+                              "long": "--nocenterbasedcavities",
+                              "action": "store_true",
+                              "dest": "no_center_based_cavities",
+                              "default": False,
+                              "type": None,
+                              "help": "Center based cavities are not calculated."},
                              {"special_type": "disable_target",
                               "name": "no hdf5 export",
                               "short": "",
@@ -199,8 +208,8 @@ class Cli(object):
         default_settings = CalculationSettings(dict())
         default_settings.resolution = self.control.config.Computation.std_resolution
         default_settings.domains = True
-        default_settings.surface_cavities = True
-        default_settings.center_cavities = not self.options.no_alternative_cavities
+        default_settings.surface_cavities = not self.options.no_surface_based_cavities
+        default_settings.center_cavities = not self.options.no_center_based_cavities
         default_settings.recalculate = True
         default_settings.exporthdf5 = not self.options.no_hdf5_export
         default_settings.exporttext = not self.options.no_text_export
