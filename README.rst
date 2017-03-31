@@ -5,7 +5,7 @@ pyMolDyn
 pyMolDyn is a viewer for atomic clusters, crystalline and amorphous materials in a unit cell corresponding to one of
 the seven 3D Bravais lattices. The program calculates cavities (vacancies, voids) according to three definitions.
 
-.. image:: https://pgi-jcns.fz-juelich.de/portal/static/images/pymoldyn-gui.png
+.. image:: http://pgi-jcns.fz-juelich.de/portal/static/images/pymoldyn-gui.png
     :width: 80%
     :alt: pyMolDyn GUI
     :align: center
