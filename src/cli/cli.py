@@ -4,10 +4,12 @@
 __all__ = ["CLI"]
 
 
+import collections
 import optparse
 import os
-import thread
+import re
 import sys
+import thread
 import logging
 from datetime import datetime
 from core.control import Control
@@ -27,6 +29,11 @@ shell_colors = {'white_font':     "\033[37m",
 get_progress_string = lambda progress: '[' + '='*int(20*progress) + ' '*(20-int(20*progress)) + ']' + ' %.2f' % (100*progress) + ' %'
 
 
+class ReadState(object):
+    DEFAULT = 0
+    ATOM_RADII = 1
+
+
 class FileList(object):
     def __init__(self, global_resolution, global_atom_radius, global_export_dir):
         self.global_resolution = global_resolution
@@ -34,25 +41,25 @@ class FileList(object):
         self.global_export_dir = global_export_dir
         self.file_list = []
 
-    def append(self, filename, frames=None, resolution=None, atom_radius=None, export_dir=None):
-        self.file_list.append((filename, frames, resolution, atom_radius, export_dir))
+    def append(self, filename, frames=None, resolution=None, atom_radii=None, export_dir=None):
+        self.file_list.append((filename, frames, resolution, atom_radii, export_dir))
 
     def createCalculationSettings(self, default_settings):
         settings_list = []
-        for filename, frames, resolution, atom_radius, export_dir in self.file_list:
+        for filename, frames, resolution, atom_radii, export_dir in self.file_list:
             if frames is None:
                 frames = [-1]
             if resolution is None or self.global_resolution is not None:
                 resolution = self.global_resolution
-            if atom_radius is None or self.global_atom_radius is not None:
-                atom_radius = self.global_atom_radius
+            if atom_radii is None or self.global_atom_radius is not None:
+                atom_radii = self.global_atom_radius
             if export_dir is None or self.global_export_dir is not None:
                 export_dir = self.global_export_dir
             settings = default_settings.copy()
             # TODO: atom radius
             settings.datasets = {filename: frames}
             settings.resolution = resolution
-            settings.cutoff_radii = atom_radius
+            settings.cutoff_radii = atom_radii
             settings.exportdir = export_dir
             settings_list.append(settings)
         return settings_list
@@ -62,7 +69,7 @@ class FileList(object):
 
     def __str__(self):
         s = ""
-        for filename, frames, resolution, atom_radius, export_dir in self.file_list:
+        for filename, frames, resolution, atom_radii, export_dir in self.file_list:
             s += "-> {}".format(filename)
             if frames is not None and frames[0] != -1:
                 s += "; frames " + ", ".join([str(f + 1) for f in frames])
@@ -74,8 +81,11 @@ class FileList(object):
                 s += "; resolution {}".format(resolution)
             if self.global_atom_radius is not None:
                 s += "; cutoff radius {}".format(self.global_atom_radius)
-            elif atom_radius is not None:
-                s += "; cutoff radius {}".format(atom_radius)
+            elif atom_radii is not None:
+                if isinstance(atom_radii, collections.Mapping):
+                    s += "; cutoff radii: {}".format(atom_radii)
+                else:
+                    s += "; cutoff radius {}".format(atom_radii)
             s += "\n"
         return s
 
@@ -100,7 +110,7 @@ class Cli(object):
                               "short": "-a",
                               "long": "--atomradius",
                               "action": "store",
-                              "dest": "atom_radius",
+                              "dest": "atom_radii",
                               "default": None,
                               "type": "float",
                               "help": "cut off radius"},
@@ -198,8 +208,8 @@ class Cli(object):
         default_settings.bonds = True
         default_settings.dihedral_angles = True
         settings_list = file_list.createCalculationSettings(default_settings)
-        if self.options.atom_radius is not None:
-            config.Computation.atom_radius = self.options.atom_radius
+        if self.options.atom_radii is not None:
+            config.Computation.atom_radii = self.options.atom_radii
         if self.options.max_cachefiles is not None:
             config.Computation.max_cachefiles = self.options.max_cachefiles
         elif self.options.no_cache:
@@ -268,7 +278,7 @@ class Cli(object):
 Batch files have the format:
 
 RESOLUTION resolution
-ATOM_RADIUS radius
+ATOM_RADIUS radius  /  ATOM_RADII (followed by indented lines with format "ELEMENT RADIUS")
 OUTPUT_DIRECTORY directory
 file-01.xyz
 file-02.xyz frame frame ...
@@ -277,7 +287,7 @@ file-02.xyz frame frame ...
     .
 
 RESOLUTION, ATOM_RADIUS and OUTPUT_DIRECTORY are optional and are overridden by the command line options. OUTPUT_DIRECTORY can contain one or more asterisks. These are replaced with the subdirectory name(s) containing the input files.
-Note: Because the cutoff radius is stored in the global configuration, it cannot yet be specified per calculation. Therefore the ATOM_RADIUS can only be specified on the command line."""
+Note: Because the cutoff radius is stored in the global configuration, it cannot yet be specified per calculation."""
         parser = optparse.OptionParser(usage=usage)
 
         for opt_dict in self.options_list:
@@ -297,35 +307,50 @@ Note: Because the cutoff radius is stored in the global configuration, it cannot
 
     def __get_file_list(self, input_file_list):
         result_file_list = FileList(self.options.resolution,
-                                    self.options.atom_radius,
+                                    self.options.atom_radii,
                                     self.options.output_directory)
         for input_file in input_file_list:
+            read_state = ReadState.DEFAULT
             try:
                 input_file = core.file.get_abspath(input_file)
                 with open(input_file) as f:
                     resolution = None
-                    atom_radius = None
+                    atom_radii = None
                     output_directory = None
                     for line in f.readlines():
                         lstripped_line = line.lstrip()
                         if len(lstripped_line) > 0 and lstripped_line[0] != '#':
                             line_parts = lstripped_line.split()
-                            if line_parts[0] == "RESOLUTION":
-                                resolution = int(line_parts[1])
-                                continue
-                            if line_parts[0] == "ATOM_RADIUS":
-                                atom_radius = float(line_parts[1])
-                                continue
-                            if line_parts[0] == "OUTPUT_DIRECTORY":
-                                output_directory = " ".join(line_parts[1:])
-                                continue
-
-                            filepath = os.path.join(os.path.dirname(os.path.abspath(input_file)), line_parts[0])
-                            if len(line_parts) > 1:
-                                frames = [int(f) - 1 for f in line_parts[1:]]
-                            else:
-                                frames = None
-                            result_file_list.append(filepath, frames, resolution, atom_radius, output_directory)
+                            line_is_processed = False
+                            while not line_is_processed:
+                                if read_state == ReadState.ATOM_RADII:
+                                    if re.match('^\s+', line):
+                                        element = line_parts[0]
+                                        radius = float(line_parts[1])
+                                        atom_radii[element] = radius
+                                        line_is_processed = True
+                                    else:
+                                        read_state = ReadState.DEFAULT
+                                else:
+                                    if line_parts[0] == "RESOLUTION":
+                                        resolution = int(line_parts[1])
+                                    elif line_parts[0] == "ATOM_RADIUS":
+                                        atom_radii = float(line_parts[1])
+                                    elif line_parts[0] == "ATOM_RADII":
+                                        atom_radii = {}
+                                        read_state = ReadState.ATOM_RADII
+                                    elif line_parts[0] == "OUTPUT_DIRECTORY":
+                                        output_directory = " ".join(line_parts[1:])
+                                    else:
+                                        filepath = os.path.join(os.path.dirname(os.path.abspath(input_file)),
+                                                                line_parts[0])
+                                        if len(line_parts) > 1:
+                                            frames = [int(f) - 1 for f in line_parts[1:]]
+                                        else:
+                                            frames = None
+                                        result_file_list.append(filepath, frames, resolution,
+                                                                atom_radii, output_directory)
+                                    line_is_processed = True
             except IOError:
                 print 'warning: batch file %s not accessable and skipped' % (os.path.abspath(input_file))
 
