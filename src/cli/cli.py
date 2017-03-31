@@ -52,6 +52,7 @@ class FileList(object):
             # TODO: atom radius
             settings.datasets = {filename: frames}
             settings.resolution = resolution
+            settings.cutoff_radii = atom_radius
             settings.exportdir = export_dir
             settings_list.append(settings)
         return settings_list
@@ -83,7 +84,7 @@ class Cli(object):
     def __init__(self, control, command_line_params=None):
         if command_line_params is None:
             command_line_params = sys.argv[1:]
-            
+
         self.control = control
         self.options_list = [{"special_type": None,
                               "name": "quiet",
@@ -175,16 +176,16 @@ class Cli(object):
                               "default": False,
                               "type": None,
                               "help": "No text files with results are created"}]
-        
+
         (self.options, self.left_args) = self.__parse_options(command_line_params)
         self.previous_progress = None
         self.cancel_callback = lambda : None
-        
-    
+
+
     # -------------------- public methods --------------------
     def start(self):
         file_list = self.__get_file_list(filter(lambda entry: entry[0] != '-', self.left_args))
-        
+
         default_settings = CalculationSettings(dict())
         default_settings.resolution = self.control.config.Computation.std_resolution
         default_settings.domains = True
@@ -209,10 +210,10 @@ class Cli(object):
         print 'parameters:'
         tmp_param_string=""
         for i, opt_dict in enumerate(self.options_list):
-            tmp_param_string += opt_dict['name'] + ': ' + str(getattr(self.options, opt_dict['dest'])) + ', ' + ('\n' if i % 4 == 3 else '') 
+            tmp_param_string += opt_dict['name'] + ': ' + str(getattr(self.options, opt_dict['dest'])) + ', ' + ('\n' if i % 4 == 3 else '')
         if tmp_param_string[-1] == '\n':
             tmp_param_string = tmp_param_string[:-3]
-        else: 
+        else:
             tmp_param_string = tmp_param_string[:-2]
         print tmp_param_string
         print
@@ -232,7 +233,7 @@ class Cli(object):
             print "Finished calculation: {}".format(datetime.now())
 
             #    started_computation = True
-        
+
             #if started_computation:
             #    #self.__handle_input()
             #    try:
@@ -242,10 +243,10 @@ class Cli(object):
             #            self.cancel_callback()
             #        except task.IllegalTaskStateException:
             #            pass
-                
-    
+
+
     # -------------------- private methods -------------------
-    
+
     def __handle_input(self):
         while True:
             try:
@@ -260,7 +261,7 @@ class Cli(object):
                 self.cancel_callback()
                 break
         print
-    
+
     def __parse_options(self, command_line_params):
         usage = """Usage: %prog [options] batch_file1 batch_file2 ...
 
@@ -278,22 +279,22 @@ file-02.xyz frame frame ...
 RESOLUTION, ATOM_RADIUS and OUTPUT_DIRECTORY are optional and are overridden by the command line options. OUTPUT_DIRECTORY can contain one or more asterisks. These are replaced with the subdirectory name(s) containing the input files.
 Note: Because the cutoff radius is stored in the global configuration, it cannot yet be specified per calculation. Therefore the ATOM_RADIUS can only be specified on the command line."""
         parser = optparse.OptionParser(usage=usage)
-        
+
         for opt_dict in self.options_list:
             parser.add_option(opt_dict["short"],
                               opt_dict["long"],
                               action=opt_dict["action"],
                               dest=opt_dict["dest"],
-                              default=opt_dict["default"], 
+                              default=opt_dict["default"],
                               type=opt_dict["type"],
                               help=opt_dict["help"])
-        
+
         (options, left_args) = parser.parse_args(command_line_params)
         if len(left_args) == 0:
             parser.print_help()
             sys.exit()
         return (options, left_args)
-    
+
     def __get_file_list(self, input_file_list):
         result_file_list = FileList(self.options.resolution,
                                     self.options.atom_radius,
@@ -327,6 +328,6 @@ Note: Because the cutoff radius is stored in the global configuration, it cannot
                             result_file_list.append(filepath, frames, resolution, atom_radius, output_directory)
             except IOError:
                 print 'warning: batch file %s not accessable and skipped' % (os.path.abspath(input_file))
-                        
+
         return result_file_list
 
