@@ -11,7 +11,7 @@ import core.file
 from core.file import File
 from algorithm import CavityCalculation, DomainCalculation, FakeDomainCalculation
 from discretization import DiscretizationCache, AtomDiscretization
-import util.message as message
+from util import message
 from hashlib import sha256
 from config.configuration import config
 from util.logger import Logger

@@ -1,9 +1,9 @@
 CFLAGS = -O3
 INCLUDES := $(shell ./build-flags --include-flags gr)
 ifeq ($(PYLIBPATH),)
-	LDFLAGS := $(shell ./build-flags --lib-flags gr)
+	LDFLAGS := $(shell ./build-flags --lib-flags gr) $(EXTRA_LD_FLAGS)
 else
-	LDFLAGS := -L$(PYLIBPATH)/python2.7/site-packages/gr3/ -lGR3
+	LDFLAGS := -L$(PYLIBPATH)/python2.7/site-packages/gr3/ -lGR3 $(EXTRA_LD_FLAGS)
 endif
 SUBDIRS=
 

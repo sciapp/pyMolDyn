@@ -10,7 +10,7 @@ app:
 
 shallow-app:
 	mkdir shallow-app
-	PATH=/usr/local/bin:${PATH} gr shallow-appify/shallow-appify.py -d ../../src/ -i ../../src/icon.png -e PATH PYTHONPATH DYLD_LIBRARY_PATH -o shallow-app/pyMolDyn.app ../../src/startGUI.py
+	PATH="/usr/local/bin:/usr/bin:/bin" PYTHONPATH="/usr/local/gr/lib/python" gr shallow-appify/shallow-appify.py -d ../../src/ -i ../../src/icon.png -e PATH PYTHONPATH -o shallow-app/pyMolDyn.app ../../src/startGUI.py
 
 clean:
 	@for subdir in ${SUBDIRS}; do \
