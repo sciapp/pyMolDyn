@@ -14,6 +14,9 @@ _finish = None
 _error = None
 _log = None
 
+# Buffer log messages if no valid log callback is set
+_log_buffer = []
+
 
 def print_message(*args):
     if callable(_print_message):
@@ -38,6 +41,8 @@ def error(*args):
 def log(*args):
     if callable(_log):
         return _log(*args)
+    else:
+        _log_buffer.append(args)
 
 
 def set_output_callbacks(progress_func, print_func, finished_func, error_func, log_func):
@@ -48,3 +53,8 @@ def set_output_callbacks(progress_func, print_func, finished_func, error_func, l
     _finish = finished_func
     _error = error_func
     _log = log_func
+
+    if _log_buffer and _log:
+        for log_args in _log_buffer:
+            _log(*log_args)
+        del _log_buffer[:]
