@@ -29,9 +29,28 @@ class DiscretizationCache(object):
     """
 
     def __init__(self, filename):
-        self.file = h5py.File(filename, 'a')
-        if '/discretizations' not in self.file:
-            self.file.create_group('/discretizations')
+        self.filename = filename
+        self.file = None
+
+    def lock(self):
+        try:
+            self.file = h5py.File(self.filename, 'a')
+            if '/discretizations' not in self.file:
+                self.file.create_group('/discretizations')
+        except IOError:
+            self.file = None
+        return self
+
+    def unlock(self):
+        if self.file is not None:
+            self.file.close()
+            self.file = None
+
+    def __enter__(self):
+        return self.lock()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.unlock()
 
     def get_discretization(self, volume, d_max):
         """
@@ -40,15 +59,16 @@ class DiscretizationCache(object):
         """
         discretization_repr = repr(volume) + " d_max=%d" % d_max
         print_message("{volume}, discretization resolution: {resolution:d}".format(volume=repr(volume), resolution=d_max))
-        if discretization_repr in self.file['/discretizations']:
+        if self.file is not None and discretization_repr in self.file['/discretizations']:
             stored_discretization = self.file['/discretizations/' + discretization_repr]
             grid = np.array(stored_discretization)
             discretization = Discretization(volume, d_max, grid)
         else:
             discretization = Discretization(volume, d_max)
             grid = discretization.grid
-            self.file['/discretizations/' + discretization_repr] = grid
-            self.file.flush()
+            if self.file is not None:
+                self.file['/discretizations/' + discretization_repr] = grid
+                self.file.flush()
         return discretization
 
     def get_discretization_from_string(self, string):

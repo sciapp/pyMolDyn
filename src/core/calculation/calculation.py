@@ -301,7 +301,8 @@ class Calculation(object):
         else:
             cachepath = os.path.join(self.cachedir, 'discretization_cache.hdf5')
             discretization_cache = DiscretizationCache(cachepath)
-            discretization = discretization_cache.get_discretization(volume, resolution)
+            with DiscretizationCache(cachepath) as discretization_cache:
+                discretization = discretization_cache.get_discretization(volume, resolution)
             atom_discretization = AtomDiscretization(atoms, discretization)
             message.progress(10)
             if (domains and results.domains is None) \
@@ -490,9 +491,9 @@ class CalculationCache(object):
 
     def buildindex(self):
         self.index = dict()
-        for filename in os.listdir(self.directory):
-            if not filename.split(".")[-1] == "hdf5":
-                continue
+        filenames = set(f for f in os.listdir(self.directory) if os.path.splitext(f)[1] == "hdf5")
+        filenames.discard('discretization_cache.hdf5')
+        for filename in filenames:
             cachepath = self.abspath(filename)
             try:
                 cachefile = core.file.HDF5File(cachepath)
