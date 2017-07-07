@@ -98,7 +98,7 @@ _file_ext_ = 'py'
 _PY_STARTUP_SCRIPT_NAME = '__startup__.py'
 _ENV_STARTUP_SCRIPT_NAME = '__startup__.sh'
 _CONDA_DEFAULT_PACKAGES = ('pyobjc-framework-cocoa', )
-_CONDA_DEFAULT_CHANNELS = ('https://conda.binstar.org/erik', )
+_CONDA_DEFAULT_CHANNELS = ('erik', )
 _EXT_PYLIB_VARIABLE = 'PYLIBPATH'
 _EXT_MAKEFILE_TARGET = 'app_extension_modules'
 
@@ -194,21 +194,19 @@ def setup_startup(app_path, executable_path, app_executable_path, executable_roo
     def create_conda_env():
         def create_env():
             conda_channels = _conda_channels or []
-            with open(os.devnull, 'w') as dummy:
-                env_path = '{resources}/{env}'.format(resources=resources_path, env='conda_env')
-                try:
-                    subprocess.check_call(['conda', 'create', '-p', env_path,
-                                           '--file', _requirements_file, '--copy', '--quiet', '--yes'] +
-                                          list(itertools.chain(*[('-c', channel) for channel in conda_channels])),
-                                          stdout=dummy, stderr=dummy)
-                    subprocess.check_call(' '.join(['source', '{env_path}/bin/activate'.format(env_path=env_path),
-                                                    env_path, ';', 'conda', 'install', '--copy', '--quiet', '--yes'] +
-                                                   list(_CONDA_DEFAULT_PACKAGES) +
-                                                   list(itertools.chain(*[('-c', channel)
-                                                                          for channel in _CONDA_DEFAULT_CHANNELS]))),
-                                          stdout=dummy, stderr=dummy, shell=True)
-                except subprocess.CalledProcessError:
-                    raise CondaError('The conda environment could not be installed.')
+            env_path = '{resources}/{env}'.format(resources=resources_path, env='conda_env')
+            try:
+                subprocess.check_call(['conda', 'create', '-p', env_path,
+                                       '--file', _requirements_file, '--copy', '--yes'] +
+                                      list(itertools.chain(*[('-c', channel) for channel in conda_channels])))
+                subprocess.check_call(' '.join(['source', '{env_path}/bin/activate'.format(env_path=env_path),
+                                                env_path, ';', 'conda', 'install', '--copy', '--yes'] +
+                                               list(_CONDA_DEFAULT_PACKAGES) +
+                                               list(itertools.chain(*[('-c', channel)
+                                                                      for channel in _CONDA_DEFAULT_CHANNELS]))),
+                                      shell=True)
+            except subprocess.CalledProcessError:
+                raise CondaError('The conda environment could not be installed.')
             return env_path
 
         env_path = create_env()
@@ -218,6 +216,7 @@ def setup_startup(app_path, executable_path, app_executable_path, executable_roo
     def make_conda_portable(env_path):
         CONDA_BIN_PATH = 'bin/conda'
         CONDA_ACTIVATE_PATH = 'bin/activate'
+        CONDA_MISSING_LIBS = ('libyaml-0.2.dylib', )
         CONDA_MISSING_PACKAGES = ('conda', 'enum', 'ruamel_yaml', 'requests')
 
         def fix_links_to_system_files():
@@ -277,20 +276,33 @@ def setup_startup(app_path, executable_path, app_executable_path, executable_roo
             with open(full_conda_bin_path, 'w') as f:
                 f.writelines(lines)
 
+        def get_system_anaconda_root_path():
+            anaconda_dir_path = None
+            system_conda_bin_path = command.which('conda')
+            if system_conda_bin_path:
+                with open(system_conda_bin_path, 'r') as f:
+                    shebang_line = f.readline()
+                match_obj = re.match('#!(.*)/bin/python', shebang_line)
+                if match_obj:
+                    anaconda_dir_path = match_obj.group(1)
+            return anaconda_dir_path
+
+        def copy_missing_conda_libs():
+            ANACONDA_LIBS_PATH = 'lib'
+            CONDAENV_LIBS_PATH = 'lib'
+
+            system_anaconda_root_path = get_system_anaconda_root_path()
+            full_anaconda_libs_path = '{system_anaconda_root}/{relative_packages_path}'.format(system_anaconda_root=system_anaconda_root_path,
+                                                                                               relative_packages_path=ANACONDA_LIBS_PATH)
+            full_condaenv_libs_path = '{env_path}/{relative_packages_path}'.format(env_path=env_path,
+                                                                                   relative_packages_path=CONDAENV_LIBS_PATH)
+            for lib in CONDA_MISSING_LIBS:
+                shutil.copy('{system_anaconda_packages_root_path}/{lib}'.format(system_anaconda_packages_root_path=full_anaconda_libs_path, lib=lib),
+                            '{condaenv_packages_root_path}/{lib}'.format(condaenv_packages_root_path=full_condaenv_libs_path, lib=lib))
+
         def copy_missing_conda_packages():
             ANACONDA_PYTHON_PACKAGES_PATH = 'lib/python2.7/site-packages'
             CONDAENV_PYTHON_PACKAGES_PATH = 'lib/python2.7/site-packages'
-
-            def get_system_anaconda_root_path():
-                anaconda_dir_path = None
-                system_conda_bin_path = command.which('conda')
-                if system_conda_bin_path:
-                    with open(system_conda_bin_path, 'r') as f:
-                        shebang_line = f.readline()
-                    match_obj = re.match('#!(.*)/bin/python', shebang_line)
-                    if match_obj:
-                        anaconda_dir_path = match_obj.group(1)
-                return anaconda_dir_path
 
             system_anaconda_root_path = get_system_anaconda_root_path()
             full_anaconda_python_packages_path = '{system_anaconda_root}/{relative_packages_path}'.format(system_anaconda_root=system_anaconda_root_path,
@@ -324,6 +336,7 @@ def setup_startup(app_path, executable_path, app_executable_path, executable_roo
         fix_links_to_system_files()
         fix_activate_script()
         fix_conda_shebang()
+        copy_missing_conda_libs()
         copy_missing_conda_packages()
         fix_application_path_prefix()
 
