@@ -30,10 +30,10 @@ array_contains() {
 get_dependencies() {
     case ${DISTRO} in
     debian)
-        DEPENDENCIES=( "python-numpy" "python-pyqt5" "python-pyqt5.qtopengl" "python-pyqt5.qtwebkit"  "python-dateutil" "python-h5py" "python-opengl" "python-jinja2" "python-pil" "gr" )
+        DEPENDENCIES=( "python-numpy" "python-pyqt5" "python-pyqt5.qtopengl" "python-pyqt5.qtwebkit"  "python-dateutil" "python-h5py" "python-opengl" "python-jinja2" "python-pil" "gr" "libpython2.7" "libxt6")
         ;;
     centos)
-        DEPENDENCIES=( "numpy" "openblas" "qt5-qtdeclarative-devel" "qt5-qtwebkit-devel" "python-dateutil" "h5py" "PyOpenGL" "python-jinja2" "python-pillow" "gr" )
+        DEPENDENCIES=( "numpy" "openblas" "qt5-qtdeclarative-devel" "qt5-qtwebkit-devel" "python-dateutil" "h5py" "PyOpenGL" "python-jinja2" "python-pillow" "gr" "libXt")
         ;;
     fedora)
         DEPENDENCIES=( "numpy" "python-qt5" "python-qt5-webengine" "python-dateutil" "h5py" "PyOpenGL" "python-jinja2" "python-pillow" "gr" )

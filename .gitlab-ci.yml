@@ -1,0 +1,157 @@
+stages:
+- build
+- install
+
+packages:
+  stage: build
+  image: centos:7
+  script:
+  - yum install -y epel-release
+  - yum install -y ruby-devel gcc gcc-c++ python-devel rpm-build qt5-qtdeclarative-devel qt5-qtwebkit-devel Cython atlas-devel openblas-devel make
+  - gem install fpm
+  # Add IFF repository
+  - curl -O http://iffwww.iff.kfa-juelich.de/repos/iffrepo.gpg.key
+  - echo -e '[iffrepo]\nname=iffrepo\nbaseurl=http://iffwww.iff.kfa-juelich.de/repos/centos/7/$basearch\nenabled=1' > iff.repo
+  - rpm --import iffrepo.gpg.key
+  - cp iff.repo /etc/yum.repos.d/
+  - yum install -y gr
+  # Build Packages 
+  - make linuxpackages
+  # Collect artifacts
+  - mkdir -p artifacts/linux/centos
+  - cp packaging/linux/centos/pymoldyn-*-1.x86_64.rpm artifacts/linux/centos/
+  - mkdir -p artifacts/linux/fedora
+  - cp packaging/linux/fedora/pymoldyn-*-1.x86_64.rpm artifacts/linux/fedora/
+  - mkdir -p artifacts/linux/debian
+  - cp packaging/linux/debian/pymoldyn_*_amd64.deb artifacts/linux/debian/
+  - mkdir -p artifacts/linux/suse
+  - cp packaging/linux/suse/pymoldyn-*-1.x86_64.rpm artifacts/linux/suse/
+  artifacts:
+    expire_in: 1 week
+    paths:
+    - artifacts/
+
+debian9-install:
+  stage: install
+  image: debian:9
+  script:
+  - apt-get -q update
+  - apt-get -q install -y wget gnupg2 gdebi-core
+  # Add IFF repository
+  - wget http://iffwww.iff.kfa-juelich.de/repos/iffrepo.gpg.key 
+  - echo 'deb http://iffwww.iff.kfa-juelich.de/repos/debian jessie main' > iffrepo.list
+  - apt-key add iffrepo.gpg.key
+  - cp iffrepo.list /etc/apt/sources.list.d/iffrepo.list
+  - rm -rf /var/lib/apt/lists
+  - apt-get -q update
+  - apt-get -q install -y libpython2.7 libxt6
+  # Install pymoldyn DEB
+  - gdebi -n artifacts/linux/debian/pymoldyn*.deb
+  - DISPLAY=:0.0 /usr/bin/pymoldyn --batch
+    
+ubuntu16.04-install:
+  stage: install
+  image: ubuntu:16.04
+  script:
+  - apt-get -q update
+  - apt-get -q install -y wget gnupg2 gdebi-core
+  # Add IFF repository
+  - wget http://iffwww.iff.kfa-juelich.de/repos/iffrepo.gpg.key 
+  - echo 'deb http://iffwww.iff.kfa-juelich.de/repos/debian jessie main' > iffrepo.list
+  - apt-key add iffrepo.gpg.key
+  - cp iffrepo.list /etc/apt/sources.list.d/iffrepo.list
+  - rm -rf /var/lib/apt/lists
+  - apt-get -q update
+  - apt-get -q install -y libpython2.7 libxt6
+  # Install pymoldyn DEB
+  - gdebi -n artifacts/linux/debian/pymoldyn*.deb
+  - DISPLAY=:0.0 /usr/bin/pymoldyn --batch
+
+ubuntu17.04-install:
+  stage: install
+  image: ubuntu:17.04
+  script:
+  - apt-get -q update
+  - apt-get -q install -y wget gnupg2 gdebi-core
+  # Add IFF repository
+  - wget http://iffwww.iff.kfa-juelich.de/repos/iffrepo.gpg.key 
+  - echo 'deb http://iffwww.iff.kfa-juelich.de/repos/debian jessie main' > iffrepo.list
+  - apt-key add iffrepo.gpg.key
+  - cp iffrepo.list /etc/apt/sources.list.d/iffrepo.list
+  - rm -rf /var/lib/apt/lists
+  - apt-get -q update
+  - apt-get -q install -y libpython2.7 libxt6
+  # Install pymoldyn DEB
+  - gdebi -n artifacts/linux/debian/pymoldyn*.deb
+  - DISPLAY=:0.0 /usr/bin/pymoldyn --batch
+    
+centos7-install:
+  stage: install
+  image: centos:7
+  script:
+  # Add IFF repository
+  - curl -O http://iffwww.iff.kfa-juelich.de/repos/iffrepo.gpg.key
+  - echo -e '[iffrepo]\nname=iffrepo\nbaseurl=http://iffwww.iff.kfa-juelich.de/repos/centos/7/$basearch\nenabled=1' > iff.repo
+  - rpm --import iffrepo.gpg.key
+  - cp iff.repo /etc/yum.repos.d/
+  - yum install -y epel-release
+  # Install pymoldyn RPM
+  - yum install -y libXt
+  - yum localinstall -y artifacts/linux/centos/pymoldyn*.rpm
+  - DISPLAY=:0.0 /usr/bin/pymoldyn --batch
+    
+fedora25-install:
+  stage: install
+  image: fedora:25
+  script:
+  # Add IFF repository
+  - curl -O http://iffwww.iff.kfa-juelich.de/repos/iffrepo.gpg.key
+  - echo -e '[iffrepo]\nname=iffrepo\nbaseurl=http://iffwww.iff.kfa-juelich.de/repos/fedora/25/$basearch\nenabled=1' > iff.repo
+  - rpm --import iffrepo.gpg.key
+  - cp iff.repo /etc/yum.repos.d/
+  # Install pymoldyn RPM
+  - dnf install -y libXt
+  - dnf install -y artifacts/linux/fedora/pymoldyn*.rpm
+  - DISPLAY=:0.0 /usr/bin/pymoldyn --batch
+    
+fedora24-install:
+  stage: install
+  image: fedora:24
+  script:
+  # Add IFF repository
+  - curl -O http://iffwww.iff.kfa-juelich.de/repos/iffrepo.gpg.key
+  - echo -e '[iffrepo]\nname=iffrepo\nbaseurl=http://iffwww.iff.kfa-juelich.de/repos/fedora/24/$basearch\nenabled=1' > iff.repo
+  - rpm --import iffrepo.gpg.key
+  - cp iff.repo /etc/yum.repos.d/
+  # Install pymoldyn RPM
+  - dnf install -y libXt
+  - dnf install -y artifacts/linux/fedora/pymoldyn*.rpm
+  - DISPLAY=:0.0 /usr/bin/pymoldyn --batch
+    
+opensuse42.1-install:
+  stage: install
+  image: opensuse:42.1
+  script:
+  # Add IFF repository
+  - zypper install -y curl
+  - curl -O http://iffwww.iff.kfa-juelich.de/repos/iffrepo.gpg.key
+  - rpm --import iffrepo.gpg.key
+  - zypper addrepo -f 'http://iffwww.iff.kfa-juelich.de/repos/suse/42-1/$basearch' iffrepo
+  # Install pymoldyn RPM
+  - zypper install -y libXt6
+  - zypper install -y artifacts/linux/suse/pymoldyn*.rpm
+  - DISPLAY=:0.0 /usr/bin/pymoldyn --batch
+    
+opensuse42.2-install:
+  stage: install
+  image: opensuse:42.2
+  script:
+  # Add IFF repository
+  - zypper install -y curl
+  - curl -O http://iffwww.iff.kfa-juelich.de/repos/iffrepo.gpg.key
+  - rpm --import iffrepo.gpg.key
+  - zypper addrepo -f 'http://iffwww.iff.kfa-juelich.de/repos/suse/42-2/$basearch' iffrepo
+  # Install pymoldyn RPM
+  - zypper install -y libXt6
+  - zypper install -y artifacts/linux/suse/pymoldyn*.rpm
+  - DISPLAY=:0.0 /usr/bin/pymoldyn --batch
