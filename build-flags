@@ -16,12 +16,43 @@ array_contains() {
 }
 
 python_flags() {
+    test_framework_version() {
+        local DARWIN_FRAMEWORK_PATH
+        local CURRENT_TEMP_DIR
+        local DARWIN_FRAMEWORK_VERSION
+
+        DARWIN_FRAMEWORK_PATH="${1}"
+        CURRENT_TEMP_DIR="$(mktemp -d)"
+        pushd "${CURRENT_TEMP_DIR}" >/dev/null 2>&1
+
+        cat <<-EOF > main.c
+			#include <Python/Python.h>
+			#include <stdio.h>
+			int main(void) {
+			    printf("%d\n", PY_MAJOR_VERSION);
+			    return 0;
+			}
+		EOF
+
+        DARWIN_FRAMEWORK_VERSION="0"
+        clang -o main -F"${DARWIN_FRAMEWORK_PATH}" -framework Python main.c >/dev/null 2>&1 && \
+        DARWIN_FRAMEWORK_VERSION="$(./main)"
+
+        popd >/dev/null 2>&1
+        rm -rf "${DARWIN_FRAMEWORK_VERSION}" >/dev/null 2>&1
+
+        echo "${DARWIN_FRAMEWORK_VERSION}"
+    }
+
     local DARWIN_CONDA_INCLUDE="${CONDA_PREFIX}/include/python2.7"
     local DARWIN_CONDA_LIB="${CONDA_PREFIX}/lib"
     local DARWIN_LOCAL_FRAMEWORK="/usr/local/Library/Frameworks"
     local DARWIN_FRAMEWORK="/System/Library/Frameworks"
-    local DARWIN_LOCAL_INCLUDE="/usr/local/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7"
-    local DARWIN_INCLUDE="/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7"
+    local DARWIN_LOCAL_FRAMEWORK_INCLUDE="${DARWIN_LOCAL_FRAMEWORK}/Python.framework/Versions/2.7/include/python2.7"
+    local DARWIN_FRAMEWORK_INCLUDE="${DARWIN_FRAMEWORK}/Python.framework/Versions/2.7/include/python2.7"
+    local DARWIN_LOCAL_INCLUDE="/usr/local/include/python2.7"
+    local DARWIN_LOCAL_FRAMEWORK_LIB="${DARWIN_LOCAL_FRAMEWORK}/Python.framework/Versions/2.7/lib/"
+    local DARWIN_LOCAL_LIB="/usr/local/lib/python2.7"
     local LINUX_LOCAL_INCLUDE="/usr/local/include/python2.7"
     local LINUX_INCLUDE="/usr/include/python2.7"
     local LINUX_LOCAL_LIB="/usr/local/lib/python2.7"
@@ -34,12 +65,18 @@ python_flags() {
             if [ -n "${CONDA_PREFIX}" ]; then
                 INC_FLAGS="-I${DARWIN_CONDA_INCLUDE}"
                 LIB_FLAGS="-L${DARWIN_CONDA_LIB} -lpython2.7"
-            elif [ -d "${DARWIN_LOCAL_FRAMEWORK}" ]; then
-                INC_FLAGS="-F${DARWIN_LOCAL_FRAMEWORK} -I${DARWIN_LOCAL_INCLUDE}"
+            elif [ -d "${DARWIN_LOCAL_FRAMEWORK}" ] && [ "$(test_framework_version ${DARWIN_LOCAL_FRAMEWORK})" -eq "2" ]; then
+                INC_FLAGS="-F${DARWIN_LOCAL_FRAMEWORK} -I${DARWIN_LOCAL_FRAMEWORK_INCLUDE}"
                 LIB_FLAGS="-F${DARWIN_LOCAL_FRAMEWORK} -framework Python"
-            else
-                INC_FLAGS="-F${DARWIN_FRAMEWORK} -I${DARWIN_INCLUDE}"
+            elif [ "$(test_framework_version ${DARWIN_FRAMEWORK})" -eq "2" ]; then
+                INC_FLAGS="-F${DARWIN_FRAMEWORK} -I${DARWIN_FRAMEWORK_INCLUDE}"
                 LIB_FLAGS="-F${DARWIN_FRAMEWORK} -framework Python"
+            elif [ -d "${DARWIN_LOCAL_FRAMEWORK_INCLUDE}" ]; then
+                INC_FLAGS="-I${DARWIN_LOCAL_FRAMEWORK_INCLUDE} -DWITHOUT_PYTHON_FRAMEWORK"
+                LIB_FLAGS="-L${DARWIN_LOCAL_FRAMEWORK_LIB} -lpython2.7"
+            else
+                INC_FLAGS="-I${DARWIN_LOCAL_INCLUDE} -DWITHOUT_PYTHON_FRAMEWORK"
+                LIB_FLAGS="-L${DARWIN_LOCAL_LIB} -lpython2.7"
             fi
             ;;
         Linux)
@@ -62,10 +99,10 @@ numpy_flags() {
     local PYTHON_EXEC
     local INC_FLAGS
 
-    if [ -f "/usr/local/bin/python" ]; then
-        PYTHON_EXEC="/usr/local/bin/python"
+    if [ -f "/usr/local/bin/python2" ]; then
+        PYTHON_EXEC="/usr/local/bin/python2"
     else
-        PYTHON_EXEC=$(which python)
+        PYTHON_EXEC=$(which python2)
     fi
 
     INC_FLAGS=$(${PYTHON_EXEC} <<EOF

@@ -1,4 +1,4 @@
-#ifdef __APPLE__
+#if defined(__APPLE__) && !defined(WITHOUT_PYTHON_FRAMEWORK)
 #include <Python/Python.h>
 #else
 #include <Python.h>
@@ -18,24 +18,24 @@ static PyObject *calculate_domain_centers(PyObject *self, PyObject *args) {
     point_t *combined_trans_vecs;
     PyObject *domains, *domain_nodes, *node;
     point_t node_pos, node_dim;
-    
+
     PyObject *atoms_it;
     PyObject *combined_translation_vectors_it;
     PyObject *domains_it, *domain_nodes_it;
-    
+
     int i, j;
     int x, y, z;
     int combined_trans_vecs_count, atom_count;
     int min_distance, max_distance, current_distance;
     point_t diff;
-    
+
     point_t current_center;
-    
+
     PyObject *centers_list;
-    
+
     if (!PyArg_ParseTuple(args, "OOO", &atoms, &combined_translation_vectors, &domains))
     return NULL;
-    
+
     atom_count = PyList_Size(atoms);
     atom_pos = malloc(atom_count * sizeof(point_t));
     atoms_it = PyObject_GetIter(atoms);
@@ -46,7 +46,7 @@ static PyObject *calculate_domain_centers(PyObject *self, PyObject *args) {
         Py_DECREF(atom);
     }
     Py_DECREF(atoms_it);
-    
+
     combined_trans_vecs_count = PySequence_Size(combined_translation_vectors) + 1;
     combined_trans_vecs = malloc(combined_trans_vecs_count * sizeof(point_t));
     combined_trans_vecs[0].x = 0;
@@ -60,9 +60,9 @@ static PyObject *calculate_domain_centers(PyObject *self, PyObject *args) {
         Py_DECREF(combined_translation_vector);
     }
     Py_DECREF(combined_translation_vectors_it);
-    
+
     centers_list = PyList_New(0);
-    
+
     domains_it = PyObject_GetIter(domains);
     while((domain_nodes = PyIter_Next(domains_it))) {
         max_distance = -1;
@@ -100,10 +100,10 @@ static PyObject *calculate_domain_centers(PyObject *self, PyObject *args) {
         PyList_Append(centers_list, Py_BuildValue("(iii)", current_center.x, current_center.y, current_center.z));
     }
     Py_DECREF(domains_it);
-    
+
     free(atom_pos);
     free(combined_trans_vecs);
-            
+
     return centers_list;
 }
 
