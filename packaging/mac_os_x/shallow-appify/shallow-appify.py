@@ -21,8 +21,8 @@ import logging
 logging.basicConfig(level=logging.WARNING)
 
 
-__author__ = 'Ingo Heimbach'
-__email__ = 'i.heimbach@fz-juelich.de'
+__author__ = 'Ingo Meyer'
+__email__ = 'i.meyer@fz-juelich.de'
 
 __version_info__ = (0, 1, 1)
 __version__ = '.'.join(map(str, __version_info__))

@@ -16,8 +16,8 @@ from .util import command
 from .util.binary_replace import binary_replace
 
 
-__author__ = 'Ingo Heimbach'
-__email__ = 'i.heimbach@fz-juelich.de'
+__author__ = 'Ingo Meyer'
+__email__ = 'i.meyer@fz-juelich.de'
 
 
 PY_PRE_STARTUP_CONDA_SETUP = '''

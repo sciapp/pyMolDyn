@@ -47,5 +47,5 @@ We provide binary software packages for Linux and Mac OS X at our
 Contact
 =======
 
-For questions, bug reports or feature requests please contact `Ingo Heimbach <mailto:i.heimbach@fz-juelich.de>`_
+For questions, bug reports or feature requests please contact `Ingo Meyer <mailto:i.meyer@fz-juelich.de>`_
 (software maintainer).

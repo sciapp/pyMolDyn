@@ -167,7 +167,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     (('Florian Rhiem', 'f.rhiem@fz-juelich.de'),
                      ('Fabian Beule', 'f.beule@fz-juelich.de'),
                      ('David Knodt', 'd.knodt@fz-juelich.de'),
-                     ('Ingo Heimbach', 'i.heimbach@fz-juelich.de'),
+                     ('Ingo Meyer', 'i.meyer@fz-juelich.de'),
                      ('Florian Macherey', 'f.macherey@fz-juelich.de'))).show()
 
     def init_submenu_recent_files(self):
