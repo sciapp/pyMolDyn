@@ -21,7 +21,10 @@ if __name__ == '__main__' and len(sys.argv) > 1 and sys.argv[1] == '--batch':
 
 
 # use pythonic PyQt api (version 2)
-import sip
+try:
+    from PyQt5 import sip
+except ImportError:
+    import sip
 API_NAMES = ("QDate", "QDateTime", "QString", "QTextStream", "QTime", "QUrl", "QVariant")
 API_VERSION = 2
 for name in API_NAMES:
