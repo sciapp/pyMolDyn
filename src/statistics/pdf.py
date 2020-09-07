@@ -161,6 +161,8 @@ class PDF(object):
 
         if pos2 is None:
             n = pos1.shape[0]
+            if n < 2:
+                return np.zeros(0)
             a1 = np.vstack([pos1[0:-i, :] for i in range(1, n)])
             a2 = np.vstack([pos1[i:, :] for i in range(1, n)])
         else:
