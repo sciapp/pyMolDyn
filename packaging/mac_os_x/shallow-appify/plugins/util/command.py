@@ -8,8 +8,8 @@ from __future__ import absolute_import
 import subprocess
 
 
-__author__ = 'Ingo Heimbach'
-__email__ = 'i.heimbach@fz-juelich.de'
+__author__ = 'Ingo Meyer'
+__email__ = 'i.meyer@fz-juelich.de'
 
 
 def exec_cmd(*cmd):

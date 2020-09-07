@@ -1,5 +1,5 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#ifdef __APPLE__
+#if defined(__APPLE__) && !defined(WITHOUT_PYTHON_FRAMEWORK)
 #include <Python/Python.h>
 #else
 #include <Python.h>
@@ -7,7 +7,7 @@
 #include <numpy/ndarraytypes.h>
 
 
-#define IS_EQUIVALENT(a, b) ((!(a) || (b)) && (!(b) || (a))) 
+#define IS_EQUIVALENT(a, b) ((!(a) || (b)) && (!(b) || (a)))
 
 typedef struct {
 	int x, y, z;
@@ -18,7 +18,7 @@ static PyObject *find_index_of_first_element_not_equivalent(PyObject *self, PyOb
     int x, y, z;
     int done = 0;
     point_t pos = {-1, -1, -1};
-    
+
     PyArrayObject *array;
     PyArrayObject *mask_array;
     int elem, current_elem;
@@ -27,19 +27,19 @@ static PyObject *find_index_of_first_element_not_equivalent(PyObject *self, PyOb
     char *mask;
     npy_intp *shape;
     npy_intp *data_stride, *mask_stride;
-    
+
     if (!PyArg_ParseTuple(args, "OO", &array, &mask_array))
     return NULL;
-        
+
     data   = (int *)  PyArray_BYTES(array);
     mask   = (char *) PyArray_BYTES(mask_array);
     shape  = PyArray_DIMS(array);
     data_stride = PyArray_STRIDES(array);
     mask_stride = PyArray_STRIDES(mask_array);
-    
+
     elem = *data;
     mask_elem = *mask;
-    
+
     for(x = 0; x < shape[0]; ++x) {
         for(y = 0; y < shape[1]; ++y) {
             for(z = 0; z < shape[2]; ++z) {
@@ -57,7 +57,7 @@ static PyObject *find_index_of_first_element_not_equivalent(PyObject *self, PyOb
         }
         if(done) break;
     }
-	
+
     return Py_BuildValue("(iii)", pos.x, pos.y, pos.z);
 }
 

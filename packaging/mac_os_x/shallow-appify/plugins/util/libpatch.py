@@ -12,8 +12,8 @@ import re
 from .command import exec_cmd
 
 
-__author__ = 'Ingo Heimbach'
-__email__ = 'i.heimbach@fz-juelich.de'
+__author__ = 'Ingo Meyer'
+__email__ = 'i.meyer@fz-juelich.de'
 
 
 def extract_dependencies(lib_path, dependency_path_prefix):
