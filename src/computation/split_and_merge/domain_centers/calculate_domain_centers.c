@@ -1,8 +1,4 @@
-#if defined(__APPLE__) && !defined(WITHOUT_PYTHON_FRAMEWORK)
-#include <Python/Python.h>
-#else
 #include <Python.h>
-#endif
 #include <limits.h>
 
 

@@ -5,7 +5,6 @@ GRDIR=/usr/local/gr
 all:
 	for i in $(SUBDIRS); do make -C $$i PYLIBPATH=$(PYLIBPATH) EXTRA_LD_FLAGS=$(EXTRA_LD_FLAGS) all; done
 
-EXTRA_LD_FLAGS = -Wl,-rpath,$(GRDIR)/lib
 app_extension_modules: clean all
 
 clean:
