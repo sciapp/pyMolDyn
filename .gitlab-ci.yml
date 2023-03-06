@@ -36,14 +36,10 @@ build:centos:7:
   - GR_FORCE_DOWNLOAD=1 ./env/bin/pip install --no-cache-dir 'gr==1.23.2'
   - ./env/bin/conda clean -f -y --all
   - rm -rf ./env/pkgs
-  - mkdir /tmp/libstdc++
-  - curl -fL "https://archlinux.org/packages/core/x86_64/gcc-libs/download/" |
-    zstd -d |
-    tar -C /tmp/libstdc++ -xf -
-  - LIBSTDCPP_NAME="$(basename "$(find /tmp/libstdc++/usr/lib -maxdepth 1 -name 'libstdc++.so.6.*')")"
-  - cp "/tmp/libstdc++/usr/lib/${LIBSTDCPP_NAME}" ./env/lib/
-  - ln -fs "${LIBSTDCPP_NAME}" "./env/lib/libstdc++.so.6"
-  - ln -fs "libstdc++.so.6" "./env/lib/libstdc++.so"
+  - rm -f
+      ./env/lib/libstdc++.so
+      ./env/lib/libstdc++.so.6
+      ./env/lib/libstdc++.so.6.0.26
   - cd "./env/lib/python2.7/site-packages/qtgr"
   - |
     patch -Np2 --ignore-whitespace <<'EOF'
@@ -167,14 +163,10 @@ build:centos:7:iff:
   - GR_FORCE_DOWNLOAD=1 ./env/bin/pip install --no-cache-dir 'gr==1.23.2'
   - ./env/bin/conda clean -f -y --all
   - rm -rf ./env/pkgs
-  - mkdir /tmp/libstdc++
-  - curl -fL "https://archlinux.org/packages/core/x86_64/gcc-libs/download/" |
-    zstd -d |
-    tar -C /tmp/libstdc++ -xf -
-  - LIBSTDCPP_NAME="$(basename "$(find /tmp/libstdc++/usr/lib -maxdepth 1 -name 'libstdc++.so.6.*')")"
-  - cp "/tmp/libstdc++/usr/lib/${LIBSTDCPP_NAME}" ./env/lib/
-  - ln -fs "${LIBSTDCPP_NAME}" "./env/lib/libstdc++.so.6"
-  - ln -fs "libstdc++.so.6" "./env/lib/libstdc++.so"
+  - rm -f
+      ./env/lib/libstdc++.so
+      ./env/lib/libstdc++.so.6
+      ./env/lib/libstdc++.so.6.0.26
   - cd "./env/lib/python2.7/site-packages/qtgr"
   - |
     patch -Np2 --ignore-whitespace <<'EOF'
