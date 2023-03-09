@@ -63,7 +63,7 @@ EOF
 }
 
 gr_flags() {
-    local GR_DIR="${CONDA_PREFIX}/lib/python2.7/site-packages/gr"
+    local GR_DIR="${CONDA_PREFIX}/gr"
     local RPATH
     local INC_FLAGS
     local LIB_FLAGS
