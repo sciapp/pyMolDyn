@@ -5,7 +5,7 @@ from __future__ import absolute_import
 
 
 import collections
-from PyQt5 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 from gui.util.table_fit_mixin import TableFitMixin
 
 

@@ -1,6 +1,6 @@
 import jinja2
 import numpy as np
-from PyQt5 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 import os.path
 import core.elements
 import core.bonds
@@ -340,10 +340,10 @@ class HTMLWindow(QtWidgets.QWidget):
         #        self.atoms.bonds[bond].append(index)
 
         atom_name = self.atoms.elements[index]           # atom name from periodic systen
-        atom_fullname = core.elements.names[core.elements.numbers[atom_name.upper()]]                # get full atom name
-        atom_color_rgb = core.elements.colors[core.elements.numbers[atom_name.upper()]]
+        atom_fullname = core.elements.names[core.elements.numbers[atom_name.decode('utf-8').upper()]]                # get full atom name
+        atom_color_rgb = core.elements.colors[core.elements.numbers[atom_name.decode('utf-8').upper()]]
         atom_positions = self.atoms.positions[index]
-        atom_number = core.elements.numbers[atom_name.upper()]
+        atom_number = core.elements.numbers[atom_name.decode('utf-8').upper()]
         covalent_radius = self.atoms.covalence_radii[index]
         cutoff_radius = self.atoms.radii[index]
         bonds = self.atoms.bonds[index]

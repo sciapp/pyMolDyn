@@ -2,15 +2,15 @@
 
 from functools import partial
 import itertools
-from PyQt5 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 from gui.object_select_widget import ObjectSelectWidget
 
-counter = itertools.count(0)
+counter = itertools.count(0, 1)
 class ObjectTypeId(object):
-    ATOM = counter.next()
-    DOMAIN = counter.next()
-    CENTER_BASED_CAVITY = counter.next()
-    SURFACE_BASED_CAVITY = counter.next()
+    ATOM = next(counter)
+    DOMAIN = next(counter)
+    CENTER_BASED_CAVITY = next(counter)
+    SURFACE_BASED_CAVITY = next(counter)
 
 del counter
 
@@ -42,7 +42,7 @@ class ViewTab(QtWidgets.QWidget):
     def __init__(self, parent, main_window):
         QtWidgets.QWidget.__init__(self, parent)
         self.gl_widget = main_window.center.gl_widget
-        #self.vis_settings = self.gl_widget.vis.settings
+        self.vis_settings = self.gl_widget.vis.settings
         self.results = None
         self.init_gui()
 
@@ -58,13 +58,18 @@ class ViewTab(QtWidgets.QWidget):
         self.domain_check = ObjectSelectWidget('show cavities (domains)', self)
         self.surface_cavity_check = ObjectSelectWidget('show cavities (surface method)', self)
         self.center_cavity_check = ObjectSelectWidget('show cavities (center method)', self)
+        # checkboxes for dataset
+        self.all_atom_check = ObjectSelectWidget('show all atoms', self)
+        self.all_domain_check = ObjectSelectWidget('show all cavities (domains)', self)
+        self.all_surface_cavity_check = ObjectSelectWidget('show all cavities (surface method)', self)
+        self.all_center_cavity_check = ObjectSelectWidget('show all cavities (center method)', self)
 
-        # TODO synch with dataset
-        # self.box_check.setCheckState(self.vis_settings.show_bounding_box)
-        # self.all_atom_check.setCheckState(self.vis_settings.show_atoms)
-        # self.all_domain_check.setCheckState(self.vis_settings.show_domains)
-        # self.all_surface_cavity_check.setCheckState(self.vis_settings.show_surface_cavities)
-        # self.all_center_cavity_check.setCheckState(self.vis_settings.show_center_cavities)
+        # synch with dataset
+        self.box_check.setChecked(self.vis_settings.show_bounding_box)
+        self.all_atom_check.setChecked(self.vis_settings.show_atoms)
+        self.all_domain_check.setChecked(self.vis_settings.show_domains)
+        self.all_surface_cavity_check.setChecked(self.vis_settings.show_surface_cavities)
+        self.all_center_cavity_check.setChecked(self.vis_settings.show_center_cavities)
 
         self.box_check.setChecked(True)
         self.atom_check.setChecked(True)

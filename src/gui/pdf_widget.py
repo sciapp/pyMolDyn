@@ -2,7 +2,7 @@
 
 from __future__ import absolute_import
 
-from PyQt5 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 import gr
 from qtgr import GRWidget
 import csv
@@ -239,7 +239,7 @@ class PDFWidget(QtWidgets.QWidget):
         yvalues = self.gr_widget.yvalues
         if xvalues is None or yvalues is None:
             return
-        with open(filepath, 'wb') as csvfile:
+        with open(filepath, 'w') as csvfile: #TODO same check as with histogramm (bytes csv)
             csvwriter = csv.writer(csvfile)
             for x, y in zip(xvalues, yvalues):
                 csvwriter.writerow([x, y])
@@ -252,6 +252,9 @@ class PDFWidget(QtWidgets.QWidget):
                 self.results = results
                 self.pdf = PDF(results)
                 e = np.unique(results.atoms.elements).tolist()
+                for i in range(len(e)):
+                    e[i] = e[i].decode("utf-8")
+                print(e)
                 if results.domains is not None \
                         and len(results.domains.centers) > 0 \
                         and "cav" not in e:

@@ -54,7 +54,7 @@ class PDF(object):
                 cachepath = os.path.join(cachedir, 'discretization_cache.hdf5')
                 dcache = DiscretizationCache(cachepath)
                 disc = dcache.get_discretization(volume, results.resolution)
-                centers = map(disc.discrete_to_continuous, centers)
+                centers = list(map(disc.discrete_to_continuous, centers))
             else:
                 centers = []
         elif len(args) == 4:
@@ -109,7 +109,8 @@ class PDF(object):
         if data is None:
             logger.debug("No statistical data for '{}-{}' found.".format(
                     elem1, elem2))
-            return None # TODO: raise Exception
+            raise Exception("No statistical data for '{}' found.".format(
+                    elem1, elem2))
 
         if cutoff is None:
             cutoff = data.max()
@@ -119,7 +120,7 @@ class PDF(object):
             return sel
         if len(sel) < 2:
             logger.debug("Not enough data for '{}-{}' in cutoff={} range.".format(elem1, elem2, cutoff))
-            return None # TODO: raise Exception
+            raise Exception("Not enough data for '{}' in cutoff={} range.".format(elem1, elem2, cutoff))
 
         if h is None:
             ## magic constant
@@ -197,6 +198,11 @@ class PDF(object):
                 pos[i] = centers
 
         stats = []
+        for i in range(len(elemlist)):
+            try:
+                elemlist[i] = elemlist[i].decode("utf-8")
+            except AttributeError:
+                pass
         for i, e1 in enumerate(elemlist):
             for j in range(i, len(elemlist)):
                 e2 = elemlist[j]
@@ -235,7 +241,7 @@ class Functions(object):
             result = np.zeros_like(p)
             if len(self.x) <= len(p):
                 p = np.asarray(p)
-                for xi, yi in itertools.izip(self.x, self.y):
+                for xi, yi in zip(self.x, self.y):
                     result += yi * self.kernel((p - xi) / self.h) / self.h
             else:
                 x = np.asarray(self.x)
@@ -375,7 +381,7 @@ class _TestPDF(object):
         plt.plot(px, gr(px), *args, label=str(h))
         py = gr(px)
         m = np.argmax(py)
-        print "h={}, xi={}, g({}) = {}".format(gr.f.h, gr.f.x.min(), px[m], py[m])
+        print("h={}, xi={}, g({}) = {}".format(gr.f.h, gr.f.x.min(), px[m], py[m]))
 
     @classmethod
     def plotpdf(cls, pdf, e1, e2):
@@ -400,9 +406,9 @@ class _TestPDF(object):
         settings = calculation.CalculationSettings(
                 {filename : [frame]},
                 resolution, True, False, False)
-        print "calculating..."
+        print("calculating...")
         res = calc.calculate(settings)[0][0]
-        print "generating statistics..."
+        print("generating statistics...")
         pdf = PDF(res)
         #centers = cls.continuous_coordinates(res.domains.centers,
         #                                     res.atoms.volume,
@@ -410,7 +416,7 @@ class _TestPDF(object):
         #pdf = PDF(res.atoms.positions, res.atoms.elements,
         #                  centers, res.atoms.volume)
 
-        print "plotting..."
+        print("plotting...")
         #cls.plotpdf(pdf, "Ge", "Ge")
         #cls.plotpdf(pdf, "Ge", "Te")
         cls.plotpdf(pdf, "cav", "cav")

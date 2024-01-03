@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import QTimer, QProcess
+from PySide6 import QtWidgets
+from PySide6.QtCore import QTimer, QProcess
 import gr3
 from gui.gl_widget import GLWidget
 from core import file
@@ -195,7 +195,7 @@ class MassScreenshotAndVideoDialog(QtWidgets.QDialog):
 
     def process_error(self):
         output = self.process.readAllStandardError()
-        sys.stderr.write(output)
+        sys.stderr.write(str(output, 'utf-8'))
 
     def reject(self):
         self.is_rejected = True

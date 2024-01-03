@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 import sys
 from collections import OrderedDict
 import functools
@@ -20,7 +20,7 @@ class GraphicsSettingsPage(QtWidgets.QWidget):
 
         self.lineedit_dict = {}
         grid = QtWidgets.QGridLayout()
-        for i, (attr_str, label) in enumerate(self.values.iteritems()):
+        for i, (attr_str, label) in enumerate(self.values.items()):
             cfg_comp = getattr(self._config, 'OpenGL')
 
             l = QtWidgets.QLabel(label, self)
@@ -41,7 +41,7 @@ class GraphicsSettingsPage(QtWidgets.QWidget):
         self.button_dict = {}
         layout = QtWidgets.QGridLayout()
         layout.setSpacing(5)
-        for index, (attr_str, btn_str) in enumerate(self.colors.iteritems()):
+        for index, (attr_str, btn_str) in enumerate(self.colors.items()):
 
             pix = QtGui.QPixmap(50, 50)
             cfg_clr = getattr(self._config, 'Colors')
@@ -72,7 +72,7 @@ class GraphicsSettingsPage(QtWidgets.QWidget):
 
     def any_change(self):
         cfg_comp = getattr(self._config, 'OpenGL')
-        for i, (attr_str, label) in enumerate(self.values.iteritems()):
+        for i, (attr_str, label) in enumerate(self.values.items()):
             setattr(cfg_comp, attr_str, float(self.lineedit_dict[attr_str].text()))
 
     def show_color_dialog(self, s, previous_color):
@@ -96,7 +96,7 @@ class ComputationSettingsPage(QtWidgets.QWidget):
         self.lineedit_dict = {}
         box = QtWidgets.QVBoxLayout()
         grid = QtWidgets.QGridLayout()
-        for i, (attr_str, label) in enumerate(self.values.iteritems()):
+        for i, (attr_str, label) in enumerate(self.values.items()):
             cfg_comp = getattr(self._config, 'Computation')
 
             l = QtWidgets.QLabel(label, self)
@@ -154,7 +154,7 @@ class ComputationSettingsPage(QtWidgets.QWidget):
 
     def any_change(self):
         cfg_comp = getattr(self._config, 'Computation')
-        for i, (attr_str, label) in enumerate(self.values.iteritems()):
+        for i, (attr_str, label) in enumerate(self.values.items()):
             setattr(cfg_comp, attr_str, float(self.lineedit_dict[attr_str].text()))
     # def value_edited(self, s):
     #     cfg_comp = getattr(self._config, 'Computation')
@@ -175,7 +175,7 @@ class PathSettingsPage(QtWidgets.QWidget):
         self.lineedit_dict = {}
         box  = QtWidgets.QVBoxLayout()
         grid = QtWidgets.QGridLayout()
-        for i, (attr_str, label) in enumerate(self.path.iteritems()):
+        for i, (attr_str, label) in enumerate(self.path.items()):
             cfg_path = getattr(self._config, 'Path')
 
             l = QtWidgets.QLabel(label, self)

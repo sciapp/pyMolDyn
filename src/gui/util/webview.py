@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import os.path
-from PyQt5 import QtCore
-try:
-    from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEnginePage
-    has_qtwebengine = True
-except ImportError:
-    # fallback to QtWebKit (necessary for Debian based distributions)
-    from PyQt5.QtWebKitWidgets import QWebView, QWebPage
-    has_qtwebengine = False
+from PySide6 import QtCore
+from PySide6.QtWebEngineWidgets import QWebEngineView
+from PySide6.QtWebEngineCore import QWebEnginePage #QtWebKit is deprecated since Pyside2
+has_qtwebengine = True
 
 
 _js_inject_css_template = '''\
@@ -23,10 +19,10 @@ window.onload = function() {{
 
 if has_qtwebengine:
     class WebWidget(QWebEngineView):
-        gui_link_clicked = QtCore.pyqtSignal(str)
+        gui_link_clicked = QtCore.Signal(str)
 
         class WebPage(QWebEnginePage):
-            gui_link_clicked = QtCore.pyqtSignal(str)
+            gui_link_clicked = QtCore.Signal(str)
 
             def __init__(self, html, css=None, *args, **kwargs):
                 super(WebWidget.WebPage, self).__init__(*args, **kwargs)
@@ -67,10 +63,10 @@ if has_qtwebengine:
             self.setPage(self._webpage)
 else:
     class WebWidget(QWebView):
-        gui_link_clicked = QtCore.pyqtSignal(str)
+        gui_link_clicked = QtCore.Signal(str)
 
         class WebPage(QWebPage):
-            gui_link_clicked = QtCore.pyqtSignal(str)
+            gui_link_clicked = QtCore.Signal(str)
 
             def __init__(self, html, css, *args, **kwargs):
                 super(WebWidget.WebPage, self).__init__(*args, **kwargs)

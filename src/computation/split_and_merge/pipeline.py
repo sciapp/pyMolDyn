@@ -9,7 +9,6 @@ def start_split_and_merge_pipeline(data, mask, atoms, combined_translation_vecto
         return algorithm.is_relevant_part(hom_image_data_part, object_type)
 
     graph = GraphForSplitAndMerge(data, mask, get_translation_vector, is_relevant_part)
-
     algorithm.split(data, mask, graph, object_type)
     algorithm.merge(data, graph)
     algorithm.add_periodic_neighbors(graph)

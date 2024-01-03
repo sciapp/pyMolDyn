@@ -14,7 +14,7 @@ logger = Logger("core.calculation")
 logger.setstream("default", sys.stdout, Logger.WARNING)
 
 try:
-    from extension_ctypes import atomstogrid, \
+    from .extension_ctypes import atomstogrid, \
                                  mark_cavities, \
                                  cavity_triangles, \
                                  cavity_intersections, \
@@ -23,7 +23,7 @@ except OSError as e:
     logger.warn(e.__repr__())
     logger.warn("Falling back to Python functions")
     message.log("C extensions could not be loaded, falling back to Python functions. Calculations may be very slow!")
-    from extension_python import atomstogrid, \
+    from .extension_python import atomstogrid, \
                                  mark_cavities, \
                                  cavity_triangles, \
                                  cavity_intersections, \

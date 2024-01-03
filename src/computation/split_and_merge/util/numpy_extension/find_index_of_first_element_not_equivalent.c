@@ -35,7 +35,6 @@ static PyObject *find_index_of_first_element_not_equivalent(PyObject *self, PyOb
 
     elem = *data;
     mask_elem = *mask;
-
     for(x = 0; x < shape[0]; ++x) {
         for(y = 0; y < shape[1]; ++y) {
             for(z = 0; z < shape[2]; ++z) {

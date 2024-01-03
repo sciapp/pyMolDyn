@@ -4,6 +4,7 @@ This module contains classes that are used to store data in pyMolDyn.
 Most of them can be read and written to hdf5 files.
 """
 
+import pysnooper
 
 import collections
 import numpy as np
@@ -12,7 +13,7 @@ import os
 from datetime import datetime
 import dateutil.parser
 import h5py
-import volumes
+from . import volumes
 from config.configuration import config
 from util.logger import Logger
 import core.elements
@@ -296,7 +297,7 @@ class ResultInfo(FileInfo):
                 self.sourcefilepath = str(h5group.attrs["sourcefile"])
             else:
                 self.sourcefilepath = None
-            for name, subgroup in h5group.iteritems():
+            for name, subgroup in h5group.items():
                 if not name.startswith("resolution"):
                     continue
                 resolution = int(name[10:])
@@ -351,7 +352,7 @@ class ResultInfo(FileInfo):
             h5group.attrs["sourcefile"] = self.sourcefilepath
         elif "sourcefile" in h5group.attrs:
             del h5group.attrs["sourcefile"]
-        for resolution, info in self.calculatedframes.iteritems():
+        for resolution, info in self.calculatedframes.items():
             if info.hasdata():
                 subgroup = h5group.require_group("resolution{}".format(resolution))
                 info.tohdf(subgroup, overwrite)
@@ -434,7 +435,7 @@ class Atoms(object):
                 positions = map(lambda pos: volume.get_equivalent_point(pos),
                                 positions)
         self.volume = volume
-        self.positions = np.array(positions, dtype=np.float, copy=False)
+        self.positions = np.array(list(positions), dtype=np.float64, copy=False)
         self.number = self.positions.shape[0]
         self.elements = np.array(elements, dtype="|S4", copy=False)
         self.radii = radii
@@ -449,7 +450,7 @@ class Atoms(object):
         if self._covalence_radii is None:
             covalence_radii = np.zeros(self.number, np.float32)
             for i, element in enumerate(self.elements):
-                element_number = core.elements.numbers[element.upper()]
+                element_number = core.elements.numbers[element.upper().decode("utf-8")]
                 covalence_radii[i] = core.elements.radii[element_number]
             self._covalence_radii = covalence_radii
         return self._covalence_radii
@@ -475,7 +476,7 @@ class Atoms(object):
         if self._colors is None:
             colors = np.zeros((self.number, 3), np.float32)
             for i, element in enumerate(self.elements):
-                element_number = core.elements.numbers[element.upper()]
+                element_number = core.elements.numbers[element.decode("utf-8").upper()]
                 colors[i] = core.elements.colors[element_number]
             self._colors = colors/255
         return self._colors
@@ -487,14 +488,14 @@ class Atoms(object):
     @radii.setter
     def radii(self, values):
         if values is None:
-            self._radii = np.ones((self.number), dtype=np.float) * config.Computation.std_cutoff_radius
-        elif isinstance(values, collections.Mapping):
+            self._radii = np.ones((self.number), dtype=np.float64) * config.Computation.std_cutoff_radius
+        elif isinstance(values, collections.abc.Mapping):
             radii = [values[elem] for elem in self.elements]
-            self._radii = np.array(radii, dtype=np.float, copy=False)
-        elif isinstance(values, collections.Iterable):
-            self._radii = np.array(values, dtype=np.float, copy=False)
+            self._radii = np.array(radii, dtype=np.float64, copy=False)
+        elif isinstance(values, collections.abc.Iterable):
+            self._radii = np.array(values, dtype=np.float64, copy=False)
         else:
-            self._radii = np.ones((self.number), dtype=np.float) * values
+            self._radii = np.ones((self.number), dtype=np.float64) * values
         indices = np.argsort(-self._radii, kind="mergesort")
         self.sorted_positions = self.positions[indices]
         unique_radii, indices = np.unique(-self._radii, return_inverse=True)
@@ -586,17 +587,17 @@ class CavitiesBase(object):
         if not isinstance(timestamp, datetime):
             timestamp = dateutil.parser.parse(str(timestamp))
         self.timestamp = timestamp
-        self.volumes = np.array(volumes, dtype=np.float, copy=False)
+        self.volumes = np.array(volumes, dtype=np.float64, copy=False)
         self.number = len(volumes)
-        self.surface_areas = np.array(surface_areas, dtype=np.float, copy=False)
-        self.triangles = [np.array(triangle, dtype=np.float, copy=False) for triangle in triangles]
-        self.mass_centers = np.array(mass_centers, dtype=np.float, copy=False)
-        self.squared_gyration_radii = np.array(squared_gyration_radii, dtype=np.float, copy=False)
-        self.asphericities = np.array(asphericities, dtype=np.float, copy=False)
-        self.acylindricities = np.array(acylindricities, dtype=np.float, copy=False)
-        self.anisotropies = np.array(anisotropies, dtype=np.float, copy=False)
-        self.characteristic_radii = np.array(characteristic_radii, dtype=np.float, copy=False)
-        self.cyclic_area_indices = (np.array(cyclic_area_indices, dtype=np.int, copy=False)
+        self.surface_areas = np.array(surface_areas, dtype=np.float64, copy=False)
+        self.triangles = [np.array(triangle, dtype=np.float64, copy=False) for triangle in triangles]
+        self.mass_centers = np.array(mass_centers, dtype=np.float64, copy=False)
+        self.squared_gyration_radii = np.array(squared_gyration_radii, dtype=np.float64, copy=False)
+        self.asphericities = np.array(asphericities, dtype=np.float64, copy=False)
+        self.acylindricities = np.array(acylindricities, dtype=np.float64, copy=False)
+        self.anisotropies = np.array(anisotropies, dtype=np.float64, copy=False)
+        self.characteristic_radii = np.array(characteristic_radii, dtype=np.float64, copy=False)
+        self.cyclic_area_indices = (np.array(cyclic_area_indices, dtype=np.int32, copy=False)
                                     if cyclic_area_indices is not None else np.array([]))
 
     def tohdf(self, h5group, overwrite=True):
@@ -703,7 +704,7 @@ class Domains(CavitiesBase):
             read the data from this hdf5 group
         """
         # Import this here to avoid cyclic imports
-        import calculation.algorithm as algorithm
+        import core.calculation.algorithm as algorithm
 
         if isinstance(args[0], h5py.Group):
             super(Domains, self).__init__(*args)
@@ -731,10 +732,10 @@ class Domains(CavitiesBase):
             super(Domains, self).__init__(*args)
             centers = args[4]
 
-        self.centers = np.array(centers, dtype=np.int, copy=False)
+        self.centers = np.array(centers, dtype=np.int32, copy=False)
         if 'discretization' in locals():
             # TODO: get discretization also from other constructor calls!
-            self.continuous_centers = np.array([discretization.discrete_to_continuous(center) for center in centers], dtype=np.float)
+            self.continuous_centers = np.array([discretization.discrete_to_continuous(center) for center in centers], dtype=np.float64)
 
     def tohdf(self, h5group, overwrite=True):
         """
@@ -801,7 +802,7 @@ class Cavities(CavitiesBase):
             read the data from this hdf5 group
         """
         # Import this here to avoid cyclic imports
-        import calculation.algorithm as algorithm
+        import core.calculation.algorithm as algorithm
 
         if isinstance(args[0], h5py.Group):
             super(Cavities, self).__init__(*args)
@@ -835,7 +836,7 @@ class Cavities(CavitiesBase):
             # cavities might be a 0-dimensional ndarray of python objects
             if isinstance(cavities, np.ndarray):
                 cavities = cavities.tolist()
-            self.multicavities[index] = np.array(list(cavities), dtype=np.int)
+            self.multicavities[index] = np.array(list(cavities), dtype=np.int32)
 
     def tohdf(self, h5group, overwrite=True):
         """

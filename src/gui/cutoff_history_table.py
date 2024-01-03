@@ -4,7 +4,7 @@
 from __future__ import absolute_import
 
 
-from PyQt5 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 from gui.util.table_with_removeable_items import TableWithRemoveableEntries
 from gui.util.cutoff_preview_table import CutoffPreviewTable
 

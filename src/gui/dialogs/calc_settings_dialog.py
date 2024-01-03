@@ -8,6 +8,7 @@ from gui.cutoff_preset_combobox import CutoffPresetComboBox
 from core import calculation
 from core import file
 import collections
+import collections.abc
 import datetime
 import os.path
 import itertools as it
@@ -17,7 +18,7 @@ from config.cutoff_presets import cutoff_presets
 from config.cutoff_presets import Preset
 from config.cutoff_history import cutoff_history
 from config.cutoff_history import HistoryEntry
-from PyQt5 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 
 class CalculationSettingsDialog(QtWidgets.QDialog):
@@ -31,7 +32,7 @@ class CalculationSettingsDialog(QtWidgets.QDialog):
 
         self.control = parent.control
         self.resolution = config.Computation.std_resolution
-        self.filenames = file_frame_dict.keys()
+        self.filenames = [f for f in file_frame_dict.keys()]
         self.file_frame_dict = file_frame_dict
 
         self.init_gui()
@@ -144,10 +145,11 @@ class CalculationSettingsDialog(QtWidgets.QDialog):
         if (method.covalence_radii_by_element is None or
             method.elements_by_frame is None or
             method.element_combinations is None):
+
             radii = {}
             elements_by_frame = {}
             element_combinations = set()
-            for filepath, frames in self.file_frame_dict.iteritems():
+            for filepath, frames in self.file_frame_dict.items():
                 elements_by_frame[filepath] = {}
                 inputfile = file.File.open(filepath)
                 if frames == (-1, ):
@@ -167,11 +169,11 @@ class CalculationSettingsDialog(QtWidgets.QDialog):
         timestamp = datetime.datetime.now()
         user_cutoff_radii = self.radii_widget.cutoff_radii
         elements = self.__get_all_covalence_radii_by_element().keys()
-        if not isinstance(user_cutoff_radii, collections.Iterable):
+        if not isinstance(user_cutoff_radii, collections.abc.Iterable):
             user_cutoff_radii = dict((elem, user_cutoff_radii) for elem in elements)
         elements_by_frame = self.__get_elements_by_frame()
         new_history = []
-        for filepath, frames in self.file_frame_dict.iteritems():
+        for filepath, frames in self.file_frame_dict.items():
             filename = os.path.basename(filepath)
             file_elements = elements_by_frame[filepath]
             for frame in frames:
@@ -201,7 +203,8 @@ class CalculationSettingsDialog(QtWidgets.QDialog):
                       else self.file_frame_dict[self.filenames[i]])
             surface_ts.append([])
             for frame in frames:
-                surface_ts[i].append(ts[frame])
+                ts, temp = it.tee(ts)
+                surface_ts[i].append(list(temp)[frame])
 
         # center based timestamps for the given frames
         center_ts = []
@@ -211,7 +214,8 @@ class CalculationSettingsDialog(QtWidgets.QDialog):
                       else self.file_frame_dict[self.filenames[i]])
             center_ts.append([])
             for frame in frames:
-                center_ts[i].append(ts[frame])
+                ts, temp = it.tee(ts)
+                center_ts[i].append(list(temp)[frame])
 
         # reduce to a single value per file
         surface_ts = ["X" if "X" in ts else ts[0] for ts in surface_ts]
@@ -317,7 +321,7 @@ class RadiiWidget(QtWidgets.QWidget):
         self._radii = radii
         self._file_frame_dict = file_frame_dict
         self._preferred_filenames_with_frames = dict((os.path.basename(filepath), frames)
-                                                     for filepath, frames in self._file_frame_dict.iteritems())
+                                                     for filepath, frames in self._file_frame_dict.items())
         self._discard_preset_choice_on_next_rb_click = True     # Default value is True
         self._selected_radii_type = RadiiWidget.RadiiType.FIXED
         self._init_ui()
@@ -485,13 +489,13 @@ class RadiiWidget(QtWidgets.QWidget):
     @cutoff_radii.setter
     def cutoff_radii(self, cutoff_radii):
         elements = self._radii.keys()
-        if not isinstance(cutoff_radii, collections.Iterable):
+        if not isinstance(cutoff_radii, collections.abc.Iterable):
             cutoff_radii = dict((elem, float(cutoff_radii)) for elem in elements)
         # Check if all cutoff radii are equal
         if len(set(cutoff_radii.values())) == 1:
             self._discard_preset_choice_on_next_rb_click = False
             self.rb_fixed.click()
-            self.le_fixed.setText(str(cutoff_radii.values()[0]))
+            self.le_fixed.setText(str(list(cutoff_radii.values())[0]))
         else:
             self._discard_preset_choice_on_next_rb_click = False
             self.rb_custom.click()

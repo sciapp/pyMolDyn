@@ -3,13 +3,13 @@
 from __future__ import absolute_import
 
 import sys
-from PyQt5 import QtCore
+from PySide6 import QtCore
 from gui.util.labeled_combobox import LabeledComboBox
 from config.cutoff_presets import cutoff_presets
 
 
 class CutoffPresetComboBox(LabeledComboBox):
-    preset_selected = QtCore.pyqtSignal(object)
+    preset_selected = QtCore.Signal(object)
 
     def __init__(self, parent=None):
         super(CutoffPresetComboBox, self).__init__(label='Preset', parent=parent)

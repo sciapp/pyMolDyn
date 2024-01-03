@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from PyQt5 import QtWidgets
+from PySide6 import QtWidgets
 from gui.gl_widget import GLWidget
 from gui.pdf_widget import PDFWidget
 from gui.histogram_widget import HistogramWidget

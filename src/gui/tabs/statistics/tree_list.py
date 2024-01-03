@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 from collections import Counter, OrderedDict
 
 class TreeList(QtWidgets.QTreeWidget):
@@ -124,7 +124,7 @@ class TreeList(QtWidgets.QTreeWidget):
             ('Cavities (domains)', self.domains_list)])
 
         self.items = []
-        for root, sib in src.iteritems():
+        for root, sib in src.items():
             self.items.append(QtWidgets.QTreeWidgetItem(self, [root]))
             if sib:
                 self.items[-1].addChildren([QtWidgets.QTreeWidgetItem(self.items[-1], [s]) for s in sib])

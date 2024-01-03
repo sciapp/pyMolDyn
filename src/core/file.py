@@ -8,7 +8,7 @@ import os.path
 import h5py
 from itertools import repeat
 from datetime import datetime
-import data
+from . import data
 import sys
 from util.logger import Logger
 import core.elements
@@ -153,13 +153,13 @@ class XYZFile(InputFile):
             with open(self.path.encode("utf-8"), 'r') as f:
                 try:
                     while True:
-                        num_atoms = f.next()
+                        num_atoms = f.readline()
                         if not num_atoms:
                             break
                         num_atoms = int(num_atoms)
-                        volume_info = f.next()
+                        volume_info = f.readline()
                         for i in range(num_atoms):
-                            f.next()
+                            f.readline()
                         self._info.num_frames += 1
                         if self._info.num_frames == 1:
                             self._info.volumestr = volume_info
@@ -179,23 +179,23 @@ class XYZFile(InputFile):
                 try:
                     # Skip the first frames
                     for i in range(frame):
-                        num_atoms = f.next()
+                        num_atoms = f.readline()
                         if not num_atoms:
                             break
                         num_atoms = int(num_atoms)
-                        f.next()
+                        f.readline()
                         for i in range(num_atoms):
-                            f.next()
+                            f.readline()
                     # actually read the molecule
                     symbols = []
                     positions = []
-                    num_atoms = f.next()
+                    num_atoms = f.readline()
                     if not num_atoms:
                         raise StopIteration
                     num_atoms = int(num_atoms)
-                    f.next()
+                    f.readline()
                     for i in range(num_atoms):
-                        line = f.next()
+                        line = f.readline()
                         if line.strip():
                             symbol, x, y, z = line.split()[:4]
                             position = (float(x), float(y), float(z))
@@ -426,7 +426,7 @@ class HDF5File(ResultFile):
 
     def writeinfo(self):
         try:
-            with h5py.File(self.path) as f:
+            with h5py.File(self.path, 'a') as f:
                 h5group = f.require_group("info")
                 self.info.tohdf(h5group)
         except IOError:
@@ -469,7 +469,7 @@ class HDF5File(ResultFile):
     def writeresults(self, results, overwrite=True):
         # TODO: results valid?
         try:
-            with h5py.File(self.path) as f:
+            with h5py.File(self.path, 'a') as f:
                 group = f.require_group("atoms/frame{}".format(results.frame))
                 # TODO: is it OK to never overwrite atoms?
                 results.atoms.tohdf(group, overwrite=False)

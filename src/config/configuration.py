@@ -13,7 +13,7 @@ type_dict = {
     int: ('integer', 'int'),
     float: ('float', 'float'),
     str: ('string', 'string'),
-    unicode: ('string', 'string'),
+    str: ('string', 'string'),
     bool: ('boolean', 'bool'),
 }
 
@@ -125,7 +125,7 @@ class ConfigFile(object):
             self._create_needed_parent_directories(CONFIG_SPEC_FILE)
             spec_file.write()
         except IOError as e:
-            print "IOError in ConfigFile.generate_configspec"
+            print("IOError in ConfigFile.generate_configspec")
 
     def generate_spec_for_section(self, section, spec_section):
         """
@@ -153,7 +153,7 @@ class ConfigFile(object):
             self.generate_configspec()
             self.file.write()
         except IOError as e:
-            print "IOError in ConfigFile.save"
+            print("IOError in ConfigFile.save")
 
     def parse_node_to_section(self, node, section):
         """

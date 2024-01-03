@@ -13,7 +13,8 @@ from gui.tabs.view_tab import ViewTabDock
 from gui.tabs.image_video_tab import ImageVideoTabDock
 from gui.tabs.statistics_tab import StatisticsTabDock
 from gui.tabs.log_tab import LogTabDock
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtQuick import QQuickWindow, QSGRendererInterface
 from gui.dialogs.settings_dialog import SettingsDialog
 from gui.dialogs.about_dialog import AboutDialog
 from gui.gl_widget import UpdateGLEvent
@@ -31,6 +32,7 @@ WEBSITE_URL = 'https://pgi-jcns.fz-juelich.de/portal/pages/pymoldyn-doc.html'
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, control):
         QtWidgets.QMainWindow.__init__(self, None)
+        QQuickWindow.setGraphicsApi(QSGRendererInterface.GraphicsApi.OpenGL)
 
         self.control = control
         self.center = CentralWidget(self)
@@ -83,45 +85,45 @@ class MainWindow(QtWidgets.QMainWindow):
         # tabbars[0].setCurrentIndex(0)
 
     def init_menu(self):
-        open_action = QtWidgets.QAction('&Open dataset', self)
+        open_action = QtGui.QAction('&Open dataset', self)
         open_action.setShortcut('Ctrl+O')
         open_action.triggered.connect(self.file_dock.file_tab.open_file_dialog)
 
-        settings_action = QtWidgets.QAction('&Settings', self)
+        settings_action = QtGui.QAction('&Settings', self)
         settings_action.setShortcut('Ctrl+I')
         settings_action.triggered.connect(self.show_settings)
 
         export_submenu = QtWidgets.QMenu("&Export", self)
 
-        export_bonds_action = QtWidgets.QAction('Export &Bonds', self)
+        export_bonds_action = QtGui.QAction('Export &Bonds', self)
         export_bonds_action.setShortcut('Ctrl+1')
         export_bonds_action.triggered.connect(self.wrapper_export_bonds)
 
-        export_bond_angles_action = QtWidgets.QAction('Export Bond &Angles', self)
+        export_bond_angles_action = QtGui.QAction('Export Bond &Angles', self)
         export_bond_angles_action.setShortcut('Ctrl+2')
         export_bond_angles_action.triggered.connect(self.wrapper_export_bond_angles)
 
-        export_bond_dihedral_angles_action = QtWidgets.QAction('Export Bond &Dihedral Angles', self)
+        export_bond_dihedral_angles_action = QtGui.QAction('Export Bond &Dihedral Angles', self)
         export_bond_dihedral_angles_action.setShortcut('Ctrl+3')
         export_bond_dihedral_angles_action.triggered.connect(self.wrapper_export_bond_dihedral_angles)
 
-        export_domains_action = QtWidgets.QAction('Export Cavity Information (domains)', self)
+        export_domains_action = QtGui.QAction('Export Cavity Information (domains)', self)
         export_domains_action.setShortcut('Ctrl+4')
         export_domains_action.triggered.connect(self.wrapper_export_domains)
 
-        export_surface_cavities_action = QtWidgets.QAction('Export Cavity Information (surface method)', self)
+        export_surface_cavities_action = QtGui.QAction('Export Cavity Information (surface method)', self)
         export_surface_cavities_action.setShortcut('Ctrl+5')
         export_surface_cavities_action.triggered.connect(self.wrapper_export_surface_cavities)
 
-        export_center_cavities_action = QtWidgets.QAction('Export Cavity Information (center method)', self)
+        export_center_cavities_action = QtGui.QAction('Export Cavity Information (center method)', self)
         export_center_cavities_action.setShortcut('Ctrl+6')
         export_center_cavities_action.triggered.connect(self.wrapper_export_center_cavities)
 
-        website_action = QtWidgets.QAction('&pyMolDyn website', self)
+        website_action = QtGui.QAction('&pyMolDyn website', self)
         website_action.setShortcut('F1')
         website_action.triggered.connect(self.show_website)
 
-        about_action = QtWidgets.QAction('&About', self)
+        about_action = QtGui.QAction('&About', self)
         about_action.triggered.connect(self.show_about_box)
 
         self.menubar = self.menuBar()
@@ -149,7 +151,7 @@ class MainWindow(QtWidgets.QMainWindow):
         QtCore.QMetaObject.invokeMethod(self, '_show_error', QtCore.Qt.QueuedConnection,
                                         QtCore.Q_ARG(str, error_message))
 
-    @QtCore.pyqtSlot(str)
+    @QtCore.Slot(str)
     def _show_error(self, error_message):
         QtWidgets.QMessageBox.information(self, 'Information', error_message)
 
@@ -177,7 +179,7 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.recent_files_submenu.setEnabled(True)
             for f in config.recent_files:
-                f_action = QtWidgets.QAction(f, self)
+                f_action = QtGui.QAction(f, self)
                 f_action.triggered.connect(functools.partial(self.wrapper_recent_files, f))
                 self.recent_files_submenu.addAction(f_action)
 
@@ -203,7 +205,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.recent_files_submenu.removeAction(actions_in_menu[index])
             self.recent_files_submenu.insertAction(actions_in_menu[0], actions_in_menu[index])
         else:
-            new_action = QtWidgets.QAction(most_recent_file, self)
+            new_action = QtGui.QAction(most_recent_file, self)
             new_action.triggered.connect(functools.partial(self.wrapper_recent_files, most_recent_file))
 
             if not actions_in_menu:
@@ -317,7 +319,7 @@ class MainWindow(QtWidgets.QMainWindow):
 #        if reply == QtWidgets.QMessageBox.Yes:
 #            event.accept()
 #        else:
-#            event.ignore()
+#            event.ignore() TODO: why is this commented out
 
 
 class CentralWidget(QtWidgets.QWidget):
@@ -338,7 +340,7 @@ class CentralWidget(QtWidgets.QWidget):
         self.combo = QtWidgets.QComboBox()
         for title in self.widget_titles:
             self.combo.addItem(title)
-        self.combo.activated[str].connect(self.on_combo)
+        self.combo.activated.connect(self.on_combo) #removed [str] from activated
 
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.gl_stack)
@@ -347,6 +349,5 @@ class CentralWidget(QtWidgets.QWidget):
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setLayout(layout)
 
-    def on_combo(self, string):
-        index = self.widget_titles.index(string)
+    def on_combo(self, index):
         self.gl_stack.activate(index)

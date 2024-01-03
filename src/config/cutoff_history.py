@@ -4,7 +4,6 @@ from __future__ import absolute_import
 
 import collections
 import datetime
-import dateutil
 import json
 import os.path
 import sys
@@ -41,7 +40,13 @@ class HistoryEntry(collections.namedtuple('HistoryEntry', ['filename', 'frame', 
         if isinstance(time, datetime.datetime):
             time = HistoryEntry.Date(time)
         else:
-            time = HistoryEntry.Date(dateutil.parser.parse(time))
+            try:
+                time = HistoryEntry.Date(datetime.datetime.strptime(time, '%m/%d/%y, %H:%M'))
+            except ValueError:
+                try:
+                    time = HistoryEntry.Date(datetime.datetime.strptime(time, '%Y-%m-%dT%H:%M:%S'))
+                except ValueError:
+                    time = HistoryEntry.Date(datetime.datetime.strptime(time, '%Y-%m-%dT%H:%M:%S.%f'))
         self = super(HistoryEntry, cls).__new__(cls, filename, frame, time, radii)
         return self
 
@@ -56,6 +61,8 @@ class CutoffHistory(object):
         try:
             with open(self._config_filepath, 'r') as f:
                 history_json = json.load(f)
+            #  for elem in history_json:
+                #  elem[3] = {elem.encode('utf-8'): value for elem, value in elem[3]}
             self._history = [HistoryEntry(*entry) for entry in history_json]
         except IOError:
             self._history = []
@@ -68,8 +75,17 @@ class CutoffHistory(object):
                 print(type(obj))
                 raise TypeError
         try:
+            history = []
+            for entry in self.history:
+                radii = {}
+                for elem in entry[3]:
+                    orig = elem
+                    if isinstance(elem, bytes):
+                        elem = elem.decode('utf-8')
+                    radii[elem] = entry[3][orig]
+                history.append(HistoryEntry(entry[0], entry[1], str(entry[2]), radii))
             with open(self._config_filepath, 'w') as f:
-                json.dump(self._history, f, default=serialization_helper)
+                json.dump(history, f, default=serialization_helper)
         except IOError:
             logger.warn('Could not save cutoff radii history')
             raise

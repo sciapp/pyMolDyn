@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 
 class CalculationTable(QtWidgets.QTableView):
@@ -10,7 +10,7 @@ class CalculationTable(QtWidgets.QTableView):
 class TableModel(QtCore.QAbstractTableModel):
     def __init__(self, parent, data, header):
         QtCore.QAbstractTableModel.__init__(self, parent)
-        self.databla = data
+        self.databla = list(data)
         self.header = header
 
     def rowCount(self, parent):

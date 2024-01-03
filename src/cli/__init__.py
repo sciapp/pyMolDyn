@@ -4,4 +4,4 @@
 __all__ = ["Cli"]
 
 
-from cli import Cli
+from .cli import Cli

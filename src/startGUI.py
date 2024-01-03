@@ -4,6 +4,11 @@
 import os
 import sys
 import subprocess
+import faulthandler
+
+
+faulthandler.enable(file=sys.stderr, all_threads=True)
+print(faulthandler.is_enabled())
 
 
 def start_batch():
@@ -21,20 +26,17 @@ if __name__ == '__main__' and len(sys.argv) > 1 and sys.argv[1] == '--batch':
 
 
 # use pythonic PyQt api (version 2)
-try:
-    from PyQt5 import sip
-except ImportError:
-    import sip
-API_NAMES = ("QDate", "QDateTime", "QString", "QTextStream", "QTime", "QUrl", "QVariant")
-API_VERSION = 2
-for name in API_NAMES:
-    sip.setapi(name, API_VERSION)
+#  import sip
+#  API_NAMES = ("QDate", "QDateTime", "QString", "QTextStream", "QTime", "QUrl", "QVariant")
+#  API_VERSION = 2
+#  for name in API_NAMES:
+    #  sip.setapi(name, API_VERSION)
 
 from gui import main_window
 import core.file
 from core import volumes
 from core.control import Control
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 import signal
 import core.calculation
 
@@ -81,10 +83,11 @@ def start_gui():
         if filename:
             window.file_dock.file_tab.disable_files_in_menu_and_open(filename)
             window.update_submenu_recent_files()
-    screen_geom = QtWidgets.QDesktopWidget().screenGeometry()
+    screen_geom= window.screen().availableGeometry()
+    #  screen_geom = QtWidgets.QDesktopWidget().screenGeometry()
     window.setGeometry((screen_geom.width() - window.width()) / 2, (screen_geom.height() - window.height()) / 2,
                        window.width(), window.height())
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 
 
 def main():

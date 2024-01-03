@@ -7,7 +7,6 @@ import sys
 import math
 import numpy as np
 import numpy.linalg as la
-import file
 import collections
 
 def clamping_acos(cos):
@@ -60,7 +59,7 @@ def get_bonds_symetric_indicies(bond_target_index_arrays):
             if bond_target_index > index:
                 bond_target_index_arrays[bond_target_index].append(index)
 
-    bond_target_index_arrays = np.array(bond_target_index_arrays)
+    bond_target_index_arrays = np.array(bond_target_index_arrays, dtype=object)
     return bond_target_index_arrays
 
 def calculate_bond_angles(atoms, bond_target_index_arrays):

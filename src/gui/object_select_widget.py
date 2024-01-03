@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import re
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 
 class ObjectSelectWidget(QtWidgets.QWidget):
-    state_changed = QtCore.pyqtSignal(bool)
-    selection_indices_changed = QtCore.pyqtSignal(object)
+    state_changed = QtCore.Signal(bool)
+    selection_indices_changed = QtCore.Signal(object)
 
     def __init__(self, text, parent, add_index_selector=True, *args, **kwargs):
         super(ObjectSelectWidget, self).__init__(parent, *args, **kwargs)
@@ -81,8 +81,9 @@ class ObjectSelectWidget(QtWidgets.QWidget):
             self.selection_indices_changed.emit(indices)
 
 
+
 class IndexSelectLineEdit(QtWidgets.QLineEdit):
-    indices_changed = QtCore.pyqtSignal(object)
+    indices_changed = QtCore.Signal(object)
     TIMER_INTERVAL = 1000
 
     class Validator(QtGui.QValidator):
@@ -180,7 +181,7 @@ class IndexSelectLineEdit(QtWidgets.QLineEdit):
             for comp in parts:
                 if '-' in comp:  # index ranges
                     start, end = map(int, comp.split('-'))
-                    indices.extend(xrange(start-1, end))
+                    indices.extend(range(start-1, end))
             indices = list(set(indices))    # Eliminate duplicate entries
             indices.sort()
             return tuple(indices)

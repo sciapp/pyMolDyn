@@ -6,8 +6,8 @@ import itertools
 import numpy as np
 import h5py
 from util.message import print_message, progress, finish
-import algorithm
-from extension import mark_translation_vectors
+from . import algorithm
+from .extension import mark_translation_vectors
 try:
     import numexpr as ne
     NUMEXPR = True
@@ -135,6 +135,7 @@ class Discretization(object):
         print_message("Step length:", self.s_step)
 
         # step 2
+        dimensions = range(len(self.s))
         self.d = [int(floor(self.s[i] / self.s_step) + 4) for i in dimensions]
         for i in dimensions:
             if self.d[i] % 2 == 1:
@@ -145,10 +146,10 @@ class Discretization(object):
         # step 3
         self.translation_vectors = [[int(floor(c / self.s_step + 0.5)) for c in v] for v in
                                     self.volume.translation_vectors]
-        # TODO: remove unnecesary vectors in hexagonal volumes
+        # TODO: remove unnecessary vectors in hexagonal volumes
         self.combined_translation_vectors = [
             [sum([v[0][j] * v[1] for v in zip(self.translation_vectors, i)]) for j in dimensions] for i in
-            itertools.product((-1, 0, 1), repeat=dimension) if any(i)]
+            itertools.product((-1, 0, 1), repeat=len(dimensions)) if any(i)]
 
         if grid is not None:
             self.grid = grid
@@ -156,14 +157,14 @@ class Discretization(object):
             # step 4
             self.grid = np.zeros(self.d, dtype=np.int8)
             # create array similar to itertools.product
-            order = [i + 1 for i in range(dimension)] + [0]
-            points = np.indices(self.d).transpose(*order).reshape((-1, dimension))
+            order = [i + 1 for i in range(len(dimensions))] + [0]
+            points = np.indices(self.d).transpose(*order).reshape((-1, len(dimensions)))
             # choose points that are not inside
             inside = self.volume.is_inside(self.discrete_to_continuous(points))
             outside_points = points.compress(np.logical_not(inside), axis=0)
             del points
-            # convert to tuple of indices
-            indices = [outside_points[:, i] for i in range(dimension)]
+            # convert to a tuple of indices
+            indices = tuple([outside_points[:, i] for i in range(len(dimensions))])
             self.grid[indices] = 1
             del outside_points
             del inside
@@ -204,14 +205,14 @@ class Discretization(object):
         cell_center = None
         while not all(0 <= p < s for p, s in zip(point, self.grid.shape)):
             if cell_center is None:
-                cell_center = np.array(self.grid.shape, dtype=np.int) / 2
+                cell_center = np.array(self.grid.shape, dtype=np.int32) // 2
                 translation_vectors = np.array(self.translation_vectors)
                 normalized_translation_vectors = (translation_vectors.T /
                                                   np.linalg.norm(translation_vectors, axis=1)).T
-            vector_to_cell_center = cell_center - np.array(point, dtype=np.int)
+            vector_to_cell_center = cell_center - np.array(point, dtype=np.int32)
             vector_to_cell_center = vector_to_cell_center / np.linalg.norm(vector_to_cell_center)
             dot_products = np.dot(normalized_translation_vectors, vector_to_cell_center)
-            rounded_dot_products = np.array(np.round(dot_products), dtype=np.int)
+            rounded_dot_products = np.array(np.round(dot_products), dtype=np.int32)
             needed_translation_vector_index = np.argmax(np.abs(dot_products))
             needed_translation_vector = (rounded_dot_products[needed_translation_vector_index] *
                                          translation_vectors[needed_translation_vector_index])
@@ -241,7 +242,8 @@ class Discretization(object):
         def transform_point(point, result_inside_volume):
             if isinstance(point, np.ndarray) and len(point.shape) > 1:
                 s_tilde_bc = np.tile(self.s_tilde, (point.shape[0], 1))
-                result = np.array(np.floor((point + s_tilde_bc / 2) / self.s_step + 0.5), dtype=np.int)
+                print("s_tilde_bc", s_tilde_bc)
+                result = np.array(np.floor((point + s_tilde_bc / 2) / self.s_step + 0.5), dtype=np.int32)
                 if result_inside_volume:
                     result = np.array(self.get_equivalent_point_in_volume(result))
             else:
@@ -253,7 +255,7 @@ class Discretization(object):
         def transform_value(value, unit_exponent):
             return int(floor(value / (self.s_step**unit_exponent) + 0.5))
 
-        if isinstance(arg, collections.Iterable):
+        if isinstance(arg, collections.abc.Iterable):
             return transform_point(arg, result_inside_volume)
         else:
             return transform_value(arg, unit_exponent)
@@ -269,7 +271,7 @@ class Discretization(object):
             if isinstance(point, np.ndarray) and len(point.shape) > 1:
                 if result_inside_volume:
                     if any(isinstance(c, float) for c in point):
-                        rounded_point = np.array(np.around(point), dtype=np.int)
+                        rounded_point = np.array(np.around(point), dtype=np.int32)
                         rounded_diff = point - rounded_point
                         rounded_point = np.array(self.get_equivalent_point_in_volume(rounded_point))
                         point = rounded_point + rounded_diff
@@ -296,7 +298,7 @@ class Discretization(object):
         def transform_value(value, unit_exponent):
             return value * (self.s_step**unit_exponent)
 
-        if isinstance(arg, collections.Iterable):
+        if isinstance(arg, collections.abc.Iterable):
             return transform_point(arg)
         else:
             return transform_value(arg, unit_exponent)

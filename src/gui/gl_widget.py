@@ -3,14 +3,14 @@
 from __future__ import absolute_import
 
 import numpy as np
-import numpy.linalg as la
-from PyQt5 import QtCore, QtWidgets
+import sys
+from PySide6 import QtCore, QtWidgets
 try:
-    from PyQt5.QtWidgets import QOpenGLWidget
+    from PySide6.QtOpenGLWidgets import QOpenGLWidget as QGLWidget
     has_qopenglwidget = True
 except ImportError:
-    from PyQt5 import QtOpenGL
-    from PyQt5.QtOpenGL import QGLWidget
+    from PySide6 import QtOpenGL
+    from PySide6.QtOpenGLWidgets import QOpenGLWidget as QGLWidget
     has_qopenglwidget = False
 from config.configuration import config
 from OpenGL.GL import glReadPixels, GL_FLOAT, GL_DEPTH_COMPONENT
@@ -24,7 +24,7 @@ class UpdateGLEvent(QtCore.QEvent):
         QtCore.QEvent.__init__(self, QtCore.QEvent.Type(t))
 
 
-class GLWidget(QOpenGLWidget if has_qopenglwidget else QGLWidget):
+class GLWidget(QGLWidget if has_qopenglwidget else QGLWidget):
     """
     OpenGL widget to show the 3D-scene
     """
@@ -46,8 +46,8 @@ class GLWidget(QOpenGLWidget if has_qopenglwidget else QGLWidget):
     def vis(self):
         return self.control.visualization
 
-    def initializeGL(self):
-        self.vis.assign_opengl_context(self)
+    #  def initializeGL(self):
+        #  self.vis.assign_opengl_context(self)
 
     def minimumSizeHint(self):
         return QtCore.QSize(400, 400)
@@ -69,7 +69,7 @@ class GLWidget(QOpenGLWidget if has_qopenglwidget else QGLWidget):
 
     def wheelEvent(self, e):
         self.update_needed = True
-	rot_v = 0.1
+        rot_v = 0.1
         if e.modifiers() == QtCore.Qt.ShiftModifier:
             if (e.angleDelta().x() != 0) or (e.angleDelta().y() != 0):
                 self.vis.rotate_mouse(-e.angleDelta().x() * rot_v, -e.angleDelta().y() * rot_v)

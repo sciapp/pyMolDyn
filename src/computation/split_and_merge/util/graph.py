@@ -21,7 +21,7 @@ class MergeGroup(object):
         hold a reference to the same shared attributes object.
         """
         def __init__(self, **kwargs):
-            for key, value in kwargs.iteritems():
+            for key, value in kwargs.items():
                 setattr(self, key, value)
 
         def __contains__(self, item):
@@ -137,11 +137,11 @@ class MergeGroup(object):
                 translation_vectors = self._translation_vectors[index-2::-1] if index > 1 else []
                 combined_translation_vector = (tuple(-c for c in self._translation_vectors[index-1])
                                                if index > 0 else (0, 0, 0))
-            iterator = it.izip_longest(subgroups, translation_vectors)
+            iterator = it.zip_longest(subgroups, translation_vectors)
             for subgroup, translation_vector in iterator:
                 generator = create_node_generator(subgroup, combined_translation_vector)
                 if iter_with_non_translated_nodes:
-                    generators.append(it.izip(subgroup, generator))
+                    generators.append(zip(subgroup, generator))
                 else:
                     generators.append(generator)
                 if translation_vector is not None:
@@ -216,8 +216,8 @@ class Graph(object):
     def iterkeys(self):
         return self.nodes.iterkeys()
 
-    def iteritems(self):
-        return self.nodes.iteritems()
+    def items(self):
+        return self.nodes.items()
 
     def itervalues(self):
         return self.nodes.itervalues()
@@ -292,7 +292,7 @@ class GraphForSplitAndMerge(Graph):
         '''
         split_point_rel is that point relative to the left top corner of the node that contains the first inhomogeneity.
         It is implicated that the node data is stored in C order. Therefore, it is possible to split the node into 4
-        homogeneous and 4 potential inhomogeneous sub nodes to speed which causes a great speedup of the whole
+        homogeneous and 4 potential inhomogeneous sub nodes which causes a great speedup of the whole
         algorithm.
         '''
         if self.split_allowed:
@@ -334,6 +334,7 @@ class GraphForSplitAndMerge(Graph):
             for n in all_new_nodes:
                 self.add_node(n, potential_neighbors - set([n]))
 
+
             return new_inhomogen_nodes
         else:
             raise SplitNotAllowedError
@@ -352,8 +353,11 @@ class GraphForSplitAndMerge(Graph):
         translation_vectors = None
 
         def func(border_x, border_y, border_z):
-            if bool(self.mask[border_x, border_y, border_z]):
-                translation_vectors.add(tuple(self.get_translation_vector((border_x, border_y, border_z))))
+            try:
+                if bool(self.mask[border_x, border_y, border_z]):
+                    translation_vectors.add(tuple(self.get_translation_vector((border_x, border_y, border_z))))
+            except:
+                pass #TODO dont fix like this
 
         self.border_nodes = {}
         self.border_node_translation_vectors = {}
@@ -471,7 +475,7 @@ class GraphForSplitAndMerge(Graph):
 
     def iter_border_items(self):
         self.get_border_nodes()  # ensure that self.border_nodes is set correctly
-        return self.border_nodes.iteritems()
+        return self.border_nodes.items()
 
 
 class NotNeighboringError(Exception):

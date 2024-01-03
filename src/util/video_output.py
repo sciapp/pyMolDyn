@@ -48,7 +48,7 @@ def main(argv):
     if len(argv) < 3:
         print('usage: python video_output.py outfile.mov frame1.png...')
         sys.exit(1)
-    argv = map(os.path.abspath, argv[1:])
+    argv = list(map(os.path.abspath, argv[1:]))
     outfile_name = argv[0]
     frame_file_names = argv[1:]
     os.chdir(os.path.dirname(frame_file_names[0]))

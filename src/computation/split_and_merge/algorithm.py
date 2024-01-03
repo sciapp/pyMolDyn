@@ -1,19 +1,34 @@
 import itertools
 
-from computation.split_and_merge.domain_centers.calculate_domain_centers import calculate_domain_centers as calc_dom
+from computation.split_and_merge.domain_centers import calculate_domain_centers as calc_dom
 from computation.split_and_merge.util.pos_bool_type import PosBoolType
-from computation.split_and_merge.util.numpy_extension.find_index_of_first_element_not_equivalent import find_index_of_first_element_not_equivalent
+#  from computation.split_and_merge.util.numpy_extension import find_index_of_first_element_not_equivalent
 from computation.split_and_merge.util.node_border_iterator import iterate_node_border_with_adjacent_node_cells
+import numpy as np
 
 
-it = itertools.count()
+it = itertools.count(0, 1)
 class ObjectType:
-    DOMAIN = it.next()
-    CAVITY = it.next()
+    DOMAIN = next(it)
+    CAVITY = next(it)
 
 
 def is_homogenous_split(data_part, mask_part):
-    return PosBoolType(find_index_of_first_element_not_equivalent(data_part, mask_part))
+    if data_part[0][0][0] == 0:
+        if mask_part[0][0][0] == 0:
+            ret = np.where(np.logical_or(mask_part != 0, data_part != 0), 1, 0).nonzero() #In c it is or not and
+        else:
+            ret = np.where(np.logical_or(mask_part == 0, data_part != 0), 1, 0).nonzero()
+    else:
+        if mask_part[0][0][0] == 0:
+            ret = np.where(np.logical_or(mask_part != 0, data_part == 0), 1, 0).nonzero()
+        else:
+            ret = np.where(np.logical_or(mask_part == 0, data_part == 0), 1, 0).nonzero()
+    try:
+        return PosBoolType((ret[0][0], ret[1][0], ret[2][0]))
+    except:
+        return PosBoolType((-1, -1, -1))
+    #  return PosBoolType(find_index_of_first_element_not_equivalent(data_part, mask_part)) TODO activate c functions
 
 
 def is_homogenous_merge(image_data_part, image_merge_data):
@@ -69,7 +84,7 @@ def split(data, mask, graph, object_type):
 
 
 def merge(data, graph):
-    for node, neighbors in graph.iteritems():
+    for node, neighbors in graph.items():
         for neighbor in neighbors:
             if not graph.is_merged(node, neighbor):
                 pos_node, dim_node = node
@@ -86,7 +101,7 @@ def merge(data, graph):
 
 def add_periodic_neighbors(graph):
     border_node_translation_vectors = graph.get_border_node_translation_vectors()
-    border_nodes = border_node_translation_vectors.keys()
+    border_nodes = list(border_node_translation_vectors.keys())
     for i, n in enumerate(border_nodes[:-1]):
         for m in border_nodes[i+1:]:
             m_x, m_y, m_z = m[0]

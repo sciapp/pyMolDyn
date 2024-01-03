@@ -132,7 +132,7 @@ lib.mark_translation_vectors.argtypes = [
 
 def atomstogrid(grid, discrete_positions, radii_indices, discrete_radii, translation_vectors, discretization_grid):
     dimensions = (c_int * 3)(*grid.shape)
-    strides = (c_int * 3)(*[s / grid.itemsize for s in grid.strides])
+    strides = (c_int * 3)(*[s // grid.itemsize for s in grid.strides])
     grid_p = grid.ctypes.data_as(POINTER(c_int64))
 
     discrete_positions = np.ascontiguousarray(discrete_positions, dtype=int_type)
@@ -150,7 +150,7 @@ def atomstogrid(grid, discrete_positions, radii_indices, discrete_radii, transla
     ntranslations = c_int(translation_vectors.shape[0])
     translation_vectors_p = translation_vectors.ctypes.data_as(POINTER(c_int))
 
-    discretization_grid_strides = (c_int * 3)(*[s / discretization_grid.itemsize for s in discretization_grid.strides])
+    discretization_grid_strides = (c_int * 3)(*[s // discretization_grid.itemsize for s in discretization_grid.strides])
     discretization_grid_p = discretization_grid.ctypes.data_as(POINTER(c_int8))
 
     lib.atomstogrid(grid_p, dimensions, strides,
@@ -200,7 +200,7 @@ def subgrid_add_domains(sg, domain_indices, domain_points, translation_vectors):
 
 def mark_cavities_c(grid, domain_grid, discretization_grid, sg, use_surface_points):
     dimensions_c = (c_int * 3)(*grid.shape)
-    strides_c = (c_int * 3)(*[s / grid.itemsize for s in grid.strides])
+    strides_c = (c_int * 3)(*[s // grid.itemsize for s in grid.strides])
     grid_c = grid.ctypes.data_as(POINTER(c_int64))
 
     if domain_grid is not None:
@@ -208,7 +208,7 @@ def mark_cavities_c(grid, domain_grid, discretization_grid, sg, use_surface_poin
     else:
         domain_grid_c = POINTER(c_int64)()
 
-    discgrid_strides_c = (c_int * 3)(*[s / discretization_grid.itemsize for s in discretization_grid.strides])
+    discgrid_strides_c = (c_int * 3)(*[s // discretization_grid.itemsize for s in discretization_grid.strides])
     discretization_grid_c = discretization_grid.ctypes.data_as(POINTER(c_int8))
 
     use_surface_points_c = c_int(use_surface_points)
@@ -256,7 +256,7 @@ def cavity_triangles(cavity_grid,
                      discretization_grid):
     cavity_grid_c = cavity_grid.ctypes.data_as(POINTER(c_int64))
     dimensions_c = (c_int * 3)(*cavity_grid.shape)
-    strides_c = (c_int * 3)(*[s / cavity_grid.itemsize for s in cavity_grid.strides])
+    strides_c = (c_int * 3)(*[s // cavity_grid.itemsize for s in cavity_grid.strides])
 
     if not isinstance(cavity_indices, np.ndarray) and not \
             isinstance(cavity_indices, list):
@@ -270,7 +270,7 @@ def cavity_triangles(cavity_grid,
     offset_c = (c_float * 3)(*offset)
 
     discretization_grid_c = discretization_grid.ctypes.data_as(POINTER(c_int8))
-    discgrid_strides_c = (c_int * 3)(*[s / discretization_grid.itemsize for s in discretization_grid.strides])
+    discgrid_strides_c = (c_int * 3)(*[s // discretization_grid.itemsize for s in discretization_grid.strides])
 
     vertices_c = POINTER(c_float)()
     normals_c = POINTER(c_float)()
@@ -299,7 +299,7 @@ def cavity_triangles(cavity_grid,
 
 def cavity_intersections(grid, num_domains):
     dimensions_c = (c_int * 3)(*grid.shape)
-    strides_c = (c_int * 3)(*[s / grid.itemsize for s in grid.strides])
+    strides_c = (c_int * 3)(*[s // grid.itemsize for s in grid.strides])
     grid_c = grid.ctypes.data_as(POINTER(c_int64))
 
     num_domains_c = c_int(num_domains)
@@ -313,7 +313,7 @@ def cavity_intersections(grid, num_domains):
 
 def mark_translation_vectors(grid, translation_vectors):
     dimensions_c = (c_int * 3)(*grid.shape)
-    strides_c = (c_int * 3)(*[s / grid.itemsize for s in grid.strides])
+    strides_c = (c_int * 3)(*[s // grid.itemsize for s in grid.strides])
     grid_c = grid.ctypes.data_as(POINTER(c_int8))
 
     translation_vectors = np.ascontiguousarray(translation_vectors, dtype=int_type)

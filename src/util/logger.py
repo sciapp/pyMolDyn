@@ -90,4 +90,5 @@ class Logger(object):
                 if isinstance(stream, Logger):
                     stream._logline(severity, line)
                 else:
-                    print >>stream, line
+                    #  print >>stream, line
+                    print(line, stream)

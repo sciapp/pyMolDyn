@@ -72,7 +72,7 @@ from computation.split_and_merge.pipeline import start_split_and_merge_pipeline
 from computation.split_and_merge.algorithm import ObjectType
 from core.calculation.gyrationtensor import calculate_gyration_tensor_parameters
 from util.message import print_message
-from extension import atomstogrid, mark_cavities, cavity_triangles, cavity_intersections
+from .extension import atomstogrid, mark_cavities, cavity_triangles, cavity_intersections
 
 
 dimension = 3
@@ -249,6 +249,8 @@ class CavityCalculation:
         self.cavity_volumes = []
         for domain_index in range(num_domains):
             self.cavity_volumes.append(1.0 * (self.grid3 == -(domain_index + 1)).sum() * (discretization.s_step ** 3))
+        if(len(self.cavity_volumes) > 0):
+            volume = self.cavity_volumes[0]
         self.characteristic_radii = [(0.75 * volume / PI)**(1.0/3.0) for volume in self.cavity_volumes]
 
         # step 6
@@ -275,7 +277,7 @@ class CavityCalculation:
 
         if gyration_tensor_parameters:
             def key_func(cavity_index):
-                cavity_area = non_translated_areas[cavity_index]
+                cavity_area = non_translated_areas[cavity_index] #cavity index is out of bounds but also for python2
                 a_single_cavity_index = -self.grid3[cavity_area[0]] - 1
                 max_neighbor_index = max(cavity_to_neighbors[a_single_cavity_index])
                 return max_neighbor_index
@@ -305,7 +307,7 @@ class CavityCalculation:
         Calculates the squared distance between two points while taking the
         translation vectors into account.
         '''
-        sqd = sys.maxint
+        sqd = sys.maxsize
         for v in self.domain_calculation.discretization.combined_translation_vectors + [(0, 0, 0)]:
             sqd = min(sqd, sum([(a[i] - b[i] + v[i]) * (a[i] - b[i] + v[i]) for i in dimensions]))
         return sqd

@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 class ProgressDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
@@ -34,7 +34,7 @@ class ProgressDialog(QtWidgets.QDialog):
     def progress(self, value):
         QtCore.QMetaObject.invokeMethod(self.progressbar, "setValue", QtCore.Qt.QueuedConnection, QtCore.Q_ARG(int, value))
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def close_dialog(self):
         if self.finished:
             self.done(QtWidgets.QDialog.Accepted)
@@ -49,6 +49,6 @@ class ProgressDialog(QtWidgets.QDialog):
         self.label.setText(tmp)
 
     def cancel(self):
-        print 'canceled calculation'
+        print('canceled calculation')
         self.close_dialog()
 

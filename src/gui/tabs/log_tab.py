@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 import datetime
 import logging
 
@@ -67,7 +67,7 @@ class LogTab(QtWidgets.QWidget):
         self.vbox.addWidget(self.log_area)
         self.setLayout(self.vbox)
 
-    @QtCore.pyqtSlot(str, int)
+    @QtCore.Slot(str, int)
     def append_log(self, message, level=logging.WARNING):
         level_to_style_class = {
             logging.INFO: 'info',

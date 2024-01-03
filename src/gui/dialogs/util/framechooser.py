@@ -4,11 +4,11 @@
 # TODO: fix frame indexing. it should start at 0 for everything, except in the strings that are displayed in the widgets
 
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 
 class LabeledFrameChooser(QtWidgets.QWidget):
-    value_changed = QtCore.pyqtSignal()
+    value_changed = QtCore.Signal()
 
     def __init__(self, parent, num_frames, calculated, text):
         QtWidgets.QWidget.__init__(self, parent)
@@ -61,7 +61,7 @@ class LabeledFrameChooser(QtWidgets.QWidget):
             # translate indices from human to machine
             l = [i - 1 for i in l_1]
         except ValueError:
-            print 'Enter a valid number'
+            print('Enter a valid number')
         self.framebar.set_selection(l)
 
     def mousePressEvent(self, e):

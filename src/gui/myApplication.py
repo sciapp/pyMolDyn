@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtGui
+from PySide6 import QtCore, QtGui
 import gl_widget
 import main_window
 ignore_list = [QtCore.QEvent.Type.HideToParent,
@@ -159,5 +159,5 @@ class MyApplication(QtGui.QApplication):
                 return True
 
         if event.type() not in ignore_list:
-            print event.type(), event
+            print(event.type(), event)
         return super(MyApplication, self).eventFilter(receiver, event)

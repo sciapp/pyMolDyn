@@ -1,19 +1,14 @@
 # -*- coding: utf-8 -*-
 
 
-__all__ = ["CLI"]
-
-
 import collections
 import optparse
 import os
 import re
 import sys
 import thread
-import logging
 from datetime import datetime
-from core.control import Control
-from core.calculation import Calculation, CalculationSettings
+from core.calculation import CalculationSettings
 import core.file
 from config.configuration import config
 
@@ -82,7 +77,7 @@ class FileList(object):
             if self.global_atom_radius is not None:
                 s += "; cutoff radius {}".format(self.global_atom_radius)
             elif atom_radii is not None:
-                if isinstance(atom_radii, collections.Mapping):
+                if isinstance(atom_radii, collections.abc.Mapping):
                     s += "; cutoff radii: {}".format(atom_radii)
                 else:
                     s += "; cutoff radius {}".format(atom_radii)
@@ -224,9 +219,10 @@ class Cli(object):
         elif self.options.no_cache:
             config.Computation.max_cachefiles = 1
 
-        print 'processing files:'
-        print file_list
-        print 'parameters:'
+
+        print('processing files:')
+        print(file_list)
+        print('parameters:')
         tmp_param_string=""
         for i, opt_dict in enumerate(self.options_list):
             tmp_param_string += opt_dict['name'] + ': ' + str(getattr(self.options, opt_dict['dest'])) + ', ' + ('\n' if i % 4 == 3 else '')
@@ -234,22 +230,22 @@ class Cli(object):
             tmp_param_string = tmp_param_string[:-3]
         else:
             tmp_param_string = tmp_param_string[:-2]
-        print tmp_param_string
-        print
-        print '='*80
+        print(tmp_param_string)
+        print()
+        print('='*80)
 
         if len(settings_list) > 0:
-            print "Started calculation: {}".format(datetime.now())
+            print("Started calculation: {}".format(datetime.now()))
             started_computation = False
             for settings in settings_list:
-                print "Calculating File:",
-                for filename, _ in settings.datasets.iteritems():
-                    print filename,
-                print "...",
+                print("Calculating File:")
+                for filename, _ in settings.datasets.items():
+                    print(filename)
+                print("...")
                 sys.stdout.flush()
                 results = self.control.calculation.calculate(settings)
-                print "Done."
-            print "Finished calculation: {}".format(datetime.now())
+                print("Done.")
+            print("Finished calculation: {}".format(datetime.now()))
 
             #    started_computation = True
 
@@ -279,7 +275,7 @@ class Cli(object):
             except ValueError:         # Wird beim Schliessen von stdin geworfen
                 self.cancel_callback()
                 break
-        print
+        print()
 
     def __parse_options(self, command_line_params):
         usage = """Usage: %prog [options] batch_file1 batch_file2 ...
@@ -333,10 +329,10 @@ Note: Because the cutoff radius is stored in the global configuration, it cannot
                             line_is_processed = False
                             while not line_is_processed:
                                 if read_state == ReadState.ATOM_RADII:
-                                    if re.match('^\s+', line):
+                                    if re.match(r'^\s+', line):
                                         element = line_parts[0]
                                         radius = float(line_parts[1])
-                                        atom_radii[element] = radius
+                                        atom_radii[element] = radius #TODO ask ingo what is happening here
                                         line_is_processed = True
                                     else:
                                         read_state = ReadState.DEFAULT
@@ -361,7 +357,7 @@ Note: Because the cutoff radius is stored in the global configuration, it cannot
                                                                 atom_radii, output_directory)
                                     line_is_processed = True
             except IOError:
-                print 'warning: batch file %s not accessable and skipped' % (os.path.abspath(input_file))
+                print('warning: batch file %s not accessable and skipped' % (os.path.abspath(input_file)))
 
         return result_file_list
 

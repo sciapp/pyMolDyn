@@ -4,7 +4,7 @@
 from __future__ import absolute_import
 
 
-from PyQt5 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 from config.cutoff_history import cutoff_history
 from config.cutoff_history import HistoryEntry
 from gui.cutoff_history_table import CutoffHistoryTable

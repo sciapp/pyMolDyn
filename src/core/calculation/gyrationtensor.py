@@ -20,7 +20,7 @@ def calculate_gyration_tensor_parameters(points):
      - κ is the anisotropy
     """
 
-    points = np.array(points, dtype=np.float)
+    points = np.array(points, dtype=np.float64)
     mean = np.mean(points, axis=0)
     points -= mean
 

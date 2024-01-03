@@ -5,12 +5,12 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from PyQt5 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 
 class CutoffTableWidget(QtWidgets.QTableWidget):
     class CutoffLineEdit(QtWidgets.QLineEdit):
-        focus_in = QtCore.pyqtSignal()
+        focus_in = QtCore.Signal()
 
         def __init__(self, *args, **kwargs):
             super(CutoffTableWidget.CutoffLineEdit, self).__init__(*args, **kwargs)
@@ -19,7 +19,7 @@ class CutoffTableWidget(QtWidgets.QTableWidget):
             super(CutoffTableWidget.CutoffLineEdit, self).focusInEvent(event)
             self.focus_in.emit()
 
-    text_edited = QtCore.pyqtSignal()
+    text_edited = QtCore.Signal()
 
     def __init__(self, radii, parent=None):
         super(CutoffTableWidget, self).__init__(len(radii), 2, parent)
@@ -32,7 +32,7 @@ class CutoffTableWidget(QtWidgets.QTableWidget):
         self.setVerticalHeaderLabels(self._radii.keys())
         for i in range(len(self._radii)):
             self.setItem(i, 0, QtWidgets.QTableWidgetItem())
-            self.item(i, 0).setText(str(self._radii.values()[i]))
+            self.item(i, 0).setText(str(list(self._radii.values())[i]))
             current_line_edit = CutoffTableWidget.CutoffLineEdit()
             current_line_edit.textEdited.connect(self.text_edited)
             current_line_edit.focus_in.connect(lambda row_index=i: self._line_edit_focus_in(row_index))

@@ -25,7 +25,7 @@ def atomstogrid(grid,
                 translation_vectors,
                 discretization_grid):
     last_radius_index = -1  # (for reuse of sphere grids)
-    atom_information = itertools.izip(range(len(discrete_positions)),
+    atom_information = zip(range(len(discrete_positions)),
                                       radii_indices,
                                       discrete_positions)
     for atom_index, radius_index, real_discrete_position in atom_information:
@@ -71,7 +71,7 @@ class Subgrid(object):
             for y in range(self.sgd[1]):
                 self.sg[x].append([])
                 for z in range(self.sgd[2]):
-                    self.sg[x][y].append([[], [], []])
+                    self.sg[x][y].append([[], [], []]) #SEG fault was here
 
     def add_atoms(self, atom_positions, translation_vectors):
         for atom_index, atom_position in enumerate(atom_positions):
@@ -90,7 +90,7 @@ class Subgrid(object):
                     self.sg[sgp[0]][sgp[1]][sgp[2]][2].append(domain_index)
 
     def to_subgrid(self, position):
-        sgp = [c / self.cubesize + 2 for c in position]
+        sgp = [c // self.cubesize + 2 for c in position]
         for i in dimensions:
             if sgp[i] < 0:
                 sgp[i] = 0
@@ -131,7 +131,7 @@ def mark_cavities(domain_grid,
             possibly_in_cavity = (discretization_grid[p] == 0)
         if possibly_in_cavity:
             # step 5
-            min_squared_atom_distance = sys.maxint
+            min_squared_atom_distance = sys.maxsize
             sgp = sg.to_subgrid(p)
             for i in itertools.product((-1, 0, 1), repeat=dimension):
                 sgci = [sgp[j] + i[j] for j in dimensions]
@@ -161,12 +161,12 @@ def cavity_triangles(cavity_grid,
                      discretization_grid):
     cavity_triangles = []
     cavity_surface_areas = []
-    grid = np.zeros(cavity_grid.shape, dtype=np.bool)
+    grid = np.zeros(cavity_grid.shape, dtype=bool)
 
     for cavity_index in cavity_indices:
         grid = np.logical_or(grid, cavity_grid == -(cavity_index + 1))
     views = []
-    for x, y, z in itertools.product(*map(xrange, (3, 3, 3))):
+    for x, y, z in itertools.product(*map(range, (3, 3, 3))):
         view = grid[x:grid.shape[0] - 2 + x, y:grid.shape[1] - 2 + y, z:grid.shape[2] - 2 + z]
         views.append(view)
     grid = np.zeros(grid.shape, np.uint16)
@@ -174,15 +174,15 @@ def cavity_triangles(cavity_grid,
     grid[1:-1, 1:-1, 1:-1] = sum(views) + 100
 
     vertices, normals = triangulate(grid, (1, 1, 1), (0, 0, 0), 100 + isolevel)
-    discrete_vertices = np.array(np.floor(vertices + 0.5), dtype=np.int)
+    discrete_vertices = np.array(np.floor(vertices + 0.5), dtype=np.int32)
     vertices *= np.tile(step, (vertices.shape[0], 3, 1))
     vertices += np.tile(offset, (vertices.shape[0], 3, 1))
     normals /= np.tile(step, (normals.shape[0], 3, 1))
 
     cavity_surface_area = 0
-    for cavity_triangle, discrete_triangle in itertools.izip(vertices, discrete_vertices):
+    for cavity_triangle, discrete_triangle in zip(vertices, discrete_vertices):
         any_outside = False
-        for vertex, discrete_vertex in itertools.izip(cavity_triangle, discrete_triangle):
+        for vertex, discrete_vertex in zip(cavity_triangle, discrete_triangle):
             if discretization_grid[tuple(discrete_vertex)] != 0:
                 any_outside = True
                 break
@@ -202,7 +202,7 @@ def cavity_intersections(grid, num_domains):
     for dx, dy, dz in itertools.product((0, 1), repeat=3):
         if any((dx > 0, dy > 0, dz > 0)):
             directions.append((dx, dy, dz))
-    for p in itertools.product(*[xrange(x - 1) for x in grid.shape]):
+    for p in itertools.product(*[range(x - 1) for x in grid.shape]):
         domain1 = -grid[p] - 1
         if domain1 != -1:
             for direction in directions:

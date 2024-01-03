@@ -5,14 +5,14 @@ from __future__ import absolute_import
 
 
 import collections
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 from gui.util.table_fit_mixin import TableFitMixin
 
 
 class TableWithRemoveableEntries(QtWidgets.QTableWidget, TableFitMixin):
     class EntryActionWidget(QtWidgets.QWidget):
 
-        remove = QtCore.pyqtSignal()
+        remove = QtCore.Signal()
 
         def __init__(self, parent=None):
             super(TableWithRemoveableEntries.EntryActionWidget, self).__init__(parent)

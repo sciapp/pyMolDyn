@@ -3,7 +3,7 @@
 from __future__ import absolute_import
 
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 
 class LabeledComboBox(QtWidgets.QComboBox):

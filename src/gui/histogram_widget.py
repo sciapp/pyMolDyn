@@ -2,7 +2,7 @@
 
 from __future__ import absolute_import
 
-from PyQt5 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 import gr
 from qtgr import GRWidget
 import csv
@@ -164,8 +164,8 @@ class HistogramWidget(QtWidgets.QWidget):
             elif self.cavity_type_box.currentText() == 'Cavity Domains':
                 cavities = self.results.domains
             nbins = str(self.nbins.text())
-            if len(nbins) > 0 and float(nbins) > 0:
-                nbins = float(nbins)
+            if len(nbins) > 0 and int(nbins) > 0:
+                nbins = int(nbins)
             else:
                 nbins = 50
             if self.volumebutton.isChecked():
@@ -214,7 +214,7 @@ class HistogramWidget(QtWidgets.QWidget):
         yvalues = self.gr_widget.yvalues
         if xvalues is None or yvalues is None:
             return
-        with open(filepath, 'wb') as csvfile:
+        with open(filepath, 'w') as csvfile:
             csvwriter = csv.writer(csvfile)
             for x, y in zip(xvalues, yvalues):
                 csvwriter.writerow([x, y])

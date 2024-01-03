@@ -1,5 +1,5 @@
-from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtCore import QTimer
+from PySide6 import QtCore, QtWidgets
+from PySide6.QtCore import QTimer
 from gui.tabs.statistics.tree_list import TreeList
 from gui.tabs.statistics.html_view import HTMLWindow
 

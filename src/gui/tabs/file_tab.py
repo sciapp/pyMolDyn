@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from PyQt5 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 import os.path
 import functools
 from core import calculation, volumes, file
@@ -49,7 +49,7 @@ class CalculationThread(QtCore.QThread):
             self.func(self.settings)
         except Exception as e:
             self._exited_with_errors = True
-            message.error(e.message)
+            message.error(str(e))
             message.finish()
             raise
 
@@ -200,14 +200,14 @@ class FileTab(QtWidgets.QWidget):
             if was_successful():
                 self.file_list._enable_screenshot_button()
 
-        thread = CalculationThread(self, func, settings)
-        thread.finished.connect(functools.partial(self.control.update,
-                                                  was_successful=lambda: not thread.exited_with_errors))
-        thread.finished.connect(functools.partial(self.main_window.updatestatus,
-                                                  was_successful=lambda: not thread.exited_with_errors))
-        thread.finished.connect(functools.partial(enable_screenshot_button_on_success, self,
-                                                  was_successful=lambda: not thread.exited_with_errors))
-        thread.start()
+        self.thread = CalculationThread(self, func, settings)
+        self.thread.finished.connect(functools.partial(self.control.update,
+                                                  was_successful=lambda: not self.thread.exited_with_errors))
+        self.thread.finished.connect(functools.partial(self.main_window.updatestatus,
+                                                  was_successful=lambda: not self.thread.exited_with_errors))
+        self.thread.finished.connect(functools.partial(enable_screenshot_button_on_success, self,
+                                                  was_successful=lambda: not self.thread.exited_with_errors))
+        self.thread.start()
         self.progress_dialog.exec_()
 
     def calculate(self, file_frame_dict=None):
@@ -219,8 +219,8 @@ class FileTab(QtWidgets.QWidget):
         if ok:
             self.control.calculationcallback = self.calculationcallback
             self.control.calculate(settings)
-            self.last_shown_filename_with_frame = (file_frame_dict.keys()[-1],
-                                                   file_frame_dict.values()[-1][-1])
+            self.last_shown_filename_with_frame = (list(file_frame_dict.keys())[-1],
+                                                   list(file_frame_dict.values())[-1][-1])
 
 
 class TreeList(QtWidgets.QTreeWidget):
@@ -232,7 +232,7 @@ class TreeList(QtWidgets.QTreeWidget):
         self.setColumnCount(1)
         self.path_dict = {}
 
-        for root, sib in data.iteritems():
+        for root, sib in data.items():
             self.append_item(root, sib)
 
         self.setHeaderHidden(True)
@@ -320,7 +320,7 @@ class TreeList(QtWidgets.QTreeWidget):
                 sel[self.path_dict[content]] = [-1]
             else:
                 parent_content = str(item.parent().data(0, 0))
-                if sel.has_key(self.path_dict[parent_content]):
+                if self.path_dict[parent_content] in sel:
                     if not sel[self.path_dict[parent_content]][0] == -1:
                         sel[self.path_dict[parent_content]].append(int(content[6:]) - 1)
                 else:
@@ -374,7 +374,7 @@ class TreeList(QtWidgets.QTreeWidget):
 
         sel = self.get_selection()
 
-        filename = sel.keys()[0]
+        filename = list(sel.keys())[0]
         frame = sel[filename][0]
 
         if frame == -1:
