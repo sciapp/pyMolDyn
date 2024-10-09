@@ -4,8 +4,6 @@ This module contains classes that are used to store data in pyMolDyn.
 Most of them can be read and written to hdf5 files.
 """
 
-import pysnooper
-
 import collections
 import numpy as np
 import sys
@@ -19,9 +17,9 @@ from util.logger import Logger
 import core.elements
 import core.bonds
 try:
-    import pybel
+    import openbabel
     USE_PYBEL = True
-    PYBEL_MOLECULE_TYPE = pybel.Molecule
+    PYBEL_MOLECULE_TYPE = openbabel.pybel.Molecule #TODO openbabel install
 except ImportError:
     USE_PYBEL = False
     PYBEL_MOLECULE_TYPE = None
@@ -435,9 +433,9 @@ class Atoms(object):
                 positions = map(lambda pos: volume.get_equivalent_point(pos),
                                 positions)
         self.volume = volume
-        self.positions = np.array(list(positions), dtype=np.float64, copy=False)
+        self.positions = np.asarray(list(positions), dtype=np.float64)
         self.number = self.positions.shape[0]
-        self.elements = np.array(elements, dtype="|S4", copy=False)
+        self.elements = np.asarray(elements, dtype="|S4")
         self.radii = radii
 
         self._covalence_radii = None
@@ -491,9 +489,9 @@ class Atoms(object):
             self._radii = np.ones((self.number), dtype=np.float64) * config.Computation.std_cutoff_radius
         elif isinstance(values, collections.abc.Mapping):
             radii = [values[elem] for elem in self.elements]
-            self._radii = np.array(radii, dtype=np.float64, copy=False)
+            self._radii = np.asarray(radii, dtype=np.float64)
         elif isinstance(values, collections.abc.Iterable):
-            self._radii = np.array(values, dtype=np.float64, copy=False)
+            self._radii = np.asarray(values, dtype=np.float64)
         else:
             self._radii = np.ones((self.number), dtype=np.float64) * values
         indices = np.argsort(-self._radii, kind="mergesort")
@@ -587,17 +585,17 @@ class CavitiesBase(object):
         if not isinstance(timestamp, datetime):
             timestamp = dateutil.parser.parse(str(timestamp))
         self.timestamp = timestamp
-        self.volumes = np.array(volumes, dtype=np.float64, copy=False)
+        self.volumes = np.asarray(volumes, dtype=np.float64)
         self.number = len(volumes)
-        self.surface_areas = np.array(surface_areas, dtype=np.float64, copy=False)
-        self.triangles = [np.array(triangle, dtype=np.float64, copy=False) for triangle in triangles]
-        self.mass_centers = np.array(mass_centers, dtype=np.float64, copy=False)
-        self.squared_gyration_radii = np.array(squared_gyration_radii, dtype=np.float64, copy=False)
-        self.asphericities = np.array(asphericities, dtype=np.float64, copy=False)
-        self.acylindricities = np.array(acylindricities, dtype=np.float64, copy=False)
-        self.anisotropies = np.array(anisotropies, dtype=np.float64, copy=False)
-        self.characteristic_radii = np.array(characteristic_radii, dtype=np.float64, copy=False)
-        self.cyclic_area_indices = (np.array(cyclic_area_indices, dtype=np.int32, copy=False)
+        self.surface_areas = np.asarray(surface_areas, dtype=np.float64)
+        self.triangles = [np.asarray(triangle, dtype=np.float64) for triangle in triangles]
+        self.mass_centers = np.asarray(mass_centers, dtype=np.float64)
+        self.squared_gyration_radii = np.asarray(squared_gyration_radii, dtype=np.float64)
+        self.asphericities = np.asarray(asphericities, dtype=np.float64)
+        self.acylindricities = np.asarray(acylindricities, dtype=np.float64)
+        self.anisotropies = np.asarray(anisotropies, dtype=np.float64)
+        self.characteristic_radii = np.asarray(characteristic_radii, dtype=np.float64)
+        self.cyclic_area_indices = (np.asarray(cyclic_area_indices, dtype=np.int32)
                                     if cyclic_area_indices is not None else np.array([]))
 
     def tohdf(self, h5group, overwrite=True):
@@ -732,7 +730,7 @@ class Domains(CavitiesBase):
             super(Domains, self).__init__(*args)
             centers = args[4]
 
-        self.centers = np.array(centers, dtype=np.int32, copy=False)
+        self.centers = np.asarray(centers, dtype=np.int32)
         if 'discretization' in locals():
             # TODO: get discretization also from other constructor calls!
             self.continuous_centers = np.array([discretization.discrete_to_continuous(center) for center in centers], dtype=np.float64)

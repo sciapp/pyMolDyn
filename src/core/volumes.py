@@ -163,7 +163,7 @@ class HexagonalVolume(object):
         p1 = self._wrap(np.matrix(p1, copy=True))
         p2 = self._wrap(np.matrix(p2, copy=True))
         d = self._wrap(p2 - p1)
-        return np.array(d, copy=False)
+        return np.asarray(d)
 
     def __repr__(self):
         return "HEXAGONAL a=%f c=%f" % (self.a, self.c)

@@ -56,14 +56,20 @@ static PyObject *find_index_of_first_element_not_equivalent(PyObject *self, PyOb
     return Py_BuildValue("(iii)", pos.x, pos.y, pos.z);
 }
 
-static PyMethodDef find_index_of_first_element_not_equivalentMethods[] = {
-    {"find_index_of_first_element_not_equivalent", find_index_of_first_element_not_equivalent, METH_VARARGS, "Finds the first index in a numpy array that is unequal a given value"},
-    {NULL, NULL, 0, NULL}        /* end marker */
+static PyMethodDef FindMethods[] = {
+    {"find_index_of_first_element_not_equivalent", find_index_of_first_element_not_equivalent, METH_VARARGS, "Finds the first index in a numpy array that is unequal to a given value"},
+    {NULL, NULL, 0, NULL}
+};
+
+static struct PyModuleDef findmodule = {
+    PyModuleDef_HEAD_INIT,
+    "find_index_of_first_element_not_equivalent",  /* name of module */
+    NULL,                                          /* module documentation */
+    -1,                                            /* size of per-interpreter state of the module */
+    FindMethods
 };
 
 PyMODINIT_FUNC
-initfind_index_of_first_element_not_equivalent(void)
-{
-    (void) Py_InitModule("find_index_of_first_element_not_equivalent", find_index_of_first_element_not_equivalentMethods);
+PyInit_find_index_of_first_element_not_equivalent(void) {
+    return PyModule_Create(&findmodule);
 }
-

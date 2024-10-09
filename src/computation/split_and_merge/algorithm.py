@@ -2,10 +2,9 @@ import itertools
 
 from computation.split_and_merge.domain_centers import calculate_domain_centers as calc_dom
 from computation.split_and_merge.util.pos_bool_type import PosBoolType
-#  from computation.split_and_merge.util.numpy_extension import find_index_of_first_element_not_equivalent
+from computation.split_and_merge.util.numpy_extension import find_index_of_first_element_not_equivalent
 from computation.split_and_merge.util.node_border_iterator import iterate_node_border_with_adjacent_node_cells
 import numpy as np
-
 
 it = itertools.count(0, 1)
 class ObjectType:
@@ -14,21 +13,23 @@ class ObjectType:
 
 
 def is_homogenous_split(data_part, mask_part):
-    if data_part[0][0][0] == 0:
-        if mask_part[0][0][0] == 0:
-            ret = np.where(np.logical_or(mask_part != 0, data_part != 0), 1, 0).nonzero() #In c it is or not and
-        else:
-            ret = np.where(np.logical_or(mask_part == 0, data_part != 0), 1, 0).nonzero()
-    else:
-        if mask_part[0][0][0] == 0:
-            ret = np.where(np.logical_or(mask_part != 0, data_part == 0), 1, 0).nonzero()
-        else:
-            ret = np.where(np.logical_or(mask_part == 0, data_part == 0), 1, 0).nonzero()
     try:
-        return PosBoolType((ret[0][0], ret[1][0], ret[2][0]))
-    except:
-        return PosBoolType((-1, -1, -1))
-    #  return PosBoolType(find_index_of_first_element_not_equivalent(data_part, mask_part)) TODO activate c functions
+        return PosBoolType(find_index_of_first_element_not_equivalent.find_index_of_first_element_not_equivalent(data_part, mask_part))
+    except TypeError:#TODO fix logging
+        if data_part[0][0][0] == 0:
+            if mask_part[0][0][0] == 0:
+                ret = np.where(np.logical_or(mask_part != 0, data_part != 0), 1, 0).nonzero() #In c it is or not and
+            else:
+                ret = np.where(np.logical_or(mask_part == 0, data_part != 0), 1, 0).nonzero()
+        else:
+            if mask_part[0][0][0] == 0:
+                ret = np.where(np.logical_or(mask_part != 0, data_part == 0), 1, 0).nonzero()
+            else:
+                ret = np.where(np.logical_or(mask_part == 0, data_part == 0), 1, 0).nonzero()
+        try:
+            return PosBoolType((ret[0][0], ret[1][0], ret[2][0]))
+        except:
+            return PosBoolType((-1, -1, -1))
 
 
 def is_homogenous_merge(image_data_part, image_merge_data):
@@ -138,7 +139,9 @@ def mark_domain_points(data, areas):
 
 
 def calculate_domain_centers(atoms, combined_translation_vectors, areas):
-    return calc_dom(atoms, combined_translation_vectors, areas)
+    combined_translation_vectors_tuples = [tuple(t) for t in combined_translation_vectors]
+    areas = [list(a) for a in areas]
+    return calc_dom.calculate_domain_centers(atoms, combined_translation_vectors_tuples, areas)
 
 
 def get_domain_area_cells(areas):

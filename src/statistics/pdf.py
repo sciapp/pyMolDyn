@@ -62,9 +62,9 @@ class PDF(object):
         else:
             raise TypeError("PDF expects 1 or 4 parameters")
 
-        self.positions = np.array(positions, copy=False)
-        self.elements = np.array(elements, dtype="|S4", copy=False)
-        self.centers = np.array(centers, copy=False)
+        self.positions = np.asarray(positions)
+        self.elements = np.asarray(elements, dtype="|S4")
+        self.centers = np.asarray(centers)
         self.volume = volume
         self.num_atoms = np.where(self.elements != "cav")[0].size
         self.numberdensity = float(self.num_atoms) / self.volume.volume
