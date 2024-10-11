@@ -1,5 +1,6 @@
 .*
 !.gitignore
+!.gitlab-ci.yml
 *.aux
 *.cfg
 *.data
