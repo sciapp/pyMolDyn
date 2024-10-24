@@ -13,7 +13,7 @@ except ImportError:
     from PySide6.QtOpenGLWidgets import QOpenGLWidget as QGLWidget
     has_qopenglwidget = False
 from ..config.configuration import config
-from OpenGL.GL import glReadPixels, GL_FLOAT, GL_DEPTH_COMPONENT
+from OpenGL.GL import GL_DEPTH_BITS, GL_DEPTH_BUFFER_BIT, GL_DEPTH_TEST, GL_FRAMEBUFFER, GL_FRAMEBUFFER_BINDING, GL_FRAMEBUFFER_COMPLETE, GL_VIEWPORT, glBindFramebuffer, glCheckFramebufferStatus, glClear, glEnable, glIsEnabled, glReadPixels, GL_FLOAT, GL_DEPTH_COMPONENT, glGetIntegerv
 
 from ..util.gl_util import create_perspective_projection_matrix, create_look_at_matrix
 
@@ -21,7 +21,7 @@ from ..util.gl_util import create_perspective_projection_matrix, create_look_at_
 class UpdateGLEvent(QtCore.QEvent):
     def __init__(self):
         t = QtCore.QEvent.registerEventType()
-        QtCore.QEvent.__init__(self, QtCore.QEvent.Type(t))
+        super().__init__(QtCore.QEvent.Type(t))
 
 
 class GLWidget(QGLWidget if has_qopenglwidget else QGLWidget):
@@ -31,9 +31,9 @@ class GLWidget(QGLWidget if has_qopenglwidget else QGLWidget):
 
     def __init__(self, parent, main_window):
         if has_qopenglwidget:
-            super(GLWidget, self).__init__(parent)
+            super().__init__(parent)
         else:
-            super(GLWidget, self).__init__(QtOpenGL.QGLFormat(QtOpenGL.QGL.SampleBuffers), parent)
+            super().__init__(QtOpenGL.QGLFormat(QtOpenGL.QGL.SampleBuffers), parent)
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.update_needed = False
@@ -46,8 +46,9 @@ class GLWidget(QGLWidget if has_qopenglwidget else QGLWidget):
     def vis(self):
         return self.control.visualization
 
-    #  def initializeGL(self):
-        #  self.vis.assign_opengl_context(self)
+    def initializeGL(self):
+        self.vis.assign_opengl_context(self)
+        glEnable(GL_DEPTH_TEST)
 
     def minimumSizeHint(self):
         return QtCore.QSize(400, 400)
@@ -88,6 +89,7 @@ class GLWidget(QGLWidget if has_qopenglwidget else QGLWidget):
         if e.buttons() and QtCore.Qt.LeftButton:
             x = e.x()
             y = self.height() - e.y()
+            glBindFramebuffer(GL_FRAMEBUFFER, 1) # Bind to correct framebuffer for depth check
             z = glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT)
             obj = self.vis.get_object_at_2dposition(x, y)
             if obj is None:
@@ -168,6 +170,7 @@ class GLWidget(QGLWidget if has_qopenglwidget else QGLWidget):
         """
         Refresh scene
         """
+        glClear(GL_DEPTH_BUFFER_BIT)
         self.vis.paint(self.width(), self.height(), has_qopenglwidget, self.devicePixelRatio())
 
     def updateGL(self):

@@ -73,7 +73,10 @@ class GraphicsSettingsPage(QtWidgets.QWidget):
     def any_change(self):
         cfg_comp = getattr(self._config, 'OpenGL')
         for i, (attr_str, label) in enumerate(self.values.items()):
-            setattr(cfg_comp, attr_str, float(self.lineedit_dict[attr_str].text()))
+            try:
+                setattr(cfg_comp, attr_str, float(self.lineedit_dict[attr_str].text()))
+            except ValueError:
+                setattr(cfg_comp, attr_str, 0.0)
 
     def show_color_dialog(self, s, previous_color):
         color = QtWidgets.QColorDialog.getColor(initial=previous_color)

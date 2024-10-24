@@ -6,13 +6,13 @@ from __future__ import absolute_import
 
 import collections
 from PySide6 import QtCore, QtWidgets
-from .table_fit_mixin import TableFitMixin
+from .table_fit import TableFit
 
 
-class CutoffPreviewTable(QtWidgets.QTableWidget, TableFitMixin):
+class CutoffPreviewTable(QtWidgets.QTableWidget):
     def __init__(self, radii):
-        QtWidgets.QTableWidget.__init__(self, 1, len(radii))
-        TableFitMixin.__init__(self, scrollbar_extra_space=(0, 0))
+        super().__init__(1, len(radii))
+        self._table_fit = TableFit(self, scrollbar_extra_space=(0, 0))
         self._radii = collections.OrderedDict(sorted(radii.items()))    # Sorted by element name
         self._init_ui()
 
@@ -21,7 +21,7 @@ class CutoffPreviewTable(QtWidgets.QTableWidget, TableFitMixin):
         self.setVerticalHeaderLabels(('  ', ))
         self.setShowGrid(True)
         self.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
-        for i, cutoff_radius in enumerate(self._radii.itervalues()):
+        for i, cutoff_radius in enumerate(self._radii.values()):
             item = QtWidgets.QTableWidgetItem(str(cutoff_radius))
             item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
             self.setItem(0, i, item)

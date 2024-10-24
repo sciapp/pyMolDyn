@@ -6,7 +6,7 @@ from PySide6 import QtCore, QtWidgets
 from ..object_select_widget import ObjectSelectWidget
 
 counter = itertools.count(0, 1)
-class ObjectTypeId(object):
+class ObjectTypeId:
     ATOM = next(counter)
     DOMAIN = next(counter)
     CENTER_BASED_CAVITY = next(counter)
@@ -58,18 +58,9 @@ class ViewTab(QtWidgets.QWidget):
         self.domain_check = ObjectSelectWidget('show cavities (domains)', self)
         self.surface_cavity_check = ObjectSelectWidget('show cavities (surface method)', self)
         self.center_cavity_check = ObjectSelectWidget('show cavities (center method)', self)
-        # checkboxes for dataset
-        self.all_atom_check = ObjectSelectWidget('show all atoms', self)
-        self.all_domain_check = ObjectSelectWidget('show all cavities (domains)', self)
-        self.all_surface_cavity_check = ObjectSelectWidget('show all cavities (surface method)', self)
-        self.all_center_cavity_check = ObjectSelectWidget('show all cavities (center method)', self)
 
         # synch with dataset
         self.box_check.setChecked(self.vis_settings.show_bounding_box)
-        self.all_atom_check.setChecked(self.vis_settings.show_atoms)
-        self.all_domain_check.setChecked(self.vis_settings.show_domains)
-        self.all_surface_cavity_check.setChecked(self.vis_settings.show_surface_cavities)
-        self.all_center_cavity_check.setChecked(self.vis_settings.show_center_cavities)
 
         self.box_check.setChecked(True)
         self.atom_check.setChecked(True)

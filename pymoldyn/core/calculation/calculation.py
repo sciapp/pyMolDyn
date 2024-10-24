@@ -318,7 +318,6 @@ class Calculation(object):
                     message.log('Found {:d} critical domains in file {}, frame {:d}'.format(
                         len(domain_calculation.critical_domains), os.path.basename(filepath), frame + 1,
                     ))
-            import numpy as np
             if results.domains is None:
                 results.domains = data.Domains(domain_calculation)
             message.progress(40)
@@ -332,14 +331,10 @@ class Calculation(object):
 
             if center and results.center_cavities is None:
                 message.print_message("Calculating center-based cavities")
-                print("----")
-                print(results)
-                print("----")
                 domain_calculation = FakeDomainCalculation(discretization, atom_discretization, results)# equal, k, k
                 cavity_calculation = CavityCalculation(domain_calculation, use_surface_points=False,
                                                        gyration_tensor_parameters=gyration_tensor_parameters)
                 results.center_cavities = data.Cavities(cavity_calculation)
-                print(results.center_cavities)
             resultfile.addresults(results, overwrite=recalculate)
 
         message.progress(100)

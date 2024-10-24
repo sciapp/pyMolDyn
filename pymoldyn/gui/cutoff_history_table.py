@@ -14,7 +14,7 @@ class CutoffHistoryTable(TableWithRemoveableEntries):
 
     def __init__(self, history):
         self._history = list(history)
-        super(CutoffHistoryTable, self).__init__(self.HEADER_LABELS, len(history))
+        super().__init__(self.HEADER_LABELS, len(history))
         self._orig_index_to_row_index = range(len(self._history))
         self._indices_to_remove = set()
         self._init_ui()

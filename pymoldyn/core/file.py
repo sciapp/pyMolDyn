@@ -56,7 +56,7 @@ class FileError(Exception):
     """
 
     def __init__(self, message, cause=None):
-        super(FileError, self).__init__(message, cause)
+        super().__init__(message, cause)
         self.message = message
         self.cause = cause
 
@@ -143,7 +143,7 @@ class XYZFile(InputFile):
     Implementation on :class:`InputFile` for Open Babel 'xyz' files.
     """
     def __init__(self, path):
-        super(XYZFile, self).__init__(path)
+        super().__init__(path)
         f = open(self.path, "r")
         f.close()
 
@@ -215,7 +215,7 @@ class BabelFile(InputFile):
     Implementation on :class:`InputFile` for Open Babel 'xyz' files.
     """
     def __init__(self, path):
-        super(BabelFile, self).__init__(path)
+        super().__init__(path)
         # Check if the file exists
         f = open(self.path, "r")
         f.close()
@@ -288,7 +288,7 @@ class ResultFile(InputFile):
             `sourcefilepath` :
                 path to the file where the input data originally came from
         """
-        super(ResultFile, self).__init__(path)
+        super().__init__(path)
         self._info = data.ResultInfo()
         self._info.sourcefilepath = sourcefilepath
 
@@ -357,7 +357,7 @@ class HDF5File(ResultFile):
     Implementation on :class:`ResultFile` for 'hdf5' files.
     """
     def __init__(self, path, sourcefilepath=None):
-        super(HDF5File, self).__init__(path, sourcefilepath)
+        super().__init__(path, sourcefilepath)
 
     @classmethod
     def fromInputFile(cls, filepath, sourcefilepath):

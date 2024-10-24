@@ -25,7 +25,7 @@ if has_qtwebengine:
             gui_link_clicked = QtCore.Signal(str)
 
             def __init__(self, html, css=None, *args, **kwargs):
-                super(WebWidget.WebPage, self).__init__(*args, **kwargs)
+                super().__init__(*args, **kwargs)
                 self._css = css
                 self.setHtml(html)
 
@@ -44,7 +44,7 @@ if has_qtwebengine:
                     return True
 
         def __init__(self, css_filepath=None, *args, **kwargs):
-            super(WebWidget, self).__init__(*args, **kwargs)
+            super().__init__(*args, **kwargs)
             if css_filepath is None:
                 self._css = None
             else:
@@ -70,7 +70,7 @@ else:
             gui_link_clicked = QtCore.Signal(str)
 
             def __init__(self, html, css, *args, **kwargs):
-                super(WebWidget.WebPage, self).__init__(*args, **kwargs)
+                super().__init__(*args, **kwargs)
                 self._css = css
                 self.setLinkDelegationPolicy(QWebPage.DelegateAllLinks)
                 self.linkClicked.connect(self._link_clicked)
@@ -89,7 +89,7 @@ else:
                     self.gui_link_clicked.emit(value[4:])
 
         def __init__(self, css_filepath=None, *args, **kwargs):
-            super(WebWidget, self).__init__(*args, **kwargs)
+            super().__init__(*args, **kwargs)
             if css_filepath is None:
                 self._css = None
             else:

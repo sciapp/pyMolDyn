@@ -218,6 +218,9 @@ class Visualization(object):
         self.lookat_mat = create_look_at_matrix(pt + t, t, upt)
         gr3.cameralookat(pt[0] + t[0], pt[1] + t[1], pt[2] + t[2], t[0], t[1], t[2], upt[0], upt[1], upt[2])
 
+    def assign_opengl_context(self, context):
+        self.assigned_opengl_context = context
+
     def paint(self, width, height, usecurrentframebuffer=None, device_pixel_ratio=1):
         """
         Refresh the OpenGL scene.

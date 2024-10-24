@@ -68,6 +68,8 @@ from math import pi as PI
 import sys
 import numpy as np
 
+from ...util import message
+from ...util.logger import Logger
 from ...computation.split_and_merge.pipeline import start_split_and_merge_pipeline
 from ...computation.split_and_merge.algorithm import ObjectType
 from ..calculation.gyrationtensor import calculate_gyration_tensor_parameters
@@ -78,6 +80,8 @@ from .extension import atomstogrid, mark_cavities, cavity_triangles, cavity_inte
 dimension = 3
 dimensions = range(dimension)
 
+logger = Logger("core.calculation.algorithm")
+logger.setstream("default", sys.stdout, Logger.WARNING)
 
 class DomainCalculation:
     """
@@ -276,18 +280,20 @@ class CavityCalculation:
         print_message("Multicavity volumes:", self.multicavity_volumes)
 
         if gyration_tensor_parameters:
-            def key_func(cavity_index):
-                cavity_area = non_translated_areas[cavity_index] #cavity index is out of bounds but also for python2
-                a_single_cavity_index = -self.grid3[cavity_area[0]] - 1
-                max_neighbor_index = max(cavity_to_neighbors[a_single_cavity_index])
-                return max_neighbor_index
-            sorted_area_indices = sorted(range(len(self.multicavities)), key=key_func)
-            sorted_translated_areas = [translated_areas[i] for i in sorted_area_indices]
-            sorted_cyclic_area_indices = [i for i, index in enumerate(sorted_area_indices)
-                                        if index in cyclic_area_indices]
-            self.cyclic_area_indices = sorted_cyclic_area_indices
+            if len(self.multicavities) == len(translated_areas): #TODO check weather split and merge and multicavity intersection give the same result for multicavities
+            #`self.multicavities` entries are sorted by the largest contained neighbor index. Thus sort the indices to
+            # access `non_translated_areas` and `translated_areas` to match the order of `self.multicavities`.
+                def key_func(cavity_index):
+                    cavity_area = non_translated_areas[cavity_index]
+                    a_single_cavity_index = -self.grid3[cavity_area[0]] - 1
+                    max_neighbor_index = max(cavity_to_neighbors[a_single_cavity_index])
+                    return max_neighbor_index
+                sorted_area_indices = sorted(range(len(self.multicavities)), key=key_func)
+                sorted_translated_areas = [translated_areas[i] for i in sorted_area_indices]
+                sorted_cyclic_area_indices = [i for i, index in enumerate(sorted_area_indices)
+                                            if index in cyclic_area_indices]
+                self.cyclic_area_indices = sorted_cyclic_area_indices
 
-            if sorted_translated_areas:
                 gyration_tensor_parameters = tuple(calculate_gyration_tensor_parameters(area)
                                                 for area in sorted_translated_areas)
                 (self.mass_centers, self.squared_gyration_radii, self.asphericities,
@@ -297,6 +303,8 @@ class CavityCalculation:
                 self.squared_gyration_radii = [discretization.discrete_to_continuous(value, unit_exponent=2)
                                             for value in self.squared_gyration_radii]
             else:
+                logger.warn("Gyration tensors could not be calculated try increasing the resolution.")
+                message.log("Gyration tensors could not be calculated try increasing the resolution.")
                 (self.mass_centers, self.squared_gyration_radii, self.asphericities,
                 self.acylindricities, self.anisotropies) = 5*([], )
 

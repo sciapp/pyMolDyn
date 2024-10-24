@@ -10,7 +10,7 @@ class LabeledComboBox(QtWidgets.QComboBox):
 
     class Delegate(QtWidgets.QItemDelegate):
         def __init__(self, parent):
-            super(LabeledComboBox.Delegate, self).__init__(parent)
+            super().__init__(parent)
 
         def paint(self, painter, option, index):
             role = index.data(QtCore.Qt.AccessibleDescriptionRole)
@@ -23,7 +23,7 @@ class LabeledComboBox(QtWidgets.QComboBox):
             super(LabeledComboBox.Delegate, self).paint(painter, option, index)
 
     def __init__(self, label, parent=None):
-        super(LabeledComboBox, self).__init__(parent)
+        super().__init__(parent)
         self._label = label
         LabeledComboBox._init_ui(self)  # Emulate static binding
 

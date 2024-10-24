@@ -6,16 +6,16 @@ from __future__ import absolute_import
 
 import collections
 from PySide6 import QtCore, QtGui, QtWidgets
-from .table_fit_mixin import TableFitMixin
+from .table_fit import TableFit
 
 
-class TableWithRemoveableEntries(QtWidgets.QTableWidget, TableFitMixin):
+class TableWithRemoveableEntries(QtWidgets.QTableWidget):
     class EntryActionWidget(QtWidgets.QWidget):
 
         remove = QtCore.Signal()
 
         def __init__(self, parent=None):
-            super(TableWithRemoveableEntries.EntryActionWidget, self).__init__(parent)
+            super().__init__(parent)
             self._init_ui()
 
         def _init_ui(self):
@@ -29,8 +29,8 @@ class TableWithRemoveableEntries(QtWidgets.QTableWidget, TableFitMixin):
             self.setLayout(self.la_main)
 
     def __init__(self, header_labels, entry_count):
-        QtWidgets.QTableWidget.__init__(self, entry_count, len(header_labels) + 1)
-        TableFitMixin.__init__(self, size_hint_only=True, scrollbar_extra_space=(-1, 2))
+        super().__init__(entry_count, len(header_labels) + 1)
+        self._table_fit = TableFit(self, size_hint_only=True, scrollbar_extra_space=(-1, 2))
         self._header_labels = header_labels
         self._row_index_to_entry_index = range(entry_count)
         self._entry_index_to_row_index = range(entry_count)

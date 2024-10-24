@@ -57,7 +57,6 @@ def main(argv):
     for frame_index, frame_file_name in enumerate(frame_file_names):
         image = np.array(Image.open(frame_file_name))
         video_output.write(image)
-        print(frame_index)
         sys.stdout.flush()
     video_output.end()
 

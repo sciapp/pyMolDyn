@@ -9,7 +9,7 @@ class AboutDialog(QtWidgets.QDialog):
 
     class MailLabel(QtWidgets.QLabel):
         def __init__(self, mail, parent):
-            super(AboutDialog.MailLabel, self).__init__('<a href="mailto:%s">%s</a>' % (mail, mail), parent)
+            super().__init__('<a href="mailto:%s">%s</a>' % (mail, mail), parent)
             self.mail = mail
 
         def mousePressEvent(self, event):
@@ -17,7 +17,7 @@ class AboutDialog(QtWidgets.QDialog):
             QtGui.QDesktopServices.openUrl(url)
 
     def __init__(self, parent, description, authors, *args, **kwargs):
-        super(AboutDialog, self).__init__(parent, *args, **kwargs)
+        super().__init__(parent, *args, **kwargs)
 
         self.title = self.parent().window().windowTitle()
         self.icon = self.parent().window().windowIcon()

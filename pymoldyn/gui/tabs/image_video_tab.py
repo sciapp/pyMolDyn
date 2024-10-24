@@ -17,7 +17,7 @@ class ImageVideoTabDock(QtWidgets.QDockWidget):
     """
 
     def __init__(self, parent):
-        QtWidgets.QDockWidget.__init__(self, "image/video", parent)
+        super().__init__("image/video", parent)#self?
         self.setWidget(QtWidgets.QWidget())
 
         self.layout             = QtWidgets.QHBoxLayout()
@@ -36,7 +36,7 @@ class ImageVideoTab(QtWidgets.QWidget):
     """
 
     def __init__(self, parent, main_window):
-        QtWidgets.QWidget.__init__(self, parent)
+        super().__init__(parent)
         self.main_window = main_window
         self.init_gui()
 
@@ -116,7 +116,7 @@ class ImageVideoTab(QtWidgets.QWidget):
 
 class MassScreenshotAndVideoDialog(QtWidgets.QDialog):
     def __init__(self, parent, frames_to_write, dir_name=None, should_save_video=False, video_file_name=None):
-        super(MassScreenshotAndVideoDialog, self).__init__(parent)
+        super().__init__(parent)
         self.control = parent.main_window.control
         self.setModal(True)
         self.frames_to_write = frames_to_write
@@ -173,7 +173,7 @@ class MassScreenshotAndVideoDialog(QtWidgets.QDialog):
 
     def save_video(self):
         self.process = QProcess()
-        self.process.start('gr', ['util/video_output.py', self.video_file_name] + self.images_written)
+        self.process.start('gr', ['../util/video_output.py', self.video_file_name] + self.images_written)
         self.process.readyReadStandardOutput.connect(self.process_output)
         self.process.readyReadStandardError.connect(self.process_error)
         self.process.finished.connect(lambda *args: self.finished_video())

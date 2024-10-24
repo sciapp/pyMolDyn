@@ -505,7 +505,7 @@ class HTMLWindow(QtWidgets.QWidget):
 
     @staticmethod
     def _create_attr_getter(obj, index):
-        class AttrGetter(object):
+        class AttrGetter:
             def __init__(self, obj, index):
                 self._obj = obj
                 self._index = index

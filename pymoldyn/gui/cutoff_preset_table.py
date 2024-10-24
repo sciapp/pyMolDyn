@@ -14,7 +14,7 @@ class CutoffPresetTable(TableWithRemoveableEntries):
 
     def __init__(self, presets):
         self._presets = list(presets)
-        super(CutoffPresetTable, self).__init__(self.HEADER_LABELS, len(presets))
+        super().__init__(self.HEADER_LABELS, len(presets))
         self._orig_index_to_row_index = range(len(self._presets))
         self._indices_to_remove = set()
         self._init_ui()

@@ -20,7 +20,7 @@ logger.setstream("default", sys.stdout, Logger.DEBUG)
 
 class GrPlotWidget(GRWidget):
     def __init__(self, *args, **kwargs):
-        super(GrPlotWidget, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.xvalues = None
         self.yvalues = None
@@ -78,7 +78,7 @@ class GrPlotWidget(GRWidget):
 class PDFWidget(QtWidgets.QWidget):
 
     def __init__(self, parent):
-        QtWidgets.QWidget.__init__(self, parent)
+        super().__init__(parent)
 
         self.control = parent.control
         self.results = None
@@ -254,7 +254,6 @@ class PDFWidget(QtWidgets.QWidget):
                 e = np.unique(results.atoms.elements).tolist()
                 for i in range(len(e)):
                     e[i] = e[i].decode("utf-8")
-                print(e)
                 if results.domains is not None \
                         and len(results.domains.centers) > 0 \
                         and "cav" not in e:

@@ -85,14 +85,9 @@ static PyObject *calculate_domain_centers(PyObject *self, PyObject *args) {
 
     // Iterate over domains and calculate centers
     domains_it = PyObject_GetIter(domains);
-    PyObject *domain_str = PyObject_Str(domains);
-    const char *domain_cstr = PyUnicode_AsUTF8(domain_str);  // Get string representation of domains
     while((domain_nodes = PyIter_Next(domains_it))) {
         max_distance = -1;
         domain_nodes_it = PyObject_GetIter(domain_nodes);
-
-        PyObject *d_node_str = PyObject_Str(domain_nodes);  // Get string representation of node
-        const char *d_node_cstr = PyUnicode_AsUTF8(d_node_str);  // Convert to C string
         while((node = PyIter_Next(domain_nodes_it))) {
             PyObject *pos_tuple, *dim_tuple;
             pos_tuple = PyTuple_GetItem(node, 0);

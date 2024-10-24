@@ -13,7 +13,7 @@ class CutoffTableWidget(QtWidgets.QTableWidget):
         focus_in = QtCore.Signal()
 
         def __init__(self, *args, **kwargs):
-            super(CutoffTableWidget.CutoffLineEdit, self).__init__(*args, **kwargs)
+            super().__init__(*args, **kwargs)
 
         def focusInEvent(self, event):
             super(CutoffTableWidget.CutoffLineEdit, self).focusInEvent(event)
@@ -22,7 +22,7 @@ class CutoffTableWidget(QtWidgets.QTableWidget):
     text_edited = QtCore.Signal()
 
     def __init__(self, radii, parent=None):
-        super(CutoffTableWidget, self).__init__(len(radii), 2, parent)
+        super().__init__(len(radii), 2, parent)
         self._radii = radii
         self._init_ui()
 

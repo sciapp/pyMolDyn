@@ -20,7 +20,7 @@ logger.setstream("default", sys.stdout, Logger.DEBUG)
 
 class GrHistogramWidget(GRWidget):
     def __init__(self, *args, **kwargs):
-        super(GrHistogramWidget, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.xvalues = None
         self.yvalues = None
@@ -83,7 +83,7 @@ class GrHistogramWidget(GRWidget):
 class HistogramWidget(QtWidgets.QWidget):
 
     def __init__(self, parent):
-        QtWidgets.QWidget.__init__(self, parent)
+        super().__init__(parent)
 
         self.control = parent.control
         self.results = None

@@ -12,7 +12,7 @@ from ..cutoff_history_table import CutoffHistoryTable
 
 class CutoffHistoryDialog(QtWidgets.QDialog):
     def __init__(self, parent, elements, preferred_filenames_with_frames=None):
-        super(CutoffHistoryDialog, self).__init__(parent)
+        super().__init__(parent)
         history = cutoff_history.filtered_history(elements,
                                                   preferred_filenames_with_frames=preferred_filenames_with_frames)
         self._init_ui(history)

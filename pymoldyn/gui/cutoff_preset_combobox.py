@@ -12,7 +12,7 @@ class CutoffPresetComboBox(LabeledComboBox):
     preset_selected = QtCore.Signal(object)
 
     def __init__(self, parent=None):
-        super(CutoffPresetComboBox, self).__init__(label='Preset', parent=parent)
+        super().__init__(label='Preset', parent=parent)
         self._presets = cutoff_presets.presets
         CutoffPresetComboBox._init_ui(self)  # Emulate static binding
 

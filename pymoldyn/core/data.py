@@ -284,7 +284,7 @@ class ResultInfo(FileInfo):
         - ``ResultInfo(hdf5group)`` :
             read the data from this hdf5 group
         """
-        super(ResultInfo, self).__init__()
+        super().__init__()
         self.sourcefilepath = None
         self.calculatedframes = dict()
         if len(args) > 0 and isinstance(args[0], h5py.Group):
@@ -705,7 +705,7 @@ class Domains(CavitiesBase):
         from .calculation import algorithm
 
         if isinstance(args[0], h5py.Group):
-            super(Domains, self).__init__(*args)
+            super().__init__(*args)
             h5group = args[0]
             centers = h5group["centers"]
         elif isinstance(args[0], algorithm.DomainCalculation):
@@ -723,11 +723,11 @@ class Domains(CavitiesBase):
             anisotropies = calculation.anisotropies
             characteristic_radii = calculation.characteristic_radii
             cyclic_area_indices = calculation.cyclic_area_indices
-            super(Domains, self).__init__(timestamp, volumes, surface_areas, triangles,
+            super().__init__(timestamp, volumes, surface_areas, triangles,
                                           mass_centers, squared_gyration_radii, asphericities, acylindricities,
                                           anisotropies, characteristic_radii, cyclic_area_indices)
         else:
-            super(Domains, self).__init__(*args)
+            super().__init__(*args)
             centers = args[4]
 
         self.centers = np.asarray(centers, dtype=np.int32)
@@ -803,7 +803,7 @@ class Cavities(CavitiesBase):
         from .calculation import algorithm
 
         if isinstance(args[0], h5py.Group):
-            super(Cavities, self).__init__(*args)
+            super().__init__(*args)
             h5group = args[0]
             multicavities = [None] * self.number
             for i in range(self.number):
@@ -822,11 +822,11 @@ class Cavities(CavitiesBase):
             anisotropies = calculation.anisotropies
             characteristic_radii = calculation.characteristic_radii
             cyclic_area_indices = calculation.cyclic_area_indices
-            super(Cavities, self).__init__(timestamp, volumes, surface_areas, triangles,
+            super().__init__(timestamp, volumes, surface_areas, triangles,
                                            mass_centers, squared_gyration_radii, asphericities, acylindricities,
                                            anisotropies, characteristic_radii, cyclic_area_indices)
         else:
-            super(Cavities, self).__init__(*args)
+            super().__init__(*args)
             multicavities = args[4]
 
         self.multicavities = [None] * self.number

@@ -28,7 +28,7 @@ class CalculationSettingsDialog(QtWidgets.QDialog):
     RES_INTERVAL = 32
 
     def __init__(self, parent, file_frame_dict):
-        QtWidgets.QDialog.__init__(self, parent)
+        super().__init__(parent)
 
         self.control = parent.control
         self.resolution = config.Computation.std_resolution
@@ -317,7 +317,7 @@ class RadiiWidget(QtWidgets.QWidget):
         CUSTOM = 1
 
     def __init__(self, radii, file_frame_dict, parent=None):
-        super(RadiiWidget, self).__init__(parent)
+        super().__init__(parent)
         self._radii = radii
         self._file_frame_dict = file_frame_dict
         self._preferred_filenames_with_frames = dict((os.path.basename(filepath), frames)

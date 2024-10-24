@@ -185,7 +185,7 @@ class FileTab(QtWidgets.QWidget):
         try:
             self.file_list.add_file(path)
         except ValueError as e:
-            QtWidgets.QMessageBox.information(self, 'Information', e.message, QtWidgets.QMessageBox.Ok)
+            QtWidgets.QMessageBox.information(self, 'Information', str(e), QtWidgets.QMessageBox.Ok)
             return
 
     def open_file_dialog(self):

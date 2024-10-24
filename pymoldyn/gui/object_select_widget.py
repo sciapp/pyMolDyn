@@ -9,7 +9,7 @@ class ObjectSelectWidget(QtWidgets.QWidget):
     selection_indices_changed = QtCore.Signal(object)
 
     def __init__(self, text, parent, add_index_selector=True, *args, **kwargs):
-        super(ObjectSelectWidget, self).__init__(parent, *args, **kwargs)
+        super().__init__(parent, *args, **kwargs)
 
         self._has_index_selector = add_index_selector
 
@@ -88,14 +88,14 @@ class IndexSelectLineEdit(QtWidgets.QLineEdit):
 
     class Validator(QtGui.QValidator):
         def __init__(self, *args, **kwargs):
-            super(IndexSelectLineEdit.Validator, self).__init__(*args, **kwargs)
+            super().__init__(*args, **kwargs)
 
         def validate(self, input, pos):
             return (QtGui.QValidator.Acceptable if re.match('^[0-9,\s-]*$', input) else QtGui.QValidator.Invalid,
                     input, pos)
 
     def __init__(self, *args, **kwargs):
-        super(IndexSelectLineEdit, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._indices = None
         self._next_indices = None
         self.setValidator(IndexSelectLineEdit.Validator())

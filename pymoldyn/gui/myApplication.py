@@ -63,9 +63,7 @@ ignore_list = [QtCore.QEvent.Type.HideToParent,
                QtCore.QEvent.Type.ToolTip
                ]
 test = QtCore.QEvent.registerEventType()
-print test
 t = QtCore.QEvent.Type(test)
-print 'T = ', t
 
 
 class UpdateGLEvent(QtCore.QEvent):
