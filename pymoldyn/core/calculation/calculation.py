@@ -14,7 +14,7 @@ from .discretization import DiscretizationCache, AtomDiscretization
 from ...util import message
 from ...config.configuration import config
 from ...util.logger import Logger
-import hashlib
+from hashlib import sha256
 import sys
 from .. import bonds
 
@@ -494,9 +494,7 @@ class CalculationCache(object):
         return os.path.abspath(os.path.join(file.get_abspath(self.directory), filename))
 
     def cachefile(self, filepath):
-        with open(filepath, "rb") as f:
-            digest = hashlib.file_digest(f, "sha256")
-        return digest.hexdigest() + ".hdf5"
+        return sha256(filepath.encode("utf-8")).hexdigest() + ".hdf5"
 
     def buildindex(self):
         self.index = dict()
