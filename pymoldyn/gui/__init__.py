@@ -1,5 +1,6 @@
 import faulthandler
 import importlib
+import io
 import os
 import signal
 import sys
@@ -88,7 +89,12 @@ def start_gui():
 
 
 def main():
-    faulthandler.enable(file=sys.stderr, all_threads=True)
+    try:
+        # NSLog on macOS raises an `io.UnsupportedOperation` when `fileno` is called
+        # `faulthandler` raises RuntimeError if `sys.stderr` is `None` (`noconsole` mode on Windows)
+        faulthandler.enable(file=sys.stderr, all_threads=True)
+    except (io.UnsupportedOperation, RuntimeError):
+        pass
     if len(sys.argv) > 1 and sys.argv[1] == "--batch":
         start_batch()
     else:
