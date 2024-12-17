@@ -201,6 +201,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 ("Fabian Beule", "f.beule@fz-juelich.de"),
                 ("David Knodt", "d.knodt@fz-juelich.de"),
                 ("Ingo Meyer", "i.meyer@fz-juelich.de"),
+                ("Torben Moll", "t.moll@fz-juelich.de"),
                 ("Florian Macherey", "f.macherey@fz-juelich.de"),
             ),
         ).show()
