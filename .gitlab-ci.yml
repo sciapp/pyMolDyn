@@ -1,157 +1,662 @@
 stages:
 - build
-- install
+- pre-package
+- package
+- deploy
 
-packages:
+
+variables:
+  BRIEFCASE_VERSION: "0.3.20"
+
+
+build:sdist:
   stage: build
-  image: centos:7
+  # Usually, a minimal image like `alpine` would be sufficient to build a sdist
+  # but gr does not build on alpine currently and is a build dependency for pymoldyn.
+  image: debian:12
+  before_script:
+  - apt-get update
+  - apt-get install -y
+      pipx
   script:
-  - yum install -y epel-release
-  - yum install -y ruby-devel gcc gcc-c++ python-devel rpm-build qt5-qtdeclarative-devel qt5-qtwebkit-devel Cython atlas-devel openblas-devel make
-  - gem install fpm
-  # Add IFF repository
-  - curl -O http://iffwww.iff.kfa-juelich.de/repos/iffrepo.gpg.key
-  - echo -e '[iffrepo]\nname=iffrepo\nbaseurl=http://iffwww.iff.kfa-juelich.de/repos/centos/7/$basearch\nenabled=1' > iff.repo
-  - rpm --import iffrepo.gpg.key
-  - cp iff.repo /etc/yum.repos.d/
-  - yum install -y gr
-  # Build Packages 
-  - make linuxpackages
-  # Collect artifacts
-  - mkdir -p artifacts/linux/centos
-  - cp packaging/linux/centos/pymoldyn-*-1.x86_64.rpm artifacts/linux/centos/
-  - mkdir -p artifacts/linux/fedora
-  - cp packaging/linux/fedora/pymoldyn-*-1.x86_64.rpm artifacts/linux/fedora/
-  - mkdir -p artifacts/linux/debian
-  - cp packaging/linux/debian/pymoldyn_*_amd64.deb artifacts/linux/debian/
-  - mkdir -p artifacts/linux/suse
-  - cp packaging/linux/suse/pymoldyn-*-1.x86_64.rpm artifacts/linux/suse/
+  - pipx run build --sdist
   artifacts:
-    expire_in: 1 week
     paths:
-    - artifacts/
+    - dist/*.tar.gz
 
-debian9-install:
-  stage: install
-  image: debian:9
-  script:
-  - apt-get -q update
-  - apt-get -q install -y wget gnupg2 gdebi-core
-  # Add IFF repository
-  - wget http://iffwww.iff.kfa-juelich.de/repos/iffrepo.gpg.key 
-  - echo 'deb http://iffwww.iff.kfa-juelich.de/repos/debian jessie main' > iffrepo.list
-  - apt-key add iffrepo.gpg.key
-  - cp iffrepo.list /etc/apt/sources.list.d/iffrepo.list
-  - rm -rf /var/lib/apt/lists
-  - apt-get -q update
-  - apt-get -q install -y libpython2.7 libxt6
-  # Install pymoldyn DEB
-  - gdebi -n artifacts/linux/debian/pymoldyn*.deb
-  - DISPLAY=:0.0 /usr/bin/pymoldyn --batch
-    
-ubuntu16.04-install:
-  stage: install
-  image: ubuntu:16.04
-  script:
-  - apt-get -q update
-  - apt-get -q install -y wget gnupg2 gdebi-core
-  # Add IFF repository
-  - wget http://iffwww.iff.kfa-juelich.de/repos/iffrepo.gpg.key 
-  - echo 'deb http://iffwww.iff.kfa-juelich.de/repos/debian jessie main' > iffrepo.list
-  - apt-key add iffrepo.gpg.key
-  - cp iffrepo.list /etc/apt/sources.list.d/iffrepo.list
-  - rm -rf /var/lib/apt/lists
-  - apt-get -q update
-  - apt-get -q install -y libpython2.7 libxt6
-  # Install pymoldyn DEB
-  - gdebi -n artifacts/linux/debian/pymoldyn*.deb
-  - DISPLAY=:0.0 /usr/bin/pymoldyn --batch
 
-ubuntu17.04-install:
-  stage: install
-  image: ubuntu:17.04
+build:wheel:linux:
+  stage: build
+  image: docker:latest
+  tags:
+  - privileged-executor
+  variables:
+    CIBW_ARCHS: "auto64"
+    CIBW_BEFORE_BUILD: "python -m pip install wheel"
+    CIBW_BUILD: "cp*-manylinux*"
+    # Do not use `auditwheel` since libGR3.so would be detected as missing but will be loaded by the `gr` package.
+    # Use the `wheel` command to retag the wheel as `manylinux2014_x86_64` (current default build image in CIBW)
+    CIBW_REPAIR_WHEEL_COMMAND: >
+      manylinux_wheel_filename=$(python -m wheel tags --platform-tag manylinux2014_x86_64 {wheel}) &&
+      mv $(dirname {wheel})/$${manylinux_wheel_filename} {dest_dir}/
+  before_script:
+  - apk --no-cache add pipx
   script:
-  - apt-get -q update
-  - apt-get -q install -y wget gnupg2 gdebi-core
-  # Add IFF repository
-  - wget http://iffwww.iff.kfa-juelich.de/repos/iffrepo.gpg.key 
-  - echo 'deb http://iffwww.iff.kfa-juelich.de/repos/debian jessie main' > iffrepo.list
-  - apt-key add iffrepo.gpg.key
-  - cp iffrepo.list /etc/apt/sources.list.d/iffrepo.list
-  - rm -rf /var/lib/apt/lists
-  - apt-get -q update
-  - apt-get -q install -y libpython2.7 libxt6
-  # Install pymoldyn DEB
-  - gdebi -n artifacts/linux/debian/pymoldyn*.deb
-  - DISPLAY=:0.0 /usr/bin/pymoldyn --batch
-    
-centos7-install:
-  stage: install
-  image: centos:7
+  - pipx run 'cibuildwheel <3' --output-dir dist
+  artifacts:
+    paths:
+    - dist/*.whl
+
+
+build:wheel:macos:
+  stage: build
+  image: macos:sonoma-xcode
+  tags:
+  - utm
+  variables:
+    CIBW_ARCHS: "universal2 x86_64 arm64"
+    CIBW_BUILD: "cp*"
+    CIBW_REPAIR_WHEEL_COMMAND: ""  # libGR3.so would be detected as missing but will be loaded by the `gr` package
+  before_script:
+  - /usr/bin/python3 -m pip install 'cibuildwheel <3'
   script:
-  # Add IFF repository
-  - curl -O http://iffwww.iff.kfa-juelich.de/repos/iffrepo.gpg.key
-  - echo -e '[iffrepo]\nname=iffrepo\nbaseurl=http://iffwww.iff.kfa-juelich.de/repos/centos/7/$basearch\nenabled=1' > iff.repo
-  - rpm --import iffrepo.gpg.key
-  - cp iff.repo /etc/yum.repos.d/
-  - yum install -y epel-release
-  # Install pymoldyn RPM
-  - yum install -y libXt
-  - yum localinstall -y artifacts/linux/centos/pymoldyn*.rpm
-  - DISPLAY=:0.0 /usr/bin/pymoldyn --batch
-    
-fedora25-install:
-  stage: install
-  image: fedora:25
+  - /usr/bin/python3 -m cibuildwheel --output-dir dist
+  artifacts:
+    paths:
+    - dist/*.whl
+
+
+build:wheel:windows:
+  stage: build
+  image: windows:10-python3
+  tags:
+  - libvirt
+  variables:
+    CIBW_ARCHS: "auto64"
+    CIBW_BUILD: "cp*"
+    CIBW_REPAIR_WHEEL_COMMAND: ""  # libGR3.dll could be detected as missing but will be loaded by the `gr` package
+  before_script:
+  - vcvars_cmd python -m pip install 'cibuildwheel <3'
   script:
-  # Add IFF repository
-  - curl -O http://iffwww.iff.kfa-juelich.de/repos/iffrepo.gpg.key
-  - echo -e '[iffrepo]\nname=iffrepo\nbaseurl=http://iffwww.iff.kfa-juelich.de/repos/fedora/25/$basearch\nenabled=1' > iff.repo
-  - rpm --import iffrepo.gpg.key
-  - cp iff.repo /etc/yum.repos.d/
-  # Install pymoldyn RPM
-  - dnf install -y libXt
-  - dnf install -y artifacts/linux/fedora/pymoldyn*.rpm
-  - DISPLAY=:0.0 /usr/bin/pymoldyn --batch
-    
-fedora24-install:
-  stage: install
-  image: fedora:24
+  - vcvars_cmd python -m cibuildwheel --output-dir dist
+  artifacts:
+    paths:
+    - dist/*.whl
+
+
+pre-package:
+  stage: pre-package
+  image: debian:12
+  needs: []
+  before_script:
+  - apt-get update
+  - apt-get install -y
+      gawk
+      git
+      pipx
+      vim
+  - export PATH="${HOME}/.local/bin:${PATH}"
+  # Upgrade `pipx` since it is quite old in Debian bookworm and does not support to run scripts with `pipx run`
+  - pipx install pipx
+  - pipx install "briefcase==${BRIEFCASE_VERSION}"
   script:
-  # Add IFF repository
-  - curl -O http://iffwww.iff.kfa-juelich.de/repos/iffrepo.gpg.key
-  - echo -e '[iffrepo]\nname=iffrepo\nbaseurl=http://iffwww.iff.kfa-juelich.de/repos/fedora/24/$basearch\nenabled=1' > iff.repo
-  - rpm --import iffrepo.gpg.key
-  - cp iff.repo /etc/yum.repos.d/
-  # Install pymoldyn RPM
-  - dnf install -y libXt
-  - dnf install -y artifacts/linux/fedora/pymoldyn*.rpm
-  - DISPLAY=:0.0 /usr/bin/pymoldyn --batch
-    
-opensuse42.1-install:
-  stage: install
-  image: opensuse:42.1
+  - project_name="$(
+      gawk
+        -F'[="[:space:]]+'
+        '$1 == "name" {
+          print $2
+        }'
+        pyproject.toml
+    )"
+  - project_name_lowercase="$(echo "$project_name" | tr '[:upper:]' '[:lower:]')"
+  - project_version="$(
+      python3 -c "$(
+        gawk
+          -F'[={}"[:space:]]+'
+          '$1 == "version" && $2 == "attr" {
+            match($3, "(.+)\\.(.+)", c);
+            printf(
+              "import runpy;  g = runpy.run_path(\"%s\".replace(\".\", \"/\") + \".py\"); print(g[\"%s\"])\n",
+              c[1],
+              c[2]
+            )
+          }'
+          pyproject.toml
+      )"
+    )"
+  - |
+    cat <<'EOF' >convert_icon.py
+    #!/usr/bin/env -S pipx run
+
+    # /// script
+    # requires-python = ">=3.9"
+    # dependencies = [
+    #   "pillow",
+    # ]
+    # ///
+
+
+    import os
+    import sys
+
+    from PIL import Image
+
+
+    def create_iconset(icon_path):
+        icon_out_path_template = os.path.splitext(icon_path)[0] + "-{size}.png"
+        original_icon = Image.open(icon_path)
+        for filepath, size in (
+            (icon_out_path_template.format(size=size), size) for size in (16, 32, 64, 128, 256, 512)
+        ):
+            resized_icon = original_icon.resize((size, size), Image.LANCZOS)
+            resized_icon.save(filepath)
+
+
+    def main():
+        create_iconset(sys.argv[1])
+
+
+    if __name__ == "__main__":
+        main()
+    EOF
+  - chmod +x convert_icon.py
+  - touch CHANGELOG
+  - ./convert_icon.py "${project_name_lowercase}/icon.png"
+  - briefcase convert --no-input
+  - ex
+      -s
+      "+%s/^project_name = *\".*/project_name = \"${project_name}\"/"
+      "+%s/^formal_name = *\".*/formal_name = \"${project_name}\"/"
+      '+%s/^bundle =.*/bundle = "de.fzj"/'
+      "+%s/^version = *\".*/version = \"${project_version}\"/"
+      +x
+      pyproject.toml
+  - |
+    ex -s pyproject.toml <<'EOF'
+    /^long_description
+    d2
+    -1
+    y
+    pu
+    s/description/long_description/
+    x
+    EOF
+  - |
+    cat <<EOF >>pyproject.toml
+    icon = "${project_name_lowercase}/icon"
+
+    [tool.briefcase.app.${project_name_lowercase}.linux]
+    requires = [
+    ]
+
+    [tool.briefcase.app.${project_name_lowercase}.linux.system.debian]
+    system_requires = [
+    ]
+
+    system_runtime_requires = [
+        # Derived from https://doc.qt.io/qt-6/linux-requirements.html
+        "libdbus-1-3",
+        "libegl1",
+        "libfontconfig1",
+        "libgl1",
+        "libglib2.0-0",
+        "libice6",
+        "libsm6",
+        "libx11-xcb1",
+        "libxcb-cursor0",
+        "libxcb-icccm4",
+        "libxcb-image0",
+        "libxcb-keysyms1",
+        "libxcb-randr0",
+        "libxcb-shape0",
+        "libxcb-sync1",
+        "libxcb-xfixes0",
+        "libxext6",
+        "libxkbcommon-x11-0",
+        "libxrender1",
+    ]
+
+    [tool.briefcase.app.${project_name_lowercase}.linux.system.rhel]
+    system_requires = [
+    ]
+
+    system_runtime_requires = [
+        # Derived from the Debian \`system_requires\` list
+        "dbus-libs",
+        "mesa-libEGL",
+        "fontconfig",
+        "mesa-libGL",
+        "glib2",
+        "libICE",
+        "libSM",
+        "libxcb",
+        "xcb-util-cursor",
+        "xcb-util-wm",
+        "xcb-util-image",
+        "xcb-util-keysyms",
+        "libXext",
+        "libxkbcommon-x11",
+        "libXrender",
+    ]
+
+    [tool.briefcase.app.${project_name_lowercase}.linux.system.suse]
+    system_requires = [
+    ]
+
+    system_runtime_requires = [
+        # Derived from the Debian \`system_requires\` list
+        "libdbus-1-3",
+        "Mesa-libEGL1",
+        "libfontconfig1",
+        "Mesa-libGL1",
+        "glib2",
+        "libICE6",
+        "libSM6",
+        "libx11-xcb1",
+        "libxcb-cursor0",
+        "libxcb-icccm4",
+        "libxcb-image0",
+        "libxcb-keysyms1",
+        "libxcb-randr0",
+        "libxcb-shape0",
+        "libxcb-sync1",
+        "libxcb-xfixes0",
+        "libXext6",
+        "libxkbcommon-x11-0",
+        "libXrender1",
+    ]
+
+    [tool.briefcase.app.${project_name_lowercase}.linux.system.arch]
+    system_requires = [
+    ]
+
+    system_runtime_requires = [
+        # Derived from the Debian \`system_requires\` list
+        "dbus",
+        "libglvnd",
+        "fontconfig",
+        "glib2",
+        "libice",
+        "libsm",
+        "libx11",
+        "xcb-util-cursor",
+        "xcb-util-wm",
+        "xcb-util-image",
+        "xcb-util-keysyms",
+        "libxcb",
+        "libxext",
+        "libxkbcommon",
+        "libxrender",
+    ]
+
+    [tool.briefcase.app.${project_name_lowercase}.linux.flatpak]
+    flatpak_runtime = "org.kde.Platform"
+    flatpak_runtime_version = "6.7"
+    flatpak_sdk = "org.kde.Sdk"
+
+    [tool.briefcase.app.${project_name_lowercase}.macOS]
+    universal_build = true
+    requires = [
+        "std-nslog~=1.0.3",
+    ]
+
+    [tool.briefcase.app.${project_name_lowercase}.windows]
+    requires = [
+    ]
+    EOF
+  artifacts:
+    paths:
+    - CHANGELOG
+    - pyproject.toml
+    - pymoldyn/icon-*.png
+
+
+.package:debian:
+  stage: package
+  needs: ["pre-package"]
+  variables:
+    DEBIAN_FRONTEND: noninteractive
+  before_script:
+  - apt-get update
+  - apt-get install -y
+      build-essential
+      git
+      python3-dev
+      python3-pip
+      python3-venv
+  - if ! apt-get install -y pipx; then
+      python3 -m pip install pipx;
+    fi
+  - pipx install "briefcase==${BRIEFCASE_VERSION}"
+  - export PATH="${HOME}/.local/bin:${PATH}"
+  - python3 -m venv env
   script:
-  # Add IFF repository
-  - zypper install -y curl
-  - curl -O http://iffwww.iff.kfa-juelich.de/repos/iffrepo.gpg.key
-  - rpm --import iffrepo.gpg.key
-  - zypper addrepo -f 'http://iffwww.iff.kfa-juelich.de/repos/suse/42-1/$basearch' iffrepo
-  # Install pymoldyn RPM
-  - zypper install -y libXt6
-  - zypper install -y artifacts/linux/suse/pymoldyn*.rpm
-  - DISPLAY=:0.0 /usr/bin/pymoldyn --batch
-    
-opensuse42.2-install:
-  stage: install
-  image: opensuse:42.2
+  # Install the project in editable mode to force to build all C extenions in-place. Otherwise, they won't be packaged
+  # by briefcase
+  - ./env/bin/python3 -m pip install -e .
+  - briefcase create linux system
+  - briefcase build linux system
+  - briefcase package linux system
+  artifacts:
+    paths:
+    - dist/*.deb
+
+
+package:debian:11:
+  extends: .package:debian
+  image: debian:11
+
+
+package:debian:12:
+  extends: .package:debian
+  image: debian:12
+
+
+package:ubuntu:22.04:
+  extends: .package:debian
+  image: ubuntu:22.04
+
+
+package:ubuntu:24.04:
+  extends: .package:debian
+  image: ubuntu:24.04
+
+
+package:ubuntu:24.10:
+  extends: .package:debian
+  image: ubuntu:24.10
+
+
+.package:rhel:
+  stage: package
+  needs: ["pre-package"]
+  before_script:
+  - dnf install -y
+      gcc
+      git
+      make
+      python3-devel
+      rpm-build
+  - python3 -m pip install pipx
+  - pipx install "briefcase==${BRIEFCASE_VERSION}"
+  - export PATH="${HOME}/.local/bin:${PATH}"
+  - python3 -m venv env
   script:
-  # Add IFF repository
-  - zypper install -y curl
-  - curl -O http://iffwww.iff.kfa-juelich.de/repos/iffrepo.gpg.key
-  - rpm --import iffrepo.gpg.key
-  - zypper addrepo -f 'http://iffwww.iff.kfa-juelich.de/repos/suse/42-2/$basearch' iffrepo
-  # Install pymoldyn RPM
-  - zypper install -y libXt6
-  - zypper install -y artifacts/linux/suse/pymoldyn*.rpm
-  - DISPLAY=:0.0 /usr/bin/pymoldyn --batch
+  # Install the project in editable mode to force to build all C extenions in-place. Otherwise, they won't be packaged
+  # by briefcase
+  - ./env/bin/python3 -m pip install -e .
+  - briefcase create linux system
+  - briefcase build linux system
+  - briefcase package linux system
+  artifacts:
+    paths:
+    - dist/*.rpm
+
+
+package:rockylinux:9:
+  extends: .package:rhel
+  image: rockylinux:9
+
+
+package:fedora:41:
+  extends: .package:rhel
+  image: fedora:41
+
+
+package:opensuse:tumbleweed:
+  stage: package
+  image: opensuse/tumbleweed
+  before_script:
+  - zypper install -y
+      git
+      patterns-devel-base-devel_basis
+      python3-devel
+      python3-pipx
+      rpm-build
+  - pipx install "briefcase==${BRIEFCASE_VERSION}"
+  - export PATH="${HOME}/.local/bin:${PATH}"
+  - python3 -m venv env
+  script:
+  # Install the project in editable mode to force to build all C extenions in-place. Otherwise, they won't be packaged
+  # by briefcase
+  - ./env/bin/python3 -m pip install -e .
+  - briefcase create linux system
+  - briefcase build linux system
+  - briefcase package linux system
+  artifacts:
+    paths:
+    - dist/*.rpm
+
+
+package:flatpack:
+  stage: package
+  image: debian:12-gcc
+  needs: ["pre-package"]
+  tags:
+  - libvirt
+  before_script:
+  - sudo apt-get update
+  - sudo apt-get install -y
+      build-essential
+      flatpak
+      flatpak-builder
+      git
+      pipx
+      python3-dev
+      python3-pip
+      python3-venv
+  - pipx install "briefcase==${BRIEFCASE_VERSION}"
+  - export PATH="${HOME}/.local/bin:${PATH}"
+  - python3 -m venv env
+  script:
+  # Install the project in editable mode to force to build all C extenions in-place. Otherwise, they won't be packaged
+  # by briefcase
+  - ./env/bin/python3 -m pip install -e .
+  - briefcase create linux flatpak
+  - briefcase build linux flatpak
+  - briefcase package linux flatpak
+  artifacts:
+    paths:
+    - dist/*.flatpak
+
+
+package:macos:
+  stage: package
+  image: macos:sonoma-xcode
+  variables:
+    PYTHON_VERSION: "3.12.8"
+  needs: ["pre-package"]
+  tags:
+  - utm
+  before_script:
+  - curl -fLO "https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macos11.pkg"
+  - sudo installer -pkg "python-${PYTHON_VERSION}-macos11.pkg" -target /
+  - python3 -m pip install -U
+      certifi
+      pipx
+  - export SSL_CERT_FILE="$(python3 -m certifi)"
+  - export PATH="${HOME}/.local/bin:/Library/Frameworks/Python.framework/Versions/${PYTHON_VERSION%.*}/bin:${PATH}"
+  - pipx install "briefcase==${BRIEFCASE_VERSION}"
+  - |
+    cat <<'EOF' >create_icns.py
+    #!/usr/bin/env -S pipx run
+
+    # /// script
+    # requires-python = ">=3.9"
+    # dependencies = [
+    #   "pillow",
+    # ]
+    # ///
+
+
+    import os
+    import subprocess
+    import sys
+    from tempfile import TemporaryDirectory
+
+    from PIL import Image
+
+
+    def create_iconset(icon_path, iconset_out_path):
+        with TemporaryDirectory() as tmp_dir:
+            tmp_icns_dir = os.path.join(tmp_dir, "icon.iconset")
+            os.mkdir(tmp_icns_dir)
+            original_icon = Image.open(icon_path)
+            for name, size in (
+                ("icon_{size}x{size}{suffix}.png".format(size=size, suffix=suffix), factor * size)
+                for size in (16, 32, 128, 256, 512)
+                for factor, suffix in ((1, ""), (2, "@2x"))
+            ):
+                resized_icon = original_icon.resize((size, size), Image.LANCZOS)
+                resized_icon.save(os.path.join(tmp_icns_dir, name))
+            subprocess.check_call(("iconutil", "--convert", "icns", tmp_icns_dir, "--output", iconset_out_path))
+
+
+    def main():
+        create_iconset(sys.argv[1], sys.argv[2])
+
+
+    if __name__ == "__main__":
+        main()
+    EOF
+  - chmod +x create_icns.py
+  - ./create_icns.py pymoldyn/icon.png pymoldyn/icon.icns
+  - GR_TEMPDIR="$(mktemp -d)"
+  - python3 -m venv env
+  - GR_STABLE_VERSION="$(
+      git ls-remote --tags "https://github.com/sciapp/gr" |
+      awk 'match($2, /refs\/tags\/v[0-9]+\.[0-9]+\.[0-9]+$/) { print substr($2, RSTART + length("refs/tags/v")) }' |
+      sort -ruV |
+      head -1
+    )"
+  - curl -fL "https://gr-framework.org/downloads/gr-${GR_STABLE_VERSION}-Darwin-universal.tar.gz" |
+    tar -C "${GR_TEMPDIR}" -xzf -
+  - export GRLIB="${GR_TEMPDIR}/gr/lib"
+  script:
+  # Install the project in editable mode to force to build all C extenions in-place. Otherwise, they won't be packaged
+  # by briefcase
+  - ./env/bin/python3 -m pip install -e .
+  - briefcase create
+  # Force to use the universal GR binaries for x86_64 and arm64
+  - rsync -a "${GR_TEMPDIR}/gr/" --exclude "Applications"
+    build/pymoldyn/macos/app/Pymoldyn.app/Contents/Resources/app_packages/gr/
+  - briefcase build
+  - briefcase package --adhoc-sign
+  artifacts:
+    paths:
+    - dist/*.dmg
+
+
+package:windows:
+  stage: package
+  image: windows:10-python3
+  needs: ["pre-package"]
+  tags:
+  - libvirt
+  variables:
+    IMAGE_MAGICK_VERSION: "7.1.1-41"
+  before_script:
+  - vcvars_cmd python -m pip install briefcase
+  - curl -fLO "https://imagemagick.org/archive/binaries/ImageMagick-${IMAGE_MAGICK_VERSION}-portable-Q8-x64.zip"
+  - unzip "ImageMagick-${IMAGE_MAGICK_VERSION}-portable-Q8-x64.zip"
+  - ./ImageMagick-${IMAGE_MAGICK_VERSION}-portable-Q8-x64/magick
+      pymoldyn/icon.png
+      -define "icon:auto-resize=16,32,48,64,128,256"
+      pymoldyn/icon.ico
+  - vcvars_cmd python -m venv env
+  script:
+  # Install the project in editable mode to force to build all C extenions in-place. Otherwise, they won't be packaged
+  # by briefcase
+  - ./env/Scripts/python -m pip install -e .
+  - vcvars_cmd python -m briefcase create
+  - vcvars_cmd python -m briefcase build
+  - vcvars_cmd python -m briefcase package --adhoc-sign
+  artifacts:
+    paths:
+    - dist/*.msi
+
+
+deploy-to-github:
+  stage: deploy
+  image: python:3-slim
+  variables:
+    GIT_STRATEGY: none
+  only:
+  - master@Scientific-IT-Systems/pyMolDyn
+  - develop@Scientific-IT-Systems/pyMolDyn
+  - tags@Scientific-IT-Systems/pyMolDyn
+  before_script:
+  - apt-get update
+  - apt-get install -y file git
+  - mkdir --mode=700 ~/.ssh/
+  - (umask 0377 && echo "${GITHUB_DEPLOY_KEY}" > ~/.ssh/id_rsa
+                && echo "github.com ${GITHUB_HOST_KEY}" >> ~/.ssh/known_hosts)
+  script:
+  - git clone --mirror "${CI_REPOSITORY_URL}" "${CI_PROJECT_NAME}_mirror"
+  - cd "${CI_PROJECT_NAME}_mirror";
+    git push --mirror "git@github.com:sciapp/${CI_PROJECT_NAME}.git";
+    cd ..
+  - if echo "${CI_COMMIT_TAG}" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+      pip install github-binary-upload;
+      echo "${GITHUB_ACCESS_TOKEN}" |
+        github-binary-upload --user IngoMeyer441 "sciapp/${CI_PROJECT_NAME}" "${CI_COMMIT_TAG}" dist/*;
+    fi
+
+
+deploy-to-pypi:
+  stage: deploy
+  image: python:3-slim
+  only:
+  - tags@Scientific-IT-Systems/pyMolDyn
+  before_script:
+  - pip install twine
+  - echo "[distutils]"                    > ~/.pypirc;
+    echo "index-servers ="               >> ~/.pypirc;
+    echo "    pypi"                      >> ~/.pypirc;
+    echo "[pypi]"                        >> ~/.pypirc;
+    echo "username = __token__"          >> ~/.pypirc;
+    echo "password = ${PYPI_DEPLOY_KEY}" >> ~/.pypirc;
+  script:
+  - twine upload dist/*.tar.gz dist/*.whl
+
+
+deploy-to-aur:
+  stage: deploy
+  needs:
+  - deploy-to-github
+  image: archlinux:base-devel
+  only:
+  - tags@Scientific-IT-Systems/pyMolDyn
+  before_script:
+  - pacman -Syu --noconfirm
+  - pacman -S --noconfirm --needed git openssh
+  - useradd -m deploy
+  - sudo -u deploy bash -c "
+      git config --global user.name \"AUR updater\" &&
+      git config --global user.email \"aur@updater.org\" &&
+      mkdir --mode=700 ~/.ssh/ &&
+      (
+        umask 0377 &&
+        echo \"$AUR_PRIVATE_KEY\" > ~/.ssh/id_rsa &&
+        echo \"aur.archlinux.org $AUR_HOST_KEY\" >> ~/.ssh/known_hosts
+      )
+    "
+  script:
+  - sudo -u deploy bash -c "
+      git clone \"ssh://aur@aur.archlinux.org/${CI_PROJECT_NAME,,}.git\" \"${CI_PROJECT_NAME}-aur\" &&
+      cd \"${CI_PROJECT_NAME}-aur\" &&
+      sed
+        -i
+        -e \"/^pkgver=/c\pkgver=\\\"${CI_COMMIT_TAG#v}\\\"\"
+        -e \"/^pkgrel=/c\pkgrel=\\\"1\\\"\"
+        PKGBUILD &&
+      (
+        source PKGBUILD;
+        curl -o source -L \"\${source[0]}\";
+        SHA256SUM=\"\$(sha256sum source | awk '{ print \$1 }')\";
+        sed -i \"/^sha256sums=/c\sha256sums=(\\\"\${SHA256SUM}\\\")\" PKGBUILD;
+      ) &&
+      makepkg --printsrcinfo > .SRCINFO &&
+      git commit -a -m \"Update to version ${CI_COMMIT_TAG#v}\" &&
+      git push
+    "

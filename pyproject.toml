@@ -1,0 +1,75 @@
+[project]
+name = "pyMolDyn"
+description = "A molecule viewer with cavity computation."
+readme = "README.rst"
+requires-python = ">=3.9"
+license = {file = "LICENSE"}
+keywords = ["scientific"]
+authors = [
+    {name = "Florian Rhiem", email = "f.rhiem@fz-juelich.de"},
+    {name = "Fabian Beule", email = "f.beule@fz-juelich.de"},
+    {name = "David Knodt"},
+    {name = "Ingo Meyer", email = "i.meyer@fz-juelich.de"},
+    {name = "Torben Moll", email = "t.moll@fz-juelich.de"},
+    {name = "Florian Macherey"}
+]
+maintainers = [
+    {name = "Ingo Meyer", email = "i.meyer@fz-juelich.de"}
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: C",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Visualization",
+]
+dependencies = [
+    "gr",
+    "h5py",
+    "Jinja2",
+    "numpy",
+    "PyOpenGL",
+    "PySide6",
+    "python-dateutil",
+]
+dynamic = ["version"]
+
+[project.urls]
+"Homepage" = "https://pgi-jcns.fz-juelich.de/portal/pages/pymoldyn-main.html"
+
+[project.scripts]
+pymoldyn-cli = "pymoldyn.cli:main"
+
+[project.gui-scripts]
+pymoldyn = "pymoldyn.gui:main"
+
+[build-system]
+requires = [
+    "gr",
+    "setuptools>=61.0.0",
+    "wheel",
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pymoldyn*"]
+exclude = []
+
+[tool.setuptools.dynamic]
+version = {attr = "pymoldyn._version.__version__"}

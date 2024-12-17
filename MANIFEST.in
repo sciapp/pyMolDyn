@@ -1,0 +1,5 @@
+include LICENSE
+include README.md
+include pymoldyn/icon.png
+include pymoldyn/gui/tabs/statistics/templates/*.html
+include pymoldyn/gui/tabs/statistics/templates/*.css

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+
+    <title>{{ title }}</title>
+    <meta name="description" content="{{ description }}"/>
+</head>
+
+<body>
+
+<div id="content">
+    <div class="headline">Summary of all atoms</div>
+
+    <p class="p_margins">number of atoms: {{ atom_number }} </p>
+
+    <table class="table_margin_upper_table">
+        <tr>
+            <td><strong>element</strong></td>
+            <td><strong>quantity</strong></td>
+        </tr>
+        {% for elem,count in atom_elements.items() %}
+        <tr>
+            <td>{{ elem }}</td>
+            <td>{{ count }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+</body>
+</html>
