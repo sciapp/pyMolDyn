@@ -2,10 +2,10 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 
 class AboutDialog(QtWidgets.QDialog):
-    '''
+    """
     Einfacher About-Dialog, der den Titel, das Icon, eine Beschreibung und eine Liste von Autoren anzeigt.
     Autoren werden als Liste von Tupeln uebergeben, in dem Format (Name (str), Mail (str))
-    '''
+    """
 
     class MailLabel(QtWidgets.QLabel):
         def __init__(self, mail, parent):
@@ -13,7 +13,7 @@ class AboutDialog(QtWidgets.QDialog):
             self.mail = mail
 
         def mousePressEvent(self, event):
-            url = QtCore.QUrl('mailto:%s' % self.mail)
+            url = QtCore.QUrl("mailto:%s" % self.mail)
             QtGui.QDesktopServices.openUrl(url)
 
     def __init__(self, parent, description, authors, *args, **kwargs):
@@ -28,9 +28,9 @@ class AboutDialog(QtWidgets.QDialog):
 
     def _init_ui(self):
         # Label
-        self.lb_title = QtWidgets.QLabel('<h2>%s</h2>' % self.title, self)
-        self.lb_description = QtWidgets.QLabel('<p>%s</p>' % self.description, self)
-        self.lb_author = QtWidgets.QLabel('<b>%s</b>' % 'Autoren:', self)
+        self.lb_title = QtWidgets.QLabel("<h2>%s</h2>" % self.title, self)
+        self.lb_description = QtWidgets.QLabel("<p>%s</p>" % self.description, self)
+        self.lb_author = QtWidgets.QLabel("<b>%s</b>" % "Autoren:", self)
         self.lb_authors = []
         for author, mail in self.authors:
             lb_author = QtWidgets.QLabel(author, self)

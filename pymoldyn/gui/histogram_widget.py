@@ -36,8 +36,7 @@ class GrHistogramWidget(GRWidget):
     def draw(self, wsviewport=None):
         if self.xvalues is not None and self.widths is not None:
             maxidx = np.argmax(self.xvalues)
-            rangex = (self.xvalues.min(),
-                      self.xvalues[maxidx] + self.widths[maxidx])
+            rangex = (self.xvalues.min(), self.xvalues[maxidx] + self.widths[maxidx])
         else:
             rangex = (0.0, 100.0)
         if self.yvalues is not None:
@@ -50,8 +49,9 @@ class GrHistogramWidget(GRWidget):
         else:
             gr.setwsviewport(*wsviewport)
         gr.setwswindow(0, self.sizex, 0, self.sizey)
-        gr.setviewport(0.075 * self.sizex, 0.95 * self.sizex,
-                       0.075 * self.sizey, 0.95 * self.sizey)
+        gr.setviewport(
+            0.075 * self.sizex, 0.95 * self.sizex, 0.075 * self.sizey, 0.95 * self.sizey
+        )
         gr.setwindow(rangex[0], rangex[1], rangey[0], rangey[1])
         gr.setcharheight(0.012)
 
@@ -59,14 +59,20 @@ class GrHistogramWidget(GRWidget):
         gr.setfillcolorind(0)
         gr.fillrect(rangex[0], rangex[1], rangey[0], rangey[1])
 
-        if self.xvalues is not None and self.yvalues is not None \
-                and self.widths is not None:
+        if (
+            self.xvalues is not None
+            and self.yvalues is not None
+            and self.widths is not None
+        ):
             gr.setfillintstyle(1)
             gr.setfillcolorind(2)
             for i in range(self.xvalues.size):
-                gr.fillrect(self.xvalues[i],
-                            self.xvalues[i] + self.widths[i] * 0.8,
-                            0.0, self.yvalues[i])
+                gr.fillrect(
+                    self.xvalues[i],
+                    self.xvalues[i] + self.widths[i] * 0.8,
+                    0.0,
+                    self.yvalues[i],
+                )
         else:
             gr.text(0.45 * self.sizex, 0.5 * self.sizey, "no data")
 
@@ -145,8 +151,7 @@ class HistogramWidget(QtWidgets.QWidget):
         self.show()
 
     def keyPressEvent(self, event):
-        if event.key() == QtCore.Qt.Key_Return \
-                or event.key() == QtCore.Qt.Key_Enter:
+        if event.key() == QtCore.Qt.Key_Return or event.key() == QtCore.Qt.Key_Enter:
             self.update()
 
     def draw(self, now=False, wsviewport=None):
@@ -157,11 +162,11 @@ class HistogramWidget(QtWidgets.QWidget):
         if self.results is None:
             self.refresh()
         if self.cavity_type_box.currentText():
-            if self.cavity_type_box.currentText() == 'Surface-based Cavities':
+            if self.cavity_type_box.currentText() == "Surface-based Cavities":
                 cavities = self.results.surface_cavities
-            elif self.cavity_type_box.currentText() == 'Center-based Cavities':
+            elif self.cavity_type_box.currentText() == "Center-based Cavities":
                 cavities = self.results.center_cavities
-            elif self.cavity_type_box.currentText() == 'Cavity Domains':
+            elif self.cavity_type_box.currentText() == "Cavity Domains":
                 cavities = self.results.domains
             nbins = str(self.nbins.text())
             if len(nbins) > 0 and int(nbins) > 0:
@@ -187,17 +192,30 @@ class HistogramWidget(QtWidgets.QWidget):
             self.gr_widget.draw(wsviewport=wsviewport)
 
     def export_image(self):
-        extensions = (".pdf", ".png", ".bmp", ".jpg", ".jpeg", ".png",
-                      ".tiff", ".fig", ".svg", ".wmf", ".eps", ".ps")
+        extensions = (
+            ".pdf",
+            ".png",
+            ".bmp",
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".tiff",
+            ".fig",
+            ".svg",
+            ".wmf",
+            ".eps",
+            ".ps",
+        )
         qtext = "*" + " *".join(extensions)
-        filepath = QtWidgets.QFileDialog.getSaveFileName(self, "Save Image",
-                                                           ".", "Image Files ({})".format(qtext))[0]
+        filepath = QtWidgets.QFileDialog.getSaveFileName(
+            self, "Save Image", ".", "Image Files ({})".format(qtext)
+        )[0]
         if not filepath:
             return
 
-        if filepath.endswith('.eps') or filepath.endswith('.ps'):
-            gr.beginprintext(filepath, 'Color', 'A4', 'Landscape')
-            self.draw(now=True, wsviewport=(0, 0.297*0.9, 0, 0.21*0.95))
+        if filepath.endswith(".eps") or filepath.endswith(".ps"):
+            gr.beginprintext(filepath, "Color", "A4", "Landscape")
+            self.draw(now=True, wsviewport=(0, 0.297 * 0.9, 0, 0.21 * 0.95))
         else:
             gr.beginprint(filepath)
             self.draw(now=True)
@@ -205,8 +223,9 @@ class HistogramWidget(QtWidgets.QWidget):
 
     def export_data(self):
         qtext = " *.csv"
-        filepath = QtWidgets.QFileDialog.getSaveFileName(self, "Save Data",
-                                                     ".", "CSV Files ({})".format(qtext))[0]
+        filepath = QtWidgets.QFileDialog.getSaveFileName(
+            self, "Save Data", ".", "CSV Files ({})".format(qtext)
+        )[0]
         if len(filepath) == 0:
             return
         self.update()
@@ -214,7 +233,7 @@ class HistogramWidget(QtWidgets.QWidget):
         yvalues = self.gr_widget.yvalues
         if xvalues is None or yvalues is None:
             return
-        with open(filepath, 'w') as csvfile:
+        with open(filepath, "w") as csvfile:
             csvwriter = csv.writer(csvfile)
             for x, y in zip(xvalues, yvalues):
                 csvwriter.writerow([x, y])
@@ -225,11 +244,11 @@ class HistogramWidget(QtWidgets.QWidget):
         if results is not None:
             results = results[-1][-1]
             if results.surface_cavities is not None:
-                self.cavity_type_box.addItem('Surface-based Cavities')
+                self.cavity_type_box.addItem("Surface-based Cavities")
             if results.center_cavities is not None:
-                self.cavity_type_box.addItem('Center-based Cavities')
+                self.cavity_type_box.addItem("Center-based Cavities")
             if results.domains is not None:
-                self.cavity_type_box.addItem('Cavity Domains')
+                self.cavity_type_box.addItem("Cavity Domains")
             if self.results != results:
                 self.results = results
                 self.gr_widget.setdata(None, None, None, None)

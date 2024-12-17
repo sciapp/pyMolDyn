@@ -16,7 +16,9 @@ class ObjectSelectWidget(QtWidgets.QWidget):
         # Widgets
         self._activation_checkbox = QtWidgets.QCheckBox(text, self)
         if self._has_index_selector:
-            self._selection_checkbox = QtWidgets.QCheckBox('only selected indices', self)
+            self._selection_checkbox = QtWidgets.QCheckBox(
+                "only selected indices", self
+            )
             self._index_selection = IndexSelectLineEdit(self)
 
         # Layout
@@ -33,7 +35,9 @@ class ObjectSelectWidget(QtWidgets.QWidget):
         self._activation_checkbox.stateChanged.connect(self._state_changed)
         if self._has_index_selector:
             self._selection_checkbox.stateChanged.connect(self._selection_toggled)
-            self._index_selection.indices_changed.connect(self._selection_indices_changed)
+            self._index_selection.indices_changed.connect(
+                self._selection_indices_changed
+            )
 
         # State setup
         self._state_changed(check_state=False)
@@ -81,7 +85,6 @@ class ObjectSelectWidget(QtWidgets.QWidget):
             self.selection_indices_changed.emit(indices)
 
 
-
 class IndexSelectLineEdit(QtWidgets.QLineEdit):
     indices_changed = QtCore.Signal(object)
     TIMER_INTERVAL = 1000
@@ -91,8 +94,15 @@ class IndexSelectLineEdit(QtWidgets.QLineEdit):
             super().__init__(*args, **kwargs)
 
         def validate(self, input, pos):
-            return (QtGui.QValidator.Acceptable if re.match('^[0-9,\s-]*$', input) else QtGui.QValidator.Invalid,
-                    input, pos)
+            return (
+                (
+                    QtGui.QValidator.Acceptable
+                    if re.match("^[0-9,\s-]*$", input)
+                    else QtGui.QValidator.Invalid
+                ),
+                input,
+                pos,
+            )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -114,16 +124,16 @@ class IndexSelectLineEdit(QtWidgets.QLineEdit):
         def indices2string(indices):
             def range2string(range):
                 if range is None:
-                    return ''
+                    return ""
                 elif len(range) == 1:
                     start = range[0]
                     end = start
                 else:
                     start, end = range
                 if start == end:
-                    return str(start+1)
+                    return str(start + 1)
                 else:
-                    return '{:d}-{:d}'.format(start+1, end+1)
+                    return "{:d}-{:d}".format(start + 1, end + 1)
 
             indices = list(set(indices))
             indices.sort()
@@ -141,7 +151,7 @@ class IndexSelectLineEdit(QtWidgets.QLineEdit):
                     previous_index = current_index
                 current_range.append(previous_index)
             ranges.append(current_range)
-            indices_string = ', '.join(map(range2string, ranges))
+            indices_string = ", ".join(map(range2string, ranges))
             return indices_string
 
         self.setText(indices2string(indices))
@@ -172,17 +182,19 @@ class IndexSelectLineEdit(QtWidgets.QLineEdit):
             self.indices_changed.emit(self._indices)
 
     def _get_indices_from_line_edit(self):
-        input_text = self.text().replace(' ', '')
-        is_input_valid = re.match('^(\d+(-\d+)?(,\d+(-\d+)?)*)?$', input_text)
+        input_text = self.text().replace(" ", "")
+        is_input_valid = re.match("^(\d+(-\d+)?(,\d+(-\d+)?)*)?$", input_text)
         if is_input_valid:
-            parts = input_text.split(',') if input_text != '' else []
+            parts = input_text.split(",") if input_text != "" else []
             indices = []
-            indices.extend((int(comp)-1 for comp in parts if '-' not in comp))   # single indices
+            indices.extend(
+                (int(comp) - 1 for comp in parts if "-" not in comp)
+            )  # single indices
             for comp in parts:
-                if '-' in comp:  # index ranges
-                    start, end = map(int, comp.split('-'))
-                    indices.extend(range(start-1, end))
-            indices = list(set(indices))    # Eliminate duplicate entries
+                if "-" in comp:  # index ranges
+                    start, end = map(int, comp.split("-"))
+                    indices.extend(range(start - 1, end))
+            indices = list(set(indices))  # Eliminate duplicate entries
             indices.sort()
             return tuple(indices)
         else:

@@ -13,16 +13,17 @@ from ..cutoff_history_table import CutoffHistoryTable
 class CutoffHistoryDialog(QtWidgets.QDialog):
     def __init__(self, parent, elements, preferred_filenames_with_frames=None):
         super().__init__(parent)
-        history = cutoff_history.filtered_history(elements,
-                                                  preferred_filenames_with_frames=preferred_filenames_with_frames)
+        history = cutoff_history.filtered_history(
+            elements, preferred_filenames_with_frames=preferred_filenames_with_frames
+        )
         self._init_ui(history)
 
     def _init_ui(self, history):
-        self.gb_history = QtWidgets.QGroupBox('History')
+        self.gb_history = QtWidgets.QGroupBox("History")
         self.tw_cutoff = CutoffHistoryTable(history)
-        self.pb_ok = QtWidgets.QPushButton('Ok')
+        self.pb_ok = QtWidgets.QPushButton("Ok")
         self.pb_ok.setEnabled(False)
-        self.pb_cancel = QtWidgets.QPushButton('Cancel')
+        self.pb_cancel = QtWidgets.QPushButton("Cancel")
 
         self.la_main = QtWidgets.QVBoxLayout()
         self.la_history = QtWidgets.QVBoxLayout()
@@ -41,7 +42,9 @@ class CutoffHistoryDialog(QtWidgets.QDialog):
         self.setLayout(self.la_main)
 
         self.tw_cutoff.itemSelectionChanged.connect(
-            lambda *args: self.pb_ok.setEnabled(len(self.tw_cutoff.selectedIndexes()) > 0)
+            lambda *args: self.pb_ok.setEnabled(
+                len(self.tw_cutoff.selectedIndexes()) > 0
+            )
         )
         self.pb_ok.clicked.connect(lambda event: self.accept())
         self.pb_cancel.clicked.connect(lambda event: self.reject())

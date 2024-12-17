@@ -64,7 +64,9 @@ setup(
         ),
         Extension(
             name="pymoldyn.computation.split_and_merge.domain_centers.calculate_domain_centers",
-            sources=["pymoldyn/computation/split_and_merge/domain_centers/calculate_domain_centers.c"],
+            sources=[
+                "pymoldyn/computation/split_and_merge/domain_centers/calculate_domain_centers.c"
+            ],
             include_dirs=[np.get_include()],
         ),
         CTypes(
@@ -76,4 +78,3 @@ setup(
         ),
     ],
 )
-

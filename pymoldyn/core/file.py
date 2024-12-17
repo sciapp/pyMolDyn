@@ -12,21 +12,22 @@ from . import data
 import sys
 from ..util.logger import Logger
 from . import elements
+
 try:
     import pybel
+
     raise ImportError
 except ImportError:
+
     class pybel:
         """
         Dummy class representing a missing pybel module.
         """
+
         informats = {}
 
-__all__ = ["File",
-           "InputFile",
-           "ResultFile",
-           "XYZFile",
-           "HDF5File"]
+
+__all__ = ["File", "InputFile", "ResultFile", "XYZFile", "HDF5File"]
 
 logger = Logger("core.file")
 logger.setstream("default", sys.stdout, Logger.WARNING)
@@ -97,9 +98,9 @@ class InputFile(object):
                 pass
             if self._info.volume is None:
                 self._info.volume_guessed = True
-                minx, maxx = float('inf'), float('-inf')
-                miny, maxy = float('inf'), float('-inf')
-                minz, maxz = float('inf'), float('-inf')
+                minx, maxx = float("inf"), float("-inf")
+                miny, maxy = float("inf"), float("-inf")
+                minz, maxz = float("inf"), float("-inf")
                 for frame in range(self._info.num_frames):
                     atoms = self.getatoms(frame)
                     minx = min(minx, atoms.positions[:, 0].min())
@@ -108,9 +109,11 @@ class InputFile(object):
                     maxy = max(maxy, atoms.positions[:, 1].max())
                     minz = min(minz, atoms.positions[:, 2].min())
                     maxz = max(maxz, atoms.positions[:, 2].max())
-                self._info.volumestr = 'ORT %f %f %f' % (maxx-minx,
-                                                         maxy-miny,
-                                                         maxz-minz)
+                self._info.volumestr = "ORT %f %f %f" % (
+                    maxx - minx,
+                    maxy - miny,
+                    maxz - minz,
+                )
         return self._info
 
     def getatoms(self, frame):
@@ -142,6 +145,7 @@ class XYZFile(InputFile):
     """
     Implementation on :class:`InputFile` for Open Babel 'xyz' files.
     """
+
     def __init__(self, path):
         super().__init__(path)
         f = open(self.path, "r")
@@ -150,7 +154,7 @@ class XYZFile(InputFile):
     def readinfo(self):
         try:
             self._info.num_frames = 0
-            with open(self.path.encode("utf-8"), 'r') as f:
+            with open(self.path.encode("utf-8"), "r") as f:
                 try:
                     while True:
                         num_atoms = f.readline()
@@ -175,7 +179,7 @@ class XYZFile(InputFile):
         try:
             if self.info.num_frames <= frame:
                 raise IndexError("Frame {} not found".format(frame))
-            with open(self.path.encode("utf-8"), 'r') as f:
+            with open(self.path.encode("utf-8"), "r") as f:
                 try:
                     # Skip the first frames
                     for i in range(frame):
@@ -214,6 +218,7 @@ class BabelFile(InputFile):
     """
     Implementation on :class:`InputFile` for Open Babel 'xyz' files.
     """
+
     def __init__(self, path):
         super().__init__(path)
         # Check if the file exists
@@ -223,8 +228,9 @@ class BabelFile(InputFile):
     def readinfo(self):
         try:
             file_extension = os.path.splitext(self.path)[1][1:]
-            mol_iter = pybel.readfile(file_extension.encode('utf8'),
-                                      self.path.encode('utf8'))
+            mol_iter = pybel.readfile(
+                file_extension.encode("utf8"), self.path.encode("utf8")
+            )
             try:
                 mol = next(mol_iter)
                 self._info.volumestr = mol.title
@@ -245,8 +251,9 @@ class BabelFile(InputFile):
                 raise IndexError("Frame {} not found".format(frame))
 
             file_extension = os.path.splitext(self.path)[1][1:]
-            mol_iter = pybel.readfile(file_extension.encode('utf8'),
-                                      self.path.encode('utf8'))
+            mol_iter = pybel.readfile(
+                file_extension.encode("utf8"), self.path.encode("utf8")
+            )
 
             # get the correct frame
             try:
@@ -332,14 +339,11 @@ class ResultFile(InputFile):
         self.writeresults(results, overwrite=overwrite)
         resinfo = self.info[results.resolution]
         if results.domains:
-            resinfo.domains[results.frame] \
-                = results.domains.timestamp
+            resinfo.domains[results.frame] = results.domains.timestamp
         if results.surface_cavities:
-            resinfo.surface_cavities[results.frame] \
-                = results.surface_cavities.timestamp
+            resinfo.surface_cavities[results.frame] = results.surface_cavities.timestamp
         if results.center_cavities:
-            resinfo.center_cavities[results.frame] \
-                = results.center_cavities.timestamp
+            resinfo.center_cavities[results.frame] = results.center_cavities.timestamp
         self.writeinfo()
 
     def writeinfo(self):
@@ -356,6 +360,7 @@ class HDF5File(ResultFile):
     """
     Implementation on :class:`ResultFile` for 'hdf5' files.
     """
+
     def __init__(self, path, sourcefilepath=None):
         super().__init__(path, sourcefilepath)
 
@@ -408,9 +413,11 @@ class HDF5File(ResultFile):
         except Exception as e:
             raise FileError("Cannot read file info.", e)
 
-        if not self.inforead \
-                and self._info.sourcefilepath is not None \
-                and os.path.isfile(self._info.sourcefilepath):
+        if (
+            not self.inforead
+            and self._info.sourcefilepath is not None
+            and os.path.isfile(self._info.sourcefilepath)
+        ):
             try:
                 sf = File.open(self._info.sourcefilepath)
                 self._info.num_frames = sf.info.num_frames
@@ -426,7 +433,7 @@ class HDF5File(ResultFile):
 
     def writeinfo(self):
         try:
-            with h5py.File(self.path, 'a') as f:
+            with h5py.File(self.path, "a") as f:
                 h5group = f.require_group("info")
                 self.info.tohdf(h5group)
         except IOError:
@@ -457,9 +464,15 @@ class HDF5File(ResultFile):
                         filepath = self.info.sourcefilepath
                     else:
                         filepath = self.path
-                    results = data.Results(filepath, frame, resolution,
-                                           atoms, domains, surface_cavities,
-                                           center_cavities)
+                    results = data.Results(
+                        filepath,
+                        frame,
+                        resolution,
+                        atoms,
+                        domains,
+                        surface_cavities,
+                        center_cavities,
+                    )
         except IOError:
             raise
         except Exception as e:
@@ -469,15 +482,20 @@ class HDF5File(ResultFile):
     def writeresults(self, results, overwrite=True):
         # TODO: results valid?
         try:
-            with h5py.File(self.path, 'a') as f:
+            with h5py.File(self.path, "a") as f:
                 group = f.require_group("atoms/frame{}".format(results.frame))
                 # TODO: is it OK to never overwrite atoms?
                 results.atoms.tohdf(group, overwrite=False)
-                if results.domains is not None or \
-                        results.surface_cavities is not None or\
-                        results.center_cavities is not None:
-                    group = f.require_group("results/frame{}/resolution{}".format(
-                                            results.frame, results.resolution))
+                if (
+                    results.domains is not None
+                    or results.surface_cavities is not None
+                    or results.center_cavities is not None
+                ):
+                    group = f.require_group(
+                        "results/frame{}/resolution{}".format(
+                            results.frame, results.resolution
+                        )
+                    )
                 if results.domains is not None:
                     subgroup = group.require_group("domains")
                     results.domains.tohdf(subgroup, overwrite=overwrite)
@@ -492,17 +510,21 @@ class HDF5File(ResultFile):
         except Exception as e:
             raise FileError("Cannot write results.", e)
 
+
 class File(object):
     """
     Provides static methods for easy access to files and directories.
     The class attribute `types` associates filename endings with
     classes to handle them.
     """
-    types = dict(list(zip(pybel.informats.keys(), repeat(BabelFile))) +
-                 [
-                     ("xyz", XYZFile),
-                     ("hdf5", HDF5File),
-                 ])
+
+    types = dict(
+        list(zip(pybel.informats.keys(), repeat(BabelFile)))
+        + [
+            ("xyz", XYZFile),
+            ("hdf5", HDF5File),
+        ]
+    )
 
     @classmethod
     def listdir(cls, directory):
@@ -518,8 +540,7 @@ class File(object):
         """
         if not directory:
             directory = "."
-        return [f for f in os.listdir(directory)
-                if cls.exists(f)]
+        return [f for f in os.listdir(directory) if cls.exists(f)]
 
     @classmethod
     def open(cls, filepath):

@@ -3,7 +3,7 @@ from PySide6 import QtCore, QtWidgets
 
 class CalculationTable(QtWidgets.QTableView):
     def __init__(self, parent):
-        QtWidgets.QTableView.__init__(self,parent)
+        QtWidgets.QTableView.__init__(self, parent)
         self.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
 
 
@@ -18,7 +18,8 @@ class TableModel(QtCore.QAbstractTableModel):
 
     def columnCount(self, parent):
         return len(self.databla[0])
-#
+
+    #
     def data(self, index, role):
         if not index.isValid():
             return None
@@ -30,6 +31,7 @@ class TableModel(QtCore.QAbstractTableModel):
         if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
             return self.header[col]
         return None
+
 
 #    def sort(self, col, order):
 #        """sort table by given column number col"""

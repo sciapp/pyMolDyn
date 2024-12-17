@@ -13,10 +13,12 @@ logger = Logger("config.cutoff_presets")
 logger.setstream("default", sys.stdout, Logger.WARNING)
 
 
-DEFAULT_CONFIG_FILE = os.path.expanduser(os.path.join(CONFIG_DIRECTORY, 'cutoff_presets.json'))
+DEFAULT_CONFIG_FILE = os.path.expanduser(
+    os.path.join(CONFIG_DIRECTORY, "cutoff_presets.json")
+)
 
 
-Preset = collections.namedtuple('Preset', ['name', 'radii'])
+Preset = collections.namedtuple("Preset", ["name", "radii"])
 
 
 class CutoffPresets(object):
@@ -27,7 +29,7 @@ class CutoffPresets(object):
 
     def read(self):
         try:
-            with open(self._config_filepath, 'r') as f:
+            with open(self._config_filepath, "r") as f:
                 presets_json = json.load(f)
             self._presets = [Preset(*entry) for entry in presets_json]
         except IOError:
@@ -35,10 +37,10 @@ class CutoffPresets(object):
 
     def save(self):
         try:
-            with open(self._config_filepath, 'w') as f:
+            with open(self._config_filepath, "w") as f:
                 json.dump(self._presets, f)
         except IOError:
-            logger.warn('Could not save cutoff radii presets')
+            logger.warn("Could not save cutoff radii presets")
             raise
 
     @property

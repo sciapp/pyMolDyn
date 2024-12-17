@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
-__all__ = ["print_message",
-           "progress",
-           "finish",
-           "error",
-           "log",
-           "set_output_callbacks"]
+__all__ = [
+    "print_message",
+    "progress",
+    "finish",
+    "error",
+    "log",
+    "set_output_callbacks",
+]
 
 
 _print_message = None
@@ -45,7 +47,9 @@ def log(*args):
         _log_buffer.append(args)
 
 
-def set_output_callbacks(progress_func, print_func, finished_func, error_func, log_func):
+def set_output_callbacks(
+    progress_func, print_func, finished_func, error_func, log_func
+):
     global _progress, _print_message, _finish, _error, _log
 
     _progress = progress_func

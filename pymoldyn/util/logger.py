@@ -22,19 +22,22 @@ class Logger(object):
     DEBUG = 7
 
     severities = [
-            "Emergency",
-            "Alert",
-            "Critical",
-            "Error",
-            "Warning",
-            "Notice",
-            "Informational",
-            "Debug"]
+        "Emergency",
+        "Alert",
+        "Critical",
+        "Error",
+        "Warning",
+        "Notice",
+        "Informational",
+        "Debug",
+    ]
 
     def __init__(self, identifier):
         self.identifier = identifier
         self.streams = dict()
-        self.format = "{time} {severity} from {identifier} in {function} ({file}:{line}): "
+        self.format = (
+            "{time} {severity} from {identifier} in {function} ({file}:{line}): "
+        )
 
     def setstream(self, ident, stream, severity):
         if severity is None or stream == -1:
@@ -75,12 +78,14 @@ class Logger(object):
 
     def _log(self, severity, message):
         st = inspect.stack()
-        info = {"identifier": self.identifier,
-                "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "severity": self.severities[severity].upper(),
-                "function": st[2][3],
-                "file": os.path.relpath(st[2][1]),
-                "line": st[2][2]}
+        info = {
+            "identifier": self.identifier,
+            "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "severity": self.severities[severity].upper(),
+            "function": st[2][3],
+            "file": os.path.relpath(st[2][1]),
+            "line": st[2][2],
+        }
         line = self.format.format(**info) + message
         self._logline(severity, line)
 

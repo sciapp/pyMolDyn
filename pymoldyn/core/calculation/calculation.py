@@ -18,17 +18,19 @@ from hashlib import sha256
 import sys
 from .. import bonds
 
-__all__ = ["Calculation",
-           "CalculationCache",
-           "CalculationSettings",
-           "calculated",
-           "count_frames",
-           "calculated_frames",
-           "calculate_cavities",
-           "getresults",
-           "delete_center_cavity_information",
-           "timestamp",
-           "calculate"]
+__all__ = [
+    "Calculation",
+    "CalculationCache",
+    "CalculationSettings",
+    "calculated",
+    "count_frames",
+    "calculated_frames",
+    "calculate_cavities",
+    "getresults",
+    "delete_center_cavity_information",
+    "timestamp",
+    "calculate",
+]
 
 logger = Logger("core.calculation")
 logger.setstream("default", sys.stdout, Logger.WARNING)
@@ -68,20 +70,21 @@ class CalculationSettings(object):
             calculate dihedral angles
     """
 
-    def __init__(self,
-                 datasets,
-                 resolution=config.Computation.std_resolution,
-                 cutoff_radii=config.Computation.std_cutoff_radius,
-                 domains=False,
-                 surface_cavities=False,
-                 center_cavities=False,
-                 gyration_tensor=False,
-                 recalculate=False,
-                 exporthdf5=False,
-                 exporttext=False,
-                 exportdir=None):
-        """
-        """
+    def __init__(
+        self,
+        datasets,
+        resolution=config.Computation.std_resolution,
+        cutoff_radii=config.Computation.std_cutoff_radius,
+        domains=False,
+        surface_cavities=False,
+        center_cavities=False,
+        gyration_tensor=False,
+        recalculate=False,
+        exporthdf5=False,
+        exporttext=False,
+        exportdir=None,
+    ):
+        """ """
         self.datasets = datasets
         self.resolution = resolution
         self.cutoff_radii = cutoff_radii
@@ -191,8 +194,7 @@ class Calculation(object):
         **Returns:**
             If the cache contains results for the given parameters.
         """
-        return not self.timestamp(filepath, frame,
-                                  resolution, surface, center) is None
+        return not self.timestamp(filepath, frame, resolution, surface, center) is None
 
     def getresults(self, filepath, frame, resolution=None, surface=False, center=False):
         """
@@ -234,11 +236,25 @@ class Calculation(object):
         if results is None:
             if resolution is None:
                 resolution = 64
-            results = data.Results(filepath, frame, resolution, inputfile.getatoms(frame), None, None, None)
+            results = data.Results(
+                filepath, frame, resolution, inputfile.getatoms(frame), None, None, None
+            )
         return results
 
-    def calculateframe(self, filepath, frame, resolution, cutoff_radii=None, domains=False, surface=False, center=False,
-                       atoms=None, gyration_tensor_parameters=False, recalculate=False, last_frame=True):
+    def calculateframe(
+        self,
+        filepath,
+        frame,
+        resolution,
+        cutoff_radii=None,
+        domains=False,
+        surface=False,
+        center=False,
+        atoms=None,
+        gyration_tensor_parameters=False,
+        recalculate=False,
+        last_frame=True,
+    ):
         """
         Get results for the given parameters. They are either loaded from the
         cache or calculated.
@@ -268,7 +284,9 @@ class Calculation(object):
             A :class:`core.data.Results` object.
         """
         # always recalculate if gyration tensor parameters shall be computed for center or surface based cavities
-        recalculate = recalculate or (gyration_tensor_parameters and (center or surface))
+        recalculate = recalculate or (
+            gyration_tensor_parameters and (center or surface)
+        )
         message.progress(0)
         inputfile = File.open(filepath)
         # TODO: error handling
@@ -294,46 +312,69 @@ class Calculation(object):
             results.surface_cavities = None
             results.center_cavities = None
 
-        if not ((domains and results.domains is None)
-                or (surface and results.surface_cavities is None)
-                or (center and results.center_cavities is None)):
+        if not (
+            (domains and results.domains is None)
+            or (surface and results.surface_cavities is None)
+            or (center and results.center_cavities is None)
+        ):
             message.print_message("Reusing results")
         else:
-            cachepath = os.path.join(self.cachedir, 'discretization_cache.hdf5')
+            cachepath = os.path.join(self.cachedir, "discretization_cache.hdf5")
             discretization_cache = DiscretizationCache(cachepath)
             with DiscretizationCache(cachepath) as discretization_cache:
-                discretization = discretization_cache.get_discretization(volume, resolution)
+                discretization = discretization_cache.get_discretization(
+                    volume, resolution
+                )
             atom_discretization = AtomDiscretization(atoms, discretization)
-            message.progress(10)#TODO: improve the progress bar visualisation
-            if (domains and results.domains is None) \
-                    or (surface and results.surface_cavities is None):
+            message.progress(10)  # TODO: improve the progress bar visualisation
+            if (domains and results.domains is None) or (
+                surface and results.surface_cavities is None
+            ):
                 # CavityCalculation depends on DomainCalculation
                 message.print_message("Calculating domains")
-                domain_calculation = DomainCalculation(discretization, atom_discretization)
+                domain_calculation = DomainCalculation(
+                    discretization, atom_discretization
+                )
                 if domain_calculation.critical_domains:
-                    logger.warn('Found {:d} critical domains in file {}, frame {:d}. Domain indices: {}'.format(
-                        len(domain_calculation.critical_domains), os.path.basename(filepath), frame,
-                        domain_calculation.critical_domains
-                    ))
-                    message.log('Found {:d} critical domains in file {}, frame {:d}'.format(
-                        len(domain_calculation.critical_domains), os.path.basename(filepath), frame + 1,
-                    ))
+                    logger.warn(
+                        "Found {:d} critical domains in file {}, frame {:d}. Domain indices: {}".format(
+                            len(domain_calculation.critical_domains),
+                            os.path.basename(filepath),
+                            frame,
+                            domain_calculation.critical_domains,
+                        )
+                    )
+                    message.log(
+                        "Found {:d} critical domains in file {}, frame {:d}".format(
+                            len(domain_calculation.critical_domains),
+                            os.path.basename(filepath),
+                            frame + 1,
+                        )
+                    )
             if results.domains is None:
                 results.domains = data.Domains(domain_calculation)
             message.progress(40)
 
             if surface and results.surface_cavities is None:
                 message.print_message("Calculating surface-based cavities")
-                cavity_calculation = CavityCalculation(domain_calculation, use_surface_points=True,
-                                                       gyration_tensor_parameters=gyration_tensor_parameters)
+                cavity_calculation = CavityCalculation(
+                    domain_calculation,
+                    use_surface_points=True,
+                    gyration_tensor_parameters=gyration_tensor_parameters,
+                )
                 results.surface_cavities = data.Cavities(cavity_calculation)
             message.progress(70)
 
             if center and results.center_cavities is None:
                 message.print_message("Calculating center-based cavities")
-                domain_calculation = FakeDomainCalculation(discretization, atom_discretization, results)# equal, k, k
-                cavity_calculation = CavityCalculation(domain_calculation, use_surface_points=False,
-                                                       gyration_tensor_parameters=gyration_tensor_parameters)
+                domain_calculation = FakeDomainCalculation(
+                    discretization, atom_discretization, results
+                )  # equal, k, k
+                cavity_calculation = CavityCalculation(
+                    domain_calculation,
+                    use_surface_points=False,
+                    gyration_tensor_parameters=gyration_tensor_parameters,
+                )
                 results.center_cavities = data.Cavities(cavity_calculation)
             resultfile.addresults(results, overwrite=recalculate)
 
@@ -367,9 +408,12 @@ class Calculation(object):
                 dirlist = os.path.dirname(filepath).split("/")
                 while "*" in exportdir:
                     i = exportdir.rindex("*")
-                    exportdir = os.path.join(exportdir[:i], dirlist.pop() + exportdir[i+1:])
-                if (calcsettings.exporthdf5 or calcsettings.exporttext) \
-                        and not os.path.exists(exportdir):
+                    exportdir = os.path.join(
+                        exportdir[:i], dirlist.pop() + exportdir[i + 1 :]
+                    )
+                if (
+                    calcsettings.exporthdf5 or calcsettings.exporttext
+                ) and not os.path.exists(exportdir):
                     os.makedirs(exportdir)
             else:
                 exportdir = os.path.dirname(filepath)
@@ -400,30 +444,56 @@ class Calculation(object):
                     center=calcsettings.center_cavities,
                     gyration_tensor_parameters=calcsettings.gyration_tensor,
                     recalculate=calcsettings.recalculate,
-                    last_frame=last_frame)
+                    last_frame=last_frame,
+                )
                 # export to text file
                 if calcsettings.exporttext:
-                    fmt = os.path.join(exportdir, fileprefix) + "-{property}-{frame:06d}.txt"
+                    fmt = (
+                        os.path.join(exportdir, fileprefix)
+                        + "-{property}-{frame:06d}.txt"
+                    )
                     if frameresult.atoms is not None:
-                        frameresult.atoms.totxt(fmt.format(property='{property}', frame=frame+1))
+                        frameresult.atoms.totxt(
+                            fmt.format(property="{property}", frame=frame + 1)
+                        )
                     if frameresult.domains is not None:
                         try:
-                            frameresult.domains.totxt(fmt.format(property='domain_{property}', frame=frame+1))
+                            frameresult.domains.totxt(
+                                fmt.format(
+                                    property="domain_{property}", frame=frame + 1
+                                )
+                            )
                         except ValueError as e:
                             logger.warn(str(e))
-                            logger.warn('The export of domain information could not be finished.')
+                            logger.warn(
+                                "The export of domain information could not be finished."
+                            )
                     if frameresult.surface_cavities is not None:
                         try:
-                            frameresult.surface_cavities.totxt(fmt.format(property='surface_cavities_{property}', frame=frame+1))
+                            frameresult.surface_cavities.totxt(
+                                fmt.format(
+                                    property="surface_cavities_{property}",
+                                    frame=frame + 1,
+                                )
+                            )
                         except ValueError as e:
                             logger.warn(str(e))
-                            logger.warn('The export of surface cavity information could not be finished.')
+                            logger.warn(
+                                "The export of surface cavity information could not be finished."
+                            )
                     if frameresult.center_cavities is not None:
                         try:
-                            frameresult.center_cavities.totxt(fmt.format(property='center_cavities_{property}', frame=frame+1))
+                            frameresult.center_cavities.totxt(
+                                fmt.format(
+                                    property="center_cavities_{property}",
+                                    frame=frame + 1,
+                                )
+                            )
                         except ValueError as e:
                             logger.warn(str(e))
-                            logger.warn('The export of center cavity information could not be finished.')
+                            logger.warn(
+                                "The export of center cavity information could not be finished."
+                            )
                 # gather results
                 fileresults.append(frameresult)
             allresults.append(fileresults)
@@ -498,15 +568,16 @@ class CalculationCache(object):
 
     def buildindex(self):
         self.index = dict()
-        filenames = set(f for f in os.listdir(self.directory) if os.path.splitext(f)[1] == "hdf5")
-        filenames.discard('discretization_cache.hdf5')
+        filenames = set(
+            f for f in os.listdir(self.directory) if os.path.splitext(f)[1] == "hdf5"
+        )
+        filenames.discard("discretization_cache.hdf5")
         for filename in filenames:
             cachepath = self.abspath(filename)
             try:
                 cachefile = file.HDF5File(cachepath)
                 filepath = cachefile.info.sourcefilepath
-                if filepath is not None \
-                        and filename == self.cachefile(filepath):
+                if filepath is not None and filename == self.cachefile(filepath):
                     self.index[filepath] = filename
             except (IOError, AttributeError, RuntimeError):
                 pass
@@ -521,7 +592,7 @@ class CalculationCache(object):
                 file_mtimes.append((cache_mtime, cachepath))
             # delete older cachefiles so that only max_cachefiles are left
             file_mtimes.sort()
-            for _, cachepath in file_mtimes[:-self.max_cachefiles]:
+            for _, cachepath in file_mtimes[: -self.max_cachefiles]:
                 os.remove(cachepath)
             # rebuild the index
             self.buildindex()
@@ -529,10 +600,9 @@ class CalculationCache(object):
     def writeindex(self):
         self.cleanindex()
         with open(self.indexfilepath, "w") as f:
-            for filepath, cachefile in sorted(self.index.items(),
-                                              key=lambda x: x[0]):
+            for filepath, cachefile in sorted(self.index.items(), key=lambda x: x[0]):
                 #  print >>f, filepath + "; " + cachefile
                 print(f"{filepath}; {cachefile}", f)
 
-calculation = Calculation()
 
+calculation = Calculation()

@@ -13,15 +13,24 @@ from ..core import file
 from ..config.configuration import config
 
 
-shell_colors = {'white_font':     "\033[37m",
-                'red_font':       "\033[31m",
-                'yellow_font':    "\033[33m",
-                'bold_font':      "\033[1m",
-                'red_background': "\033[41m",
-                'default': "\033[0m"}
+shell_colors = {
+    "white_font": "\033[37m",
+    "red_font": "\033[31m",
+    "yellow_font": "\033[33m",
+    "bold_font": "\033[1m",
+    "red_background": "\033[41m",
+    "default": "\033[0m",
+}
 
 
-get_progress_string = lambda progress: '[' + '='*int(20*progress) + ' '*(20-int(20*progress)) + ']' + ' %.2f' % (100*progress) + ' %'
+get_progress_string = (
+    lambda progress: "["
+    + "=" * int(20 * progress)
+    + " " * (20 - int(20 * progress))
+    + "]"
+    + " %.2f" % (100 * progress)
+    + " %"
+)
 
 
 class ReadState(object):
@@ -36,7 +45,9 @@ class FileList(object):
         self.global_export_dir = global_export_dir
         self.file_list = []
 
-    def append(self, filename, frames=None, resolution=None, atom_radii=None, export_dir=None):
+    def append(
+        self, filename, frames=None, resolution=None, atom_radii=None, export_dir=None
+    ):
         self.file_list.append((filename, frames, resolution, atom_radii, export_dir))
 
     def createCalculationSettings(self, default_settings):
@@ -91,114 +102,137 @@ class Cli(object):
             command_line_params = sys.argv[1:]
 
         self.control = control
-        self.options_list = [{"special_type": None,
-                              "name": "quiet",
-                              "short": "-q",
-                              "long": "--quiet",
-                              "action": "store_true",
-                              "dest": "quiet",
-                              "default": False,
-                              "type": None,
-                              "help": "Less progress information is printed"},
-                             {"special_type": "parameter",
-                              "name": "atom radius",
-                              "short": "-a",
-                              "long": "--atomradius",
-                              "action": "store",
-                              "dest": "atom_radii",
-                              "default": None,
-                              "type": "float",
-                              "help": "cut off radius"},
-                             {"special_type": "parameter",
-                              "name": "resolution",
-                              "short": "-r",
-                              "long": "--resolution",
-                              "action": "store",
-                              "dest": "resolution",
-                              "default": 128,
-                              "type": "int",
-                              "help": "vacancy resolution"},
-                             {"special_type": "parameter",
-                              "name": "output directory",
-                              "short": "-o",
-                              "long": "--output_directory",
-                              "action": "store",
-                              "dest": "output_directory",
-                              "default": None,
-                              "type": "str",
-                              "help": "directory to store the results in"},
-                             {"special_type": "parameter",
-                              "name": "max cachefiles",
-                              "short": "",
-                              "long": "--maxcachefiles",
-                              "action": "store",
-                              "dest": "max_cachefiles",
-                              "default": None,
-                              "type": "int",
-                              "help": "maximum number of cached files"},
-                             {"special_type": None,
-                              "name": "no cache files",
-                              "short": "",
-                              "long": "--no-cache",
-                              "action": "store_true",
-                              "dest": "no_cache",
-                              "default": False,
-                              "type": None,
-                              "help": "Do not use any unnecessary cache files. One temporary cache file is always necessary."},
-#                             {"special_type": "parameter",
-#                              "name": "bond delta",
-#                              "short": "-b",
-#                              "long": "--bonddelta",
-#                              "action": "store",
-#                              "dest": "bond_delta",
-#                              "default": None,
-#                              "type": "float",
-#                              "help": "constant bond delta (when no parameter is given, radii sum criterion (1.15) is used)"},
-                             {"special_type": "disable_target",
-                              "name": "no surface based cavities",
-                              "short": "",
-                              "long": "--nosurfacebasedcavities",
-                              "action": "store_true",
-                              "dest": "no_surface_based_cavities",
-                              "default": False,
-                              "type": None,
-                              "help": "Surface based cavities are not calculated."},
-                             {"special_type": "disable_target",
-                              "name": "no center based cavities",
-                              "short": "",
-                              "long": "--nocenterbasedcavities",
-                              "action": "store_true",
-                              "dest": "no_center_based_cavities",
-                              "default": False,
-                              "type": None,
-                              "help": "Center based cavities are not calculated."},
-                             {"special_type": "disable_target",
-                              "name": "no hdf5 export",
-                              "short": "",
-                              "long": "--nohdf5export",
-                              "action": "store_true",
-                              "dest": "no_hdf5_export",
-                              "default": False,
-                              "type": None,
-                              "help": "No HDF5 files with results are created"},
-                             {"special_type": "disable_target",
-                              "name": "no text export",
-                              "short": "",
-                              "long": "--notextexport",
-                              "action": "store_true",
-                              "dest": "no_text_export",
-                              "default": False,
-                              "type": None,
-                              "help": "No text files with results are created"}]
+        self.options_list = [
+            {
+                "special_type": None,
+                "name": "quiet",
+                "short": "-q",
+                "long": "--quiet",
+                "action": "store_true",
+                "dest": "quiet",
+                "default": False,
+                "type": None,
+                "help": "Less progress information is printed",
+            },
+            {
+                "special_type": "parameter",
+                "name": "atom radius",
+                "short": "-a",
+                "long": "--atomradius",
+                "action": "store",
+                "dest": "atom_radii",
+                "default": None,
+                "type": "float",
+                "help": "cut off radius",
+            },
+            {
+                "special_type": "parameter",
+                "name": "resolution",
+                "short": "-r",
+                "long": "--resolution",
+                "action": "store",
+                "dest": "resolution",
+                "default": 128,
+                "type": "int",
+                "help": "vacancy resolution",
+            },
+            {
+                "special_type": "parameter",
+                "name": "output directory",
+                "short": "-o",
+                "long": "--output_directory",
+                "action": "store",
+                "dest": "output_directory",
+                "default": None,
+                "type": "str",
+                "help": "directory to store the results in",
+            },
+            {
+                "special_type": "parameter",
+                "name": "max cachefiles",
+                "short": "",
+                "long": "--maxcachefiles",
+                "action": "store",
+                "dest": "max_cachefiles",
+                "default": None,
+                "type": "int",
+                "help": "maximum number of cached files",
+            },
+            {
+                "special_type": None,
+                "name": "no cache files",
+                "short": "",
+                "long": "--no-cache",
+                "action": "store_true",
+                "dest": "no_cache",
+                "default": False,
+                "type": None,
+                "help": "Do not use any unnecessary cache files. One temporary cache file is always necessary.",
+            },
+            #                             {"special_type": "parameter",
+            #                              "name": "bond delta",
+            #                              "short": "-b",
+            #                              "long": "--bonddelta",
+            #                              "action": "store",
+            #                              "dest": "bond_delta",
+            #                              "default": None,
+            #                              "type": "float",
+            #                              "help": "constant bond delta (when no parameter is given, radii sum criterion (1.15) is used)"},
+            {
+                "special_type": "disable_target",
+                "name": "no surface based cavities",
+                "short": "",
+                "long": "--nosurfacebasedcavities",
+                "action": "store_true",
+                "dest": "no_surface_based_cavities",
+                "default": False,
+                "type": None,
+                "help": "Surface based cavities are not calculated.",
+            },
+            {
+                "special_type": "disable_target",
+                "name": "no center based cavities",
+                "short": "",
+                "long": "--nocenterbasedcavities",
+                "action": "store_true",
+                "dest": "no_center_based_cavities",
+                "default": False,
+                "type": None,
+                "help": "Center based cavities are not calculated.",
+            },
+            {
+                "special_type": "disable_target",
+                "name": "no hdf5 export",
+                "short": "",
+                "long": "--nohdf5export",
+                "action": "store_true",
+                "dest": "no_hdf5_export",
+                "default": False,
+                "type": None,
+                "help": "No HDF5 files with results are created",
+            },
+            {
+                "special_type": "disable_target",
+                "name": "no text export",
+                "short": "",
+                "long": "--notextexport",
+                "action": "store_true",
+                "dest": "no_text_export",
+                "default": False,
+                "type": None,
+                "help": "No text files with results are created",
+            },
+        ]
 
         (self.options, self.left_args) = self.__parse_options(command_line_params)
         self.previous_progress = None
-        self.cancel_callback = lambda : None
-
+        self.cancel_callback = lambda: None
 
     # -------------------- public methods --------------------
     def start(self):
-        file_list = self.__get_file_list(filter(lambda entry: entry[0] != '-', self.left_args))
+        file_list = self.__get_file_list(
+            filter(lambda entry: entry[0] != "-", self.left_args)
+        )
 
         default_settings = CalculationSettings(dict())
         default_settings.resolution = self.control.config.Computation.std_resolution
@@ -219,20 +253,25 @@ class Cli(object):
         elif self.options.no_cache:
             config.Computation.max_cachefiles = 1
 
-
-        print('processing files:')
+        print("processing files:")
         print(file_list)
-        print('parameters:')
-        tmp_param_string=""
+        print("parameters:")
+        tmp_param_string = ""
         for i, opt_dict in enumerate(self.options_list):
-            tmp_param_string += opt_dict['name'] + ': ' + str(getattr(self.options, opt_dict['dest'])) + ', ' + ('\n' if i % 4 == 3 else '')
-        if tmp_param_string[-1] == '\n':
+            tmp_param_string += (
+                opt_dict["name"]
+                + ": "
+                + str(getattr(self.options, opt_dict["dest"]))
+                + ", "
+                + ("\n" if i % 4 == 3 else "")
+            )
+        if tmp_param_string[-1] == "\n":
             tmp_param_string = tmp_param_string[:-3]
         else:
             tmp_param_string = tmp_param_string[:-2]
         print(tmp_param_string)
         print()
-        print('='*80)
+        print("=" * 80)
 
         if len(settings_list) > 0:
             print("Started calculation: {}".format(datetime.now()))
@@ -249,7 +288,7 @@ class Cli(object):
 
             #    started_computation = True
 
-            #if started_computation:
+            # if started_computation:
             #    #self.__handle_input()
             #    try:
             #        self.control.request_action(Actions.Computation.WAIT_UNTIL_FINISHED, [True])
@@ -258,7 +297,6 @@ class Cli(object):
             #            self.cancel_callback()
             #        except task.IllegalTaskStateException:
             #            pass
-
 
     # -------------------- private methods -------------------
 
@@ -272,7 +310,7 @@ class Cli(object):
             except KeyboardInterrupt:
                 self.cancel_callback()
                 break
-            except ValueError:         # Wird beim Schliessen von stdin geworfen
+            except ValueError:  # Wird beim Schliessen von stdin geworfen
                 self.cancel_callback()
                 break
         print()
@@ -296,13 +334,15 @@ Note: Because the cutoff radius is stored in the global configuration, it cannot
         parser = optparse.OptionParser(usage=usage)
 
         for opt_dict in self.options_list:
-            parser.add_option(opt_dict["short"],
-                              opt_dict["long"],
-                              action=opt_dict["action"],
-                              dest=opt_dict["dest"],
-                              default=opt_dict["default"],
-                              type=opt_dict["type"],
-                              help=opt_dict["help"])
+            parser.add_option(
+                opt_dict["short"],
+                opt_dict["long"],
+                action=opt_dict["action"],
+                dest=opt_dict["dest"],
+                default=opt_dict["default"],
+                type=opt_dict["type"],
+                help=opt_dict["help"],
+            )
 
         (options, left_args) = parser.parse_args(command_line_params)
         if len(left_args) == 0:
@@ -311,9 +351,11 @@ Note: Because the cutoff radius is stored in the global configuration, it cannot
         return (options, left_args)
 
     def __get_file_list(self, input_file_list):
-        result_file_list = FileList(self.options.resolution,
-                                    self.options.atom_radii,
-                                    self.options.output_directory)
+        result_file_list = FileList(
+            self.options.resolution,
+            self.options.atom_radii,
+            self.options.output_directory,
+        )
         for input_file in input_file_list:
             read_state = ReadState.DEFAULT
             try:
@@ -324,15 +366,17 @@ Note: Because the cutoff radius is stored in the global configuration, it cannot
                     output_directory = None
                     for line in f.readlines():
                         lstripped_line = line.lstrip()
-                        if len(lstripped_line) > 0 and lstripped_line[0] != '#':
+                        if len(lstripped_line) > 0 and lstripped_line[0] != "#":
                             line_parts = lstripped_line.split()
                             line_is_processed = False
                             while not line_is_processed:
                                 if read_state == ReadState.ATOM_RADII:
-                                    if re.match(r'^\s+', line):
+                                    if re.match(r"^\s+", line):
                                         element = line_parts[0]
                                         radius = float(line_parts[1])
-                                        atom_radii[element] = radius #TODO ask ingo what is happening here
+                                        atom_radii[element] = (
+                                            radius  # TODO ask ingo what is happening here
+                                        )
                                         line_is_processed = True
                                     else:
                                         read_state = ReadState.DEFAULT
@@ -347,17 +391,30 @@ Note: Because the cutoff radius is stored in the global configuration, it cannot
                                     elif line_parts[0] == "OUTPUT_DIRECTORY":
                                         output_directory = " ".join(line_parts[1:])
                                     else:
-                                        filepath = os.path.join(os.path.dirname(os.path.abspath(input_file)),
-                                                                line_parts[0])
+                                        filepath = os.path.join(
+                                            os.path.dirname(
+                                                os.path.abspath(input_file)
+                                            ),
+                                            line_parts[0],
+                                        )
                                         if len(line_parts) > 1:
-                                            frames = [int(f) - 1 for f in line_parts[1:]]
+                                            frames = [
+                                                int(f) - 1 for f in line_parts[1:]
+                                            ]
                                         else:
                                             frames = None
-                                        result_file_list.append(filepath, frames, resolution,
-                                                                atom_radii, output_directory)
+                                        result_file_list.append(
+                                            filepath,
+                                            frames,
+                                            resolution,
+                                            atom_radii,
+                                            output_directory,
+                                        )
                                     line_is_processed = True
             except IOError:
-                print('warning: batch file %s not accessable and skipped' % (os.path.abspath(input_file)))
+                print(
+                    "warning: batch file %s not accessable and skipped"
+                    % (os.path.abspath(input_file))
+                )
 
         return result_file_list
-

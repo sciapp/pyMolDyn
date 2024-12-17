@@ -17,7 +17,7 @@ class LabeledComboBox(QtWidgets.QComboBox):
             if role == "parent":
                 option.state |= QtWidgets.QStyle.State_Enabled
             else:
-                indent = option.fontMetrics.width(2*' ')
+                indent = option.fontMetrics.width(2 * " ")
                 option.rect.adjust(indent, 0, 0, 0)
                 option.textElideMode = QtCore.Qt.ElideNone
             super(LabeledComboBox.Delegate, self).paint(painter, option, index)
@@ -30,7 +30,9 @@ class LabeledComboBox(QtWidgets.QComboBox):
     def _init_ui(self):
         self.setItemDelegate(LabeledComboBox.Delegate(self))
         label_item = QtGui.QStandardItem(self._label)
-        label_item.setFlags(label_item.flags() & ~(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable))
+        label_item.setFlags(
+            label_item.flags() & ~(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        )
         label_item.setData("parent", QtCore.Qt.AccessibleDescriptionRole)
         label_item_font = label_item.font()
         label_item_font.setBold(True)

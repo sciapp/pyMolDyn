@@ -14,10 +14,14 @@ logger = Logger("config.cutoff_history")
 logger.setstream("default", sys.stdout, Logger.WARNING)
 
 
-DEFAULT_CONFIG_FILE = os.path.expanduser(os.path.join(CONFIG_DIRECTORY, 'cutoff_history.json'))
+DEFAULT_CONFIG_FILE = os.path.expanduser(
+    os.path.join(CONFIG_DIRECTORY, "cutoff_history.json")
+)
 
 
-class HistoryEntry(collections.namedtuple('HistoryEntry', ['filename', 'frame', 'time', 'radii'])):
+class HistoryEntry(
+    collections.namedtuple("HistoryEntry", ["filename", "frame", "time", "radii"])
+):
     class Date(object):
         def __init__(self, *args, **kwargs):
             if not isinstance(args[0], datetime.datetime):
@@ -30,7 +34,7 @@ class HistoryEntry(collections.namedtuple('HistoryEntry', ['filename', 'frame', 
             return repr(self)
 
         def __repr__(self):
-            return self._date.strftime('%m/%d/%y, %H:%M')
+            return self._date.strftime("%m/%d/%y, %H:%M")
 
         @property
         def datetime_obj(self):
@@ -41,12 +45,18 @@ class HistoryEntry(collections.namedtuple('HistoryEntry', ['filename', 'frame', 
             time = HistoryEntry.Date(time)
         else:
             try:
-                time = HistoryEntry.Date(datetime.datetime.strptime(time, '%m/%d/%y, %H:%M'))
+                time = HistoryEntry.Date(
+                    datetime.datetime.strptime(time, "%m/%d/%y, %H:%M")
+                )
             except ValueError:
                 try:
-                    time = HistoryEntry.Date(datetime.datetime.strptime(time, '%Y-%m-%dT%H:%M:%S'))
+                    time = HistoryEntry.Date(
+                        datetime.datetime.strptime(time, "%Y-%m-%dT%H:%M:%S")
+                    )
                 except ValueError:
-                    time = HistoryEntry.Date(datetime.datetime.strptime(time, '%Y-%m-%dT%H:%M:%S.%f'))
+                    time = HistoryEntry.Date(
+                        datetime.datetime.strptime(time, "%Y-%m-%dT%H:%M:%S.%f")
+                    )
         self = super(HistoryEntry, cls).__new__(cls, filename, frame, time, radii)
         return self
 
@@ -59,10 +69,10 @@ class CutoffHistory(object):
 
     def read(self):
         try:
-            with open(self._config_filepath, 'r') as f:
+            with open(self._config_filepath, "r") as f:
                 history_json = json.load(f)
             #  for elem in history_json:
-                #  elem[3] = {elem.encode('utf-8'): value for elem, value in elem[3]}
+            #  elem[3] = {elem.encode('utf-8'): value for elem, value in elem[3]}
             self._history = [HistoryEntry(*entry) for entry in history_json]
         except IOError:
             self._history = []
@@ -74,6 +84,7 @@ class CutoffHistory(object):
             else:
                 print(type(obj))
                 raise TypeError
+
         try:
             history = []
             for entry in self.history:
@@ -81,28 +92,37 @@ class CutoffHistory(object):
                 for elem in entry[3]:
                     orig = elem
                     if isinstance(elem, bytes):
-                        elem = elem.decode('utf-8')
+                        elem = elem.decode("utf-8")
                     radii[elem] = entry[3][orig]
                 history.append(HistoryEntry(entry[0], entry[1], str(entry[2]), radii))
-            with open(self._config_filepath, 'w') as f:
+            with open(self._config_filepath, "w") as f:
                 json.dump(history, f, default=serialization_helper)
         except IOError:
-            logger.warn('Could not save cutoff radii history')
+            logger.warn("Could not save cutoff radii history")
             raise
 
-    def filtered_history(self, elements, entries_with_additional_elements=True, preferred_filenames_with_frames=None):
+    def filtered_history(
+        self,
+        elements,
+        entries_with_additional_elements=True,
+        preferred_filenames_with_frames=None,
+    ):
         elements = set(elements)
         filtered_history = []
         for entry in self._history:
             current_elements = set(entry.radii.keys())
-            if (entries_with_additional_elements and elements.issubset(current_elements)) or \
-               (not entries_with_additional_elements and elements == current_elements):
+            if (
+                entries_with_additional_elements and elements.issubset(current_elements)
+            ) or (
+                not entries_with_additional_elements and elements == current_elements
+            ):
                 filtered_history.append(entry)
         if preferred_filenames_with_frames is not None:
+
             def key_func(entry):
-                '''Key function thats for sorting by filenames. It preferres filenames from a given list by using
+                """Key function thats for sorting by filenames. It preferres filenames from a given list by using
                 integer weights.
-                '''
+                """
                 if entry.filename in preferred_filenames_with_frames:
                     if entry.frame in preferred_filenames_with_frames[entry.filename]:
                         weight = 0

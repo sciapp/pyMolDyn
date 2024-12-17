@@ -10,7 +10,7 @@ from .util.cutoff_preview_table import CutoffPreviewTable
 
 
 class CutoffPresetTable(TableWithRemoveableEntries):
-    HEADER_LABELS = ('Preset Name', 'Cutoff')
+    HEADER_LABELS = ("Preset Name", "Cutoff")
 
     def __init__(self, presets):
         self._presets = list(presets)
@@ -24,7 +24,11 @@ class CutoffPresetTable(TableWithRemoveableEntries):
 
     @property
     def presets(self):
-        return [entry for i, entry in enumerate(self._presets) if i in self._indices_to_remove]
+        return [
+            entry
+            for i, entry in enumerate(self._presets)
+            if i in self._indices_to_remove
+        ]
 
     @property
     def preset_entries_for_deletion(self):
@@ -37,7 +41,7 @@ class CutoffPresetTable(TableWithRemoveableEntries):
         entries = []
         for i, presets_entry in enumerate(self._presets):
             current_row = []
-            for j, value in enumerate((presets_entry.name, )):
+            for j, value in enumerate((presets_entry.name,)):
                 item = QtWidgets.QTableWidgetItem(str(value))
                 item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
                 current_row.append(item)

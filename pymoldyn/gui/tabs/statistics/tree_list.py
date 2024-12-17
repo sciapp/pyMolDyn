@@ -1,11 +1,12 @@
 from PySide6 import QtCore, QtWidgets
 from collections import Counter, OrderedDict
 
+
 class TreeList(QtWidgets.QTreeWidget):
     def __init__(self, html_view):
         QtWidgets.QTreeWidget.__init__(self)
         self.setColumnCount(1)
-        #todo dynamic list generation from results
+        # todo dynamic list generation from results
 
         # attributes get intialized by update_control method after calculation
         self.control = None
@@ -19,7 +20,7 @@ class TreeList(QtWidgets.QTreeWidget):
         self.atom_list = []
         self.cavities_center_list = []
         self.cavities_surface_list = []
-        self.domains_list  = []
+        self.domains_list = []
 
         self.html_view = html_view
 
@@ -55,31 +56,31 @@ class TreeList(QtWidgets.QTreeWidget):
         self.setCurrentItem(self.items[3].child(index))
 
     def item_selected(self, item, column):
-        '''
-            This method decides which element in the tree_list was clicked and calls the specific show method.
-        '''
+        """
+        This method decides which element in the tree_list was clicked and calls the specific show method.
+        """
         data = item.data(0, column)
-        if data == 'Atoms':
+        if data == "Atoms":
             self.html_view.show_atom_group()
-        elif data.startswith('Atom '):
-            index = int(data.split()[-1])-1
+        elif data.startswith("Atom "):
+            index = int(data.split()[-1]) - 1
             self.html_view.show_atom(index)
-        elif data == 'Cavities (center)':
+        elif data == "Cavities (center)":
             self.html_view.show_center_cavity_group()
-        elif data == 'Cavities (surface)':
+        elif data == "Cavities (surface)":
             self.html_view.show_surface_cavity_group()
-        elif data == 'Cavities (domains)':
+        elif data == "Cavities (domains)":
             self.html_view.show_domain_group()
         elif item.parent().data(0, column) is not None:
             parent = item.parent().data(0, column)
-            if data.startswith('Cavity ') and parent == "Cavities (center)":
-                index = int(data.split()[-1])-1
+            if data.startswith("Cavity ") and parent == "Cavities (center)":
+                index = int(data.split()[-1]) - 1
                 self.html_view.show_center_cavity(index)
-            elif data.startswith('Cavity ') and parent == 'Cavities (surface)':
-                index = int(data.split()[-1])-1
+            elif data.startswith("Cavity ") and parent == "Cavities (surface)":
+                index = int(data.split()[-1]) - 1
                 self.html_view.show_surface_cavity(index)
-            elif data.startswith('Cavity ') and parent == 'Cavities (domains)':
-                index = int(data.split()[-1])-1
+            elif data.startswith("Cavity ") and parent == "Cavities (domains)":
+                index = int(data.split()[-1]) - 1
                 self.html_view.show_domain(index)
 
     def update_results(self, results):
@@ -90,41 +91,53 @@ class TreeList(QtWidgets.QTreeWidget):
         self.cavities_surface = results.surface_cavities
         self.domains = results.domains
 
-        self.atom_list = ["Atom %d" % (i+1) for i in range(self.atoms.number)]
+        self.atom_list = ["Atom %d" % (i + 1) for i in range(self.atoms.number)]
         if self.cavities_center is not None:
-            self.cavities_center_list = ["Cavity %d" % (i+1) for i in range(len(self.cavities_center.multicavities))]
+            self.cavities_center_list = [
+                "Cavity %d" % (i + 1)
+                for i in range(len(self.cavities_center.multicavities))
+            ]
         else:
             self.cavities_center_list = []
         if self.cavities_surface is not None:
-            self.cavities_surface_list = ["Cavity %d" % (i+1) for i in range(len(self.cavities_surface.multicavities))]
+            self.cavities_surface_list = [
+                "Cavity %d" % (i + 1)
+                for i in range(len(self.cavities_surface.multicavities))
+            ]
         else:
             self.cavities_surface_list = []
         if self.domains is not None:
-            self.domains_list = ["Cavity %d" % (i+1) for i in range(self.domains.number)]
+            self.domains_list = [
+                "Cavity %d" % (i + 1) for i in range(self.domains.number)
+            ]
         else:
             self.domains_list = []
-        #print dir(atoms)
-        #print atoms.positions
-        #print atoms.elements
-        #print atoms.sorted_positions
-        #print atoms.radii_as_indices
-        #print atoms.sorted_radii
-        #print atoms.volume
-
+        # print dir(atoms)
+        # print atoms.positions
+        # print atoms.elements
+        # print atoms.sorted_positions
+        # print atoms.radii_as_indices
+        # print atoms.sorted_radii
+        # print atoms.volume
 
         self.update_tree_view()
 
     def update_tree_view(self):
         for index in reversed(range(self.topLevelItemCount())):
             self.takeTopLevelItem(index)
-        src = OrderedDict([
-            ('Atoms', self.atom_list),
-            ('Cavities (center)', self.cavities_center_list),
-            ('Cavities (surface)', self.cavities_surface_list),
-            ('Cavities (domains)', self.domains_list)])
+        src = OrderedDict(
+            [
+                ("Atoms", self.atom_list),
+                ("Cavities (center)", self.cavities_center_list),
+                ("Cavities (surface)", self.cavities_surface_list),
+                ("Cavities (domains)", self.domains_list),
+            ]
+        )
 
         self.items = []
         for root, sib in src.items():
             self.items.append(QtWidgets.QTreeWidgetItem(self, [root]))
             if sib:
-                self.items[-1].addChildren([QtWidgets.QTreeWidgetItem(self.items[-1], [s]) for s in sib])
+                self.items[-1].addChildren(
+                    [QtWidgets.QTreeWidgetItem(self.items[-1], [s]) for s in sib]
+                )

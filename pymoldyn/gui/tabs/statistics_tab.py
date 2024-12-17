@@ -3,22 +3,26 @@ from PySide6.QtCore import QTimer
 from .statistics.tree_list import TreeList
 from .statistics.html_view import HTMLWindow
 
+
 class StatisticsTabDock(QtWidgets.QDockWidget):
     """
-        DockWidget for the 'statistics'-tab
+    DockWidget for the 'statistics'-tab
     """
 
     def __init__(self, parent):
         QtWidgets.QDockWidget.__init__(self, "statistics", parent)
         self.setWidget(QtWidgets.QWidget())
 
-        self.layout             = QtWidgets.QHBoxLayout()
-        self.statistics_tab     = StatisticsTab(self.widget())
+        self.layout = QtWidgets.QHBoxLayout()
+        self.statistics_tab = StatisticsTab(self.widget())
 
         self.layout.addWidget(self.statistics_tab)
         self.widget().setLayout(self.layout)
 
-        self.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable | QtWidgets.QDockWidget.DockWidgetFloatable)
+        self.setFeatures(
+            QtWidgets.QDockWidget.DockWidgetMovable
+            | QtWidgets.QDockWidget.DockWidgetFloatable
+        )
         self.setVisible(False)
         self.setMinimumWidth(350)
 

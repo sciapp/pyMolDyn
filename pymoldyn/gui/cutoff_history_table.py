@@ -10,7 +10,7 @@ from .util.cutoff_preview_table import CutoffPreviewTable
 
 
 class CutoffHistoryTable(TableWithRemoveableEntries):
-    HEADER_LABELS = ('Filename', 'Frame', 'Time', 'Cutoff')
+    HEADER_LABELS = ("Filename", "Frame", "Time", "Cutoff")
 
     def __init__(self, history):
         self._history = list(history)
@@ -24,7 +24,11 @@ class CutoffHistoryTable(TableWithRemoveableEntries):
 
     @property
     def history(self):
-        return [entry for i, entry in enumerate(self._history) if i not in self._indices_to_remove]
+        return [
+            entry
+            for i, entry in enumerate(self._history)
+            if i not in self._indices_to_remove
+        ]
 
     @property
     def history_entries_for_deletion(self):
@@ -37,7 +41,9 @@ class CutoffHistoryTable(TableWithRemoveableEntries):
         entries = []
         for i, history_entry in enumerate(self._history):
             current_row = []
-            for j, value in enumerate((history_entry.filename, history_entry.frame + 1, history_entry.time)):
+            for j, value in enumerate(
+                (history_entry.filename, history_entry.frame + 1, history_entry.time)
+            ):
                 item = QtWidgets.QTableWidgetItem(str(value))
                 item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
                 current_row.append(item)

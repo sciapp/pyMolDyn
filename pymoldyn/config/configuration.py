@@ -4,17 +4,17 @@ import os
 import os.path
 import inspect
 
-CONFIG_DIRECTORY = '~/.pymoldyn/'   # MUST be written with ~ to save a path in the config file that is relative to the user's home directory
-CONFIG_FILE = os.path.expanduser('%s/config.cfg' % CONFIG_DIRECTORY)
-CONFIG_SPEC_FILE = os.path.expanduser('%s/config.spec' % CONFIG_DIRECTORY)
+CONFIG_DIRECTORY = "~/.pymoldyn/"  # MUST be written with ~ to save a path in the config file that is relative to the user's home directory
+CONFIG_FILE = os.path.expanduser("%s/config.cfg" % CONFIG_DIRECTORY)
+CONFIG_SPEC_FILE = os.path.expanduser("%s/config.spec" % CONFIG_DIRECTORY)
 
 # second string is the list type name
 type_dict = {
-    int: ('integer', 'int'),
-    float: ('float', 'float'),
-    str: ('string', 'string'),
-    str: ('string', 'string'),
-    bool: ('boolean', 'bool'),
+    int: ("integer", "int"),
+    float: ("float", "float"),
+    str: ("string", "string"),
+    str: ("string", "string"),
+    bool: ("boolean", "bool"),
 }
 
 
@@ -32,8 +32,8 @@ class Configuration(ConfigNode):
     class Colors(ConfigNode):
 
         def __init__(self):
-            self.surface_cavity = [0.2, 0.4, 1.]
-            self.domain = [0., 1., 0.5]
+            self.surface_cavity = [0.2, 0.4, 1.0]
+            self.domain = [0.0, 1.0, 0.5]
             self.center_cavity = [0.9, 0.4, 0.2]
             self.background = [0.0, 0.0, 0.0]
             self.bounding_box = [1.0, 1.0, 1.0]
@@ -58,9 +58,9 @@ class Configuration(ConfigNode):
     class Path(ConfigNode):
 
         def __init__(self):
-            self.cache_dir = os.path.join(CONFIG_DIRECTORY, 'cache')
-            self.ffmpeg = '/usr/local/bin/ffmpeg'
-            self.result_dir = os.path.join(CONFIG_DIRECTORY, 'results')
+            self.cache_dir = os.path.join(CONFIG_DIRECTORY, "cache")
+            self.ffmpeg = "/usr/local/bin/ffmpeg"
+            self.result_dir = os.path.join(CONFIG_DIRECTORY, "results")
 
     def __init__(self):
         # standard configuration
@@ -70,7 +70,7 @@ class Configuration(ConfigNode):
         self.Path = Configuration.Path()
 
         self.window_position = [-1, -1]
-        self.recent_files = ['']
+        self.recent_files = [""]
         self.max_files = 5
 
         self._file = ConfigFile(self)
@@ -80,7 +80,7 @@ class Configuration(ConfigNode):
             self.recent_files[0] = filename
         elif len(self.recent_files) == self.max_files:
             self.recent_files.pop(-1)
-            self.recent_files.insert(0,filename)
+            self.recent_files.insert(0, filename)
         else:
             self.recent_files.insert(0, filename)
         self.save()
@@ -133,7 +133,11 @@ class ConfigFile(object):
         """
         for scalar in section.scalars:
             t = type(section[scalar])
-            type_string = type_dict[t][0] if t is not list else type_dict[type(section[scalar][0])][1] + '_list'
+            type_string = (
+                type_dict[t][0]
+                if t is not list
+                else type_dict[type(section[scalar][0])][1] + "_list"
+            )
             spec_section[scalar] = type_string
         for sect in section.sections:
             spec_section[sect] = {}
@@ -164,7 +168,7 @@ class ConfigFile(object):
             if isinstance(attr, ConfigNode):
                 section[type(attr).__name__] = {}
                 self.parse_node_to_section(attr, section[type(attr).__name__])
-            elif not inspect.ismethod(attr) and not attr_str.startswith('_'):
+            elif not inspect.ismethod(attr) and not attr_str.startswith("_"):
                 section[attr_str] = attr
             else:
                 pass
@@ -178,8 +182,7 @@ class ConfigFile(object):
             self.save()
         else:
             validator = validate.Validator()
-            self.file = configobj.ConfigObj(CONFIG_FILE,
-                                            configspec=CONFIG_SPEC_FILE)
+            self.file = configobj.ConfigObj(CONFIG_FILE, configspec=CONFIG_SPEC_FILE)
             self.file.validate(validator)
             self.parse_section_to_node(self.file, self.config)
 
@@ -191,6 +194,7 @@ class ConfigFile(object):
             setattr(node, scalar, section[scalar])
         for sec in section.sections:
             self.parse_section_to_node(section[sec], getattr(node, sec))
+
 
 config = Configuration()
 config.read()

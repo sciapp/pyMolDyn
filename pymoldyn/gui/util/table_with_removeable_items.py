@@ -19,7 +19,9 @@ class TableWithRemoveableEntries(QtWidgets.QTableWidget):
             self._init_ui()
 
         def _init_ui(self):
-            self.bt_remove = QtWidgets.QPushButton(self.style().standardIcon(QtWidgets.QStyle.SP_TitleBarCloseButton), '')
+            self.bt_remove = QtWidgets.QPushButton(
+                self.style().standardIcon(QtWidgets.QStyle.SP_TitleBarCloseButton), ""
+            )
             self.bt_remove.setFixedSize(30, 30)
             self.bt_remove.setFlat(True)
             self.bt_remove.clicked.connect(lambda event: self.remove.emit())
@@ -30,18 +32,20 @@ class TableWithRemoveableEntries(QtWidgets.QTableWidget):
 
     def __init__(self, header_labels, entry_count):
         super().__init__(entry_count, len(header_labels) + 1)
-        self._table_fit = TableFit(self, size_hint_only=True, scrollbar_extra_space=(-1, 2))
+        self._table_fit = TableFit(
+            self, size_hint_only=True, scrollbar_extra_space=(-1, 2)
+        )
         self._header_labels = header_labels
         self._row_index_to_entry_index = range(entry_count)
         self._entry_index_to_row_index = range(entry_count)
         self._indices_to_remove = set()
-        TableWithRemoveableEntries._init_ui(self)   # Emulate static binding
+        TableWithRemoveableEntries._init_ui(self)  # Emulate static binding
 
     def _init_ui(self):
         self.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Expanding)
         self.setMaximumHeight(300)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setHorizontalHeaderLabels(self._header_labels + ('', ))
+        self.setHorizontalHeaderLabels(self._header_labels + ("",))
         self.setVerticalHeaderLabels(map(str, range(self.entry_count())))
         self.setShowGrid(True)
         self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
@@ -49,14 +53,16 @@ class TableWithRemoveableEntries(QtWidgets.QTableWidget):
 
         for i, entry in enumerate(self.entries()):
             for j, item in enumerate(entry):
-                if isinstance(item,  QtWidgets.QTableWidgetItem):
+                if isinstance(item, QtWidgets.QTableWidgetItem):
                     self.setItem(i, j, item)
                 else:
                     # item is an arbitrary widget that should be set as cell widget
                     self.setCellWidget(i, j, item)
             entry_action_widget = TableWithRemoveableEntries.EntryActionWidget()
             self.setCellWidget(i, len(entry), entry_action_widget)
-            entry_action_widget.remove.connect(lambda entry_index=i: self._remove_clicked(entry_index))
+            entry_action_widget.remove.connect(
+                lambda entry_index=i: self._remove_clicked(entry_index)
+            )
         self.resizeRowsToContents()
         self.resizeColumnsToContents()
 
@@ -73,15 +79,21 @@ class TableWithRemoveableEntries(QtWidgets.QTableWidget):
         super(TableWithRemoveableEntries, self).removeRow(row)
         self._indices_to_remove.add(self._row_index_to_entry_index[row])
         del self._row_index_to_entry_index[row]
-        self._entry_index_to_row_index = (self._entry_index_to_row_index[:row] +
-                                          [None] +
-                                          [index - 1 if index is not None else None
-                                           for index in self._entry_index_to_row_index[row+1:]])
+        self._entry_index_to_row_index = (
+            self._entry_index_to_row_index[:row]
+            + [None]
+            + [
+                index - 1 if index is not None else None
+                for index in self._entry_index_to_row_index[row + 1 :]
+            ]
+        )
 
     def _remove_clicked(self, entry_index):
         self.removeRow(self._entry_index_to_row_index[entry_index])
 
-    def entry_count(self):          # Overriding properties in in a QObject class seems not to work...
+    def entry_count(
+        self,
+    ):  # Overriding properties in in a QObject class seems not to work...
         raise NotImplementedError
 
     def entries(self):

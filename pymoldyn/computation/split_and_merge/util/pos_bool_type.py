@@ -1,4 +1,3 @@
-
 class PosBoolType(object):
     def __init__(self, pos):
         self.pos = pos
@@ -11,4 +10,3 @@ class PosBoolType(object):
 
     def __str__(self):
         return "(%d, %d, %d)" % self.pos
-

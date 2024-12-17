@@ -52,8 +52,9 @@ class GrPlotWidget(GRWidget):
         else:
             gr.setwsviewport(*wsviewport)
         gr.setwswindow(0, self.sizex, 0, self.sizey)
-        gr.setviewport(0.075 * self.sizex, 0.95 * self.sizex,
-                       0.075 * self.sizey, 0.95 * self.sizey)
+        gr.setviewport(
+            0.075 * self.sizex, 0.95 * self.sizex, 0.075 * self.sizey, 0.95 * self.sizey
+        )
         gr.setwindow(rangex[0], rangex[1], rangey[0], rangey[1])
         gr.setcharheight(0.012)
 
@@ -117,10 +118,28 @@ class PDFWidget(QtWidgets.QWidget):
 
         cutoffbox = QtWidgets.QHBoxLayout()
         cutoffbox.addWidget(QtWidgets.QLabel("Kernel:", self))
-        self.kernels = {"Gaussian": Kernels.gauss, "Epanechnikov": Kernels.epanechnikov, "Compact": Kernels.compact, "Triangular": Kernels.triang, "Box": Kernels.quad, "Right Box": Kernels.posquad, "Left Box": Kernels.negquad}
+        self.kernels = {
+            "Gaussian": Kernels.gauss,
+            "Epanechnikov": Kernels.epanechnikov,
+            "Compact": Kernels.compact,
+            "Triangular": Kernels.triang,
+            "Box": Kernels.quad,
+            "Right Box": Kernels.posquad,
+            "Left Box": Kernels.negquad,
+        }
         self.kernel = QtWidgets.QComboBox(self)
-        self.kernel .setMinimumWidth(130)
-        self.kernel.addItems(["Gaussian", "Epanechnikov", "Compact", "Triangular", "Box", "Right Box", "Left Box"])
+        self.kernel.setMinimumWidth(130)
+        self.kernel.addItems(
+            [
+                "Gaussian",
+                "Epanechnikov",
+                "Compact",
+                "Triangular",
+                "Box",
+                "Right Box",
+                "Left Box",
+            ]
+        )
         cutoffbox.addWidget(self.kernel)
         cutoffbox.addWidget(QtWidgets.QLabel("Cutoff:", self))
         self.cutoff = QtWidgets.QLineEdit("12", self)
@@ -154,8 +173,7 @@ class PDFWidget(QtWidgets.QWidget):
         self.show()
 
     def keyPressEvent(self, event):
-        if event.key() == QtCore.Qt.Key_Return \
-                or event.key() == QtCore.Qt.Key_Enter:
+        if event.key() == QtCore.Qt.Key_Return or event.key() == QtCore.Qt.Key_Enter:
             self.update()
 
     def draw(self, now=False, wsviewport=None):
@@ -183,10 +201,10 @@ class PDFWidget(QtWidgets.QWidget):
                 bandwidth = float(str(self.bandwidth.text()))
                 if bandwidth < 0:
                     bandwidth = 0
-                    self.bandwidth.setText('0')
+                    self.bandwidth.setText("0")
             except ValueError:
                 bandwidth = None
-                self.bandwidth.setText('')
+                self.bandwidth.setText("")
             kernel = self.kernels.get(self.kernel.currentText(), None)
             f = self.pdf.pdf(elem1, elem2, cutoff=cutoff, h=bandwidth, kernel=kernel)
             if f is not None:
@@ -212,17 +230,30 @@ class PDFWidget(QtWidgets.QWidget):
             self.gr_widget.draw(wsviewport=wsviewport)
 
     def export_image(self):
-        extensions = (".pdf", ".png", ".bmp", ".jpg", ".jpeg", ".png",
-                      ".tiff", ".fig", ".svg", ".wmf", ".eps", ".ps")
+        extensions = (
+            ".pdf",
+            ".png",
+            ".bmp",
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".tiff",
+            ".fig",
+            ".svg",
+            ".wmf",
+            ".eps",
+            ".ps",
+        )
         qtext = "*" + " *".join(extensions)
-        filepath = QtWidgets.QFileDialog.getSaveFileName(self, "Save Image",
-                                                     ".", "Image Files ({})".format(qtext))[0]
+        filepath = QtWidgets.QFileDialog.getSaveFileName(
+            self, "Save Image", ".", "Image Files ({})".format(qtext)
+        )[0]
         if len(filepath) == 0:
             return
 
-        if filepath.endswith('.eps') or filepath.endswith('.ps'):
-            gr.beginprintext(filepath, 'Color', 'A4', 'Landscape')
-            self.draw(now=True, wsviewport=(0, 0.297*0.9, 0, 0.21*0.95))
+        if filepath.endswith(".eps") or filepath.endswith(".ps"):
+            gr.beginprintext(filepath, "Color", "A4", "Landscape")
+            self.draw(now=True, wsviewport=(0, 0.297 * 0.9, 0, 0.21 * 0.95))
         else:
             gr.beginprint(filepath)
             self.draw(now=True)
@@ -230,8 +261,9 @@ class PDFWidget(QtWidgets.QWidget):
 
     def export_data(self):
         qtext = " *.csv"
-        filepath = QtWidgets.QFileDialog.getSaveFileName(self, "Save Data",
-                                                     ".", "CSV Files ({})".format(qtext))[0]
+        filepath = QtWidgets.QFileDialog.getSaveFileName(
+            self, "Save Data", ".", "CSV Files ({})".format(qtext)
+        )[0]
         if len(filepath) == 0:
             return
         self.update()
@@ -239,7 +271,9 @@ class PDFWidget(QtWidgets.QWidget):
         yvalues = self.gr_widget.yvalues
         if xvalues is None or yvalues is None:
             return
-        with open(filepath, 'w') as csvfile: #TODO same check as with histogramm (bytes csv)
+        with open(
+            filepath, "w"
+        ) as csvfile:  # TODO same check as with histogramm (bytes csv)
             csvwriter = csv.writer(csvfile)
             for x, y in zip(xvalues, yvalues):
                 csvwriter.writerow([x, y])
@@ -254,9 +288,11 @@ class PDFWidget(QtWidgets.QWidget):
                 e = np.unique(results.atoms.elements).tolist()
                 for i in range(len(e)):
                     e[i] = e[i].decode("utf-8")
-                if results.domains is not None \
-                        and len(results.domains.centers) > 0 \
-                        and "cav" not in e:
+                if (
+                    results.domains is not None
+                    and len(results.domains.centers) > 0
+                    and "cav" not in e
+                ):
                     e.append("cavity domain centers")
                 self.elem1.clear()
                 self.elem1.addItems(e)

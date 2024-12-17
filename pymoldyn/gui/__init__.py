@@ -37,7 +37,10 @@ def test_gui_dependencies():
             + f"{', '.join(gui_dependencies[dep] for dep in missing_dependencies)}",
             file=sys.stderr,
         )
-        print("Please install them (or `pip install pymoldyn[gui]`) and try again.", file=sys.stderr)
+        print(
+            "Please install them (or `pip install pymoldyn[gui]`) and try again.",
+            file=sys.stderr,
+        )
         return False
     return True
 

@@ -15,25 +15,30 @@ from ...util import message
 
 class FileTabDock(QtWidgets.QDockWidget):
     """
-        DockWidget for the 'file'-tab
+    DockWidget for the 'file'-tab
     """
+
     def __init__(self, parent):
         QtWidgets.QDockWidget.__init__(self, "file", parent)
         self.setWidget(QtWidgets.QWidget(self))
 
-        self.layout     = QtWidgets.QHBoxLayout()
-        self.file_tab   = FileTab(self.widget(), parent)
+        self.layout = QtWidgets.QHBoxLayout()
+        self.file_tab = FileTab(self.widget(), parent)
 
         self.layout.addWidget(self.file_tab)
         self.widget().setLayout(self.layout)
 
-        self.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable | QtWidgets.QDockWidget.DockWidgetFloatable)
+        self.setFeatures(
+            QtWidgets.QDockWidget.DockWidgetMovable
+            | QtWidgets.QDockWidget.DockWidgetFloatable
+        )
 
 
 class CalculationThread(QtCore.QThread):
     """
-        Thread to calculate the cavities
+    Thread to calculate the cavities
     """
+
     def __init__(self, parent, func, settings):
         QtCore.QThread.__init__(self, parent)
         self.func = func
@@ -56,7 +61,7 @@ class CalculationThread(QtCore.QThread):
 
 class FileTab(QtWidgets.QWidget):
     """
-        tab 'file' in the main widget
+    tab 'file' in the main widget
     """
 
     def __init__(self, parent, main_window):
@@ -77,22 +82,22 @@ class FileTab(QtWidgets.QWidget):
         self.button_hbox = QtWidgets.QHBoxLayout()
         self.button_hbox.setSpacing(10)
 
-        self.file_button = QtWidgets.QPushButton('Open', self)
+        self.file_button = QtWidgets.QPushButton("Open", self)
         self.file_button.setDefault(True)
         self.file_button.clicked.connect(self.open_file_dialog)
         self.button_hbox.addWidget(self.file_button)
 
-        self.delete_button = QtWidgets.QPushButton('Delete', self)
+        self.delete_button = QtWidgets.QPushButton("Delete", self)
         self.delete_button.clicked.connect(self.remove_selected_files)
         self.delete_button.setDisabled(True)
         self.button_hbox.addWidget(self.delete_button)
 
-        self.calculate_button = QtWidgets.QPushButton('Calculate', self)
+        self.calculate_button = QtWidgets.QPushButton("Calculate", self)
         self.calculate_button.clicked.connect(self.calculate)
         self.calculate_button.setDisabled(True)
         self.button_hbox.addWidget(self.calculate_button)
 
-        self.show_button = QtWidgets.QPushButton('Show', self)
+        self.show_button = QtWidgets.QPushButton("Show", self)
         self.show_button.clicked.connect(self.show_selected_frame)
         self.show_button.setDisabled(True)
         self.button_hbox.addWidget(self.show_button)
@@ -102,25 +107,27 @@ class FileTab(QtWidgets.QWidget):
         self.button2_hbox = QtWidgets.QHBoxLayout()
         self.button2_hbox.setSpacing(10)
 
-        self.select_all_button = QtWidgets.QPushButton('Select all frames', self)
+        self.select_all_button = QtWidgets.QPushButton("Select all frames", self)
         self.select_all_button.clicked.connect(self.select_all)
         self.select_all_button.setDisabled(True)
         self.button2_hbox.addWidget(self.select_all_button)
 
-        self.select_nth_button = QtWidgets.QPushButton('Select every nth frame...', self)
+        self.select_nth_button = QtWidgets.QPushButton(
+            "Select every nth frame...", self
+        )
         self.select_nth_button.clicked.connect(self.select_nth)
         self.select_nth_button.setDisabled(True)
         self.button2_hbox.addWidget(self.select_nth_button)
 
         self.vbox.addLayout(self.button2_hbox)
 
-#        self.file_list = DragList(self)
-#        self.file_list.itemDoubleClicked.connect(self.calculate)
-#        self.file_list.itemSelectionChanged.connect(self.selection_changed)
-#        self.vbox.addWidget(self.file_list)
-#
-#        for path in config.recent_files:
-#            self.file_list.add_file(path)
+        #        self.file_list = DragList(self)
+        #        self.file_list.itemDoubleClicked.connect(self.calculate)
+        #        self.file_list.itemSelectionChanged.connect(self.selection_changed)
+        #        self.vbox.addWidget(self.file_list)
+        #
+        #        for path in config.recent_files:
+        #            self.file_list.add_file(path)
 
         self.file_list = TreeList(self)
         self.vbox.addSpacing(10)
@@ -158,14 +165,18 @@ class FileTab(QtWidgets.QWidget):
         item = subitem.parent()
 
         # if sheet contains only one frame and this is deleted, the parent will be also deleted
-        if subitem.text(0).startswith("frame") and ((item.childCount() == 1) or (item.childCount() == len(selected))):
+        if subitem.text(0).startswith("frame") and (
+            (item.childCount() == 1) or (item.childCount() == len(selected))
+        ):
             text = item.text(0)
             for action in actions:
                 if action.text().endswith(text):
                     action.setEnabled(True)
                     item.takeChild(item.indexOfChild(subitem))
                     self.file_list.removeItemWidget(subitem, 0)
-                    self.file_list.takeTopLevelItem(self.file_list.indexOfTopLevelItem(item))
+                    self.file_list.takeTopLevelItem(
+                        self.file_list.indexOfTopLevelItem(item)
+                    )
                     self.file_list.removeItemWidget(item, 0)
                     del self.file_list.path_dict[text]
         else:
@@ -185,11 +196,15 @@ class FileTab(QtWidgets.QWidget):
         try:
             self.file_list.add_file(path)
         except ValueError as e:
-            QtWidgets.QMessageBox.information(self, 'Information', str(e), QtWidgets.QMessageBox.Ok)
+            QtWidgets.QMessageBox.information(
+                self, "Information", str(e), QtWidgets.QMessageBox.Ok
+            )
             return
 
     def open_file_dialog(self):
-        filenames = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open dataset', self.most_recent_path)[0]
+        filenames = QtWidgets.QFileDialog.getOpenFileNames(
+            self, "Open dataset", self.most_recent_path
+        )[0]
         for path in filenames:
             if path:
                 self.disable_files_in_menu_and_open(path)
@@ -201,12 +216,25 @@ class FileTab(QtWidgets.QWidget):
                 self.file_list._enable_screenshot_button()
 
         self.thread = CalculationThread(self, func, settings)
-        self.thread.finished.connect(functools.partial(self.control.update,
-                                                  was_successful=lambda: not self.thread.exited_with_errors))
-        self.thread.finished.connect(functools.partial(self.main_window.updatestatus,
-                                                  was_successful=lambda: not self.thread.exited_with_errors))
-        self.thread.finished.connect(functools.partial(enable_screenshot_button_on_success, self,
-                                                  was_successful=lambda: not self.thread.exited_with_errors))
+        self.thread.finished.connect(
+            functools.partial(
+                self.control.update,
+                was_successful=lambda: not self.thread.exited_with_errors,
+            )
+        )
+        self.thread.finished.connect(
+            functools.partial(
+                self.main_window.updatestatus,
+                was_successful=lambda: not self.thread.exited_with_errors,
+            )
+        )
+        self.thread.finished.connect(
+            functools.partial(
+                enable_screenshot_button_on_success,
+                self,
+                was_successful=lambda: not self.thread.exited_with_errors,
+            )
+        )
         self.thread.start()
         self.progress_dialog.exec_()
 
@@ -219,8 +247,10 @@ class FileTab(QtWidgets.QWidget):
         if ok:
             self.control.calculationcallback = self.calculationcallback
             self.control.calculate(settings)
-            self.last_shown_filename_with_frame = (list(file_frame_dict.keys())[-1],
-                                                   list(file_frame_dict.values())[-1][-1])
+            self.last_shown_filename_with_frame = (
+                list(file_frame_dict.keys())[-1],
+                list(file_frame_dict.values())[-1][-1],
+            )
 
 
 class TreeList(QtWidgets.QTreeWidget):
@@ -256,7 +286,7 @@ class TreeList(QtWidgets.QTreeWidget):
     def acceptable_drop_urls(self, e):
         if e.mimeData().hasUrls():
             for url in e.mimeData().urls():
-                if url.scheme() == 'file' and os.path.isfile(url.path()):
+                if url.scheme() == "file" and os.path.isfile(url.path()):
                     yield url
 
     def dragEnterEvent(self, e):
@@ -284,7 +314,7 @@ class TreeList(QtWidgets.QTreeWidget):
         frames_selected = 0
         for item in self.selectedItems():
             # items representing the whole dataset
-            if not item.data(0, 0).startswith('frame'):
+            if not item.data(0, 0).startswith("frame"):
                 # select the children of the selected dataset
                 for i in range(item.childCount()):
                     c = item.child(i)
@@ -295,8 +325,13 @@ class TreeList(QtWidgets.QTreeWidget):
         any_frame_selected = len(self.selectedItems()) > 0
         self.parent().delete_button.setEnabled(any_frame_selected)
         self.parent().calculate_button.setEnabled(any_frame_selected)
-        only_one_frame_available = self.topLevelItemCount() == 1 and self.topLevelItem(0).childCount() == 1
-        self.parent().show_button.setEnabled(frames_selected == 1 or (not any_frame_selected and only_one_frame_available))
+        only_one_frame_available = (
+            self.topLevelItemCount() == 1 and self.topLevelItem(0).childCount() == 1
+        )
+        self.parent().show_button.setEnabled(
+            frames_selected == 1
+            or (not any_frame_selected and only_one_frame_available)
+        )
         parent = self.parent()
         while parent.parent():
             parent = parent.parent()
@@ -316,7 +351,7 @@ class TreeList(QtWidgets.QTreeWidget):
         sel = {}
         for item in self.selectedItems():
             content = str(item.data(0, 0))
-            if not content.startswith('frame'):
+            if not content.startswith("frame"):
                 sel[self.path_dict[content]] = [-1]
             else:
                 parent_content = str(item.parent().data(0, 0))
@@ -332,7 +367,7 @@ class TreeList(QtWidgets.QTreeWidget):
         del_files = self.selectedItems()
         for i, item in enumerate(del_files):
             content = str(item.data(0, 0))
-            if content.startswith('frame'):
+            if content.startswith("frame"):
                 item.parent().takeChild(item.parent().indexOfChild(item))
                 self.removeItemWidget(item, 0)
                 del del_files[i]
@@ -340,7 +375,7 @@ class TreeList(QtWidgets.QTreeWidget):
         # delete top level items
         for item in self.selectedItems():
             content = str(item.data(0, 0))
-            if not content.startswith('frame'):
+            if not content.startswith("frame"):
                 self.takeTopLevelItem(self.indexOfTopLevelItem(item))
                 self.removeItemWidget(item, 0)
                 del self.path_dict[content]
@@ -355,7 +390,7 @@ class TreeList(QtWidgets.QTreeWidget):
         if bname not in self.path_dict.keys() and File.exists(path):
             self.path_dict[bname] = str(path)
             root = bname
-            sib = ['frame {}'.format(i) for i in range(1, n_frames + 1)]
+            sib = ["frame {}".format(i) for i in range(1, n_frames + 1)]
             self.append_item(root, sib)
 
             if path not in config.recent_files:
@@ -388,12 +423,14 @@ class TreeList(QtWidgets.QTreeWidget):
             msgBox = QtWidgets.QMessageBox(self)
             msgBox.setWindowTitle("Missing cell shape description")
             msgBox.setTextFormat(QtCore.Qt.RichText)
-            msgBox.setText("This file does not contain information about the "
-                           "cell shape. Should pyMolDyn use an orthorhombic "
-                           "shape?<br />"
-                           "You can find information about the different cell "
-                           "shapes shapes in the "
-                           "<a href=\"https://pgi-jcns.fz-juelich.de/portal/pages/pymoldyn-doc.html#cell-shape-description\">pyMolDyn documentation</a>")
+            msgBox.setText(
+                "This file does not contain information about the "
+                "cell shape. Should pyMolDyn use an orthorhombic "
+                "shape?<br />"
+                "You can find information about the different cell "
+                "shapes shapes in the "
+                '<a href="https://pgi-jcns.fz-juelich.de/portal/pages/pymoldyn-doc.html#cell-shape-description">pyMolDyn documentation</a>'
+            )
             msgBox.addButton(QtWidgets.QMessageBox.Yes)
             msgBox.addButton(QtWidgets.QMessageBox.No)
             msgBox.setDefaultButton(QtWidgets.QMessageBox.Yes)

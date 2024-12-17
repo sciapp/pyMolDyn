@@ -128,46 +128,47 @@
     A badly formatted set of arguments will raise a ``VdtParamError``.
 """
 
-__version__ = '1.0.1'
+__version__ = "1.0.1"
 
 
 __all__ = (
-    '__version__',
-    'dottedQuadToNum',
-    'numToDottedQuad',
-    'ValidateError',
-    'VdtUnknownCheckError',
-    'VdtParamError',
-    'VdtTypeError',
-    'VdtValueError',
-    'VdtValueTooSmallError',
-    'VdtValueTooBigError',
-    'VdtValueTooShortError',
-    'VdtValueTooLongError',
-    'VdtMissingValue',
-    'Validator',
-    'is_integer',
-    'is_float',
-    'is_boolean',
-    'is_list',
-    'is_tuple',
-    'is_ip_addr',
-    'is_string',
-    'is_int_list',
-    'is_bool_list',
-    'is_float_list',
-    'is_string_list',
-    'is_ip_addr_list',
-    'is_mixed_list',
-    'is_option',
-    '__docformat__',
+    "__version__",
+    "dottedQuadToNum",
+    "numToDottedQuad",
+    "ValidateError",
+    "VdtUnknownCheckError",
+    "VdtParamError",
+    "VdtTypeError",
+    "VdtValueError",
+    "VdtValueTooSmallError",
+    "VdtValueTooBigError",
+    "VdtValueTooShortError",
+    "VdtValueTooLongError",
+    "VdtMissingValue",
+    "Validator",
+    "is_integer",
+    "is_float",
+    "is_boolean",
+    "is_list",
+    "is_tuple",
+    "is_ip_addr",
+    "is_string",
+    "is_int_list",
+    "is_bool_list",
+    "is_float_list",
+    "is_string_list",
+    "is_ip_addr_list",
+    "is_mixed_list",
+    "is_option",
+    "__docformat__",
 )
 
 
 import re
 
 
-_list_arg = re.compile(r'''
+_list_arg = re.compile(
+    r"""
     (?:
         ([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*list\(
             (
@@ -188,9 +189,12 @@ _list_arg = re.compile(r'''
             )
         \)
     )
-''', re.VERBOSE | re.DOTALL)    # two groups
+""",
+    re.VERBOSE | re.DOTALL,
+)  # two groups
 
-_list_members = re.compile(r'''
+_list_members = re.compile(
+    r"""
     (
         (?:".*?")|              # double quotes
         (?:'.*?')|              # single quotes
@@ -199,9 +203,11 @@ _list_members = re.compile(r'''
     (?:
     (?:\s*,\s*)|(?:\s*$)            # comma
     )
-''', re.VERBOSE | re.DOTALL)    # one group
+""",
+    re.VERBOSE | re.DOTALL,
+)  # one group
 
-_paramstring = r'''
+_paramstring = r"""
     (?:
         (
             (?:
@@ -240,16 +246,17 @@ _paramstring = r'''
             (?:\s*,\s*)|(?:\s*$)            # comma
         )
     )
-    '''
+    """
 
-_matchstring = '^%s*' % _paramstring
+_matchstring = "^%s*" % _paramstring
 
 # Python pre 2.2.1 doesn't have bool
 try:
     bool
 except NameError:
+
     def bool(val):
-        """Simple boolean equivalent function. """
+        """Simple boolean equivalent function."""
         if val:
             return 1
         else:
@@ -281,14 +288,13 @@ def dottedQuadToNum(ip):
     import socket, struct
 
     try:
-        return struct.unpack('!L',
-            socket.inet_aton(ip.strip()))[0]
+        return struct.unpack("!L", socket.inet_aton(ip.strip()))[0]
     except socket.error:
         # bug in inet_aton, corrected in Python 2.3
-        if ip.strip() == '255.255.255.255':
+        if ip.strip() == "255.255.255.255":
             return 0xFFFFFFFF
         else:
-            raise ValueError('Not a good dotted-quad IP: %s' % ip)
+            raise ValueError("Not a good dotted-quad IP: %s" % ip)
     return
 
 
@@ -319,12 +325,11 @@ def numToDottedQuad(num):
 
     # no need to intercept here, 4294967295L is fine
     if num > 4294967295 or num < 0:
-        raise ValueError('Not a good numeric IP: %s' % num)
+        raise ValueError("Not a good numeric IP: %s" % num)
     try:
-        return socket.inet_ntoa(
-            struct.pack('!L', int(num)))
+        return socket.inet_ntoa(struct.pack("!L", int(num)))
     except (socket.error, struct.error, OverflowError):
-        raise ValueError('Not a good numeric IP: %s' % num)
+        raise ValueError("Not a good numeric IP: %s" % num)
 
 
 class ValidateError(Exception):
@@ -366,7 +371,9 @@ class VdtParamError(SyntaxError):
         Traceback (most recent call last):
         VdtParamError: passed an incorrect value "jedi" for parameter "yoda".
         """
-        SyntaxError.__init__(self, 'passed an incorrect value "%s" for parameter "%s".' % (value, name))
+        SyntaxError.__init__(
+            self, 'passed an incorrect value "%s" for parameter "%s".' % (value, name)
+        )
 
 
 class VdtTypeError(ValidateError):
@@ -426,9 +433,7 @@ class VdtValueTooShortError(VdtValueError):
         Traceback (most recent call last):
         VdtValueTooShortError: the value "jed" is too short.
         """
-        ValidateError.__init__(
-            self,
-            'the value "%s" is too short.' % (value,))
+        ValidateError.__init__(self, 'the value "%s" is too short.' % (value,))
 
 
 class VdtValueTooLongError(VdtValueError):
@@ -516,11 +521,10 @@ class Validator(object):
     """
 
     # this regex does the initial parsing of the checks
-    _func_re = re.compile(r'(.+?)\((.*)\)', re.DOTALL)
+    _func_re = re.compile(r"(.+?)\((.*)\)", re.DOTALL)
 
     # this regex takes apart keyword arguments
-    _key_arg = re.compile(r'^([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*(.*)$',  re.DOTALL)
-
+    _key_arg = re.compile(r"^([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*(.*)$", re.DOTALL)
 
     # this regex finds keyword=list(....) type values
     _list_arg = _list_arg
@@ -533,36 +537,34 @@ class Validator(object):
     _paramfinder = re.compile(_paramstring, re.VERBOSE | re.DOTALL)
     _matchfinder = re.compile(_matchstring, re.VERBOSE | re.DOTALL)
 
-
     def __init__(self, functions=None):
         """
         >>> vtri = Validator()
         """
         self.functions = {
-            '': self._pass,
-            'integer': is_integer,
-            'float': is_float,
-            'boolean': is_boolean,
-            'ip_addr': is_ip_addr,
-            'string': is_string,
-            'list': is_list,
-            'tuple': is_tuple,
-            'int_list': is_int_list,
-            'float_list': is_float_list,
-            'bool_list': is_bool_list,
-            'ip_addr_list': is_ip_addr_list,
-            'string_list': is_string_list,
-            'mixed_list': is_mixed_list,
-            'pass': self._pass,
-            'option': is_option,
-            'force_list': force_list,
+            "": self._pass,
+            "integer": is_integer,
+            "float": is_float,
+            "boolean": is_boolean,
+            "ip_addr": is_ip_addr,
+            "string": is_string,
+            "list": is_list,
+            "tuple": is_tuple,
+            "int_list": is_int_list,
+            "float_list": is_float_list,
+            "bool_list": is_bool_list,
+            "ip_addr_list": is_ip_addr_list,
+            "string_list": is_string_list,
+            "mixed_list": is_mixed_list,
+            "pass": self._pass,
+            "option": is_option,
+            "force_list": force_list,
         }
         if functions is not None:
             self.functions.update(functions)
         # tekNico: for use by ConfigObj
         self.baseErrorClass = ValidateError
         self._cache = {}
-
 
     def check(self, check, value, missing=False):
         """
@@ -598,15 +600,13 @@ class Validator(object):
 
         return self._check_value(value, fun_name, fun_args, fun_kwargs)
 
-
     def _handle_none(self, value):
-        if value == 'None':
+        if value == "None":
             value = None
         elif value in ("'None'", '"None"'):
             # Special case a quoted None
             value = self._unquote(value)
         return value
-
 
     def _parse_with_caching(self, check):
         if check in self._cache:
@@ -617,10 +617,11 @@ class Validator(object):
             fun_kwargs = dict(fun_kwargs)
         else:
             fun_name, fun_args, fun_kwargs, default = self._parse_check(check)
-            fun_kwargs = dict([(str(key), value) for (key, value) in fun_kwargs.items()])
+            fun_kwargs = dict(
+                [(str(key), value) for (key, value) in fun_kwargs.items()]
+            )
             self._cache[check] = fun_name, list(fun_args), dict(fun_kwargs), default
         return fun_name, fun_args, fun_kwargs, default
-
 
     def _check_value(self, value, fun_name, fun_args, fun_kwargs):
         try:
@@ -629,7 +630,6 @@ class Validator(object):
             raise VdtUnknownCheckError(fun_name)
         else:
             return fun(value, *fun_args, **fun_kwargs)
-
 
     def _parse_check(self, check):
         fun_match = self._func_re.match(check)
@@ -668,25 +668,23 @@ class Validator(object):
         # Default must be deleted if the value is specified too,
         # otherwise the check function will get a spurious "default" keyword arg
         try:
-            default = fun_kwargs.pop('default', None)
+            default = fun_kwargs.pop("default", None)
         except AttributeError:
             # Python 2.2 compatibility
             default = None
             try:
-                default = fun_kwargs['default']
-                del fun_kwargs['default']
+                default = fun_kwargs["default"]
+                del fun_kwargs["default"]
             except KeyError:
                 pass
 
         return fun_name, fun_args, fun_kwargs, default
-
 
     def _unquote(self, val):
         """Unquote a value if necessary."""
         if (len(val) >= 2) and (val[0] in ("'", '"')) and (val[0] == val[-1]):
             val = val[1:-1]
         return val
-
 
     def _list_handle(self, listmatch):
         """Take apart a ``keyword=list('val, 'val')`` type string."""
@@ -696,7 +694,6 @@ class Validator(object):
         for arg in self._list_members.findall(args):
             out.append(self._unquote(arg))
         return name, out
-
 
     def _pass(self, value):
         """
@@ -708,7 +705,6 @@ class Validator(object):
         '0'
         """
         return value
-
 
     def get_default_value(self, check):
         """
@@ -745,7 +741,7 @@ def _is_num_param(names, values, to_float=False):
     """
     fun = to_float and float or int
     out_params = []
-    for (name, val) in zip(names, values):
+    for name, val in zip(names, values):
         if val is None:
             out_params.append(val)
         elif isinstance(val, (int, float, str)):
@@ -763,6 +759,7 @@ def _is_num_param(names, values, to_float=False):
 # in Validator.functions
 # note: if the params are specified wrongly in your input string,
 #       you will also raise errors.
+
 
 def is_integer(value, min=None, max=None):
     """
@@ -804,7 +801,7 @@ def is_integer(value, min=None, max=None):
     >>> vtor.check('integer(0, 9)', False)
     0
     """
-    (min_val, max_val) = _is_num_param(('min', 'max'), (min, max))
+    (min_val, max_val) = _is_num_param(("min", "max"), (min, max))
     if not isinstance(value, (int, str)):
         raise VdtTypeError(value)
     if isinstance(value, str):
@@ -855,8 +852,7 @@ def is_float(value, min=None, max=None):
     Traceback (most recent call last):
     VdtValueTooBigError: the value "35.0" is too big.
     """
-    (min_val, max_val) = _is_num_param(
-        ('min', 'max'), (min, max), to_float=True)
+    (min_val, max_val) = _is_num_param(("min", "max"), (min, max), to_float=True)
     if not isinstance(value, (int, float, str)):
         raise VdtTypeError(value)
     if not isinstance(value, float):
@@ -873,8 +869,16 @@ def is_float(value, min=None, max=None):
 
 
 bool_dict = {
-    True: True, 'on': True, '1': True, 'true': True, 'yes': True,
-    False: False, 'off': False, '0': False, 'false': False, 'no': False,
+    True: True,
+    "on": True,
+    "1": True,
+    "true": True,
+    "yes": True,
+    False: False,
+    "off": False,
+    "0": False,
+    "false": False,
+    "no": False,
 }
 
 
@@ -1006,7 +1010,7 @@ def is_list(value, min=None, max=None):
     Traceback (most recent call last):
     VdtTypeError: the value "12" is of the wrong type.
     """
-    (min_len, max_len) = _is_num_param(('min', 'max'), (min, max))
+    (min_len, max_len) = _is_num_param(("min", "max"), (min, max))
     if isinstance(value, str):
         raise VdtTypeError(value)
     try:
@@ -1078,7 +1082,7 @@ def is_string(value, min=None, max=None):
     """
     if not isinstance(value, str):
         raise VdtTypeError(value)
-    (min_len, max_len) = _is_num_param(('min', 'max'), (min, max))
+    (min_len, max_len) = _is_num_param(("min", "max"), (min, max))
     try:
         num_members = len(value)
     except TypeError:
@@ -1230,13 +1234,12 @@ def force_list(value, min=None, max=None):
     return is_list(value, min, max)
 
 
-
 fun_dict = {
-    'integer': is_integer,
-    'float': is_float,
-    'ip_addr': is_ip_addr,
-    'string': is_string,
-    'boolean': is_boolean,
+    "integer": is_integer,
+    "float": is_float,
+    "ip_addr": is_ip_addr,
+    "string": is_string,
+    "boolean": is_boolean,
 }
 
 
@@ -1305,7 +1308,7 @@ def is_mixed_list(value, *args):
     try:
         return [fun_dict[arg](val) for arg, val in zip(args, value)]
     except KeyError as e:
-        raise VdtParamError('mixed_list', e)
+        raise VdtParamError("mixed_list", e)
 
 
 def is_option(value, *options):
@@ -1422,6 +1425,7 @@ def _test2():
     3
     """
 
+
 def _test3():
     r"""
     >>> vtor.check('string(default="")', '', missing=True)
@@ -1450,13 +1454,16 @@ def _test3():
     """
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # run the code tests in doctest format
     import sys
     import doctest
-    m = sys.modules.get('__main__')
+
+    m = sys.modules.get("__main__")
     globs = m.__dict__.copy()
-    globs.update({
-        'vtor': Validator(),
-    })
+    globs.update(
+        {
+            "vtor": Validator(),
+        }
+    )
     doctest.testmod(m, globs=globs)

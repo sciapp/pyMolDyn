@@ -5,7 +5,7 @@ import datetime
 import logging
 
 
-STYLE_SHEET = '''
+STYLE_SHEET = """
 .default {
     color: #909090;
     font-weight: bold;
@@ -22,12 +22,12 @@ STYLE_SHEET = '''
     color: red;
     font-weight: bold;
 }
-'''
+"""
 
 
 class LogTabDock(QtWidgets.QDockWidget):
     """
-        DockWidget for the 'log'-tab
+    DockWidget for the 'log'-tab
     """
 
     def __init__(self, parent):
@@ -40,16 +40,24 @@ class LogTabDock(QtWidgets.QDockWidget):
         self.layout.addWidget(self.log_tab)
         self.widget().setLayout(self.layout)
 
-        self.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable | QtWidgets.QDockWidget.DockWidgetFloatable)
+        self.setFeatures(
+            QtWidgets.QDockWidget.DockWidgetMovable
+            | QtWidgets.QDockWidget.DockWidgetFloatable
+        )
 
     def append_log(self, message, level=logging.WARNING):
-        QtCore.QMetaObject.invokeMethod(self.log_tab, 'append_log', QtCore.Qt.QueuedConnection,
-                                        QtCore.Q_ARG(str, message), QtCore.Q_ARG(int, level))
+        QtCore.QMetaObject.invokeMethod(
+            self.log_tab,
+            "append_log",
+            QtCore.Qt.QueuedConnection,
+            QtCore.Q_ARG(str, message),
+            QtCore.Q_ARG(int, level),
+        )
 
 
 class LogTab(QtWidgets.QWidget):
     """
-        tab 'log' in the main widget
+    tab 'log' in the main widget
     """
 
     def __init__(self, parent, main_window):
@@ -70,20 +78,21 @@ class LogTab(QtWidgets.QWidget):
     @QtCore.Slot(str, int)
     def append_log(self, message, level=logging.WARNING):
         level_to_style_class = {
-            logging.INFO: 'info',
-            logging.WARNING: 'warning',
-            logging.ERROR: 'error'
+            logging.INFO: "info",
+            logging.WARNING: "warning",
+            logging.ERROR: "error",
         }
 
-        current_date_as_string = datetime.datetime.now().strftime('%m/%d/%y, %H:%M')
+        current_date_as_string = datetime.datetime.now().strftime("%m/%d/%y, %H:%M")
 
         self.log_area.insertHtml(
             '<div><span class="{style_class}">{message_type} <span class="default">({date})</span>:</span> <span>{message}</span></div><br />'.format(
                 style_class=level_to_style_class[level],
                 message_type=level_to_style_class[level].upper(),
                 date=current_date_as_string,
-                message=message
-            ))
+                message=message,
+            )
+        )
 
         current_cursor = self.log_area.textCursor()
         current_cursor.movePosition(QtGui.QTextCursor.End)

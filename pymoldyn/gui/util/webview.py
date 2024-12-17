@@ -3,11 +3,14 @@
 import os.path
 from PySide6 import QtCore
 from PySide6.QtWebEngineWidgets import QWebEngineView
-from PySide6.QtWebEngineCore import QWebEnginePage #QtWebKit is deprecated since Pyside2
+from PySide6.QtWebEngineCore import (
+    QWebEnginePage,
+)  # QtWebKit is deprecated since Pyside2
+
 has_qtwebengine = True
 
 
-_js_inject_css_template = '''\
+_js_inject_css_template = """\
 window.onload = function() {{
     (function(css) {{
         var node = document.createElement('style');
@@ -15,9 +18,10 @@ window.onload = function() {{
         document.body.appendChild(node);
     }})('{css}');
 }};\
-'''
+"""
 
 if has_qtwebengine:
+
     class WebWidget(QWebEngineView):
         gui_link_clicked = QtCore.Signal(str)
 
@@ -31,13 +35,18 @@ if has_qtwebengine:
 
             def setHtml(self, html):
                 if html:
-                    css = ' '.join(self._css.split('\n'))
-                    js = '<script>{code}</script>'.format(code=_js_inject_css_template.format(css=css))
+                    css = " ".join(self._css.split("\n"))
+                    js = "<script>{code}</script>".format(
+                        code=_js_inject_css_template.format(css=css)
+                    )
                     html += js
                 super(WebWidget.WebPage, self).setHtml(html)
 
             def acceptNavigationRequest(self, url, t, is_main_frame):
-                if t == QWebEnginePage.NavigationTypeLinkClicked and url.scheme() == 'gui':
+                if (
+                    t == QWebEnginePage.NavigationTypeLinkClicked
+                    and url.scheme() == "gui"
+                ):
                     self.gui_link_clicked.emit(url.path())
                     return False
                 else:
@@ -55,14 +64,18 @@ if has_qtwebengine:
 
         def set_gui_html(self, html_string):
             if html_string is None:
-                html_string = ''
+                html_string = ""
             if self._webpage is None:
                 self._webpage = WebWidget.WebPage(html_string, self._css, parent=self)
-                self._webpage.gui_link_clicked.connect(self.gui_link_clicked.emit)  # Forward signal
+                self._webpage.gui_link_clicked.connect(
+                    self.gui_link_clicked.emit
+                )  # Forward signal
             else:
                 self._webpage.setHtml(html_string)
             self.setPage(self._webpage)
+
 else:
+
     class WebWidget(QWebView):
         gui_link_clicked = QtCore.Signal(str)
 
@@ -78,14 +91,16 @@ else:
 
             def setHtml(self, html):
                 if html:
-                    css = ' '.join(self._css.split('\n'))
-                    js = '<script>{code}</script>'.format(code=_js_inject_css_template.format(css=css))
+                    css = " ".join(self._css.split("\n"))
+                    js = "<script>{code}</script>".format(
+                        code=_js_inject_css_template.format(css=css)
+                    )
                     html += js
                 self.mainFrame().setHtml(html)
 
             def _link_clicked(self, data):
                 value = data.toString()
-                if value.startswith('gui:'):
+                if value.startswith("gui:"):
                     self.gui_link_clicked.emit(value[4:])
 
         def __init__(self, css_filepath=None, *args, **kwargs):
@@ -99,10 +114,12 @@ else:
 
         def set_gui_html(self, html_string):
             if html_string is None:
-                html_string = ''
+                html_string = ""
             if self._webpage is None:
                 self._webpage = WebWidget.WebPage(html_string, self._css, parent=self)
-                self._webpage.gui_link_clicked.connect(self.gui_link_clicked.emit)  # Forward signal
+                self._webpage.gui_link_clicked.connect(
+                    self.gui_link_clicked.emit
+                )  # Forward signal
             else:
                 self._webpage.setHtml(html_string)
             self.setPage(self._webpage)

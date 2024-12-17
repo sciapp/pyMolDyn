@@ -4,8 +4,8 @@ Calculate pair distribution functions.
 """
 
 
-MINDISTANCE = 2.0 # shorter distances are ignored
-PDFCUTOFF = 1.0   # g(r) = 0 if r < PDFCUTOFF
+MINDISTANCE = 2.0  # shorter distances are ignored
+PDFCUTOFF = 1.0  # g(r) = 0 if r < PDFCUTOFF
 
 
 __all__ = ["PDF"]
@@ -51,7 +51,7 @@ class PDF(object):
             if results.domains is not None:
                 centers = results.domains.centers
                 cachedir = os.path.expanduser(config.Path.cache_dir)
-                cachepath = os.path.join(cachedir, 'discretization_cache.hdf5')
+                cachepath = os.path.join(cachedir, "discretization_cache.hdf5")
                 dcache = DiscretizationCache(cachepath)
                 disc = dcache.get_discretization(volume, results.resolution)
                 centers = list(map(disc.discrete_to_continuous, centers))
@@ -69,10 +69,9 @@ class PDF(object):
         self.num_atoms = np.where(self.elements != "cav")[0].size
         self.numberdensity = float(self.num_atoms) / self.volume.volume
 
-        self.stats = self._genstats(self.positions,
-                                    self.elements,
-                                    self.centers,
-                                    self.volume)
+        self.stats = self._genstats(
+            self.positions, self.elements, self.centers, self.volume
+        )
 
     def pdf(self, elem1, elem2, cutoff=None, h=None, kernel=None):
         """
@@ -97,20 +96,17 @@ class PDF(object):
             not enough data to create the function.
         """
         if kernel is None:
-            #kernel = Kernels.epanechnikov
+            # kernel = Kernels.epanechnikov
             kernel = Kernels.epanechnikov
 
         data = None
         for s in self.stats:
-            if set((elem1.lower(), elem2.lower())) \
-                    == set((s[0].lower(), s[1].lower())):
+            if set((elem1.lower(), elem2.lower())) == set((s[0].lower(), s[1].lower())):
                 data = s[2]
-                break;
+                break
         if data is None:
-            logger.debug("No statistical data for '{}-{}' found.".format(
-                    elem1, elem2))
-            raise Exception("No statistical data for '{}' found.".format(
-                    elem1, elem2))
+            logger.debug("No statistical data for '{}-{}' found.".format(elem1, elem2))
+            raise Exception("No statistical data for '{}' found.".format(elem1, elem2))
 
         if cutoff is None:
             cutoff = data.max()
@@ -119,16 +115,24 @@ class PDF(object):
         if h == 0:
             return sel
         if len(sel) < 2:
-            logger.debug("Not enough data for '{}-{}' in cutoff={} range.".format(elem1, elem2, cutoff))
-            raise Exception("Not enough data for '{}' in cutoff={} range.".format(elem1, elem2, cutoff))
+            logger.debug(
+                "Not enough data for '{}-{}' in cutoff={} range.".format(
+                    elem1, elem2, cutoff
+                )
+            )
+            raise Exception(
+                "Not enough data for '{}' in cutoff={} range.".format(
+                    elem1, elem2, cutoff
+                )
+            )
 
         if h is None:
             ## magic constant
             ## minimizes the first peak
-            #h = min(0.5, 0.5772778 * sel.min())
+            # h = min(0.5, 0.5772778 * sel.min())
             h = 0.4
 
-        #if h > 0.9 * sel.min():
+        # if h > 0.9 * sel.min():
         #    logger.debug("Bandwidth {} above threshold. Setting to {}.".format(h, 0.9 * sel.min()))
         #    h = 0.9 * sel.min()
         kde = Functions.KDE(sel, h=h, kernel=kernel)
@@ -136,7 +140,7 @@ class PDF(object):
         def wfunc(r):
             y = np.zeros_like(r)
             i = np.where(np.abs(r) > PDFCUTOFF)[0]
-            y[i] = self.volume.volume / (data.size * 4 * math.pi * r[i]**2)
+            y[i] = self.volume.volume / (data.size * 4 * math.pi * r[i] ** 2)
             return y
 
         return Functions.Product(kde, wfunc)
@@ -156,7 +160,7 @@ class PDF(object):
             A sorted sample.
         """
         if volume is None:
-            distance = lambda x, y: np.abs(y-x)
+            distance = lambda x, y: np.abs(y - x)
         else:
             distance = volume.get_distance
 
@@ -285,7 +289,7 @@ class Kernels(object):
         else:
             i = np.where(np.abs(x) < 1.0)[0]
             y = np.zeros(x.size)
-            y[i] = c * np.exp(1.0 / (x[i]**2 - 1.0))
+            y[i] = c * np.exp(1.0 / (x[i] ** 2 - 1.0))
             return y
 
     @staticmethod
@@ -354,7 +358,7 @@ class Kernels(object):
         else:
             i = np.where(np.abs(x) < 1.0)[0]
             y = np.zeros_like(x)
-            y[i] = 3.0 / 4.0 * (1.0 - x[i]**2)
+            y[i] = 3.0 / 4.0 * (1.0 - x[i] ** 2)
             return y
 
     @staticmethod
@@ -369,7 +373,7 @@ class _TestPDF(object):
     @staticmethod
     def continuous_coordinates(coords, volume, resolution):
         cachedir = os.path.expanduser(config.Path.cache_dir)
-        cachepath = os.path.join(cachedir, 'discretization_cache.hdf5')
+        cachepath = os.path.join(cachedir, "discretization_cache.hdf5")
         dcache = DiscretizationCache(cachepath)
         disc = dcache.get_discretization(volume, resolution)
 
@@ -389,47 +393,49 @@ class _TestPDF(object):
         plt.figure()
         cls.plotfunc(pdf, e1, e2, px, 0.25, "g--")
         cls.plotfunc(pdf, e1, e2, px, 0.5, "r-")
-        #cls.plotfunc(pdf, e1, e2, px, 1.0, "b--")
+        # cls.plotfunc(pdf, e1, e2, px, 1.0, "b--")
         plt.legend(loc=0)
         plt.title("{}-{}".format(e1, e2))
 
     @classmethod
     def run(cls):
         import core.calculation as calculation
+
         calc = calculation.Calculation("../results")
         filename = "../xyz/structure_c.xyz"
         resolution = 64
         frame = 9
-        #filename = "../xyz/GST_111_128_bulk.xyz"
-        #resolution = 256
-        #frame = 0
+        # filename = "../xyz/GST_111_128_bulk.xyz"
+        # resolution = 256
+        # frame = 0
         settings = calculation.CalculationSettings(
-                {filename : [frame]},
-                resolution, True, False, False)
+            {filename: [frame]}, resolution, True, False, False
+        )
         print("calculating...")
         res = calc.calculate(settings)[0][0]
         print("generating statistics...")
         pdf = PDF(res)
-        #centers = cls.continuous_coordinates(res.domains.centers,
+        # centers = cls.continuous_coordinates(res.domains.centers,
         #                                     res.atoms.volume,
         #                                     res.resolution)
-        #pdf = PDF(res.atoms.positions, res.atoms.elements,
+        # pdf = PDF(res.atoms.positions, res.atoms.elements,
         #                  centers, res.atoms.volume)
 
         print("plotting...")
-        #cls.plotpdf(pdf, "Ge", "Ge")
-        #cls.plotpdf(pdf, "Ge", "Te")
+        # cls.plotpdf(pdf, "Ge", "Ge")
+        # cls.plotpdf(pdf, "Ge", "Te")
         cls.plotpdf(pdf, "cav", "cav")
         plt.show()
 
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
+
     _TestPDF.run()
-    #x = np.linspace(-2, 2, 200)
-    #plt.plot(x, Kernels.gauss(x))
-    #plt.plot(x, Kernels.compact(x))
-    #plt.plot(x, Kernels.triang(x))
-    #plt.plot(x, Kernels.quad(x))
-    #plt.plot(x, Kernels.epanechnikov(x))
-    #plt.show()
+    # x = np.linspace(-2, 2, 200)
+    # plt.plot(x, Kernels.gauss(x))
+    # plt.plot(x, Kernels.compact(x))
+    # plt.plot(x, Kernels.triang(x))
+    # plt.plot(x, Kernels.quad(x))
+    # plt.plot(x, Kernels.epanechnikov(x))
+    # plt.show()
