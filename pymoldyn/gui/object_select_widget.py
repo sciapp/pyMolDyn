@@ -91,7 +91,7 @@ class IndexSelectLineEdit(QtWidgets.QLineEdit):
 
         def validate(self, input, pos):
             return (
-                (QtGui.QValidator.Acceptable if re.match("^[0-9,\s-]*$", input) else QtGui.QValidator.Invalid),
+                (QtGui.QValidator.Acceptable if re.match(r"^[0-9,\s-]*$", input) else QtGui.QValidator.Invalid),
                 input,
                 pos,
             )
@@ -175,7 +175,7 @@ class IndexSelectLineEdit(QtWidgets.QLineEdit):
 
     def _get_indices_from_line_edit(self):
         input_text = self.text().replace(" ", "")
-        is_input_valid = re.match("^(\d+(-\d+)?(,\d+(-\d+)?)*)?$", input_text)
+        is_input_valid = re.match(r"^(\d+(-\d+)?(,\d+(-\d+)?)*)?$", input_text)
         if is_input_valid:
             parts = input_text.split(",") if input_text != "" else []
             indices = []
