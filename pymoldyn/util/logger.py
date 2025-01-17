@@ -94,4 +94,4 @@ class Logger(object):
                     stream._logline(severity, line)
                 else:
                     #  print >>stream, line
-                    print(line, stream)
+                    print(line, file=stream)
