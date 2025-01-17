@@ -6,7 +6,7 @@ import optparse
 import os
 import re
 import sys
-import thread
+import threading
 from datetime import datetime
 from ..core.calculation import CalculationSettings
 from ..core import file
@@ -312,7 +312,7 @@ class Cli(object):
         print()
 
     def __parse_options(self, command_line_params):
-        usage = """Usage: %prog [options] batch_file1 batch_file2 ...
+        usage = """Usage: pymoldyn-cli [options] batch_file1 batch_file2 ...
 
 Batch files have the format:
 
@@ -355,7 +355,7 @@ Note: Because the cutoff radius is stored in the global configuration, it cannot
         for input_file in input_file_list:
             read_state = ReadState.DEFAULT
             try:
-                input_file = core.file.get_abspath(input_file)
+                input_file = file.get_abspath(input_file)
                 with open(input_file) as f:
                     resolution = None
                     atom_radii = None

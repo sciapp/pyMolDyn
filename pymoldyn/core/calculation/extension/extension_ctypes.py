@@ -4,6 +4,8 @@
 __all__ = ["atomstogrid", "mark_cavities", "cavity_triangles", "cavity_intersections"]
 
 
+# Import gr3 to load `libGR3.so` which is needed by the ctypes extension
+import gr3  # noqa: F401 pylint: disable=unused-import
 import numpy as np
 from ctypes import (
     c_int,
