@@ -133,11 +133,7 @@ class ConfigFile(object):
         """
         for scalar in section.scalars:
             t = type(section[scalar])
-            type_string = (
-                type_dict[t][0]
-                if t is not list
-                else type_dict[type(section[scalar][0])][1] + "_list"
-            )
+            type_string = type_dict[t][0] if t is not list else type_dict[type(section[scalar][0])][1] + "_list"
             spec_section[scalar] = type_string
         for sect in section.sections:
             spec_section[sect] = {}

@@ -92,32 +92,18 @@ class CalculationSettingsDialog(QtWidgets.QDialog):
         self.surf_check = QtWidgets.QCheckBox("calculate surface based cavities", self)
         self.surf_check.setChecked(True)
         self.center_check = QtWidgets.QCheckBox("calculate center based cavities", self)
-        self.gyration_tensor_check = QtWidgets.QCheckBox(
-            "calculate gyration tensor parameters", self
-        )
-        self.gyration_tensor_check.setToolTip(
-            "squared_gyration_radius, asphericity, acylindricity, anisotropy"
-        )
+        self.gyration_tensor_check = QtWidgets.QCheckBox("calculate gyration tensor parameters", self)
+        self.gyration_tensor_check.setToolTip("squared_gyration_radius, asphericity, acylindricity, anisotropy")
         self.overwrite_check = QtWidgets.QCheckBox("overwrite existing results", self)
-        self.exporthdf5_check = QtWidgets.QCheckBox(
-            "export results as HDF5 files", self
-        )
-        self.exporttext_check = QtWidgets.QCheckBox(
-            "export results as text files", self
-        )
-        self.exportdir_radio_input = QtWidgets.QRadioButton(
-            "export to the directory of the input files", self
-        )
-        self.exportdir_radio_config = QtWidgets.QRadioButton(
-            "export to %s" % config.Path.result_dir, self
-        )
+        self.exporthdf5_check = QtWidgets.QCheckBox("export results as HDF5 files", self)
+        self.exporttext_check = QtWidgets.QCheckBox("export results as text files", self)
+        self.exportdir_radio_input = QtWidgets.QRadioButton("export to the directory of the input files", self)
+        self.exportdir_radio_config = QtWidgets.QRadioButton("export to %s" % config.Path.result_dir, self)
 
         self.exportdir_radio_input.setChecked(True)
 
         covalence_radii_by_element = self.__get_all_covalence_radii_by_element()
-        self.radii_widget = RadiiWidget(
-            covalence_radii_by_element, self.file_frame_dict, self
-        )
+        self.radii_widget = RadiiWidget(covalence_radii_by_element, self.file_frame_dict, self)
 
         inner_layout.addLayout(res_hbox)
         inner_layout.addWidget(self.table_view)
@@ -139,21 +125,15 @@ class CalculationSettingsDialog(QtWidgets.QDialog):
         self.setLayout(vbox)
 
     def __get_all_covalence_radii_by_element(self):
-        covalence_radii_by_element, elements_by_frame, element_combinations = (
-            self.__read_atom_info()
-        )
+        covalence_radii_by_element, elements_by_frame, element_combinations = self.__read_atom_info()
         return covalence_radii_by_element
 
     def __get_elements_by_frame(self):
-        covalence_radii_by_element, elements_by_frame, element_combinations = (
-            self.__read_atom_info()
-        )
+        covalence_radii_by_element, elements_by_frame, element_combinations = self.__read_atom_info()
         return elements_by_frame
 
     def __get_element_combinations(self):
-        covalence_radii_by_element, elements_by_frame, element_combinations = (
-            self.__read_atom_info()
-        )
+        covalence_radii_by_element, elements_by_frame, element_combinations = self.__read_atom_info()
         return element_combinations
 
     def __read_atom_info(self):
@@ -208,12 +188,8 @@ class CalculationSettingsDialog(QtWidgets.QDialog):
             file_elements = elements_by_frame[filepath]
             for frame in frames:
                 elements = file_elements[frame]
-                frame_cutoff_radii = dict(
-                    (elem, user_cutoff_radii[elem]) for elem in elements
-                )
-                history_entry = HistoryEntry(
-                    filename, frame, timestamp, frame_cutoff_radii
-                )
+                frame_cutoff_radii = dict((elem, user_cutoff_radii[elem]) for elem in elements)
+                history_entry = HistoryEntry(filename, frame, timestamp, frame_cutoff_radii)
                 new_history.append(history_entry)
         cutoff_history.extend(new_history)
         cutoff_history.save()
@@ -277,16 +253,12 @@ class CalculationSettingsDialog(QtWidgets.QDialog):
         self.table_view.resizeColumnsToContents()
 
         # calculate table size to set its minimum size
-        width = (
-            self.table_view.model().columnCount(self.table_view) - 1
-        ) + self.table_view.verticalHeader().width()
+        width = (self.table_view.model().columnCount(self.table_view) - 1) + self.table_view.verticalHeader().width()
         for i in range(self.table_view.model().columnCount(self.table_view)):
             width += self.table_view.columnWidth(i)
         self.table_view.setMinimumWidth(width)
 
-        height = (
-            self.table_view.model().rowCount(self.table_view) - 1
-        ) + self.table_view.horizontalHeader().height()
+        height = (self.table_view.model().rowCount(self.table_view) - 1) + self.table_view.horizontalHeader().height()
         for i in range(self.table_view.model().rowCount(self.table_view)):
             height += self.table_view.rowHeight(i)
         self.table_view.setMinimumHeight(height)
@@ -372,8 +344,7 @@ class RadiiWidget(QtWidgets.QWidget):
         self._radii = radii
         self._file_frame_dict = file_frame_dict
         self._preferred_filenames_with_frames = dict(
-            (os.path.basename(filepath), frames)
-            for filepath, frames in self._file_frame_dict.items()
+            (os.path.basename(filepath), frames) for filepath, frames in self._file_frame_dict.items()
         )
         self._discard_preset_choice_on_next_rb_click = True  # Default value is True
         self._selected_radii_type = RadiiWidget.RadiiType.FIXED
@@ -392,9 +363,7 @@ class RadiiWidget(QtWidgets.QWidget):
         # QStackedWidget le_fixed
         self.tmp1 = QtWidgets.QWidget()
         self.sw_fixed = QtWidgets.QStackedWidget()
-        self.sw_fixed.setSizePolicy(
-            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
-        )
+        self.sw_fixed.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.sw_fixed.addWidget(self.le_fixed)
         self.sw_fixed.addWidget(self.tmp1)
         self.sw_fixed.setCurrentIndex(1)
@@ -407,17 +376,13 @@ class RadiiWidget(QtWidgets.QWidget):
 
         # Preset Combo Box
         self.cb_preset = CutoffPresetComboBox()
-        self.cb_preset.setSizePolicy(
-            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
-        )
+        self.cb_preset.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.cb_preset.preset_selected.connect(self.cb_preset_selected)
 
         # History button
         self.pb_history = QtWidgets.QPushButton("History", self)
         self.pb_history.setMinimumWidth(0)
-        self.pb_history.setSizePolicy(
-            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
-        )
+        self.pb_history.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.pb_history.setAutoDefault(False)
         self.pb_history.clicked.connect(self.pb_history_clicked)
         if (
@@ -434,9 +399,7 @@ class RadiiWidget(QtWidgets.QWidget):
         # Preset save
         self.cb_preset_save = QtWidgets.QCheckBox("Save as Preset", self)
         self.le_preset_save = QtWidgets.QLineEdit()
-        self.le_preset_save.setSizePolicy(
-            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
-        )
+        self.le_preset_save.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.le_preset_save.textChanged.connect(self.le_preset_save_changed)
 
         self.la_main = QtWidgets.QGridLayout()
@@ -479,20 +442,14 @@ class RadiiWidget(QtWidgets.QWidget):
 
     def rb_fixed_clicked(self):
         self.sw_fixed.setCurrentIndex(0)
-        if (
-            self._selected_radii_type != RadiiWidget.RadiiType.FIXED
-            and self._discard_preset_choice_on_next_rb_click
-        ):
+        if self._selected_radii_type != RadiiWidget.RadiiType.FIXED and self._discard_preset_choice_on_next_rb_click:
             self.cb_preset.discard_preset_choice()
             self._selected_radii_type = RadiiWidget.RadiiType.FIXED
         self._discard_preset_choice_on_next_rb_click = True
 
     def rb_custom_clicked(self):
         self.sw_fixed.setCurrentIndex(1)
-        if (
-            self._selected_radii_type != RadiiWidget.RadiiType.CUSTOM
-            and self._discard_preset_choice_on_next_rb_click
-        ):
+        if self._selected_radii_type != RadiiWidget.RadiiType.CUSTOM and self._discard_preset_choice_on_next_rb_click:
             self.cb_preset.discard_preset_choice()
             self._selected_radii_type = RadiiWidget.RadiiType.CUSTOM
         self._discard_preset_choice_on_next_rb_click = True
@@ -506,9 +463,7 @@ class RadiiWidget(QtWidgets.QWidget):
         self.cb_preset.discard_preset_choice()
 
     def pb_history_clicked(self):
-        cutoff_history_dialog = CutoffHistoryDialog(
-            self, self._radii.keys(), self._preferred_filenames_with_frames
-        )
+        cutoff_history_dialog = CutoffHistoryDialog(self, self._radii.keys(), self._preferred_filenames_with_frames)
         return_value = cutoff_history_dialog.exec_()
         if return_value == QtWidgets.QDialog.Rejected:
             return
@@ -529,9 +484,7 @@ class RadiiWidget(QtWidgets.QWidget):
             message = QtWidgets.QMessageBox()
             message.setStandardButtons(QtWidgets.QMessageBox.Ok)
             message.setText(
-                "{} is not valid preset name. Only A-Z, a-z, 0-9 and _ are valid characters".format(
-                    preset_name
-                )
+                "{} is not valid preset name. Only A-Z, a-z, 0-9 and _ are valid characters".format(preset_name)
             )
             message.exec_()
             return None
@@ -561,9 +514,7 @@ class RadiiWidget(QtWidgets.QWidget):
                 except ValueError:
                     message = QtWidgets.QMessageBox()
                     message.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                    message.setText(
-                        "Incorrect input: {}".format(current_radius_as_text)
-                    )
+                    message.setText("Incorrect input: {}".format(current_radius_as_text))
                     message.exec_()
                     raise
             return elem_to_cutoff_radius

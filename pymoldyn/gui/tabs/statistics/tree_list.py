@@ -93,23 +93,17 @@ class TreeList(QtWidgets.QTreeWidget):
 
         self.atom_list = ["Atom %d" % (i + 1) for i in range(self.atoms.number)]
         if self.cavities_center is not None:
-            self.cavities_center_list = [
-                "Cavity %d" % (i + 1)
-                for i in range(len(self.cavities_center.multicavities))
-            ]
+            self.cavities_center_list = ["Cavity %d" % (i + 1) for i in range(len(self.cavities_center.multicavities))]
         else:
             self.cavities_center_list = []
         if self.cavities_surface is not None:
             self.cavities_surface_list = [
-                "Cavity %d" % (i + 1)
-                for i in range(len(self.cavities_surface.multicavities))
+                "Cavity %d" % (i + 1) for i in range(len(self.cavities_surface.multicavities))
             ]
         else:
             self.cavities_surface_list = []
         if self.domains is not None:
-            self.domains_list = [
-                "Cavity %d" % (i + 1) for i in range(self.domains.number)
-            ]
+            self.domains_list = ["Cavity %d" % (i + 1) for i in range(self.domains.number)]
         else:
             self.domains_list = []
         # print dir(atoms)
@@ -138,6 +132,4 @@ class TreeList(QtWidgets.QTreeWidget):
         for root, sib in src.items():
             self.items.append(QtWidgets.QTreeWidgetItem(self, [root]))
             if sib:
-                self.items[-1].addChildren(
-                    [QtWidgets.QTreeWidgetItem(self.items[-1], [s]) for s in sib]
-                )
+                self.items[-1].addChildren([QtWidgets.QTreeWidgetItem(self.items[-1], [s]) for s in sib])

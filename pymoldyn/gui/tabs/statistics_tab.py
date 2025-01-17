@@ -19,10 +19,7 @@ class StatisticsTabDock(QtWidgets.QDockWidget):
         self.layout.addWidget(self.statistics_tab)
         self.widget().setLayout(self.layout)
 
-        self.setFeatures(
-            QtWidgets.QDockWidget.DockWidgetMovable
-            | QtWidgets.QDockWidget.DockWidgetFloatable
-        )
+        self.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable | QtWidgets.QDockWidget.DockWidgetFloatable)
         self.setVisible(False)
         self.setMinimumWidth(350)
 

@@ -78,11 +78,7 @@ def to_png(image):
 
     def png_pack(png_tag, data):
         chunk_head = png_tag + data
-        return (
-            struct.pack(b"!I", len(data))
-            + chunk_head
-            + struct.pack("!I", 0xFFFFFFFF & zlib.crc32(chunk_head))
-        )
+        return struct.pack(b"!I", len(data)) + chunk_head + struct.pack("!I", 0xFFFFFFFF & zlib.crc32(chunk_head))
 
     return b"".join(
         [

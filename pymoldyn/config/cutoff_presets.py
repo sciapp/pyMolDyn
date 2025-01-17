@@ -13,9 +13,7 @@ logger = Logger("config.cutoff_presets")
 logger.setstream("default", sys.stdout, Logger.WARNING)
 
 
-DEFAULT_CONFIG_FILE = os.path.expanduser(
-    os.path.join(CONFIG_DIRECTORY, "cutoff_presets.json")
-)
+DEFAULT_CONFIG_FILE = os.path.expanduser(os.path.join(CONFIG_DIRECTORY, "cutoff_presets.json"))
 
 
 Preset = collections.namedtuple("Preset", ["name", "radii"])

@@ -40,10 +40,7 @@ class LogTabDock(QtWidgets.QDockWidget):
         self.layout.addWidget(self.log_tab)
         self.widget().setLayout(self.layout)
 
-        self.setFeatures(
-            QtWidgets.QDockWidget.DockWidgetMovable
-            | QtWidgets.QDockWidget.DockWidgetFloatable
-        )
+        self.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable | QtWidgets.QDockWidget.DockWidgetFloatable)
 
     def append_log(self, message, level=logging.WARNING):
         QtCore.QMetaObject.invokeMethod(

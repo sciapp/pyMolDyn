@@ -13,9 +13,7 @@ class CutoffPreviewTable(QtWidgets.QTableWidget):
     def __init__(self, radii):
         super().__init__(1, len(radii))
         self._table_fit = TableFit(self, scrollbar_extra_space=(0, 0))
-        self._radii = collections.OrderedDict(
-            sorted(radii.items())
-        )  # Sorted by element name
+        self._radii = collections.OrderedDict(sorted(radii.items()))  # Sorted by element name
         self._init_ui()
 
     def _init_ui(self):

@@ -30,9 +30,7 @@ class ProgressDialog(QtWidgets.QDialog):
 
     def calculation_finished(self):
         self.finished = True
-        QtCore.QMetaObject.invokeMethod(
-            self, "close_dialog", QtCore.Qt.QueuedConnection
-        )
+        QtCore.QMetaObject.invokeMethod(self, "close_dialog", QtCore.Qt.QueuedConnection)
 
     def progress(self, value):
         QtCore.QMetaObject.invokeMethod(

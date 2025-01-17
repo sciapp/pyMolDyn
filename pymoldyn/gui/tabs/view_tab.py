@@ -33,10 +33,7 @@ class ViewTabDock(QtWidgets.QDockWidget):
         self.layout.addWidget(self.view_tab)
         self.widget().setLayout(self.layout)
 
-        self.setFeatures(
-            QtWidgets.QDockWidget.DockWidgetMovable
-            | QtWidgets.QDockWidget.DockWidgetFloatable
-        )
+        self.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable | QtWidgets.QDockWidget.DockWidgetFloatable)
 
 
 class ViewTab(QtWidgets.QWidget):
@@ -57,20 +54,12 @@ class ViewTab(QtWidgets.QWidget):
         view_layout = QtWidgets.QVBoxLayout()
 
         # normal checkboxes are not used to prevent alignment problems between the different check box types
-        self.box_check = ObjectSelectWidget(
-            "show bounding box", self, add_index_selector=False
-        )
+        self.box_check = ObjectSelectWidget("show bounding box", self, add_index_selector=False)
         self.atom_check = ObjectSelectWidget("show atoms", self)
-        self.bonds_check = ObjectSelectWidget(
-            "show bonds", self, add_index_selector=False
-        )
+        self.bonds_check = ObjectSelectWidget("show bonds", self, add_index_selector=False)
         self.domain_check = ObjectSelectWidget("show cavities (domains)", self)
-        self.surface_cavity_check = ObjectSelectWidget(
-            "show cavities (surface method)", self
-        )
-        self.center_cavity_check = ObjectSelectWidget(
-            "show cavities (center method)", self
-        )
+        self.surface_cavity_check = ObjectSelectWidget("show cavities (surface method)", self)
+        self.center_cavity_check = ObjectSelectWidget("show cavities (center method)", self)
 
         # synch with dataset
         self.box_check.setChecked(self.vis_settings.show_bounding_box)
@@ -83,16 +72,10 @@ class ViewTab(QtWidgets.QWidget):
         self.center_cavity_check.setChecked(False)
 
         self.box_check.state_changed.connect(partial(self.on_checkbox, self.box_check))
-        self.atom_check.state_changed.connect(
-            partial(self.on_checkbox, self.atom_check, clicked_box=ObjectTypeId.ATOM)
-        )
-        self.bonds_check.state_changed.connect(
-            partial(self.on_checkbox, self.bonds_check)
-        )
+        self.atom_check.state_changed.connect(partial(self.on_checkbox, self.atom_check, clicked_box=ObjectTypeId.ATOM))
+        self.bonds_check.state_changed.connect(partial(self.on_checkbox, self.bonds_check))
         self.domain_check.state_changed.connect(
-            partial(
-                self.on_checkbox, self.domain_check, clicked_box=ObjectTypeId.DOMAIN
-            )
+            partial(self.on_checkbox, self.domain_check, clicked_box=ObjectTypeId.DOMAIN)
         )
         self.surface_cavity_check.state_changed.connect(
             partial(
@@ -172,10 +155,7 @@ class ViewTab(QtWidgets.QWidget):
         if clicked_box == ObjectTypeId.SURFACE_BASED_CAVITY:
             is_checked = self.surface_cavity_check.isChecked()
             if is_checked:
-                has_triggered_check_event = (
-                    self.domain_check.isChecked()
-                    or self.center_cavity_check.isChecked()
-                )
+                has_triggered_check_event = self.domain_check.isChecked() or self.center_cavity_check.isChecked()
                 self.domain_check.setChecked(False)
                 self.center_cavity_check.setChecked(False)
         elif clicked_box == ObjectTypeId.CENTER_BASED_CAVITY:
@@ -207,9 +187,7 @@ class ViewTab(QtWidgets.QWidget):
         if self.bonds_check.isEnabled():
             settings.show_bonds = self.bonds_check.isChecked()
 
-        has_triggered_check_event = self.update_cavity_buttons(
-            self.results, clicked_box
-        )
+        has_triggered_check_event = self.update_cavity_buttons(self.results, clicked_box)
         settings.show_domains = self.domain_check.isChecked()
         if check_box == self.domain_check and check_box.isChecked():
             settings.visible_domain_indices = check_box.indices

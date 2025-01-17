@@ -62,11 +62,7 @@ class GraphicsSettingsPage(QtWidgets.QWidget):
             b.setFixedSize(50, 50)
             b.setFocusPolicy(QtCore.Qt.StrongFocus)
             self.button_dict[attr_str] = b
-            b.clicked.connect(
-                lambda _, arg1=attr_str, arg2=current_color: self.show_color_dialog(
-                    arg1, arg2
-                )
-            )
+            b.clicked.connect(lambda _, arg1=attr_str, arg2=current_color: self.show_color_dialog(arg1, arg2))
             b.setIcon(QtGui.QIcon(pix))
 
             layout.addWidget(b, index, 0)
@@ -239,12 +235,8 @@ class SettingsDialog(QtWidgets.QDialog):
         graphics_page = GraphicsSettingsPage(tab_widget, self._tmp)
         path_page = PathSettingsPage(tab_widget, self._tmp)
         comp_page = ComputationSettingsPage(tab_widget, self._tmp)
-        self.cutoff_history_entries_for_deletion = (
-            lambda: comp_page.tw_cutoff_history.history_entries_for_deletion
-        )
-        self.cutoff_preset_entries_for_deletion = (
-            lambda: comp_page.tw_cutoff_presets.preset_entries_for_deletion
-        )
+        self.cutoff_history_entries_for_deletion = lambda: comp_page.tw_cutoff_history.history_entries_for_deletion
+        self.cutoff_preset_entries_for_deletion = lambda: comp_page.tw_cutoff_presets.preset_entries_for_deletion
 
         # Ok, Cancel and Restore defaults Buttons
         ok = QtWidgets.QPushButton("Ok", self)

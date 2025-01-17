@@ -24,11 +24,7 @@ class CutoffPresetTable(TableWithRemoveableEntries):
 
     @property
     def presets(self):
-        return [
-            entry
-            for i, entry in enumerate(self._presets)
-            if i in self._indices_to_remove
-        ]
+        return [entry for i, entry in enumerate(self._presets) if i in self._indices_to_remove]
 
     @property
     def preset_entries_for_deletion(self):

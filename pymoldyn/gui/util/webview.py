@@ -36,17 +36,12 @@ if has_qtwebengine:
             def setHtml(self, html):
                 if html:
                     css = " ".join(self._css.split("\n"))
-                    js = "<script>{code}</script>".format(
-                        code=_js_inject_css_template.format(css=css)
-                    )
+                    js = "<script>{code}</script>".format(code=_js_inject_css_template.format(css=css))
                     html += js
                 super(WebWidget.WebPage, self).setHtml(html)
 
             def acceptNavigationRequest(self, url, t, is_main_frame):
-                if (
-                    t == QWebEnginePage.NavigationTypeLinkClicked
-                    and url.scheme() == "gui"
-                ):
+                if t == QWebEnginePage.NavigationTypeLinkClicked and url.scheme() == "gui":
                     self.gui_link_clicked.emit(url.path())
                     return False
                 else:
@@ -67,9 +62,7 @@ if has_qtwebengine:
                 html_string = ""
             if self._webpage is None:
                 self._webpage = WebWidget.WebPage(html_string, self._css, parent=self)
-                self._webpage.gui_link_clicked.connect(
-                    self.gui_link_clicked.emit
-                )  # Forward signal
+                self._webpage.gui_link_clicked.connect(self.gui_link_clicked.emit)  # Forward signal
             else:
                 self._webpage.setHtml(html_string)
             self.setPage(self._webpage)
@@ -92,9 +85,7 @@ else:
             def setHtml(self, html):
                 if html:
                     css = " ".join(self._css.split("\n"))
-                    js = "<script>{code}</script>".format(
-                        code=_js_inject_css_template.format(css=css)
-                    )
+                    js = "<script>{code}</script>".format(code=_js_inject_css_template.format(css=css))
                     html += js
                 self.mainFrame().setHtml(html)
 
@@ -117,9 +108,7 @@ else:
                 html_string = ""
             if self._webpage is None:
                 self._webpage = WebWidget.WebPage(html_string, self._css, parent=self)
-                self._webpage.gui_link_clicked.connect(
-                    self.gui_link_clicked.emit
-                )  # Forward signal
+                self._webpage.gui_link_clicked.connect(self.gui_link_clicked.emit)  # Forward signal
             else:
                 self._webpage.setHtml(html_string)
             self.setPage(self._webpage)

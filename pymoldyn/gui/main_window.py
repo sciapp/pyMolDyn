@@ -113,35 +113,21 @@ class MainWindow(QtWidgets.QMainWindow):
         export_bond_angles_action.setShortcut("Ctrl+2")
         export_bond_angles_action.triggered.connect(self.wrapper_export_bond_angles)
 
-        export_bond_dihedral_angles_action = QtGui.QAction(
-            "Export Bond &Dihedral Angles", self
-        )
+        export_bond_dihedral_angles_action = QtGui.QAction("Export Bond &Dihedral Angles", self)
         export_bond_dihedral_angles_action.setShortcut("Ctrl+3")
-        export_bond_dihedral_angles_action.triggered.connect(
-            self.wrapper_export_bond_dihedral_angles
-        )
+        export_bond_dihedral_angles_action.triggered.connect(self.wrapper_export_bond_dihedral_angles)
 
-        export_domains_action = QtGui.QAction(
-            "Export Cavity Information (domains)", self
-        )
+        export_domains_action = QtGui.QAction("Export Cavity Information (domains)", self)
         export_domains_action.setShortcut("Ctrl+4")
         export_domains_action.triggered.connect(self.wrapper_export_domains)
 
-        export_surface_cavities_action = QtGui.QAction(
-            "Export Cavity Information (surface method)", self
-        )
+        export_surface_cavities_action = QtGui.QAction("Export Cavity Information (surface method)", self)
         export_surface_cavities_action.setShortcut("Ctrl+5")
-        export_surface_cavities_action.triggered.connect(
-            self.wrapper_export_surface_cavities
-        )
+        export_surface_cavities_action.triggered.connect(self.wrapper_export_surface_cavities)
 
-        export_center_cavities_action = QtGui.QAction(
-            "Export Cavity Information (center method)", self
-        )
+        export_center_cavities_action = QtGui.QAction("Export Cavity Information (center method)", self)
         export_center_cavities_action.setShortcut("Ctrl+6")
-        export_center_cavities_action.triggered.connect(
-            self.wrapper_export_center_cavities
-        )
+        export_center_cavities_action.triggered.connect(self.wrapper_export_center_cavities)
 
         website_action = QtGui.QAction("&pyMolDyn website", self)
         website_action.setShortcut("F1")
@@ -214,14 +200,10 @@ class MainWindow(QtWidgets.QMainWindow):
             self.recent_files_submenu.setEnabled(True)
             for f in config.recent_files:
                 f_action = QtGui.QAction(f, self)
-                f_action.triggered.connect(
-                    functools.partial(self.wrapper_recent_files, f)
-                )
+                f_action.triggered.connect(functools.partial(self.wrapper_recent_files, f))
                 self.recent_files_submenu.addAction(f_action)
 
-            self.file_dock.file_tab.most_recent_path = os.path.dirname(
-                config.recent_files[0]
-            )
+            self.file_dock.file_tab.most_recent_path = os.path.dirname(config.recent_files[0])
             self._submenu_add_shortcut_for_first_item()
 
     def update_submenu_recent_files(self):
@@ -241,14 +223,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 return
 
             self.recent_files_submenu.removeAction(actions_in_menu[index])
-            self.recent_files_submenu.insertAction(
-                actions_in_menu[0], actions_in_menu[index]
-            )
+            self.recent_files_submenu.insertAction(actions_in_menu[0], actions_in_menu[index])
         else:
             new_action = QtGui.QAction(most_recent_file, self)
-            new_action.triggered.connect(
-                functools.partial(self.wrapper_recent_files, most_recent_file)
-            )
+            new_action.triggered.connect(functools.partial(self.wrapper_recent_files, most_recent_file))
 
             if not actions_in_menu:
                 self.recent_files_submenu.setEnabled(True)
@@ -277,35 +255,23 @@ class MainWindow(QtWidgets.QMainWindow):
             self.update_submenu_recent_files()
 
     def wrapper_export_bonds(self):
-        filename = QtWidgets.QFileDialog.getSaveFileName(
-            self, "Export Bonds", "bonds.txt"
-        )[0]
+        filename = QtWidgets.QFileDialog.getSaveFileName(self, "Export Bonds", "bonds.txt")[0]
         if filename:
             core.bonds.export_bonds(filename, self.control.visualization.results.atoms)
-            QtWidgets.QMessageBox.information(
-                self, "Export Bonds", "Saved to filename: %s" % (filename)
-            )
+            QtWidgets.QMessageBox.information(self, "Export Bonds", "Saved to filename: %s" % (filename))
 
     def wrapper_export_bond_angles(self):
-        filename = QtWidgets.QFileDialog.getSaveFileName(
-            self, "Export Bond Angles", "bond_angles.txt"
-        )[0]
+        filename = QtWidgets.QFileDialog.getSaveFileName(self, "Export Bond Angles", "bond_angles.txt")[0]
         if filename:
-            core.bonds.export_bond_angles(
-                filename, self.control.visualization.results.atoms
-            )
-            QtWidgets.QMessageBox.information(
-                self, "Export Bond Angles", "Saved to filename: %s" % (filename)
-            )
+            core.bonds.export_bond_angles(filename, self.control.visualization.results.atoms)
+            QtWidgets.QMessageBox.information(self, "Export Bond Angles", "Saved to filename: %s" % (filename))
 
     def wrapper_export_bond_dihedral_angles(self):
         filename = QtWidgets.QFileDialog.getSaveFileName(
             self, "Export Bond Dihedral Angles", "bond_dihedral_angles.txt"
         )[0]
         if filename:
-            core.bonds.export_bond_dihedral_angles(
-                filename, self.control.visualization.results.atoms
-            )
+            core.bonds.export_bond_dihedral_angles(filename, self.control.visualization.results.atoms)
             QtWidgets.QMessageBox.information(
                 self,
                 "Export Bond Dihedral Angles",
@@ -313,13 +279,9 @@ class MainWindow(QtWidgets.QMainWindow):
             )
 
     def wrapper_export_domains(self):
-        filename = QtWidgets.QFileDialog.getSaveFileName(
-            self, "Export Cavity Information (domains)", "domains"
-        )[0]
+        filename = QtWidgets.QFileDialog.getSaveFileName(self, "Export Cavity Information (domains)", "domains")[0]
         if filename:
-            filenames = self.control.visualization.results.domains.totxt(
-                filename + "_{property}.txt"
-            )
+            filenames = self.control.visualization.results.domains.totxt(filename + "_{property}.txt")
             QtWidgets.QMessageBox.information(
                 self,
                 "Export Cavity Information (domains)",
@@ -331,9 +293,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self, "Export Cavity Information (surface method)", "surface_cavities"
         )[0]
         if filename:
-            filenames = self.control.visualization.results.surface_cavities.totxt(
-                filename + "_{property}.txt"
-            )
+            filenames = self.control.visualization.results.surface_cavities.totxt(filename + "_{property}.txt")
             QtWidgets.QMessageBox.information(
                 self,
                 "Export Cavity Information (surface method)",
@@ -345,9 +305,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self, "Export Cavity Information (center method)", "center_cavities"
         )[0]
         if filename:
-            filenames = self.control.visualization.results.center_cavities.totxt(
-                filename + "_{property}.txt"
-            )
+            filenames = self.control.visualization.results.center_cavities.totxt(filename + "_{property}.txt")
             QtWidgets.QMessageBox.information(
                 self,
                 "Export Cavity Information (center method)",
@@ -365,12 +323,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     dock.show()
                 self.showNormal()
 
-    def set_output_callbacks(
-        self, progress_func, print_func, finish_func, error_func, log_func
-    ):
-        message.set_output_callbacks(
-            progress_func, print_func, finish_func, error_func, log_func
-        )
+    def set_output_callbacks(self, progress_func, print_func, finish_func, error_func, log_func):
+        message.set_output_callbacks(progress_func, print_func, finish_func, error_func, log_func)
 
     def updatestatus(self, was_successful=lambda: True):
         if was_successful and self.control.results is not None:
@@ -385,13 +339,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.statusBar().showMessage(status)
             self.statistics_dock.update_results(self.control.visualization.results)
             self.view_dock.setVisible(True)
-            self.view_dock.view_tab.update_cavity_buttons(
-                self.control.visualization.results, None
-            )
+            self.view_dock.view_tab.update_cavity_buttons(self.control.visualization.results, None)
             self.center.gl_stack.updatestatus()
-            QtWidgets.QApplication.postEvent(
-                self.center.gl_stack.gl_widget, UpdateGLEvent()
-            )
+            QtWidgets.QApplication.postEvent(self.center.gl_stack.gl_widget, UpdateGLEvent())
 
 
 #    def closeEvent(self, event):

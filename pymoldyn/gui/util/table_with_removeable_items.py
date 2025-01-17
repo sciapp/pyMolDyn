@@ -32,9 +32,7 @@ class TableWithRemoveableEntries(QtWidgets.QTableWidget):
 
     def __init__(self, header_labels, entry_count):
         super().__init__(entry_count, len(header_labels) + 1)
-        self._table_fit = TableFit(
-            self, size_hint_only=True, scrollbar_extra_space=(-1, 2)
-        )
+        self._table_fit = TableFit(self, size_hint_only=True, scrollbar_extra_space=(-1, 2))
         self._header_labels = header_labels
         self._row_index_to_entry_index = range(entry_count)
         self._entry_index_to_row_index = range(entry_count)
@@ -60,9 +58,7 @@ class TableWithRemoveableEntries(QtWidgets.QTableWidget):
                     self.setCellWidget(i, j, item)
             entry_action_widget = TableWithRemoveableEntries.EntryActionWidget()
             self.setCellWidget(i, len(entry), entry_action_widget)
-            entry_action_widget.remove.connect(
-                lambda entry_index=i: self._remove_clicked(entry_index)
-            )
+            entry_action_widget.remove.connect(lambda entry_index=i: self._remove_clicked(entry_index))
         self.resizeRowsToContents()
         self.resizeColumnsToContents()
 
@@ -82,10 +78,7 @@ class TableWithRemoveableEntries(QtWidgets.QTableWidget):
         self._entry_index_to_row_index = (
             self._entry_index_to_row_index[:row]
             + [None]
-            + [
-                index - 1 if index is not None else None
-                for index in self._entry_index_to_row_index[row + 1 :]
-            ]
+            + [index - 1 if index is not None else None for index in self._entry_index_to_row_index[row + 1 :]]
         )
 
     def _remove_clicked(self, entry_index):

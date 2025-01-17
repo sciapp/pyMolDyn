@@ -228,9 +228,7 @@ class BabelFile(InputFile):
     def readinfo(self):
         try:
             file_extension = os.path.splitext(self.path)[1][1:]
-            mol_iter = pybel.readfile(
-                file_extension.encode("utf8"), self.path.encode("utf8")
-            )
+            mol_iter = pybel.readfile(file_extension.encode("utf8"), self.path.encode("utf8"))
             try:
                 mol = next(mol_iter)
                 self._info.volumestr = mol.title
@@ -251,9 +249,7 @@ class BabelFile(InputFile):
                 raise IndexError("Frame {} not found".format(frame))
 
             file_extension = os.path.splitext(self.path)[1][1:]
-            mol_iter = pybel.readfile(
-                file_extension.encode("utf8"), self.path.encode("utf8")
-            )
+            mol_iter = pybel.readfile(file_extension.encode("utf8"), self.path.encode("utf8"))
 
             # get the correct frame
             try:
@@ -413,11 +409,7 @@ class HDF5File(ResultFile):
         except Exception as e:
             raise FileError("Cannot read file info.", e)
 
-        if (
-            not self.inforead
-            and self._info.sourcefilepath is not None
-            and os.path.isfile(self._info.sourcefilepath)
-        ):
+        if not self.inforead and self._info.sourcefilepath is not None and os.path.isfile(self._info.sourcefilepath):
             try:
                 sf = File.open(self._info.sourcefilepath)
                 self._info.num_frames = sf.info.num_frames
@@ -491,11 +483,7 @@ class HDF5File(ResultFile):
                     or results.surface_cavities is not None
                     or results.center_cavities is not None
                 ):
-                    group = f.require_group(
-                        "results/frame{}/resolution{}".format(
-                            results.frame, results.resolution
-                        )
-                    )
+                    group = f.require_group("results/frame{}/resolution{}".format(results.frame, results.resolution))
                 if results.domains is not None:
                     subgroup = group.require_group("domains")
                     results.domains.tohdf(subgroup, overwrite=overwrite)

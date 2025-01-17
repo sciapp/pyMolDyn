@@ -42,9 +42,7 @@ class CutoffHistoryDialog(QtWidgets.QDialog):
         self.setLayout(self.la_main)
 
         self.tw_cutoff.itemSelectionChanged.connect(
-            lambda *args: self.pb_ok.setEnabled(
-                len(self.tw_cutoff.selectedIndexes()) > 0
-            )
+            lambda *args: self.pb_ok.setEnabled(len(self.tw_cutoff.selectedIndexes()) > 0)
         )
         self.pb_ok.clicked.connect(lambda event: self.accept())
         self.pb_cancel.clicked.connect(lambda event: self.reject())

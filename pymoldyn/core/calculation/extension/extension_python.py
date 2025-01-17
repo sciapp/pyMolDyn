@@ -24,29 +24,20 @@ def atomstogrid(
     discretization_grid,
 ):
     last_radius_index = -1  # (for reuse of sphere grids)
-    atom_information = zip(
-        range(len(discrete_positions)), radii_indices, discrete_positions
-    )
+    atom_information = zip(range(len(discrete_positions)), radii_indices, discrete_positions)
     for atom_index, radius_index, real_discrete_position in atom_information:
         discrete_radius = discrete_radii[radius_index]
         cube_size = 2 * discrete_radius + 1
         if radius_index != last_radius_index:
             last_radius_index = radius_index
-            cube_indices = (
-                np.indices([cube_size] * 3).transpose(1, 2, 3, 0) - discrete_radius
-            )
+            cube_indices = np.indices([cube_size] * 3).transpose(1, 2, 3, 0) - discrete_radius
             sphere_grid = np.sum(cube_indices**2, axis=3) <= discrete_radius**2
             last_radius_index = radius_index
         for v in translation_vectors:
             discrete_position = [real_discrete_position[i] + v[i] for i in dimensions]
-            for point in itertools.product(
-                range(discrete_radius * 2 + 1), repeat=dimension
-            ):
+            for point in itertools.product(range(discrete_radius * 2 + 1), repeat=dimension):
                 if sphere_grid[point]:
-                    p = [
-                        point[i] - discrete_radius + discrete_position[i]
-                        for i in dimensions
-                    ]
+                    p = [point[i] - discrete_radius + discrete_position[i] for i in dimensions]
                     if all([0 <= p[i] <= grid.shape[i] - 1 for i in dimensions]):
                         discretization_grid_value = discretization_grid[tuple(p)]
                         if discretization_grid_value == 0:
@@ -55,19 +46,12 @@ def atomstogrid(
                             if grid_value == 0:
                                 grid[tuple(p)] = atom_index + 1
                             else:
-                                this_squared_distance = sum(
-                                    [(x - y) ** 2 for x, y in zip(discrete_position, p)]
-                                )
+                                this_squared_distance = sum([(x - y) ** 2 for x, y in zip(discrete_position, p)])
                                 other_position = discrete_positions[grid_value - 1]
                                 for v2 in translation_vectors:
-                                    other_discrete_position = [
-                                        other_position[i] + v2[i] for i in dimensions
-                                    ]
+                                    other_discrete_position = [other_position[i] + v2[i] for i in dimensions]
                                     other_squared_distance = sum(
-                                        [
-                                            (x - y) ** 2
-                                            for x, y in zip(other_discrete_position, p)
-                                        ]
+                                        [(x - y) ** 2 for x, y in zip(other_discrete_position, p)]
                                     )
                                     if other_squared_distance <= this_squared_distance:
                                         break
@@ -78,9 +62,7 @@ def atomstogrid(
 class Subgrid(object):
     def __init__(self, cubesize, grid_dimensions):
         self.cubesize = cubesize
-        self.sgd = tuple(
-            [2 + int(ceil(1.0 * d / cubesize)) + 2 for d in grid_dimensions]
-        )
+        self.sgd = tuple([2 + int(ceil(1.0 * d / cubesize)) + 2 for d in grid_dimensions])
         self.sg = []
         for x in range(self.sgd[0]):
             self.sg.append([])
@@ -100,9 +82,7 @@ class Subgrid(object):
         for domain_index, domain_seed_points in enumerate(domain_point_list):
             for domain_seed_point in domain_seed_points:
                 for v in translation_vectors:
-                    real_domain_seed_point = [
-                        domain_seed_point[i] + v[i] for i in dimensions
-                    ]
+                    real_domain_seed_point = [domain_seed_point[i] + v[i] for i in dimensions]
                     sgp = self.to_subgrid(real_domain_seed_point)
                     self.sg[sgp[0]][sgp[1]][sgp[2]][1].append(real_domain_seed_point)
                     self.sg[sgp[0]][sgp[1]][sgp[2]][2].append(domain_index)
@@ -141,14 +121,10 @@ def mark_cavities(
             if grid_value == 0:  # outside the volume
                 grid[p] = 0
                 possibly_in_cavity = False
-            elif (
-                grid_value < 0
-            ):  # cavity domain (stored as: -index-1), therefore guaranteed to be in a cavity
+            elif grid_value < 0:  # cavity domain (stored as: -index-1), therefore guaranteed to be in a cavity
                 grid[p] = grid_value
                 possibly_in_cavity = False  # is already marked
-            elif (
-                grid_value > 0
-            ):  # in radius of atom (stored as: index+1), therefore possibly in a cavity
+            elif grid_value > 0:  # in radius of atom (stored as: index+1), therefore possibly in a cavity
                 grid[p] = 0
                 possibly_in_cavity = True
         else:
@@ -161,14 +137,9 @@ def mark_cavities(
                 sgci = [sgp[j] + i[j] for j in dimensions]
                 for atom_position in sg.sg[sgci[0]][sgci[1]][sgci[2]][0]:
                     squared_atom_distance = sum(
-                        [
-                            (atom_position[j] - p[j]) * (atom_position[j] - p[j])
-                            for j in dimensions
-                        ]
+                        [(atom_position[j] - p[j]) * (atom_position[j] - p[j]) for j in dimensions]
                     )
-                    min_squared_atom_distance = min(
-                        min_squared_atom_distance, squared_atom_distance
-                    )
+                    min_squared_atom_distance = min(min_squared_atom_distance, squared_atom_distance)
             for i in itertools.product((-1, 0, 1), repeat=dimension):
                 next = False
                 sgci = [sgp[j] + i[j] for j in dimensions]
@@ -177,11 +148,7 @@ def mark_cavities(
                     sg.sg[sgci[0]][sgci[1]][sgci[2]][1],
                 ):
                     squared_domain_seed_point_distance = sum(
-                        [
-                            (domain_seed_point[j] - p[j])
-                            * (domain_seed_point[j] - p[j])
-                            for j in dimensions
-                        ]
+                        [(domain_seed_point[j] - p[j]) * (domain_seed_point[j] - p[j]) for j in dimensions]
                     )
                     if squared_domain_seed_point_distance < min_squared_atom_distance:
                         grid[p] = -domain_index - 1
@@ -192,9 +159,7 @@ def mark_cavities(
     return grid
 
 
-def cavity_triangles(
-    cavity_grid, cavity_indices, isolevel, step, offset, discretization_grid
-):
+def cavity_triangles(cavity_grid, cavity_indices, isolevel, step, offset, discretization_grid):
     cavity_triangles = []
     cavity_surface_areas = []
     grid = np.zeros(cavity_grid.shape, dtype=bool)
@@ -257,51 +222,30 @@ def cavity_intersections(grid, num_domains):
 def mark_translation_vectors(grid, translation_vectors):
     # step 5
     for p in itertools.product(*map(range, grid.shape)):
-        equivalent_points = [
-            [p[i] + v[i] for i in dimensions] for v in translation_vectors
-        ]
+        equivalent_points = [[p[i] + v[i] for i in dimensions] for v in translation_vectors]
         valid_equivalent_points = [
-            tuple(point)
-            for point in equivalent_points
-            if all([0 <= point[i] <= grid.shape[i] - 1 for i in dimensions])
+            tuple(point) for point in equivalent_points if all([0 <= point[i] <= grid.shape[i] - 1 for i in dimensions])
         ]
         if grid[p] == 0:
-            equivalent_points_inside = [
-                point for point in valid_equivalent_points if grid[point] == 0
-            ]
+            equivalent_points_inside = [point for point in valid_equivalent_points if grid[point] == 0]
             for point in equivalent_points_inside:
                 grid[point] = 1
     # step 6 & 7
     for p in itertools.product(*map(range, grid.shape)):
-        equivalent_points = [
-            ([p[i] + v[i] for i in dimensions], vi)
-            for vi, v in enumerate(translation_vectors)
-        ]
+        equivalent_points = [([p[i] + v[i] for i in dimensions], vi) for vi, v in enumerate(translation_vectors)]
         valid_equivalent_points = [
             (tuple(point), vi)
             for point, vi in equivalent_points
             if all([0 <= point[i] <= grid.shape[i] - 1 for i in dimensions])
         ]
         if grid[p] == 1:
-            equivalent_points_inside = [
-                (point, vi) for point, vi in valid_equivalent_points if grid[point] == 0
-            ]
+            equivalent_points_inside = [(point, vi) for point, vi in valid_equivalent_points if grid[point] == 0]
             if not equivalent_points_inside:
                 nearest_to_center = p
                 nearest_to_center_index = -1  # -1 -> -(-1+1) == 0
-                min_d_center = sum(
-                    [
-                        (p[i] - grid.shape[i] / 2) * (p[i] - grid.shape[i] / 2)
-                        for i in dimensions
-                    ]
-                )
+                min_d_center = sum([(p[i] - grid.shape[i] / 2) * (p[i] - grid.shape[i] / 2) for i in dimensions])
                 for p2, vi in valid_equivalent_points:
-                    d_center = sum(
-                        [
-                            (p2[i] - grid.shape[i] / 2) * (p2[i] - grid.shape[i] / 2)
-                            for i in dimensions
-                        ]
-                    )
+                    d_center = sum([(p2[i] - grid.shape[i] / 2) * (p2[i] - grid.shape[i] / 2) for i in dimensions])
                     if d_center < min_d_center:
                         min_d_center = d_center
                         nearest_to_center = p2

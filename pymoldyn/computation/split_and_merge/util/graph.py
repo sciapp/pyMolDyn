@@ -36,9 +36,7 @@ class MergeGroup(object):
             all_merge_groups=[self],
             is_cyclic=False,
         )
-        self._index_of_primary_subgroup = (
-            None  # Saves the index of the first subgroup in the subgroups list that has
-        )
+        self._index_of_primary_subgroup = None  # Saves the index of the first subgroup in the subgroups list that has
         # been assigned to this MergeGroup object
         if initial_node is not None:
             self.add(set([initial_node]))
@@ -48,9 +46,7 @@ class MergeGroup(object):
         Adds nodes from another MergeGroup or a single node.
         """
         if len(self._subgroups) > 1:
-            raise AddingNodesNotAllowedError(
-                "In the merge phase adding nodes is not longer possible."
-            )
+            raise AddingNodesNotAllowedError("In the merge phase adding nodes is not longer possible.")
 
         if isinstance(nodes, type(self)):
             # only the nodes of the second merge group are collected. That is NOT a merging operation!
@@ -73,29 +69,19 @@ class MergeGroup(object):
 
         def subtract_vector_list(translation_vector, *vector_lists):
             for vector in it.chain(*vector_lists):
-                translation_vector = tuple(
-                    tc - vc for tc, vc in zip(translation_vector, vector)
-                )
+                translation_vector = tuple(tc - vc for tc, vc in zip(translation_vector, vector))
             return translation_vector
 
         subgroup_count_before_merge = len(self._subgroups)
 
         self._subgroups.extend(merge_group._subgroups)
-        subtraction_vectors = self._translation_vectors[
-            self._index_of_primary_subgroup :
-        ]
-        subtraction_vectors.extend(
-            merge_group._translation_vectors[: merge_group._index_of_primary_subgroup]
-        )
-        self._translation_vectors.append(
-            subtract_vector_list(translation_vector, subtraction_vectors)
-        )
+        subtraction_vectors = self._translation_vectors[self._index_of_primary_subgroup :]
+        subtraction_vectors.extend(merge_group._translation_vectors[: merge_group._index_of_primary_subgroup])
+        self._translation_vectors.append(subtract_vector_list(translation_vector, subtraction_vectors))
         self._translation_vectors.extend(merge_group._translation_vectors)
 
         self._all_merge_groups.extend(merge_group._all_merge_groups)
-        merge_group._update_all_merge_groups(
-            self._shared_attributes, subgroup_count_before_merge
-        )
+        merge_group._update_all_merge_groups(self._shared_attributes, subgroup_count_before_merge)
 
     def set_cyclic(self):
         self._shared_attributes.is_cyclic = True
@@ -107,10 +93,7 @@ class MergeGroup(object):
 
     def __getattr__(self, attr):
         if attr.startswith("_"):
-            if (
-                hasattr(self, "_shared_attributes")
-                and attr[1:] in self._shared_attributes
-            ):
+            if hasattr(self, "_shared_attributes") and attr[1:] in self._shared_attributes:
                 return getattr(self._shared_attributes, attr[1:])
         return super(MergeGroup, self).__getattribute__(attr)
 
@@ -144,10 +127,7 @@ class MergeGroup(object):
             # generator expression must be created in a nested function to avoid late variable binding problems with
             # "combined_translation_vector"; without a nested function all generator expressions would get the last
             # value that was assigned to "combined_translation_vector" during the loop iterations in the outer function
-            return (
-                (tuple(nc - tc for nc, tc in zip(pos, translation_vector)), dim)
-                for pos, dim in subgroup
-            )
+            return ((tuple(nc - tc for nc, tc in zip(pos, translation_vector)), dim) for pos, dim in subgroup)
 
         def get_generators_from_start_index(index, reverse=False):
             generators = []
@@ -159,13 +139,9 @@ class MergeGroup(object):
             else:
                 factor = -1
                 subgroups = self._subgroups[index - 1 :: -1] if index > 0 else []
-                translation_vectors = (
-                    self._translation_vectors[index - 2 :: -1] if index > 1 else []
-                )
+                translation_vectors = self._translation_vectors[index - 2 :: -1] if index > 1 else []
                 combined_translation_vector = (
-                    tuple(-c for c in self._translation_vectors[index - 1])
-                    if index > 0
-                    else (0, 0, 0)
+                    tuple(-c for c in self._translation_vectors[index - 1]) if index > 0 else (0, 0, 0)
                 )
             iterator = it.zip_longest(subgroups, translation_vectors)
             for subgroup, translation_vector in iterator:
@@ -176,27 +152,18 @@ class MergeGroup(object):
                     generators.append(generator)
                 if translation_vector is not None:
                     combined_translation_vector = tuple(
-                        cc + factor * tc
-                        for cc, tc in zip(
-                            combined_translation_vector, translation_vector
-                        )
+                        cc + factor * tc for cc, tc in zip(combined_translation_vector, translation_vector)
                     )
             return generators
 
         if keep_largest_volume_within_cell:
-            index_of_non_translated_subgroup = max(
-                range(len(self._subgroups)), key=lambda i: len(self._subgroups[i])
-            )
+            index_of_non_translated_subgroup = max(range(len(self._subgroups)), key=lambda i: len(self._subgroups[i]))
         else:
             index_of_non_translated_subgroup = self._index_of_primary_subgroup
         generators = []
-        backwards_generators = get_generators_from_start_index(
-            index_of_non_translated_subgroup, reverse=True
-        )
+        backwards_generators = get_generators_from_start_index(index_of_non_translated_subgroup, reverse=True)
         generators.extend(list(reversed(backwards_generators)))
-        forwards_generators = get_generators_from_start_index(
-            index_of_non_translated_subgroup
-        )
+        forwards_generators = get_generators_from_start_index(index_of_non_translated_subgroup)
         generators.extend(forwards_generators)
         return it.chain(*generators)
 
@@ -277,9 +244,7 @@ class GraphForSplitAndMerge(Graph):
     The split method can only be used until merge is called for the first time!
     """
 
-    def __init__(
-        self, data, mask, get_translation_vector, is_relevant_part, initial_node=None
-    ):
+    def __init__(self, data, mask, get_translation_vector, is_relevant_part, initial_node=None):
         Graph.__init__(self)
         self.data = data
         self.mask = mask
@@ -323,12 +288,8 @@ class GraphForSplitAndMerge(Graph):
                 self.__mark_border_nodes()
             self.border_nodes[node] |= set(neighbors)
             for neighbor, translation_vector in zip(neighbors, translation_vectors):
-                self.border_node_pair_translations[(neighbor, node)] = (
-                    translation_vector
-                )
-                self.border_node_pair_translations[(node, neighbor)] = tuple(
-                    -c for c in translation_vector
-                )
+                self.border_node_pair_translations[(neighbor, node)] = translation_vector
+                self.border_node_pair_translations[(node, neighbor)] = tuple(-c for c in translation_vector)
 
     def remove_node(self, node):
         Graph.remove_node(self, node)
@@ -371,17 +332,13 @@ class GraphForSplitAndMerge(Graph):
                     if w > 0 and h > 0 and d > 0:
                         # a => b
                         if not hom_nodes or (
-                            self.is_relevant_part(
-                                self.data[x : x + w, y : y + h, z : z + d]
-                            )
+                            self.is_relevant_part(self.data[x : x + w, y : y + h, z : z + d])
                             and not bool(self.mask[x, y, z])
                         ):
                             new_nodes.append(n)
                 return new_nodes
 
-            new_homogen_nodes = get_relevant_nodes(
-                potential_new_homogen_nodes, hom_nodes=True
-            )
+            new_homogen_nodes = get_relevant_nodes(potential_new_homogen_nodes, hom_nodes=True)
             new_inhomogen_nodes = get_relevant_nodes(potential_new_inhomogen_nodes)
             all_new_nodes = set(new_homogen_nodes) | set(new_inhomogen_nodes)
 
@@ -410,11 +367,7 @@ class GraphForSplitAndMerge(Graph):
         def func(border_x, border_y, border_z):
             try:
                 if bool(self.mask[border_x, border_y, border_z]):
-                    translation_vectors.add(
-                        tuple(
-                            self.get_translation_vector((border_x, border_y, border_z))
-                        )
-                    )
+                    translation_vectors.add(tuple(self.get_translation_vector((border_x, border_y, border_z))))
             except:
                 pass  # TODO dont fix like this
 
@@ -450,9 +403,7 @@ class GraphForSplitAndMerge(Graph):
         self.forbid_splitting()
         if not self.is_merged(node1, node2, detect_cyclic_merge=True):
             separated_by_periodic_boundary_condition = (
-                self.border_nodes is not None
-                and node1 in self.border_nodes
-                and node2 in self.border_nodes[node1]
+                self.border_nodes is not None and node1 in self.border_nodes and node2 in self.border_nodes[node1]
             )
             if not separated_by_periodic_boundary_condition:
                 if not self.merging_non_periodic_neighbors_allowed:
@@ -474,11 +425,7 @@ class GraphForSplitAndMerge(Graph):
     def is_merged(self, node1, node2, detect_cyclic_merge=False):
         # If node2 is not merged with node1 than node1 is not merged with node2, neither.
         is_merged = node2 in self.merged_nodes[node1]
-        if (
-            is_merged
-            and detect_cyclic_merge
-            and self.merged_nodes[node1] is self.merged_nodes[node2]
-        ):
+        if is_merged and detect_cyclic_merge and self.merged_nodes[node1] is self.merged_nodes[node2]:
             self.merged_nodes[node1].set_cyclic()
         return is_merged
 
@@ -507,9 +454,7 @@ class GraphForSplitAndMerge(Graph):
             if node not in visited_nodes:
                 area = set()
                 if apply_translation:
-                    node_iterator = self.merged_nodes[
-                        node
-                    ].iter_with_applied_translation(
+                    node_iterator = self.merged_nodes[node].iter_with_applied_translation(
                         iter_with_non_translated_nodes=True,
                         keep_largest_volume_within_cell=True,
                     )
@@ -548,11 +493,7 @@ class GraphForSplitAndMerge(Graph):
         for n in potential_neighbors:
             x, y, z = n[0]
             w, h, d = n[1]
-            if (
-                x - w_ <= x_ <= x + w
-                and y - h_ <= y_ <= y + h
-                and z - d_ <= z_ <= z + d
-            ):
+            if x - w_ <= x_ <= x + w and y - h_ <= y_ <= y + h and z - d_ <= z_ <= z + d:
                 neighbors.add(n)
         return neighbors
 
