@@ -554,7 +554,7 @@ package:windows:
   tags:
   - libvirt
   variables:
-    IMAGE_MAGICK_VERSION: "7.1.1-41"
+    IMAGE_MAGICK_VERSION: "7.1.1-43"
   before_script:
   - vcvars_cmd python -m pip install briefcase
   - curl -fLO "https://imagemagick.org/archive/binaries/ImageMagick-${IMAGE_MAGICK_VERSION}-portable-Q8-x64.zip"

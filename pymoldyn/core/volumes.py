@@ -47,9 +47,7 @@ class HexagonalVolume(object):
         f = 2 * self.a * sin(pi / 3)
 
         #: The lattice system translation vectors (`right`, `right-up`, `forward`)
-        self.translation_vectors = [
-            (cos(pi * i / 3) * f, sin(pi * i / 3) * f, 0) for i in range(2)
-        ] + [(0, 0, self.c)]
+        self.translation_vectors = [(cos(pi * i / 3) * f, sin(pi * i / 3) * f, 0) for i in range(2)] + [(0, 0, self.c)]
 
         #: The side lengths of an axis-aligned bounding box
         self.side_lengths = [2 * self.a * sin(pi / 3), 2 * self.a, self.c]
@@ -106,9 +104,7 @@ class HexagonalVolume(object):
                 result = ap[:, 2] <= self.c / 2
                 result = np.logical_and(result, ap[:, 0] <= sin(pi / 3) * self.a)
                 result = np.logical_and(result, ap[:, 1] <= self.a)
-                tmp = np.logical_or(
-                    ap[:, 1] <= self.a / 2, ap[:, 1] <= self.a - ap[:, 0] * cot(pi / 3)
-                )
+                tmp = np.logical_or(ap[:, 1] <= self.a / 2, ap[:, 1] <= self.a - ap[:, 0] * cot(pi / 3))
                 result = np.logical_and(result, tmp)
                 return result
         else:
@@ -132,9 +128,7 @@ class HexagonalVolume(object):
         """
         equivalent_point = np.array(point)
         translation_vectors = np.array(self.translation_vectors)
-        translation_vectors = np.append(
-            translation_vectors, [translation_vectors[1] - translation_vectors[0]]
-        )
+        translation_vectors = np.append(translation_vectors, [translation_vectors[1] - translation_vectors[0]])
         translation_vectors.shape = (4, 3)
         translation_vector_lengths = np.array([la.norm(v) for v in translation_vectors])
         for i, translation_vector_length in enumerate(translation_vector_lengths):
@@ -144,9 +138,7 @@ class HexagonalVolume(object):
         may_be_outside = True
         while may_be_outside:
             projected_point = projection_matrix * np.matrix(equivalent_point).T
-            scaled_projected_point = (
-                np.array(projected_point.flat) / translation_vector_lengths
-            )
+            scaled_projected_point = np.array(projected_point.flat) / translation_vector_lengths
             max_index = np.argmax(np.abs(scaled_projected_point))
             if abs(scaled_projected_point[max_index]) > 0.5:
                 may_be_outside = True
@@ -161,9 +153,7 @@ class HexagonalVolume(object):
 
     def _wrap(self, p):
         f = sqrt(3) * self.a
-        M60 = np.matrix(
-            [[0.5, 0.5 * sqrt(3), 0.0], [-0.5 * sqrt(3), 0.5, 0.0], [0.0, 0.0, 1.0]]
-        )
+        M60 = np.matrix([[0.5, 0.5 * sqrt(3), 0.0], [-0.5 * sqrt(3), 0.5, 0.0], [0.0, 0.0, 1.0]])
         p[:, 2] -= np.ceil(p[:, 2] / self.c - 0.5) * self.c
         p[:, 0] -= np.ceil(p[:, 0] / f - 0.5) * f
         p = (M60 * p.T).T
@@ -218,11 +208,7 @@ class TriclinicVolume(object):
             self.beta = beta
             self.gamma = gamma
             self.V = (
-                1
-                - cos(alpha) ** 2
-                - cos(beta) ** 2
-                - cos(gamma) ** 2
-                + 2 * cos(alpha) * cos(beta) * cos(gamma)
+                1 - cos(alpha) ** 2 - cos(beta) ** 2 - cos(gamma) ** 2 + 2 * cos(alpha) * cos(beta) * cos(gamma)
             ) ** 0.5
             #: The cartesian-to-fractional transformation matrix
             self.M = np.matrix(
@@ -230,18 +216,12 @@ class TriclinicVolume(object):
                     [
                         1 / a,
                         1 / a * (-cos(gamma) / sin(gamma)),
-                        1
-                        / a
-                        * (cos(alpha) * cos(gamma) - cos(beta))
-                        / (self.V * sin(gamma)),
+                        1 / a * (cos(alpha) * cos(gamma) - cos(beta)) / (self.V * sin(gamma)),
                     ],
                     [
                         0,
                         1 / b * 1 / sin(gamma),
-                        1
-                        / b
-                        * (cos(beta) * cos(gamma) - cos(alpha))
-                        / (self.V * sin(gamma)),
+                        1 / b * (cos(beta) * cos(gamma) - cos(alpha)) / (self.V * sin(gamma)),
                     ],
                     [0, 0, 1 / c * sin(gamma) / self.V],
                 ]
@@ -265,11 +245,7 @@ class TriclinicVolume(object):
             self.gamma = gamma
 
             self.V = (
-                1
-                - cos(alpha) ** 2
-                - cos(beta) ** 2
-                - cos(gamma) ** 2
-                + 2 * cos(alpha) * cos(beta) * cos(gamma)
+                1 - cos(alpha) ** 2 - cos(beta) ** 2 - cos(gamma) ** 2 + 2 * cos(alpha) * cos(beta) * cos(gamma)
             ) ** 0.5
             self.Minv = np.matrix(np.array([v1, v2, v3]).T)
             self.M = np.matrix(la.inv(self.Minv))
@@ -537,10 +513,7 @@ class Volume(object):
             else:
                 param_list = s[1:]
                 # parsing parameter
-                param = [
-                    cls.convert_functions[p](param_list[i])
-                    for i, p in enumerate(cls.volumes[t][1])
-                ]
+                param = [cls.convert_functions[p](param_list[i]) for i, p in enumerate(cls.volumes[t][1])]
             return cl(*param)
         except Exception:
             return None

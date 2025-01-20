@@ -35,9 +35,7 @@ class Logger(object):
     def __init__(self, identifier):
         self.identifier = identifier
         self.streams = dict()
-        self.format = (
-            "{time} {severity} from {identifier} in {function} ({file}:{line}): "
-        )
+        self.format = "{time} {severity} from {identifier} in {function} ({file}:{line}): "
 
     def setstream(self, ident, stream, severity):
         if severity is None or stream == -1:
@@ -96,4 +94,4 @@ class Logger(object):
                     stream._logline(severity, line)
                 else:
                     #  print >>stream, line
-                    print(line, stream)
+                    print(line, file=stream)

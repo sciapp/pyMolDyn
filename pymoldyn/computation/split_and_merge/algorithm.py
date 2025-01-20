@@ -17,29 +17,19 @@ class ObjectType:
 def is_homogenous_split(data_part, mask_part):
     try:
         return PosBoolType(
-            find_index_of_first_element_not_equivalent.find_index_of_first_element_not_equivalent(
-                data_part, mask_part
-            )
+            find_index_of_first_element_not_equivalent.find_index_of_first_element_not_equivalent(data_part, mask_part)
         )
     except TypeError:  # TODO fix logging
         if data_part[0][0][0] == 0:
             if mask_part[0][0][0] == 0:
-                ret = np.where(
-                    np.logical_or(mask_part != 0, data_part != 0), 1, 0
-                ).nonzero()  # In c it is or not and
+                ret = np.where(np.logical_or(mask_part != 0, data_part != 0), 1, 0).nonzero()  # In c it is or not and
             else:
-                ret = np.where(
-                    np.logical_or(mask_part == 0, data_part != 0), 1, 0
-                ).nonzero()
+                ret = np.where(np.logical_or(mask_part == 0, data_part != 0), 1, 0).nonzero()
         else:
             if mask_part[0][0][0] == 0:
-                ret = np.where(
-                    np.logical_or(mask_part != 0, data_part == 0), 1, 0
-                ).nonzero()
+                ret = np.where(np.logical_or(mask_part != 0, data_part == 0), 1, 0).nonzero()
             else:
-                ret = np.where(
-                    np.logical_or(mask_part == 0, data_part == 0), 1, 0
-                ).nonzero()
+                ret = np.where(np.logical_or(mask_part == 0, data_part == 0), 1, 0).nonzero()
         try:
             return PosBoolType((ret[0][0], ret[1][0], ret[2][0]))
         except:
@@ -154,18 +144,14 @@ def add_periodic_neighbors(graph):
                     m[1],
                 )
                 if is_neighboring(n, translated_node):
-                    graph.add_neighbors(
-                        n, [m], translation_vectors=[translation_vector]
-                    )
+                    graph.add_neighbors(n, [m], translation_vectors=[translation_vector])
                     break
 
 
 def merge_periodic_border(data, graph):
     for border_node, border_neighbors in graph.iter_border_items():
         for border_neighbor in border_neighbors:
-            if not graph.is_merged(
-                border_node, border_neighbor, detect_cyclic_merge=True
-            ):
+            if not graph.is_merged(border_node, border_neighbor, detect_cyclic_merge=True):
                 pos_node, dim_node = border_node
                 pos_neighbor, dim_neighbor = border_neighbor
                 data_node = data[
@@ -191,13 +177,9 @@ def mark_domain_points(data, areas):
 
 
 def calculate_domain_centers(atoms, combined_translation_vectors, areas):
-    combined_translation_vectors_tuples = [
-        tuple(t) for t in combined_translation_vectors
-    ]
+    combined_translation_vectors_tuples = [tuple(t) for t in combined_translation_vectors]
     areas = [list(a) for a in areas]
-    return calc_dom.calculate_domain_centers(
-        atoms, combined_translation_vectors_tuples, areas
-    )
+    return calc_dom.calculate_domain_centers(atoms, combined_translation_vectors_tuples, areas)
 
 
 def get_domain_area_cells(areas):
@@ -216,9 +198,7 @@ def get_domain_surface_cells(data, mask, areas):
     domain = None
 
     def func(border_x, border_y, border_z, adjacent_node_cells):
-        if bool(data[border_x, border_y, border_z]) or bool(
-            mask[border_x, border_y, border_z]
-        ):
+        if bool(data[border_x, border_y, border_z]) or bool(mask[border_x, border_y, border_z]):
             for n in adjacent_node_cells:
                 domain.add(n)
 

@@ -49,9 +49,7 @@ class GrHistogramWidget(GRWidget):
         else:
             gr.setwsviewport(*wsviewport)
         gr.setwswindow(0, self.sizex, 0, self.sizey)
-        gr.setviewport(
-            0.075 * self.sizex, 0.95 * self.sizex, 0.075 * self.sizey, 0.95 * self.sizey
-        )
+        gr.setviewport(0.075 * self.sizex, 0.95 * self.sizex, 0.075 * self.sizey, 0.95 * self.sizey)
         gr.setwindow(rangex[0], rangex[1], rangey[0], rangey[1])
         gr.setcharheight(0.012)
 
@@ -59,11 +57,7 @@ class GrHistogramWidget(GRWidget):
         gr.setfillcolorind(0)
         gr.fillrect(rangex[0], rangex[1], rangey[0], rangey[1])
 
-        if (
-            self.xvalues is not None
-            and self.yvalues is not None
-            and self.widths is not None
-        ):
+        if self.xvalues is not None and self.yvalues is not None and self.widths is not None:
             gr.setfillintstyle(1)
             gr.setfillcolorind(2)
             for i in range(self.xvalues.size):
@@ -207,9 +201,7 @@ class HistogramWidget(QtWidgets.QWidget):
             ".ps",
         )
         qtext = "*" + " *".join(extensions)
-        filepath = QtWidgets.QFileDialog.getSaveFileName(
-            self, "Save Image", ".", "Image Files ({})".format(qtext)
-        )[0]
+        filepath = QtWidgets.QFileDialog.getSaveFileName(self, "Save Image", ".", "Image Files ({})".format(qtext))[0]
         if not filepath:
             return
 
@@ -223,9 +215,7 @@ class HistogramWidget(QtWidgets.QWidget):
 
     def export_data(self):
         qtext = " *.csv"
-        filepath = QtWidgets.QFileDialog.getSaveFileName(
-            self, "Save Data", ".", "CSV Files ({})".format(qtext)
-        )[0]
+        filepath = QtWidgets.QFileDialog.getSaveFileName(self, "Save Data", ".", "CSV Files ({})".format(qtext))[0]
         if len(filepath) == 0:
             return
         self.update()

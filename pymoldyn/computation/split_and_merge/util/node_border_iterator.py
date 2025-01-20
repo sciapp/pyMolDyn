@@ -6,9 +6,7 @@ def iterate_node_border(node, func):
     node_w, node_h, node_d = node[1]
 
     border_points = [
-        (x, node_y - 1, z)
-        for x in range(node_x, node_x + node_w + 1)
-        for z in range(node_z, node_z + node_d + 1)
+        (x, node_y - 1, z) for x in range(node_x, node_x + node_w + 1) for z in range(node_z, node_z + node_d + 1)
     ]
     border_points.extend(
         [
@@ -25,25 +23,13 @@ def iterate_node_border(node, func):
         ]
     )
     border_points.extend(
-        [
-            (node_x + node_w, y, z)
-            for y in range(node_y, node_y + node_h)
-            for z in range(node_z, node_z + node_d + 1)
-        ]
+        [(node_x + node_w, y, z) for y in range(node_y, node_y + node_h) for z in range(node_z, node_z + node_d + 1)]
     )
     border_points.extend(
-        [
-            (x, y, node_z - 1)
-            for x in range(node_x, node_x + node_w + 1)
-            for y in range(node_y - 1, node_y + node_h + 1)
-        ]
+        [(x, y, node_z - 1) for x in range(node_x, node_x + node_w + 1) for y in range(node_y - 1, node_y + node_h + 1)]
     )
     border_points.extend(
-        [
-            (x, y, node_z + node_d)
-            for x in range(node_x, node_x + node_w)
-            for y in range(node_y, node_y + node_h)
-        ]
+        [(x, y, node_z + node_d) for x in range(node_x, node_x + node_w) for y in range(node_y, node_y + node_h)]
     )
 
     for border_x, border_y, border_z in border_points:

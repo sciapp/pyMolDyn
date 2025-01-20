@@ -4,6 +4,8 @@
 __all__ = ["atomstogrid", "mark_cavities", "cavity_triangles", "cavity_intersections"]
 
 
+# Import gr3 to load `libGR3.so` which is needed by the ctypes extension
+import gr3  # noqa: F401 pylint: disable=unused-import
 import numpy as np
 from ctypes import (
     c_int,
@@ -179,9 +181,7 @@ def atomstogrid(
     ntranslations = c_int(translation_vectors.shape[0])
     translation_vectors_p = translation_vectors.ctypes.data_as(POINTER(c_int))
 
-    discretization_grid_strides = (c_int * 3)(
-        *[s // discretization_grid.itemsize for s in discretization_grid.strides]
-    )
+    discretization_grid_strides = (c_int * 3)(*[s // discretization_grid.itemsize for s in discretization_grid.strides])
     discretization_grid_p = discretization_grid.ctypes.data_as(POINTER(c_int8))
 
     lib.atomstogrid(
@@ -220,9 +220,7 @@ def subgrid_add_atoms(sg, atom_positions, translation_vectors):
     ntranslations_c = c_int(translations.shape[0])
     translations_c = translations.ctypes.data_as(POINTER(c_int))
 
-    lib.subgrid_add_atoms(
-        sg, natoms_c, atom_positions_c, ntranslations_c, translations_c
-    )
+    lib.subgrid_add_atoms(sg, natoms_c, atom_positions_c, ntranslations_c, translations_c)
 
 
 def subgrid_add_domains(sg, domain_indices, domain_points, translation_vectors):
@@ -257,9 +255,7 @@ def mark_cavities_c(grid, domain_grid, discretization_grid, sg, use_surface_poin
     else:
         domain_grid_c = POINTER(c_int64)()
 
-    discgrid_strides_c = (c_int * 3)(
-        *[s // discretization_grid.itemsize for s in discretization_grid.strides]
-    )
+    discgrid_strides_c = (c_int * 3)(*[s // discretization_grid.itemsize for s in discretization_grid.strides])
     discretization_grid_c = discretization_grid.ctypes.data_as(POINTER(c_int8))
 
     use_surface_points_c = c_int(use_surface_points)
@@ -310,16 +306,12 @@ def mark_cavities(
     return grid
 
 
-def cavity_triangles(
-    cavity_grid, cavity_indices, isolevel, step, offset, discretization_grid
-):
+def cavity_triangles(cavity_grid, cavity_indices, isolevel, step, offset, discretization_grid):
     cavity_grid_c = cavity_grid.ctypes.data_as(POINTER(c_int64))
     dimensions_c = (c_int * 3)(*cavity_grid.shape)
     strides_c = (c_int * 3)(*[s // cavity_grid.itemsize for s in cavity_grid.strides])
 
-    if not isinstance(cavity_indices, np.ndarray) and not isinstance(
-        cavity_indices, list
-    ):
+    if not isinstance(cavity_indices, np.ndarray) and not isinstance(cavity_indices, list):
         cavity_indices = list(cavity_indices)
     ncavity_indices_c = c_int(len(cavity_indices))
     cavity_indices = np.ascontiguousarray(cavity_indices, dtype=int_type)
@@ -330,9 +322,7 @@ def cavity_triangles(
     offset_c = (c_float * 3)(*offset)
 
     discretization_grid_c = discretization_grid.ctypes.data_as(POINTER(c_int8))
-    discgrid_strides_c = (c_int * 3)(
-        *[s // discretization_grid.itemsize for s in discretization_grid.strides]
-    )
+    discgrid_strides_c = (c_int * 3)(*[s // discretization_grid.itemsize for s in discretization_grid.strides])
 
     vertices_c = POINTER(c_float)()
     normals_c = POINTER(c_float)()
@@ -377,9 +367,7 @@ def cavity_intersections(grid, num_domains):
     intersection_table = np.zeros((num_domains, num_domains), dtype=np.int8)
     intersection_table_c = intersection_table.ctypes.data_as(POINTER(c_int8))
 
-    lib.cavity_intersections(
-        grid_c, dimensions_c, strides_c, num_domains_c, intersection_table_c
-    )
+    lib.cavity_intersections(grid_c, dimensions_c, strides_c, num_domains_c, intersection_table_c)
 
     return intersection_table
 
@@ -393,6 +381,4 @@ def mark_translation_vectors(grid, translation_vectors):
     ntranslations_c = c_int(translation_vectors.shape[0])
     translation_vectors_c = translation_vectors.ctypes.data_as(POINTER(c_int))
 
-    lib.mark_translation_vectors(
-        grid_c, dimensions_c, strides_c, ntranslations_c, translation_vectors_c
-    )
+    lib.mark_translation_vectors(grid_c, dimensions_c, strides_c, ntranslations_c, translation_vectors_c)

@@ -26,10 +26,7 @@ class ImageVideoTabDock(QtWidgets.QDockWidget):
         self.layout.addWidget(self.image_video_tab)
         self.widget().setLayout(self.layout)
 
-        self.setFeatures(
-            QtWidgets.QDockWidget.DockWidgetMovable
-            | QtWidgets.QDockWidget.DockWidgetFloatable
-        )
+        self.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable | QtWidgets.QDockWidget.DockWidgetFloatable)
         self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
 
 
@@ -46,21 +43,13 @@ class ImageVideoTab(QtWidgets.QWidget):
     def init_gui(self):
         self.vbox = QtWidgets.QVBoxLayout()
 
-        self.screenshot_button = QtWidgets.QPushButton(
-            "Save screenshot for the current frame", self
-        )
-        self.video_button = QtWidgets.QPushButton(
-            "Save video for all selected frames", self
-        )
-        self.mass_screenshot_button = QtWidgets.QPushButton(
-            "Save screenshot for all selected frames", self
-        )
+        self.screenshot_button = QtWidgets.QPushButton("Save screenshot for the current frame", self)
+        self.video_button = QtWidgets.QPushButton("Save video for all selected frames", self)
+        self.mass_screenshot_button = QtWidgets.QPushButton("Save screenshot for all selected frames", self)
 
         self.screenshot_button.clicked.connect(self.save_screenshot)
         self.screenshot_button.setDisabled(True)
-        self.mass_screenshot_button.clicked.connect(
-            self.save_screenshot_for_all_selected_frames
-        )
+        self.mass_screenshot_button.clicked.connect(self.save_screenshot_for_all_selected_frames)
         self.mass_screenshot_button.setDisabled(True)
         self.video_button.clicked.connect(self.save_video_for_all_selected_frames)
         self.video_button.setDisabled(True)
@@ -109,9 +98,7 @@ class ImageVideoTab(QtWidgets.QWidget):
         frames_to_write = self.get_selected_frames()
         if not frames_to_write:
             return
-        file_name = QtWidgets.QFileDialog.getSaveFileName(
-            self, "Save video...", filter="QuickTime Movie (*.mov)"
-        )[0]
+        file_name = QtWidgets.QFileDialog.getSaveFileName(self, "Save video...", filter="QuickTime Movie (*.mov)")[0]
         if file_name:
             ext = os.path.splitext(file_name)[1]
             if not ext:
@@ -126,9 +113,7 @@ class ImageVideoTab(QtWidgets.QWidget):
         frames_to_write = self.get_selected_frames()
         if not frames_to_write:
             return
-        dir_name = QtWidgets.QFileDialog.getExistingDirectory(
-            self, "Save screenshots to folder..."
-        )
+        dir_name = QtWidgets.QFileDialog.getExistingDirectory(self, "Save screenshots to folder...")
         if dir_name:
             dialog = MassScreenshotAndVideoDialog(self, frames_to_write, dir_name)
             dialog.show()

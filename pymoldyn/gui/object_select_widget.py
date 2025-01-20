@@ -16,9 +16,7 @@ class ObjectSelectWidget(QtWidgets.QWidget):
         # Widgets
         self._activation_checkbox = QtWidgets.QCheckBox(text, self)
         if self._has_index_selector:
-            self._selection_checkbox = QtWidgets.QCheckBox(
-                "only selected indices", self
-            )
+            self._selection_checkbox = QtWidgets.QCheckBox("only selected indices", self)
             self._index_selection = IndexSelectLineEdit(self)
 
         # Layout
@@ -35,9 +33,7 @@ class ObjectSelectWidget(QtWidgets.QWidget):
         self._activation_checkbox.stateChanged.connect(self._state_changed)
         if self._has_index_selector:
             self._selection_checkbox.stateChanged.connect(self._selection_toggled)
-            self._index_selection.indices_changed.connect(
-                self._selection_indices_changed
-            )
+            self._index_selection.indices_changed.connect(self._selection_indices_changed)
 
         # State setup
         self._state_changed(check_state=False)
@@ -95,11 +91,7 @@ class IndexSelectLineEdit(QtWidgets.QLineEdit):
 
         def validate(self, input, pos):
             return (
-                (
-                    QtGui.QValidator.Acceptable
-                    if re.match("^[0-9,\s-]*$", input)
-                    else QtGui.QValidator.Invalid
-                ),
+                (QtGui.QValidator.Acceptable if re.match(r"^[0-9,\s-]*$", input) else QtGui.QValidator.Invalid),
                 input,
                 pos,
             )
@@ -183,13 +175,11 @@ class IndexSelectLineEdit(QtWidgets.QLineEdit):
 
     def _get_indices_from_line_edit(self):
         input_text = self.text().replace(" ", "")
-        is_input_valid = re.match("^(\d+(-\d+)?(,\d+(-\d+)?)*)?$", input_text)
+        is_input_valid = re.match(r"^(\d+(-\d+)?(,\d+(-\d+)?)*)?$", input_text)
         if is_input_valid:
             parts = input_text.split(",") if input_text != "" else []
             indices = []
-            indices.extend(
-                (int(comp) - 1 for comp in parts if "-" not in comp)
-            )  # single indices
+            indices.extend((int(comp) - 1 for comp in parts if "-" not in comp))  # single indices
             for comp in parts:
                 if "-" in comp:  # index ranges
                     start, end = map(int, comp.split("-"))

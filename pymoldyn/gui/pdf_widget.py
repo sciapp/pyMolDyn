@@ -52,9 +52,7 @@ class GrPlotWidget(GRWidget):
         else:
             gr.setwsviewport(*wsviewport)
         gr.setwswindow(0, self.sizex, 0, self.sizey)
-        gr.setviewport(
-            0.075 * self.sizex, 0.95 * self.sizex, 0.075 * self.sizey, 0.95 * self.sizey
-        )
+        gr.setviewport(0.075 * self.sizex, 0.95 * self.sizex, 0.075 * self.sizey, 0.95 * self.sizey)
         gr.setwindow(rangex[0], rangex[1], rangey[0], rangey[1])
         gr.setcharheight(0.012)
 
@@ -245,9 +243,7 @@ class PDFWidget(QtWidgets.QWidget):
             ".ps",
         )
         qtext = "*" + " *".join(extensions)
-        filepath = QtWidgets.QFileDialog.getSaveFileName(
-            self, "Save Image", ".", "Image Files ({})".format(qtext)
-        )[0]
+        filepath = QtWidgets.QFileDialog.getSaveFileName(self, "Save Image", ".", "Image Files ({})".format(qtext))[0]
         if len(filepath) == 0:
             return
 
@@ -261,9 +257,7 @@ class PDFWidget(QtWidgets.QWidget):
 
     def export_data(self):
         qtext = " *.csv"
-        filepath = QtWidgets.QFileDialog.getSaveFileName(
-            self, "Save Data", ".", "CSV Files ({})".format(qtext)
-        )[0]
+        filepath = QtWidgets.QFileDialog.getSaveFileName(self, "Save Data", ".", "CSV Files ({})".format(qtext))[0]
         if len(filepath) == 0:
             return
         self.update()
@@ -271,9 +265,7 @@ class PDFWidget(QtWidgets.QWidget):
         yvalues = self.gr_widget.yvalues
         if xvalues is None or yvalues is None:
             return
-        with open(
-            filepath, "w"
-        ) as csvfile:  # TODO same check as with histogramm (bytes csv)
+        with open(filepath, "w") as csvfile:  # TODO same check as with histogramm (bytes csv)
             csvwriter = csv.writer(csvfile)
             for x, y in zip(xvalues, yvalues):
                 csvwriter.writerow([x, y])
@@ -288,11 +280,7 @@ class PDFWidget(QtWidgets.QWidget):
                 e = np.unique(results.atoms.elements).tolist()
                 for i in range(len(e)):
                     e[i] = e[i].decode("utf-8")
-                if (
-                    results.domains is not None
-                    and len(results.domains.centers) > 0
-                    and "cav" not in e
-                ):
+                if results.domains is not None and len(results.domains.centers) > 0 and "cav" not in e:
                     e.append("cavity domain centers")
                 self.elem1.clear()
                 self.elem1.addItems(e)

@@ -55,9 +55,7 @@ class GLWidget(QGLWidget if has_qopenglwidget else QGLWidget):
         else:
             super().__init__(QtOpenGL.QGLFormat(QtOpenGL.QGL.SampleBuffers), parent)
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.setSizePolicy(
-            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
-        )
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.update_needed = False
         self.dataset_loaded = False
         self.control = parent.control
@@ -76,9 +74,7 @@ class GLWidget(QGLWidget if has_qopenglwidget else QGLWidget):
         return QtCore.QSize(400, 400)
 
     def sizeHint(self):
-        return QtCore.QSize(
-            config.OpenGL.gl_window_size[0], config.OpenGL.gl_window_size[1]
-        )
+        return QtCore.QSize(config.OpenGL.gl_window_size[0], config.OpenGL.gl_window_size[1])
 
     def mouseMoveEvent(self, e):
         dx = e.x() - self.x
@@ -97,9 +93,7 @@ class GLWidget(QGLWidget if has_qopenglwidget else QGLWidget):
         rot_v = 0.1
         if e.modifiers() == QtCore.Qt.ShiftModifier:
             if (e.angleDelta().x() != 0) or (e.angleDelta().y() != 0):
-                self.vis.rotate_mouse(
-                    -e.angleDelta().x() * rot_v, -e.angleDelta().y() * rot_v
-                )
+                self.vis.rotate_mouse(-e.angleDelta().x() * rot_v, -e.angleDelta().y() * rot_v)
         else:
             if e.angleDelta().y() != 0:
                 self.vis.zoom(-e.angleDelta().y())
@@ -115,9 +109,7 @@ class GLWidget(QGLWidget if has_qopenglwidget else QGLWidget):
         if e.buttons() and QtCore.Qt.LeftButton:
             x = e.x()
             y = self.height() - e.y()
-            glBindFramebuffer(
-                GL_FRAMEBUFFER, 1
-            )  # Bind to correct framebuffer for depth check
+            glBindFramebuffer(GL_FRAMEBUFFER, 1)  # Bind to correct framebuffer for depth check
             z = glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT)
             obj = self.vis.get_object_at_2dposition(x, y)
             if obj is None:
@@ -136,21 +128,13 @@ class GLWidget(QGLWidget if has_qopenglwidget else QGLWidget):
             if obj is not None:
                 object_type, object_index = obj
                 if object_type == "atom":
-                    self.window().statistics_dock.statistics_tab.html_view.show_atom(
-                        object_index
-                    )
+                    self.window().statistics_dock.statistics_tab.html_view.show_atom(object_index)
                 elif object_type == "domain":
-                    self.window().statistics_dock.statistics_tab.html_view.show_domain(
-                        object_index
-                    )
+                    self.window().statistics_dock.statistics_tab.html_view.show_domain(object_index)
                 elif object_type == "surface cavity":
-                    self.window().statistics_dock.statistics_tab.html_view.show_surface_cavity(
-                        object_index
-                    )
+                    self.window().statistics_dock.statistics_tab.html_view.show_surface_cavity(object_index)
                 elif object_type == "center cavity":
-                    self.window().statistics_dock.statistics_tab.html_view.show_center_cavity(
-                        object_index
-                    )
+                    self.window().statistics_dock.statistics_tab.html_view.show_center_cavity(object_index)
                 self.window().statistics_dock.raise_()
             self.updateGL()
 
@@ -207,9 +191,7 @@ class GLWidget(QGLWidget if has_qopenglwidget else QGLWidget):
         Refresh scene
         """
         glClear(GL_DEPTH_BUFFER_BIT)
-        self.vis.paint(
-            self.width(), self.height(), has_qopenglwidget, self.devicePixelRatio()
-        )
+        self.vis.paint(self.width(), self.height(), has_qopenglwidget, self.devicePixelRatio())
 
     def updateGL(self):
         if has_qopenglwidget:

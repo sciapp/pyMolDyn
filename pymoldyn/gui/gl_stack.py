@@ -19,9 +19,7 @@ class GLStack(QtWidgets.QStackedWidget):
         self.addWidget(self.pdf_widget)
         self.addWidget(self.histogram_widget)
 
-        self.setSizePolicy(
-            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
-        )
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
         self.show()
 

@@ -84,9 +84,7 @@ class MyApplication(QtGui.QApplication):
         global ignore_list
         # print(receiver, event.type(), t)
         global t
-        if event.type() == QtCore.QEvent.MouseMove and isinstance(
-            receiver, gl_widget.GLWidget
-        ):
+        if event.type() == QtCore.QEvent.MouseMove and isinstance(receiver, gl_widget.GLWidget):
             if receiver.dataset_loaded:
                 if event.buttons() & QtCore.Qt.LeftButton:
                     dx = event.x() - receiver.x
@@ -97,9 +95,7 @@ class MyApplication(QtGui.QApplication):
                     receiver.updateGL()
             return True
 
-        if event.type() == QtCore.QEvent.Wheel and isinstance(
-            receiver, gl_widget.GLWidget
-        ):
+        if event.type() == QtCore.QEvent.Wheel and isinstance(receiver, gl_widget.GLWidget):
             if receiver.dataset_loaded:
                 receiver.update_needed = True
                 if event.modifiers() != QtCore.Qt.ShiftModifier:
@@ -115,9 +111,7 @@ class MyApplication(QtGui.QApplication):
                 QtGui.QApplication.postEvent(receiver, UpdateGLEvent())
                 return True
 
-        if event.type() == QtCore.QEvent.MouseButtonPress and isinstance(
-            receiver, gl_widget.GLWidget
-        ):
+        if event.type() == QtCore.QEvent.MouseButtonPress and isinstance(receiver, gl_widget.GLWidget):
             if receiver.dataset_loaded:
                 if event.buttons() and QtCore.Qt.LeftButton:
                     receiver.x = event.x()
@@ -130,9 +124,7 @@ class MyApplication(QtGui.QApplication):
                 receiver.update_needed = False
             return True
 
-        if event.type() == QtCore.QEvent.KeyPress and isinstance(
-            receiver, gl_widget.GLWidget
-        ):
+        if event.type() == QtCore.QEvent.KeyPress and isinstance(receiver, gl_widget.GLWidget):
             if receiver.dataset_loaded:
                 rot_v_key = 15
                 if event.key() == QtCore.Qt.Key_Right:
@@ -154,9 +146,7 @@ class MyApplication(QtGui.QApplication):
                 receiver.updateGL()
                 return True
 
-        if event.type() == QtCore.QEvent.KeyPress and isinstance(
-            receiver, main_window.MainWindow
-        ):
+        if event.type() == QtCore.QEvent.KeyPress and isinstance(receiver, main_window.MainWindow):
             if event.key() == QtCore.Qt.Key_M:
                 if not self.isFullScreen():
                     for dock in self.docks:

@@ -28,10 +28,7 @@ class FileTabDock(QtWidgets.QDockWidget):
         self.layout.addWidget(self.file_tab)
         self.widget().setLayout(self.layout)
 
-        self.setFeatures(
-            QtWidgets.QDockWidget.DockWidgetMovable
-            | QtWidgets.QDockWidget.DockWidgetFloatable
-        )
+        self.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable | QtWidgets.QDockWidget.DockWidgetFloatable)
 
 
 class CalculationThread(QtCore.QThread):
@@ -112,9 +109,7 @@ class FileTab(QtWidgets.QWidget):
         self.select_all_button.setDisabled(True)
         self.button2_hbox.addWidget(self.select_all_button)
 
-        self.select_nth_button = QtWidgets.QPushButton(
-            "Select every nth frame...", self
-        )
+        self.select_nth_button = QtWidgets.QPushButton("Select every nth frame...", self)
         self.select_nth_button.clicked.connect(self.select_nth)
         self.select_nth_button.setDisabled(True)
         self.button2_hbox.addWidget(self.select_nth_button)
@@ -165,18 +160,14 @@ class FileTab(QtWidgets.QWidget):
         item = subitem.parent()
 
         # if sheet contains only one frame and this is deleted, the parent will be also deleted
-        if subitem.text(0).startswith("frame") and (
-            (item.childCount() == 1) or (item.childCount() == len(selected))
-        ):
+        if subitem.text(0).startswith("frame") and ((item.childCount() == 1) or (item.childCount() == len(selected))):
             text = item.text(0)
             for action in actions:
                 if action.text().endswith(text):
                     action.setEnabled(True)
                     item.takeChild(item.indexOfChild(subitem))
                     self.file_list.removeItemWidget(subitem, 0)
-                    self.file_list.takeTopLevelItem(
-                        self.file_list.indexOfTopLevelItem(item)
-                    )
+                    self.file_list.takeTopLevelItem(self.file_list.indexOfTopLevelItem(item))
                     self.file_list.removeItemWidget(item, 0)
                     del self.file_list.path_dict[text]
         else:
@@ -196,15 +187,11 @@ class FileTab(QtWidgets.QWidget):
         try:
             self.file_list.add_file(path)
         except ValueError as e:
-            QtWidgets.QMessageBox.information(
-                self, "Information", str(e), QtWidgets.QMessageBox.Ok
-            )
+            QtWidgets.QMessageBox.information(self, "Information", str(e), QtWidgets.QMessageBox.Ok)
             return
 
     def open_file_dialog(self):
-        filenames = QtWidgets.QFileDialog.getOpenFileNames(
-            self, "Open dataset", self.most_recent_path
-        )[0]
+        filenames = QtWidgets.QFileDialog.getOpenFileNames(self, "Open dataset", self.most_recent_path)[0]
         for path in filenames:
             if path:
                 self.disable_files_in_menu_and_open(path)
@@ -325,12 +312,9 @@ class TreeList(QtWidgets.QTreeWidget):
         any_frame_selected = len(self.selectedItems()) > 0
         self.parent().delete_button.setEnabled(any_frame_selected)
         self.parent().calculate_button.setEnabled(any_frame_selected)
-        only_one_frame_available = (
-            self.topLevelItemCount() == 1 and self.topLevelItem(0).childCount() == 1
-        )
+        only_one_frame_available = self.topLevelItemCount() == 1 and self.topLevelItem(0).childCount() == 1
         self.parent().show_button.setEnabled(
-            frames_selected == 1
-            or (not any_frame_selected and only_one_frame_available)
+            frames_selected == 1 or (not any_frame_selected and only_one_frame_available)
         )
         parent = self.parent()
         while parent.parent():

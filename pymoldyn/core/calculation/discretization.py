@@ -60,14 +60,9 @@ class DiscretizationCache(object):
         """
         discretization_repr = repr(volume) + " d_max=%d" % d_max
         print_message(
-            "{volume}, discretization resolution: {resolution:d}".format(
-                volume=repr(volume), resolution=d_max
-            )
+            "{volume}, discretization resolution: {resolution:d}".format(volume=repr(volume), resolution=d_max)
         )
-        if (
-            self.file is not None
-            and discretization_repr in self.file["/discretizations"]
-        ):
+        if self.file is not None and discretization_repr in self.file["/discretizations"]:
             stored_discretization = self.file["/discretizations/" + discretization_repr]
             grid = np.array(stored_discretization)
             discretization = Discretization(volume, d_max, grid)
@@ -93,9 +88,7 @@ class DiscretizationCache(object):
         volume = volume_class(**arguments)
         d_max_info = string_parts[-1]
         if not d_max_info.startswith("d_max="):
-            raise Exception(
-                'Any volume discretization information string must end with "d_max=<d_max>".'
-            )
+            raise Exception('Any volume discretization information string must end with "d_max=<d_max>".')
         d_max = float(d_max_info[len("d_max=") :])
         return self.get_discretization(volume, d_max)
 
@@ -151,23 +144,17 @@ class Discretization(object):
             if self.d[i] % 2 == 1:
                 self.d[i] += 1
         print_message(
-            "Resolution per axis: (x: {x:d}, y: {y:d}, z: {z:d})".format(
-                x=self.d[0], y=self.d[1], z=self.d[2]
-            )
+            "Resolution per axis: (x: {x:d}, y: {y:d}, z: {z:d})".format(x=self.d[0], y=self.d[1], z=self.d[2])
         )
         self.s_tilde = [(self.d[i] - 1) * self.s_step for i in dimensions]
 
         # step 3
         self.translation_vectors = [
-            [int(floor(c / self.s_step + 0.5)) for c in v]
-            for v in self.volume.translation_vectors
+            [int(floor(c / self.s_step + 0.5)) for c in v] for v in self.volume.translation_vectors
         ]
         # TODO: remove unnecessary vectors in hexagonal volumes
         self.combined_translation_vectors = [
-            [
-                sum([v[0][j] * v[1] for v in zip(self.translation_vectors, i)])
-                for j in dimensions
-            ]
+            [sum([v[0][j] * v[1] for v in zip(self.translation_vectors, i)]) for j in dimensions]
             for i in itertools.product((-1, 0, 1), repeat=len(dimensions))
             if any(i)
         ]
@@ -192,9 +179,7 @@ class Discretization(object):
             del indices
             # steps 5, 6, 7
             mark_translation_vectors(self.grid, self.combined_translation_vectors)
-        translation_vector_output = ", ".join(
-            ["({0}, {1}, {2})".format(*vec) for vec in self.translation_vectors]
-        )
+        translation_vector_output = ", ".join(["({0}, {1}, {2})".format(*vec) for vec in self.translation_vectors])
         print_message("Translation vectors:", translation_vector_output)
 
     def get_direct_neighbors(self, point):
@@ -202,9 +187,7 @@ class Discretization(object):
         This method returns the direct neighbor points of a given point.
         """
         neighbors_without_bound_checks = [
-            [point[j] + i[j] for j in dimensions]
-            for i in itertools.product((-1, 0, 1), repeat=dimension)
-            if any(i)
+            [point[j] + i[j] for j in dimensions] for i in itertools.product((-1, 0, 1), repeat=dimension) if any(i)
         ]
         direct_neighbors = [
             tuple(neighbor)
@@ -236,13 +219,9 @@ class Discretization(object):
             if cell_center is None:
                 cell_center = np.array(self.grid.shape, dtype=np.int32) // 2
                 translation_vectors = np.array(self.translation_vectors)
-                normalized_translation_vectors = (
-                    translation_vectors.T / np.linalg.norm(translation_vectors, axis=1)
-                ).T
+                normalized_translation_vectors = (translation_vectors.T / np.linalg.norm(translation_vectors, axis=1)).T
             vector_to_cell_center = cell_center - np.array(point, dtype=np.int32)
-            vector_to_cell_center = vector_to_cell_center / np.linalg.norm(
-                vector_to_cell_center
-            )
+            vector_to_cell_center = vector_to_cell_center / np.linalg.norm(vector_to_cell_center)
             dot_products = np.dot(normalized_translation_vectors, vector_to_cell_center)
             rounded_dot_products = np.array(np.round(dot_products), dtype=np.int32)
             needed_translation_vector_index = np.argmax(np.abs(dot_products))
@@ -252,26 +231,18 @@ class Discretization(object):
             )
             next_point = tuple(p + t for p, t in zip(point, needed_translation_vector))
             if next_point == point:
-                raise ArithmeticError(
-                    "Could not determine an equivalent point inside the volume"
-                )
+                raise ArithmeticError("Could not determine an equivalent point inside the volume")
             point = next_point
         if self.grid[point] == 0:
             return point
         else:
             combined_translation_vector_index = -self.grid[point] - 1
-            combined_translation_vector = self.combined_translation_vectors[
-                combined_translation_vector_index
-            ]
-            return tuple(
-                [point[i] + combined_translation_vector[i] for i in dimensions]
-            )
+            combined_translation_vector = self.combined_translation_vectors[combined_translation_vector_index]
+            return tuple([point[i] + combined_translation_vector[i] for i in dimensions])
 
     def get_translation_vector(self, point):
         combined_translation_vector_index = -self.grid[point] - 1
-        combined_translation_vector = self.combined_translation_vectors[
-            combined_translation_vector_index
-        ]
+        combined_translation_vector = self.combined_translation_vectors[combined_translation_vector_index]
         return combined_translation_vector
 
     def continuous_to_discrete(self, arg, result_inside_volume=False, unit_exponent=1):
@@ -293,10 +264,7 @@ class Discretization(object):
                 if result_inside_volume:
                     result = np.array(self.get_equivalent_point_in_volume(result))
             else:
-                result = tuple(
-                    int(floor((point[i] + self.s_tilde[i] / 2) / self.s_step + 0.5))
-                    for i in dimensions
-                )
+                result = tuple(int(floor((point[i] + self.s_tilde[i] / 2) / self.s_step + 0.5)) for i in dimensions)
                 if result_inside_volume:
                     result = self.get_equivalent_point_in_volume(result)
             return result
@@ -323,9 +291,7 @@ class Discretization(object):
                     if any(isinstance(c, float) for c in point):
                         rounded_point = np.array(np.around(point), dtype=np.int32)
                         rounded_diff = point - rounded_point
-                        rounded_point = np.array(
-                            self.get_equivalent_point_in_volume(rounded_point)
-                        )
+                        rounded_point = np.array(self.get_equivalent_point_in_volume(rounded_point))
                         point = rounded_point + rounded_diff
                     else:
                         point = np.array(self.get_equivalent_point_in_volume(point))
@@ -340,20 +306,12 @@ class Discretization(object):
                 if result_inside_volume:
                     if any(isinstance(c, float) for c in point):
                         rounded_point = tuple(int(round(c)) for c in point)
-                        rounded_diff = tuple(
-                            c1 - c2 for c1, c2 in zip(point, rounded_point)
-                        )
-                        rounded_point = self.get_equivalent_point_in_volume(
-                            rounded_point
-                        )
-                        point = tuple(
-                            c1 + c2 for c1, c2 in zip(rounded_point, rounded_diff)
-                        )
+                        rounded_diff = tuple(c1 - c2 for c1, c2 in zip(point, rounded_point))
+                        rounded_point = self.get_equivalent_point_in_volume(rounded_point)
+                        point = tuple(c1 + c2 for c1, c2 in zip(rounded_point, rounded_diff))
                     else:
                         point = self.get_equivalent_point_in_volume(point)
-                return tuple(
-                    point[k] * self.s_step - self.s_tilde[k] / 2 for k in dimensions
-                )
+                return tuple(point[k] * self.s_step - self.s_tilde[k] / 2 for k in dimensions)
 
         def transform_value(value, unit_exponent):
             return value * (self.s_step**unit_exponent)
@@ -378,9 +336,7 @@ class AtomDiscretization:
         self.sorted_discrete_radii = []
         self.discrete_radii = []
         self.discrete_positions = []
-        for radius_index, position in zip(
-            self.atoms.radii_as_indices, self.atoms.sorted_positions
-        ):
+        for radius_index, position in zip(self.atoms.radii_as_indices, self.atoms.sorted_positions):
             radius = self.atoms.sorted_radii[radius_index]
             discrete_position = self.discretization.continuous_to_discrete(position)
             self.discrete_positions.append(discrete_position)

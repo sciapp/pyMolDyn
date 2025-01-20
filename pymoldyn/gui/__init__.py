@@ -13,7 +13,7 @@ def start_batch():
     # startGUI.py.
     from ..cli import main as cli_main
 
-    if sys.args[1] == "--batch":
+    if sys.argv[1] == "--batch":
         del sys.argv[1]
     cli_main()
 

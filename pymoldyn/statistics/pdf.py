@@ -69,9 +69,7 @@ class PDF(object):
         self.num_atoms = np.where(self.elements != "cav")[0].size
         self.numberdensity = float(self.num_atoms) / self.volume.volume
 
-        self.stats = self._genstats(
-            self.positions, self.elements, self.centers, self.volume
-        )
+        self.stats = self._genstats(self.positions, self.elements, self.centers, self.volume)
 
     def pdf(self, elem1, elem2, cutoff=None, h=None, kernel=None):
         """
@@ -115,16 +113,8 @@ class PDF(object):
         if h == 0:
             return sel
         if len(sel) < 2:
-            logger.debug(
-                "Not enough data for '{}-{}' in cutoff={} range.".format(
-                    elem1, elem2, cutoff
-                )
-            )
-            raise Exception(
-                "Not enough data for '{}' in cutoff={} range.".format(
-                    elem1, elem2, cutoff
-                )
-            )
+            logger.debug("Not enough data for '{}-{}' in cutoff={} range.".format(elem1, elem2, cutoff))
+            raise Exception("Not enough data for '{}' in cutoff={} range.".format(elem1, elem2, cutoff))
 
         if h is None:
             ## magic constant
@@ -408,9 +398,7 @@ class _TestPDF(object):
         # filename = "../xyz/GST_111_128_bulk.xyz"
         # resolution = 256
         # frame = 0
-        settings = calculation.CalculationSettings(
-            {filename: [frame]}, resolution, True, False, False
-        )
+        settings = calculation.CalculationSettings({filename: [frame]}, resolution, True, False, False)
         print("calculating...")
         res = calc.calculate(settings)[0][0]
         print("generating statistics...")

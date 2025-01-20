@@ -31,9 +31,7 @@ class LabeledFrameChooser(QtWidgets.QWidget):
 
         self.update_lineedit()
         self.lineedit.setAlignment(QtCore.Qt.AlignRight)
-        self.lineedit.setSizePolicy(
-            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred
-        )
+        self.lineedit.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
 
         hbox.addWidget(QtWidgets.QLabel(self.text + ":", self), 0)
         hbox.addWidget(self.lineedit, 1)
@@ -142,9 +140,7 @@ class FrameBar(QtWidgets.QWidget):
     def process_mouse_event(self, clicked, e):
         if e.modifiers() == QtCore.Qt.ShiftModifier:
             if self.last_clicked:
-                for i in range(
-                    min(self.last_clicked, clicked), max(self.last_clicked, clicked) + 1
-                ):
+                for i in range(min(self.last_clicked, clicked), max(self.last_clicked, clicked) + 1):
                     if i not in self.selection:
                         self.selection.append(i)
                 self.selection.sort()

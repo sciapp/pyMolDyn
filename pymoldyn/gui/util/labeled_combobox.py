@@ -30,9 +30,7 @@ class LabeledComboBox(QtWidgets.QComboBox):
     def _init_ui(self):
         self.setItemDelegate(LabeledComboBox.Delegate(self))
         label_item = QtGui.QStandardItem(self._label)
-        label_item.setFlags(
-            label_item.flags() & ~(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-        )
+        label_item.setFlags(label_item.flags() & ~(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable))
         label_item.setData("parent", QtCore.Qt.AccessibleDescriptionRole)
         label_item_font = label_item.font()
         label_item_font.setBold(True)

@@ -14,14 +14,10 @@ logger = Logger("config.cutoff_history")
 logger.setstream("default", sys.stdout, Logger.WARNING)
 
 
-DEFAULT_CONFIG_FILE = os.path.expanduser(
-    os.path.join(CONFIG_DIRECTORY, "cutoff_history.json")
-)
+DEFAULT_CONFIG_FILE = os.path.expanduser(os.path.join(CONFIG_DIRECTORY, "cutoff_history.json"))
 
 
-class HistoryEntry(
-    collections.namedtuple("HistoryEntry", ["filename", "frame", "time", "radii"])
-):
+class HistoryEntry(collections.namedtuple("HistoryEntry", ["filename", "frame", "time", "radii"])):
     class Date(object):
         def __init__(self, *args, **kwargs):
             if not isinstance(args[0], datetime.datetime):
@@ -45,18 +41,12 @@ class HistoryEntry(
             time = HistoryEntry.Date(time)
         else:
             try:
-                time = HistoryEntry.Date(
-                    datetime.datetime.strptime(time, "%m/%d/%y, %H:%M")
-                )
+                time = HistoryEntry.Date(datetime.datetime.strptime(time, "%m/%d/%y, %H:%M"))
             except ValueError:
                 try:
-                    time = HistoryEntry.Date(
-                        datetime.datetime.strptime(time, "%Y-%m-%dT%H:%M:%S")
-                    )
+                    time = HistoryEntry.Date(datetime.datetime.strptime(time, "%Y-%m-%dT%H:%M:%S"))
                 except ValueError:
-                    time = HistoryEntry.Date(
-                        datetime.datetime.strptime(time, "%Y-%m-%dT%H:%M:%S.%f")
-                    )
+                    time = HistoryEntry.Date(datetime.datetime.strptime(time, "%Y-%m-%dT%H:%M:%S.%f"))
         self = super(HistoryEntry, cls).__new__(cls, filename, frame, time, radii)
         return self
 
@@ -111,9 +101,7 @@ class CutoffHistory(object):
         filtered_history = []
         for entry in self._history:
             current_elements = set(entry.radii.keys())
-            if (
-                entries_with_additional_elements and elements.issubset(current_elements)
-            ) or (
+            if (entries_with_additional_elements and elements.issubset(current_elements)) or (
                 not entries_with_additional_elements and elements == current_elements
             ):
                 filtered_history.append(entry)

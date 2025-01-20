@@ -30,9 +30,7 @@ def get_bonds_with_constant_delta(atoms, delta):
         distance_vector_array = atoms.positions[index + 1 :] - position
         distance_squared_array = np.sum(np.square(distance_vector_array), axis=1)
         delta_squared = delta**2
-        bond_target_indices = (
-            (distance_squared_array <= delta_squared).nonzero()[0] + index + 1
-        )
+        bond_target_indices = (distance_squared_array <= delta_squared).nonzero()[0] + index + 1
         bond_target_index_arrays.append(bond_target_indices)
     return bond_target_index_arrays
 
@@ -47,12 +45,9 @@ def get_bonds_with_radii(atoms, radii_sum_factor):
         distance_vector_array = atoms.positions[index + 1 :] - position
         distance_squared_array = np.sum(np.square(distance_vector_array), axis=1)
         delta_squared = np.square(
-            (atoms.covalence_radii[index + 1 :] + atoms.covalence_radii[index])
-            * radii_sum_factor
+            (atoms.covalence_radii[index + 1 :] + atoms.covalence_radii[index]) * radii_sum_factor
         )
-        bond_target_indices = (
-            (distance_squared_array <= delta_squared).nonzero()[0] + index + 1
-        )
+        bond_target_indices = (distance_squared_array <= delta_squared).nonzero()[0] + index + 1
         bond_target_index_arrays.append(bond_target_indices)
     return bond_target_index_arrays
 
@@ -64,8 +59,7 @@ def get_bonds_symetric_indicies(bond_target_index_arrays):
     :return:
     """
     bond_target_index_arrays = [
-        bond_target_index_array.tolist()
-        for bond_target_index_array in bond_target_index_arrays
+        bond_target_index_array.tolist() for bond_target_index_array in bond_target_index_arrays
     ]
     for index, bond_target_index_array in enumerate(bond_target_index_arrays):
         for bond_target_index in bond_target_index_array:
@@ -147,9 +141,7 @@ def normalized(vec):
     return vec / la.norm(vec)
 
 
-def find_bond_chains(
-    atoms, source_index, atom_bonds, length=3, previous_bond_chain=None
-):
+def find_bond_chains(atoms, source_index, atom_bonds, length=3, previous_bond_chain=None):
     if previous_bond_chain is None:
         previous_bond_chain = [source_index]
     length -= 1
@@ -159,9 +151,7 @@ def find_bond_chains(
             new_bond_chain = previous_bond_chain + [target_index]
             new_source_index = target_index
             if length > 0:
-                new_bond_chains = find_bond_chains(
-                    atoms, new_source_index, atom_bonds, length, new_bond_chain
-                )
+                new_bond_chains = find_bond_chains(atoms, new_source_index, atom_bonds, length, new_bond_chain)
                 if new_bond_chains:
                     bond_chains += new_bond_chains
             else:
@@ -180,25 +170,17 @@ def export_bonds(filename, atoms):
 
 def export_bond_angles(filename, atoms):
     bond_target_index_arrays = get_bonds_with_constant_delta(atoms, 2.8)
-    bond_angles, bond_chain_angles = calculate_bond_angles(
-        atoms, bond_target_index_arrays
-    )
+    bond_angles, bond_chain_angles = calculate_bond_angles(atoms, bond_target_index_arrays)
 
     with open(filename, "w") as outfile:
         for bond1, bond2 in bond_angles.keys():
             if bond1[0] > bond2[1]:
-                outfile.write(
-                    "{} {} {} {}\n".format(
-                        bond1[0], bond1[1], bond2[1], bond_angles[bond1, bond2]
-                    )
-                )
+                outfile.write("{} {} {} {}\n".format(bond1[0], bond1[1], bond2[1], bond_angles[bond1, bond2]))
 
 
 def export_bond_dihedral_angles(filename, atoms):
     bond_target_index_arrays = get_bonds_with_constant_delta(atoms, 2.8)
-    bond_angles, bond_chain_angles = calculate_bond_angles(
-        atoms, bond_target_index_arrays
-    )
+    bond_angles, bond_chain_angles = calculate_bond_angles(atoms, bond_target_index_arrays)
 
     with open(filename, "w") as outfile:
         for bond_chain, angle in bond_chain_angles.items():
@@ -214,9 +196,7 @@ def main():
 
     bond_target_index_arrays = get_bonds_with_constant_delta(get_atoms(), 2.8)
     bond_target_index_arrays = get_bonds_with_radii(atoms, 1.15)
-    bond_angles, bond_chain_angles = calculate_bond_angles(
-        get_atoms(), bond_target_index_arrays
-    )
+    bond_angles, bond_chain_angles = calculate_bond_angles(get_atoms(), bond_target_index_arrays)
 
     export_bonds("bonds.txt", get_bonds_with_constant_delta(get_atoms(), 2.8))
     export_bond_angles("bond_angles.txt", get_bond_angles())
@@ -229,11 +209,7 @@ def main():
     with open("bond_angles.txt", "w") as outfile:
         for bond1, bond2 in bond_angles.keys():
             if bond1[0] > bond2[1]:
-                outfile.write(
-                    "{} {} {} {}\n".format(
-                        bond1[0], bond1[1], bond2[1], bond_angles[bond1, bond2]
-                    )
-                )
+                outfile.write("{} {} {} {}\n".format(bond1[0], bond1[1], bond2[1], bond_angles[bond1, bond2]))
     with open("bond_dihedral_angles.txt", "w") as outfile:
         for bond_chain, angle in bond_chain_angles.items():
             outfile.write("{} {} {} {}".format(*bond_chain))

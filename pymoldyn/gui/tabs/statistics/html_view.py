@@ -11,9 +11,7 @@ from ...util.webview import WebWidget
 
 
 def render_html_atom_group(atom_number, atom_elements):
-    template_loader = jinja2.FileSystemLoader(
-        searchpath=os.path.join(os.path.dirname(__file__), "templates")
-    )
+    template_loader = jinja2.FileSystemLoader(searchpath=os.path.join(os.path.dirname(__file__), "templates"))
     template_env = jinja2.Environment(loader=template_loader)
 
     TEMPLATE_FILE = "atoms.html"
@@ -39,9 +37,7 @@ def render_html_atom(
     atom_color_rgb,
     bonds,
 ):
-    template_loader = jinja2.FileSystemLoader(
-        searchpath=os.path.join(os.path.dirname(__file__), "templates")
-    )
+    template_loader = jinja2.FileSystemLoader(searchpath=os.path.join(os.path.dirname(__file__), "templates"))
     template_env = jinja2.Environment(loader=template_loader)
 
     TEMPLATE_FILE = "atom.html"
@@ -63,12 +59,8 @@ def render_html_atom(
     return template.render(template_vars)
 
 
-def render_html_cavity_center_group(
-    number, surface_area, surface_volumes, volume_fraction
-):
-    template_loader = jinja2.FileSystemLoader(
-        searchpath=os.path.join(os.path.dirname(__file__), "templates")
-    )
+def render_html_cavity_center_group(number, surface_area, surface_volumes, volume_fraction):
+    template_loader = jinja2.FileSystemLoader(searchpath=os.path.join(os.path.dirname(__file__), "templates"))
     template_env = jinja2.Environment(loader=template_loader)
 
     TEMPLATE_FILE = "cavities_center.html"
@@ -87,9 +79,7 @@ def render_html_cavity_center_group(
 
 
 def render_html_cavity_center_group_unknown():
-    template_loader = jinja2.FileSystemLoader(
-        searchpath=os.path.join(os.path.dirname(__file__), "templates")
-    )
+    template_loader = jinja2.FileSystemLoader(searchpath=os.path.join(os.path.dirname(__file__), "templates"))
     template_env = jinja2.Environment(loader=template_loader)
 
     TEMPLATE_FILE = "cavities_center_unknown.html"
@@ -112,9 +102,7 @@ def render_html_cavity_center(**kwargs):
         "characteristic_radius",
         "is_cyclic",
     )
-    template_loader = jinja2.FileSystemLoader(
-        searchpath=os.path.join(os.path.dirname(__file__), "templates")
-    )
+    template_loader = jinja2.FileSystemLoader(searchpath=os.path.join(os.path.dirname(__file__), "templates"))
     template_env = jinja2.Environment(loader=template_loader)
 
     TEMPLATE_FILE = "cavity_center.html"
@@ -125,23 +113,15 @@ def render_html_cavity_center(**kwargs):
     template_vars["description"] = "a summary of one calculated cavities (domain)"
     if kwargs["surface"] is not None and kwargs["volume"] is not None:
         template_vars["surface_to_volume_ratio"] = kwargs["surface"] / kwargs["volume"]
-    missing_values = tuple(
-        key for key in needed_keys if key not in kwargs or kwargs[key] is None
-    )
+    missing_values = tuple(key for key in needed_keys if key not in kwargs or kwargs[key] is None)
     template_vars.update((key, None) for key in missing_values)
-    template_vars["missing_values"] = (
-        missing_values if len(missing_values) > 0 else None
-    )
+    template_vars["missing_values"] = missing_values if len(missing_values) > 0 else None
 
     return template.render(template_vars)
 
 
-def render_html_cavity_surface_group(
-    number, surface_area, surface_volumes, volume_fraction
-):
-    template_loader = jinja2.FileSystemLoader(
-        searchpath=os.path.join(os.path.dirname(__file__), "templates")
-    )
+def render_html_cavity_surface_group(number, surface_area, surface_volumes, volume_fraction):
+    template_loader = jinja2.FileSystemLoader(searchpath=os.path.join(os.path.dirname(__file__), "templates"))
     template_env = jinja2.Environment(loader=template_loader)
 
     TEMPLATE_FILE = "cavities_surface.html"
@@ -160,9 +140,7 @@ def render_html_cavity_surface_group(
 
 
 def render_html_cavity_surface_group_unknown():
-    template_loader = jinja2.FileSystemLoader(
-        searchpath=os.path.join(os.path.dirname(__file__), "templates")
-    )
+    template_loader = jinja2.FileSystemLoader(searchpath=os.path.join(os.path.dirname(__file__), "templates"))
     template_env = jinja2.Environment(loader=template_loader)
 
     TEMPLATE_FILE = "cavities_surface_unknown.html"
@@ -185,9 +163,7 @@ def render_html_cavity_surface(**kwargs):
         "characteristic_radius",
         "is_cyclic",
     )
-    template_loader = jinja2.FileSystemLoader(
-        searchpath=os.path.join(os.path.dirname(__file__), "templates")
-    )
+    template_loader = jinja2.FileSystemLoader(searchpath=os.path.join(os.path.dirname(__file__), "templates"))
     template_env = jinja2.Environment(loader=template_loader)
 
     TEMPLATE_FILE = "cavity_surface.html"
@@ -198,23 +174,15 @@ def render_html_cavity_surface(**kwargs):
     template_vars["description"] = "a summary of one calculated cavities (domain)"
     if kwargs["surface"] is not None and kwargs["volume"] is not None:
         template_vars["surface_to_volume_ratio"] = kwargs["surface"] / kwargs["volume"]
-    missing_values = tuple(
-        key for key in needed_keys if key not in kwargs or kwargs[key] is None
-    )
+    missing_values = tuple(key for key in needed_keys if key not in kwargs or kwargs[key] is None)
     template_vars.update((key, None) for key in missing_values)
-    template_vars["missing_values"] = (
-        missing_values if len(missing_values) > 0 else None
-    )
+    template_vars["missing_values"] = missing_values if len(missing_values) > 0 else None
 
     return template.render(template_vars)
 
 
-def render_html_cavity_domain_group(
-    number, surface_area, surface_volumes, surface_volumes_fractions
-):
-    template_loader = jinja2.FileSystemLoader(
-        searchpath=os.path.join(os.path.dirname(__file__), "templates")
-    )
+def render_html_cavity_domain_group(number, surface_area, surface_volumes, surface_volumes_fractions):
+    template_loader = jinja2.FileSystemLoader(searchpath=os.path.join(os.path.dirname(__file__), "templates"))
     template_env = jinja2.Environment(loader=template_loader)
 
     TEMPLATE_FILE = "domains.html"
@@ -233,9 +201,7 @@ def render_html_cavity_domain_group(
 
 
 def render_html_cavity_domain_group_unknown():
-    template_loader = jinja2.FileSystemLoader(
-        searchpath=os.path.join(os.path.dirname(__file__), "templates")
-    )
+    template_loader = jinja2.FileSystemLoader(searchpath=os.path.join(os.path.dirname(__file__), "templates"))
     template_env = jinja2.Environment(loader=template_loader)
 
     TEMPLATE_FILE = "domains_unknown.html"
@@ -260,9 +226,7 @@ def render_html_cavity_domain(**kwargs):
         "characteristic_radius",
         "is_cyclic",
     )
-    template_loader = jinja2.FileSystemLoader(
-        searchpath=os.path.join(os.path.dirname(__file__), "templates")
-    )
+    template_loader = jinja2.FileSystemLoader(searchpath=os.path.join(os.path.dirname(__file__), "templates"))
     template_env = jinja2.Environment(loader=template_loader)
 
     TEMPLATE_FILE = "domain.html"
@@ -273,13 +237,9 @@ def render_html_cavity_domain(**kwargs):
     template_vars["description"] = "a summary of one calculated cavities (domain)"
     if kwargs["surface"] is not None and kwargs["volume"] is not None:
         template_vars["surface_to_volume_ratio"] = kwargs["surface"] / kwargs["volume"]
-    missing_values = tuple(
-        key for key in needed_keys if key not in kwargs or kwargs[key] is None
-    )
+    missing_values = tuple(key for key in needed_keys if key not in kwargs or kwargs[key] is None)
     template_vars.update((key, None) for key in missing_values)
-    template_vars["missing_values"] = (
-        missing_values if len(missing_values) > 0 else None
-    )
+    template_vars["missing_values"] = missing_values if len(missing_values) > 0 else None
 
     return template.render(template_vars)
 
@@ -347,10 +307,7 @@ class HTMLWindow(QtWidgets.QWidget):
                 element = elements.names[int(value[2])]
                 visible_atom_indices = []
                 for i, element_name in enumerate(self.atoms.elements):
-                    if (
-                        elements.names[elements.numbers[element_name.upper()]]
-                        == element
-                    ):
+                    if elements.names[elements.numbers[element_name.upper()]] == element:
                         visible_atom_indices.append(i)
                 view_tab.atom_check.indices = visible_atom_indices
                 view_tab.atom_check.selection_checkbox_set_checked(True)
@@ -416,9 +373,7 @@ class HTMLWindow(QtWidgets.QWidget):
         self.cavities_center = results.center_cavities
         self.cavities_surface = results.surface_cavities
         self.domains = results.domains
-        self.discretization = Discretization(
-            results.atoms.volume, results.resolution, True
-        )
+        self.discretization = Discretization(results.atoms.volume, results.resolution, True)
         self.show_atom_group()
 
     def show_atom_group(self):
@@ -436,12 +391,8 @@ class HTMLWindow(QtWidgets.QWidget):
         #        self.atoms.bonds[bond].append(index)
 
         atom_name = self.atoms.elements[index]  # atom name from periodic systen
-        atom_fullname = elements.names[
-            elements.numbers[atom_name.decode("utf-8").upper()]
-        ]  # get full atom name
-        atom_color_rgb = elements.colors[
-            elements.numbers[atom_name.decode("utf-8").upper()]
-        ]
+        atom_fullname = elements.names[elements.numbers[atom_name.decode("utf-8").upper()]]  # get full atom name
+        atom_color_rgb = elements.colors[elements.numbers[atom_name.decode("utf-8").upper()]]
         atom_positions = self.atoms.positions[index]
         atom_number = elements.numbers[atom_name.decode("utf-8").upper()]
         covalent_radius = self.atoms.covalence_radii[index]
@@ -480,11 +431,7 @@ class HTMLWindow(QtWidgets.QWidget):
         if self.atoms.volume is not None:
             volume_fraction = (volumes / self.atoms.volume.volume) * 100
 
-        self.webview.set_gui_html(
-            render_html_cavity_center_group(
-                number, surface_area, volumes, volume_fraction
-            )
-        )
+        self.webview.set_gui_html(render_html_cavity_center_group(number, surface_area, volumes, volume_fraction))
 
     def show_center_cavity(self, index):
         if self.tree_list is not None:
@@ -499,9 +446,7 @@ class HTMLWindow(QtWidgets.QWidget):
             domains.append(
                 (
                     cavity + 1,
-                    self.discretization.discrete_to_continuous(
-                        self.domains.centers[cavity]
-                    ),
+                    self.discretization.discrete_to_continuous(self.domains.centers[cavity]),
                 )
             )
         data["domains"] = domains
@@ -538,11 +483,7 @@ class HTMLWindow(QtWidgets.QWidget):
         if self.atoms.volume is not None:
             volume_fraction = (volumes / self.atoms.volume.volume) * 100
 
-        self.webview.set_gui_html(
-            render_html_cavity_surface_group(
-                number, surface_area, volumes, volume_fraction
-            )
-        )
+        self.webview.set_gui_html(render_html_cavity_surface_group(number, surface_area, volumes, volume_fraction))
 
     def show_surface_cavity(self, index):
         if self.tree_list is not None:
@@ -557,9 +498,7 @@ class HTMLWindow(QtWidgets.QWidget):
             domains.append(
                 (
                     cavity + 1,
-                    self.discretization.discrete_to_continuous(
-                        self.domains.centers[cavity]
-                    ),
+                    self.discretization.discrete_to_continuous(self.domains.centers[cavity]),
                 )
             )
         data["domains"] = domains
@@ -597,9 +536,7 @@ class HTMLWindow(QtWidgets.QWidget):
         if self.atoms.volume is not None:
             volume_fraction = (volumes / self.atoms.volume.volume) * 100
 
-        self.webview.set_gui_html(
-            render_html_cavity_domain_group(number, surface, volumes, volume_fraction)
-        )
+        self.webview.set_gui_html(render_html_cavity_domain_group(number, surface, volumes, volume_fraction))
 
     def show_domain(self, index):
         if self.tree_list is not None:
@@ -647,9 +584,7 @@ class HTMLWindow(QtWidgets.QWidget):
             def __getattr__(self, attr):
                 value = getattr(self._obj, attr)
                 is_numpy_array = isinstance(value, np.ndarray)
-                if (is_numpy_array and len(value.shape) > 0) or (
-                    not is_numpy_array and len(value) > 0
-                ):
+                if (is_numpy_array and len(value.shape) > 0) or (not is_numpy_array and len(value) > 0):
                     return value[self._index]
                 else:
                     return None

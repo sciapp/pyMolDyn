@@ -6,7 +6,7 @@ import optparse
 import os
 import re
 import sys
-import thread
+import threading
 from datetime import datetime
 from ..core.calculation import CalculationSettings
 from ..core import file
@@ -45,9 +45,7 @@ class FileList(object):
         self.global_export_dir = global_export_dir
         self.file_list = []
 
-    def append(
-        self, filename, frames=None, resolution=None, atom_radii=None, export_dir=None
-    ):
+    def append(self, filename, frames=None, resolution=None, atom_radii=None, export_dir=None):
         self.file_list.append((filename, frames, resolution, atom_radii, export_dir))
 
     def createCalculationSettings(self, default_settings):
@@ -230,9 +228,7 @@ class Cli(object):
 
     # -------------------- public methods --------------------
     def start(self):
-        file_list = self.__get_file_list(
-            filter(lambda entry: entry[0] != "-", self.left_args)
-        )
+        file_list = self.__get_file_list(filter(lambda entry: entry[0] != "-", self.left_args))
 
         default_settings = CalculationSettings(dict())
         default_settings.resolution = self.control.config.Computation.std_resolution
@@ -316,7 +312,7 @@ class Cli(object):
         print()
 
     def __parse_options(self, command_line_params):
-        usage = """Usage: %prog [options] batch_file1 batch_file2 ...
+        usage = """Usage: pymoldyn-cli [options] batch_file1 batch_file2 ...
 
 Batch files have the format:
 
@@ -359,7 +355,7 @@ Note: Because the cutoff radius is stored in the global configuration, it cannot
         for input_file in input_file_list:
             read_state = ReadState.DEFAULT
             try:
-                input_file = core.file.get_abspath(input_file)
+                input_file = file.get_abspath(input_file)
                 with open(input_file) as f:
                     resolution = None
                     atom_radii = None
@@ -374,9 +370,7 @@ Note: Because the cutoff radius is stored in the global configuration, it cannot
                                     if re.match(r"^\s+", line):
                                         element = line_parts[0]
                                         radius = float(line_parts[1])
-                                        atom_radii[element] = (
-                                            radius  # TODO ask ingo what is happening here
-                                        )
+                                        atom_radii[element] = radius  # TODO ask ingo what is happening here
                                         line_is_processed = True
                                     else:
                                         read_state = ReadState.DEFAULT
@@ -392,15 +386,11 @@ Note: Because the cutoff radius is stored in the global configuration, it cannot
                                         output_directory = " ".join(line_parts[1:])
                                     else:
                                         filepath = os.path.join(
-                                            os.path.dirname(
-                                                os.path.abspath(input_file)
-                                            ),
+                                            os.path.dirname(os.path.abspath(input_file)),
                                             line_parts[0],
                                         )
                                         if len(line_parts) > 1:
-                                            frames = [
-                                                int(f) - 1 for f in line_parts[1:]
-                                            ]
+                                            frames = [int(f) - 1 for f in line_parts[1:]]
                                         else:
                                             frames = None
                                         result_file_list.append(
@@ -412,9 +402,6 @@ Note: Because the cutoff radius is stored in the global configuration, it cannot
                                         )
                                     line_is_processed = True
             except IOError:
-                print(
-                    "warning: batch file %s not accessable and skipped"
-                    % (os.path.abspath(input_file))
-                )
+                print("warning: batch file %s not accessable and skipped" % (os.path.abspath(input_file)))
 
         return result_file_list

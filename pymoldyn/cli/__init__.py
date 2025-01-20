@@ -1,4 +1,5 @@
 import os
+import sys
 
 from ..core import file
 from ..core.control import Control
@@ -9,7 +10,7 @@ __all__ = ["Cli"]
 
 
 def main():
-    core.file.SEARCH_PATH = os.getcwd()
+    file.SEARCH_PATH = os.getcwd()
     os.chdir(os.path.abspath(os.path.dirname(__file__)))
     control = Control()
     instance = Cli(control)

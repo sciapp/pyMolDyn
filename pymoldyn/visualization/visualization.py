@@ -90,9 +90,7 @@ class Visualization(object):
         edges = self.results.atoms.volume.edges
         num_edges = len(edges)
         edge_positions = [edge[0] for edge in edges]
-        edge_directions = [
-            [edge[1][i] - edge[0][i] for i in range(3)] for edge in edges
-        ]
+        edge_directions = [[edge[1][i] - edge[0][i] for i in range(3)] for edge in edges]
         edge_lengths = [sum([c * c for c in edge]) ** 0.5 for edge in edge_directions]
         edge_radius = min(edge_lengths) / 200
         if self.settings.show_bounding_box:
@@ -104,12 +102,7 @@ class Visualization(object):
                 [edge_radius] * num_edges,
                 edge_lengths,
             )
-            corners = list(
-                set(
-                    [tuple(edge[0]) for edge in edges]
-                    + [tuple(edge[1]) for edge in edges]
-                )
-            )
+            corners = list(set([tuple(edge[0]) for edge in edges] + [tuple(edge[1]) for edge in edges]))
             num_corners = len(corners)
             gr3.drawspheremesh(
                 num_corners,
@@ -121,11 +114,7 @@ class Visualization(object):
         if self.settings.show_atoms and self.results.atoms is not None:
             visible_atom_indices = self.settings.visible_atom_indices
             if visible_atom_indices is not None:
-                visible_atom_indices = [
-                    comp
-                    for comp in visible_atom_indices
-                    if 0 <= comp < self.results.atoms.number
-                ]
+                visible_atom_indices = [comp for comp in visible_atom_indices if 0 <= comp < self.results.atoms.number]
             else:
                 visible_atom_indices = range(self.results.atoms.number)
             if len(visible_atom_indices) == 0:
@@ -143,9 +132,7 @@ class Visualization(object):
                     for start_index, target_indices in enumerate(bonds):
                         if start_index not in visible_atom_indices:
                             continue
-                        target_indices = np.array(
-                            [i for i in target_indices if i in visible_atom_indices]
-                        )
+                        target_indices = np.array([i for i in target_indices if i in visible_atom_indices])
                         if len(target_indices) == 0:
                             continue
                         start_position = self.results.atoms.positions[start_index]
@@ -200,9 +187,7 @@ class Visualization(object):
                     triangles[1, :, :, :],
                     [color] * (triangles.shape[1] * 3),
                 )
-                gr3.drawmesh(
-                    mesh, 1, (0, 0, 0), (0, 0, 1), (0, 1, 0), (1, 1, 1), (1, 1, 1)
-                )
+                gr3.drawmesh(mesh, 1, (0, 0, 0), (0, 0, 1), (0, 1, 0), (1, 1, 1), (1, 1, 1))
                 gr3.deletemesh(c_int(mesh.value))
         gr3._gr3.gr3_setobjectid(gr3.c_int(0))
 
@@ -225,9 +210,7 @@ class Visualization(object):
         """
         trans_v = 1.0 / 1000
         trans_factor = trans_v * max(self.d, 20)
-        m = create_translation_matrix_homogenous(
-            -dx * trans_factor, dy * trans_factor, 0
-        )
+        m = create_translation_matrix_homogenous(-dx * trans_factor, dy * trans_factor, 0)
         self.mat = self.mat.dot(m)
 
     def set_focus_on(self, x, y, z):
@@ -243,9 +226,7 @@ class Visualization(object):
         rot_axis = np.array((-dy, -dx, 0.0))
         rot_factor = max(self.d, 20) * rot_v * la.norm(rot_axis)
         # rotation matrix with min rotation angle
-        m = create_rotation_matrix_homogenous(
-            rot_factor, rot_axis[0], rot_axis[1], rot_axis[2]
-        )
+        m = create_rotation_matrix_homogenous(rot_factor, rot_axis[0], rot_axis[1], rot_axis[2])
         self.mat = self.mat.dot(m)
 
     def reset_view(self):
@@ -301,9 +282,7 @@ class Visualization(object):
             gr3.GR3_Drawable.GR3_DRAWABLE_OPENGL,
         )
 
-    def save_screenshot(
-        self, file_name, width=3840, height=2160, first=True, last=True
-    ):
+    def save_screenshot(self, file_name, width=3840, height=2160, first=True, last=True):
         """
         Save a screenshot in the given resolution.
         ``first`` and ``last`` can be used to indicate if the first or last screenshot is taken when
@@ -332,12 +311,8 @@ class Visualization(object):
 
             # calculate atom radius
             edges = self.results.atoms.volume.edges
-            edge_directions = [
-                [edge[1][i] - edge[0][i] for i in range(3)] for edge in edges
-            ]
-            edge_lengths = [
-                sum([c * c for c in edge]) ** 0.5 for edge in edge_directions
-            ]
+            edge_directions = [[edge[1][i] - edge[0][i] for i in range(3)] for edge in edges]
+            edge_lengths = [sum([c * c for c in edge]) ** 0.5 for edge in edge_directions]
             edge_radius = min(edge_lengths) / 200
             atom_radius = 4 * edge_radius
 
