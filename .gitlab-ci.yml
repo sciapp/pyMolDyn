@@ -59,6 +59,18 @@ build:wheel:macos:
     CIBW_REPAIR_WHEEL_COMMAND: ""  # libGR3.so would be detected as missing but will be loaded by the `gr` package
   before_script:
   - /usr/bin/python3 -m pip install 'cibuildwheel <3'
+  - GR_TEMPDIR="$(mktemp -d)"
+  - GR_STABLE_VERSION="$(
+      git ls-remote --tags "https://github.com/sciapp/gr" |
+      awk 'match($2, /refs\/tags\/v[0-9]+\.[0-9]+\.[0-9]+$/) { print substr($2, RSTART + length("refs/tags/v")) }' |
+      sort -ruV |
+      head -1
+    )"
+  # python-gr will download the binaries for the host architecture by default (aarch64 in this case). Thus, force to use
+  # universal binaries which can also be used to produce x86_64 and universal pyMolDyn wheels.
+  - curl -fL "https://gr-framework.org/downloads/gr-${GR_STABLE_VERSION}-Darwin-universal.tar.gz" |
+    tar -C "${GR_TEMPDIR}" -xzf -
+  - export GRLIB="${GR_TEMPDIR}/gr/lib"
   script:
   - /usr/bin/python3 -m cibuildwheel --output-dir dist
   artifacts:
