@@ -32,6 +32,9 @@ class HistoryEntry(collections.namedtuple("HistoryEntry", ["filename", "frame", 
         def __repr__(self):
             return self._date.strftime("%m/%d/%y, %H:%M")
 
+        def __gt__(self, other):
+            return self._date > other._date
+
         @property
         def datetime_obj(self):
             return self._date

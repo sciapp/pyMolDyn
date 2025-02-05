@@ -36,6 +36,7 @@ class Logger(object):
         self.identifier = identifier
         self.streams = dict()
         self.format = "{time} {severity} from {identifier} in {function} ({file}:{line}): "
+        self.logs = []
 
     def setstream(self, ident, stream, severity):
         if severity is None or stream == -1:
@@ -44,8 +45,8 @@ class Logger(object):
         else:
             self.streams[ident] = (stream, severity)
 
-    def log(self, severtiy, message):
-        self._log(severtiy, message)
+    def log(self, severtiy, message, tag=None):
+        self._log(severtiy, message, tag)
 
     def emerg(self, message):
         self._log(self.EMERG, message)
@@ -74,7 +75,7 @@ class Logger(object):
     def debug(self, message):
         self._log(self.DEBUG, message)
 
-    def _log(self, severity, message):
+    def _log(self, severity, message, tag=None):
         st = inspect.stack()
         info = {
             "identifier": self.identifier,
@@ -86,6 +87,8 @@ class Logger(object):
         }
         line = self.format.format(**info) + message
         self._logline(severity, line)
+        if tag is not None:
+            self.logs.append(tag)
 
     def _logline(self, severity, line):
         for stream, maxseverity in self.streams.values():
@@ -93,5 +96,4 @@ class Logger(object):
                 if isinstance(stream, Logger):
                     stream._logline(severity, line)
                 else:
-                    #  print >>stream, line
                     print(line, file=stream)

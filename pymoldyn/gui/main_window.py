@@ -344,16 +344,6 @@ class MainWindow(QtWidgets.QMainWindow):
             QtWidgets.QApplication.postEvent(self.center.gl_stack.gl_widget, UpdateGLEvent())
 
 
-#    def closeEvent(self, event):
-#        reply = QtWidgets.QMessageBox.question(self, 'Message',
-#            "Are you sure to quit?", QtWidgets.QMessageBox.Yes |
-#            QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
-#        if reply == QtWidgets.QMessageBox.Yes:
-#            event.accept()
-#        else:
-#            event.ignore() TODO: why is this commented out
-
-
 class CentralWidget(QtWidgets.QWidget):
 
     def __init__(self, parent):

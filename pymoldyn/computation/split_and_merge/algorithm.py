@@ -1,5 +1,7 @@
 import itertools
 
+from ...util import message
+from ...util.logger import Logger
 from .domain_centers import calculate_domain_centers as calc_dom
 from .util.pos_bool_type import PosBoolType
 from .util.numpy_extension import find_index_of_first_element_not_equivalent
@@ -7,6 +9,8 @@ from .util.node_border_iterator import iterate_node_border_with_adjacent_node_ce
 import numpy as np
 
 it = itertools.count(0, 1)
+
+logger = Logger("computation.split_and_merge.algorithm")
 
 
 class ObjectType:
@@ -19,10 +23,16 @@ def is_homogenous_split(data_part, mask_part):
         return PosBoolType(
             find_index_of_first_element_not_equivalent.find_index_of_first_element_not_equivalent(data_part, mask_part)
         )
-    except TypeError:  # TODO fix logging
+    except TypeError:
+        if "C extension missing" not in logger.logs:
+            logger.warn("Falling back to Python functions")
+            message.log(
+                "Some C extensions could not be loaded, falling back to Python functions. Calculations may be very slow!",
+                tag="C extension missing",
+            )
         if data_part[0][0][0] == 0:
             if mask_part[0][0][0] == 0:
-                ret = np.where(np.logical_or(mask_part != 0, data_part != 0), 1, 0).nonzero()  # In c it is or not and
+                ret = np.where(np.logical_or(mask_part != 0, data_part != 0), 1, 0).nonzero()
             else:
                 ret = np.where(np.logical_or(mask_part == 0, data_part != 0), 1, 0).nonzero()
         else:
@@ -128,10 +138,13 @@ def merge(data, graph):
                     graph.merge_nodes(node, neighbor)
 
 
-def add_periodic_neighbors(graph):
+def add_periodic_neighbors(graph, progress):
     border_node_translation_vectors = graph.get_border_node_translation_vectors()
     border_nodes = list(border_node_translation_vectors.keys())
+    num_nodes = len(border_nodes[:-1])
     for i, n in enumerate(border_nodes[:-1]):
+        if progress > 0:
+            message.progress(int(progress + (7 / num_nodes) * i))
         for m in border_nodes[i + 1 :]:
             m_x, m_y, m_z = m[0]
             for translation_vector in border_node_translation_vectors[m]:

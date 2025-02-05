@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import os
 import sys
 from pymoldyn.util import env_is_true
 from pymoldyn.util import message

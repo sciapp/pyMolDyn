@@ -124,6 +124,10 @@ class ConfigFile(object):
         try:
             self._create_needed_parent_directories(CONFIG_SPEC_FILE)
             spec_file.write()
+        except FileNotFoundError:
+            pass
+        except PermissionError:
+            pass
         except IOError as e:
             print("IOError in ConfigFile.generate_configspec")
 
@@ -152,6 +156,9 @@ class ConfigFile(object):
             self.file.write()
             self.generate_configspec()
             self.file.write()
+
+        except FileNotFoundError:
+            pass
         except IOError as e:
             print("IOError in ConfigFile.save")
 
@@ -169,6 +176,7 @@ class ConfigFile(object):
             else:
                 pass
                 # print attr_str, 'NOT PROCESSED'
+                # TODO ???
 
     def read(self):
         """

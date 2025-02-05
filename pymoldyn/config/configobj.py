@@ -22,7 +22,7 @@ import os
 import re
 import sys
 
-from codecs import BOM_UTF8, BOM_UTF16, BOM_UTF16_BE, BOM_UTF16_LE
+from codecs import BOM_UTF8, BOM_UTF16, BOM_UTF16_BE, BOM_UTF16_LE, lookup
 
 
 # imported lazily to avoid startup performance hit if it isn't used
@@ -38,25 +38,17 @@ BOMS = {
     BOM_UTF16: ("utf_16", "utf_16"),
 }
 # All legal variants of the BOM codecs.
-# TO_DO: the list of aliases is not meant to be exhaustive, is there a
-#   better way ?
-BOM_LIST = {
-    "utf_16": "utf_16",
-    "u16": "utf_16",
-    "utf16": "utf_16",
-    "utf-16": "utf_16",
-    "utf16_be": "utf16_be",
-    "utf_16_be": "utf16_be",
-    "utf-16be": "utf16_be",
-    "utf16_le": "utf16_le",
-    "utf_16_le": "utf16_le",
-    "utf-16le": "utf16_le",
-    "utf_8": "utf_8",
-    "u8": "utf_8",
-    "utf": "utf_8",
-    "utf8": "utf_8",
-    "utf-8": "utf_8",
-}
+
+
+def get_bom_encoding(encoding):
+    """
+    Translates encoding name into legal BOM codec.
+    """
+    try:
+        return lookup(encoding).name
+    except LookupError:
+        return None
+
 
 # Map of encodings to the BOM to write.
 BOM_SET = {
@@ -69,7 +61,7 @@ BOM_SET = {
 
 
 def match_utf8(encoding):
-    return BOM_LIST.get(encoding.lower()) == "utf_8"
+    return get_bom_encoding(encoding) == "utf_8"
 
 
 # Quote strings used for writing values
@@ -699,9 +691,9 @@ class Section(dict):
             self[key] = default
             return self[key]
 
-    def items(self):  # TODO INGO WHAT ITEMS TO USE
-        """D.items() -> list of D's (key, value) pairs, as 2-tuples"""
-        return zip((self.scalars + self.sections), self.values())
+    #  def items(self):TODO
+    #  """D.items() -> list of D's (key, value) pairs, as 2-tuples"""
+    #  return zip((self.scalars + self.sections), self.values())
 
     def keys(self):
         """D.keys() -> list of D's keys"""
@@ -942,14 +934,10 @@ class Section(dict):
         elif val == False:
             return False
         else:
-            try:
-                if not isinstance(val, str):
-                    # TODO: Why do we raise a KeyError here?
-                    raise KeyError()
-                else:
-                    return self.main._bools[val.lower()]
-            except KeyError:
+            if not isinstance(val, str):
                 raise ValueError('Value "%s" is neither True nor False' % val)
+            else:
+                return self.main._bools[val.lower()]
 
     def as_int(self, key):
         """
@@ -1222,10 +1210,11 @@ class ConfigObj(Section):
                 stacklevel=2,
             )
 
-            # TO_DO: check the values too.
-            for entry in options:
+            for entry, value in options:
                 if entry not in OPTION_DEFAULTS:
                     raise TypeError('Unrecognised option "%s".' % entry)
+                if value not in [True, False, None]:  # INGO can other values appear?
+                    raise TypeError('Unrecognised value "%s" for option "%s".' % (value, entry))
             for entry, value in OPTION_DEFAULTS.items():
                 if entry not in options:
                     options[entry] = value
@@ -1404,7 +1393,7 @@ class ConfigObj(Section):
         ``infile`` must always be returned as a list of lines, but may be
         passed in as a single string.
         """
-        if (self.encoding is not None) and (self.encoding.lower() not in BOM_LIST):
+        if (self.encoding is not None) and (get_bom_encoding(self.encoding) is None):
             # No need to check for a BOM
             # the encoding specified doesn't have one
             # just decode
@@ -1417,10 +1406,8 @@ class ConfigObj(Section):
         if self.encoding is not None:
             # encoding explicitly supplied
             # And it could have an associated BOM
-            # TO_DO: if encoding is just UTF16 - we ought to check for both
-            # TO_DO: big endian and little endian versions.
-            enc = BOM_LIST[self.encoding.lower()]
-            if enc == "utf_16":
+            enc = get_bom_encoding(self.encoding)
+            if enc in BOMS.items():
                 # For UTF16 we try big endian and little endian
                 for BOM, (encoding, final_encoding) in BOMS.items():
                     if not final_encoding:
@@ -1430,7 +1417,7 @@ class ConfigObj(Section):
                         ### BOM discovered
                         ##self.BOM = True
                         # Don't need to remove BOM
-                        return self._decode(infile, encoding)
+                        return self._decode(infile, encoding)  # Encoding is utf_16 variant
 
                 # If we get this far, will *probably* raise a DecodeError
                 # As it doesn't appear to start with a BOM
@@ -2066,7 +2053,7 @@ class ConfigObj(Section):
             # NOTE: This will *screw* UTF16, each line will start with the BOM
             if self.encoding:
                 out = [l.encode(self.encoding) for l in out]
-            if self.BOM and ((self.encoding is None) or (BOM_LIST.get(self.encoding.lower()) == "utf_8")):
+            if self.BOM and ((self.encoding is None) or (get_bom_encoding(self.encoding) == "utf_8")):
                 # Add the UTF8 BOM
                 if not out:
                     out.append("")

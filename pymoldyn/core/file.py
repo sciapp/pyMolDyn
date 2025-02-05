@@ -94,8 +94,8 @@ class InputFile(object):
             try:
                 self.readinfo()
             except IOError as e:
-                # logger.error(str(e))
-                pass
+                logger.info(str(e))
+                return None
             if self._info.volume is None:
                 self._info.volume_guessed = True
                 minx, maxx = float("inf"), float("-inf")

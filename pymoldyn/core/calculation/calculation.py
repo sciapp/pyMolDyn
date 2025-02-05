@@ -8,13 +8,12 @@ Additionally, results are stored in a cache and can be reused later.
 import os
 from .. import data
 from .. import file
-from ..file import File
+from ..file import File, FileError
 from .algorithm import CavityCalculation, DomainCalculation, FakeDomainCalculation
 from .discretization import DiscretizationCache, AtomDiscretization
 from ...util import message
 from ...config.configuration import config
 from ...util.logger import Logger
-from hashlib import sha256
 import sys
 from .. import bonds
 
@@ -160,8 +159,12 @@ class Calculation(object):
             of the calculation or `None`.
         """
         info = None
-        inputfile = File.open(filepath)
-        # TODO: error handling
+        try:
+            inputfile = File.open(filepath)
+        except IOError:
+            raise
+        except Exception as e:
+            raise FileError("Cannot read file info.", e)  # TODO error
         if isinstance(inputfile, file.ResultFile):
             info = inputfile.info
         else:
@@ -216,8 +219,12 @@ class Calculation(object):
             A :class:`core.data.Results` object if cached results exist,
             else `None`
         """
-        inputfile = File.open(filepath)
-        # TODO: error handling
+        try:
+            inputfile = File.open(filepath)
+        except IOError:
+            raise
+        except Exception as e:
+            raise FileError("Cannot read file info.", e)
         resultfile = None
         results = None
         if isinstance(inputfile, file.ResultFile):
@@ -285,7 +292,6 @@ class Calculation(object):
         recalculate = recalculate or (gyration_tensor_parameters and (center or surface))
         message.progress(0)
         inputfile = File.open(filepath)
-        # TODO: error handling
         if isinstance(inputfile, file.ResultFile):
             resultfile = inputfile
         else:
@@ -320,7 +326,7 @@ class Calculation(object):
             with DiscretizationCache(cachepath) as discretization_cache:
                 discretization = discretization_cache.get_discretization(volume, resolution)
             atom_discretization = AtomDiscretization(atoms, discretization)
-            message.progress(10)  # TODO: improve the progress bar visualisation
+            message.progress(10)
             if (domains and results.domains is None) or (surface and results.surface_cavities is None):
                 # CavityCalculation depends on DomainCalculation
                 message.print_message("Calculating domains")
@@ -526,7 +532,10 @@ class CalculationCache(object):
             self.index[sourcefilepath] = cachefilepath
             self.writeindex()
         cachefile = file.HDF5File(cachefilepath, sourcefilepath)
-        # TODO: what if not sourcefilepath == cachefile.info.sourcefilepath
+        if cachefile.info is not None:
+            if sourcefilepath != cachefile.info.sourcefilepath:
+                cachefile.info.sourcefilepath = sourcefilepath
+                logger.info("Updating source file path in cache file.")
         return cachefile
 
     def abspath(self, filename):

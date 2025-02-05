@@ -112,6 +112,8 @@ class DomainCalculation:
         self.atom_discretization = atom_discretization
         self.grid = np.zeros(self.discretization.d, dtype=np.int64)
 
+        message.progress(13)
+
         # step 2
         atomstogrid(
             self.grid,
@@ -121,6 +123,7 @@ class DomainCalculation:
             [(0, 0, 0)] + self.discretization.combined_translation_vectors,
             self.discretization.grid,
         )
+        message.progress(16)
         # step 3
         result = start_split_and_merge_pipeline(
             self.grid,
@@ -138,6 +141,7 @@ class DomainCalculation:
             self.cyclic_area_indices,
         ) = result
         print_message("Number of domains:", len(self.centers))
+        message.progress(20)
 
         self.domain_volumes = []
         self.critical_domains = []  # count of very small domains -> domains that can disappear on cutoff radius changes
@@ -189,6 +193,7 @@ class DomainCalculation:
         offset = self.discretization.discrete_to_continuous((0, 0, 0))
         for domain_index in range(number_of_domains):
             print_message("Calculating triangles for domain", domain_index)
+            message.progress(int(20 + (20 / number_of_domains) * domain_index))
             vertices, normals, surface_area = cavity_triangles(
                 self.grid, [domain_index], 1, step, offset, self.discretization.grid
             )
@@ -247,10 +252,12 @@ class CavityCalculation:
     ):
         self.domain_calculation = domain_calculation
         if use_surface_points:
+            progress_bar_offset = 0
             self.grid = self.domain_calculation.grid
             num_surface_points = sum(map(len, self.domain_calculation.surface_point_list))
             print_message("Number of surface points:", num_surface_points)
         else:
+            progress_bar_offset = 30
             self.grid = None
 
         self.sg_cube_size = self.domain_calculation.atom_discretization.sorted_discrete_radii[0]
@@ -273,8 +280,10 @@ class CavityCalculation:
             domain_seed_point_lists,
             use_surface_points,
         )
+        message.progress(43 + progress_bar_offset)
 
         if gyration_tensor_parameters:
+            message.print_message("Calculating gyration tensor parameters")
             result = start_split_and_merge_pipeline(
                 self.grid3,
                 discretization.grid,
@@ -282,14 +291,18 @@ class CavityCalculation:
                 discretization.combined_translation_vectors,
                 discretization.get_translation_vector,
                 ObjectType.CAVITY,
+                progress=43 + progress_bar_offset,
             )
             translated_areas, non_translated_areas, cyclic_area_indices = result
+        message.progress(50 + progress_bar_offset)
 
         num_domains = len(self.domain_calculation.centers)
         grid_volume = (discretization.grid == 0).sum()
         self.cavity_volumes = []
+        print(num_domains)
         for domain_index in range(num_domains):
             self.cavity_volumes.append(1.0 * (self.grid3 == -(domain_index + 1)).sum() * (discretization.s_step**3))
+            message.progress(int(50 + progress_bar_offset + (7 / num_domains) * domain_index))
         if len(self.cavity_volumes) > 0:
             volume = self.cavity_volumes[0]
         self.characteristic_radii = [(0.75 * volume / PI) ** (1.0 / 3.0) for volume in self.cavity_volumes]
@@ -299,6 +312,7 @@ class CavityCalculation:
         multicavities = []
         cavity_to_neighbors = num_domains * [None]
         for domain in range(num_domains):
+            message.progress(int(55 + progress_bar_offset + (13 / num_domains) * domain))
             current_neighbors = set([domain])
             for neighbor in range(num_domains):
                 if intersection_table[domain][neighbor] == 1:

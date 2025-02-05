@@ -23,6 +23,10 @@ cot = lambda alpha: cos(alpha) / sin(alpha)
 import itertools
 import numpy as np
 import numpy.linalg as la
+from ..util.logger import Logger
+
+logger = Logger("core.volumes")
+
 
 try:
     import numexpr as ne
@@ -30,9 +34,7 @@ try:
     NUMEXPR = True
 except ImportError:
     NUMEXPR = False
-
-
-# TODO: check __str__ routines, make them use vectors
+    logger.info("numexpr package not found.")
 
 
 class HexagonalVolume(object):
@@ -183,7 +185,8 @@ class HexagonalVolume(object):
         return "HEXAGONAL a=%f c=%f" % (self.a, self.c)
 
     def __str__(self):
-        return "HEX %f %f" % (self.a, self.c)
+        #  return "HEX %f %f" % (self.a, self.c)
+        return "HEX " + " ".join([str(x) for v in self.translation_vectors for x in v])
 
 
 class TriclinicVolume(object):
@@ -370,7 +373,8 @@ class MonoclinicVolume(TriclinicVolume):
         return "MONOCLINIC a=%f b=%f c=%f beta=%f" % (self.a, self.b, self.c, self.beta)
 
     def __str__(self):
-        return "MON %f %f %f %f" % (self.a, self.b, self.c, self.beta)
+        #  return "MON %f %f %f %f" % (self.a, self.b, self.c, self.beta)
+        return "MON " + " ".join([str(x) for v in self.translation_vectors for x in v])
 
 
 class OrthorhombicVolume(TriclinicVolume):
@@ -398,7 +402,8 @@ class OrthorhombicVolume(TriclinicVolume):
         return "ORTHORHOMBIC a=%f b=%f c=%f" % (self.a, self.b, self.c)
 
     def __str__(self):
-        return "ORT %f %f %f" % (self.a, self.b, self.c)
+        #  return "ORT %f %f %f" % (self.a, self.b, self.c)
+        return "ORT " + " ".join([str(x) for v in self.translation_vectors for x in v])
 
 
 class TetragonalVolume(TriclinicVolume):
@@ -426,7 +431,8 @@ class TetragonalVolume(TriclinicVolume):
         return "TETRAGONAL a=%f c=%f" % (self.a, self.c)
 
     def __str__(self):
-        return "TET %f %f" % (self.a, self.c)
+        #  return "TET %f %f" % (self.a, self.c)
+        return "TET " + " ".join([str(x) for v in self.translation_vectors for x in v])
 
 
 class RhombohedralVolume(TriclinicVolume):
@@ -454,7 +460,8 @@ class RhombohedralVolume(TriclinicVolume):
         return "RHOMBOHEDRAL a=%f alpha=%f" % (self.a, self.alpha)
 
     def __str__(self):
-        return "RHO %f %f" % (self.a, self.alpha)
+        #  return "RHO %f %f" % (self.a, self.alpha)
+        return "RHO " + " ".join([str(x) for v in self.translation_vectors for x in v])
 
 
 class CubicVolume(TriclinicVolume):
@@ -482,7 +489,8 @@ class CubicVolume(TriclinicVolume):
         return "CUBIC a=%f" % self.a
 
     def __str__(self):
-        return "CUB %f" % self.a
+        #  return "CUB %f" % self.a
+        return "CUB " + " ".join([str(x) for v in self.translation_vectors for x in v])
 
 
 class Volume(object):

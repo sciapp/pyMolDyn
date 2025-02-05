@@ -297,6 +297,10 @@ class TreeList(QtWidgets.QTreeWidget):
         for url in self.acceptable_drop_urls(e):
             self.add_file(url.path())
 
+    def mouseDoubleClickEvent(self, e):
+        if self.parent().show_button.isEnabled():
+            self.parent().show_selected_frame()
+
     def selection_changed(self):
         frames_selected = 0
         for item in self.selectedItems():

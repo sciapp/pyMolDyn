@@ -92,7 +92,6 @@ static PyObject *calculate_domain_centers(PyObject *self, PyObject *args) {
             PyObject *pos_tuple, *dim_tuple;
             pos_tuple = PyTuple_GetItem(node, 0);
             dim_tuple = PyTuple_GetItem(node, 1);
-            //TODO Splitup here was necessary or i couldnt find a better way to do it
             if (!PyArg_ParseTuple(pos_tuple, "iii", &node_pos.x, &node_pos.y, &node_pos.z)) {
                 Py_DECREF(node);
                 Py_DECREF(domain_nodes_it);
