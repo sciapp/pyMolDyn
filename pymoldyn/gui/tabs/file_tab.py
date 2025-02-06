@@ -301,6 +301,12 @@ class TreeList(QtWidgets.QTreeWidget):
         if self.parent().show_button.isEnabled():
             self.parent().show_selected_frame()
 
+    def keyPressEvent(self, e):
+        if e.key() == QtCore.Qt.Key_Return and self.parent().show_button.isEnabled():
+            self.parent().show_selected_frame()
+        else:
+            super().keyPressEvent(e)
+
     def selection_changed(self):
         frames_selected = 0
         for item in self.selectedItems():

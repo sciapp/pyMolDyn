@@ -15,6 +15,7 @@ from ...util import message
 from ...config.configuration import config
 from ...util.logger import Logger
 import sys
+from hashlib import sha256
 from .. import bonds
 
 __all__ = [
