@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-# coding: utf-8
 
 import os
 import sys
-from PIL import Image
+
 import gr
 import numpy as np
+from PIL import Image
 
 
 class GRVideoOutput(object):

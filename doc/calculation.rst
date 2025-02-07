@@ -13,4 +13,3 @@
 .. autoclass:: CalculationCache
     :special-members: __init__, __getitem__, __contains__
     :members:
-

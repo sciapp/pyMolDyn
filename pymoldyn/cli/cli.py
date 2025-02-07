@@ -1,17 +1,13 @@
-# -*- coding: utf-8 -*-
-
-
 import collections
 import optparse
 import os
 import re
 import sys
-import threading
 from datetime import datetime
-from ..core.calculation import CalculationSettings
-from ..core import file
-from ..config.configuration import config
 
+from ..config.configuration import config
+from ..core import file
+from ..core.calculation import CalculationSettings
 
 shell_colors = {
     "white_font": "\033[37m",
@@ -167,15 +163,15 @@ class Cli(object):
                 "type": None,
                 "help": "Do not use any unnecessary cache files. One temporary cache file is always necessary.",
             },
-            #                             {"special_type": "parameter",
-            #                              "name": "bond delta",
-            #                              "short": "-b",
-            #                              "long": "--bonddelta",
-            #                              "action": "store",
-            #                              "dest": "bond_delta",
-            #                              "default": None,
-            #                              "type": "float",
-            #                              "help": "constant bond delta (when no parameter is given, radii sum criterion (1.15) is used)"},
+            # {"special_type": "parameter",
+            #  "name": "bond delta",
+            #  "short": "-b",
+            #  "long": "--bonddelta",
+            #  "action": "store",
+            #  "dest": "bond_delta",
+            #  "default": None,
+            #  "type": "float",
+            #  "help": "constant bond delta (when no parameter is given, radii sum criterion (1.15) is used)"},
             {
                 "special_type": "disable_target",
                 "name": "no surface based cavities",
@@ -271,14 +267,14 @@ class Cli(object):
 
         if len(settings_list) > 0:
             print("Started calculation: {}".format(datetime.now()))
-            started_computation = False
+            # started_computation = False
             for settings in settings_list:
                 print("Calculating File:")
                 for filename, _ in settings.datasets.items():
                     print(filename)
                 print("...")
                 sys.stdout.flush()
-                results = self.control.calculation.calculate(settings)
+                self.control.calculation.calculate(settings)
                 print("Done.")
             print("Finished calculation: {}".format(datetime.now()))
 
@@ -296,20 +292,20 @@ class Cli(object):
 
     # -------------------- private methods -------------------
 
-    def __handle_input(self):
-        while True:
-            try:
-                line = raw_input()
-            except EOFError:
-                self.cancel_callback()
-                break
-            except KeyboardInterrupt:
-                self.cancel_callback()
-                break
-            except ValueError:  # Wird beim Schliessen von stdin geworfen
-                self.cancel_callback()
-                break
-        print()
+    # def __handle_input(self):
+    #     while True:
+    #         try:
+    #             line = input()
+    #         except EOFError:
+    #             self.cancel_callback()
+    #             break
+    #         except KeyboardInterrupt:
+    #             self.cancel_callback()
+    #             break
+    #         except ValueError:  # Wird beim Schliessen von stdin geworfen
+    #             self.cancel_callback()
+    #             break
+    #     print()
 
     def __parse_options(self, command_line_params):
         usage = """Usage: pymoldyn-cli [options] batch_file1 batch_file2 ...
@@ -325,7 +321,9 @@ file-02.xyz frame frame ...
     .
     .
 
-RESOLUTION, ATOM_RADIUS and OUTPUT_DIRECTORY are optional and are overridden by the command line options. OUTPUT_DIRECTORY can contain one or more asterisks. These are replaced with the subdirectory name(s) containing the input files.
+RESOLUTION, ATOM_RADIUS and OUTPUT_DIRECTORY are optional and are overridden by the command line options.
+OUTPUT_DIRECTORY can contain one or more asterisks. These are replaced with the subdirectory name(s) containing the
+input files.
 Note: Because the cutoff radius is stored in the global configuration, it cannot yet be specified per calculation."""
         parser = optparse.OptionParser(usage=usage)
 

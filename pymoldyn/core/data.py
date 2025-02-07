@@ -1,21 +1,20 @@
-# -*- coding: utf-8 -*-
 """
 This module contains classes that are used to store data in pyMolDyn.
 Most of them can be read and written to hdf5 files.
 """
 
 import collections
-import numpy as np
-import sys
 import os
+import sys
 from datetime import datetime
+
 import dateutil.parser
 import h5py
-from . import volumes
+import numpy as np
+
 from ..config.configuration import config
 from ..util.logger import Logger
-from . import elements
-from . import bonds
+from . import bonds, elements, volumes
 
 try:
     import openbabel
@@ -316,8 +315,8 @@ class ResultInfo(FileInfo):
                 the resolution for which the information will be queried
 
         **Returns:**
-             A :class:`CalculatedFrames` object with information about
-             existing calculations.
+            A :class:`CalculatedFrames` object with information about
+            existing calculations.
         """
         if resolution not in self.calculatedframes:
             self.calculatedframes[resolution] = CalculatedFrames(self.num_frames)
@@ -332,7 +331,7 @@ class ResultInfo(FileInfo):
                 the resolution for which the information will be queried
 
         **Returns:**
-             If a :class:`CalculatedFrames` object for this resolution exists
+            If a :class:`CalculatedFrames` object for this resolution exists
         """
         return resolution in self.calculatedframes
 
@@ -823,7 +822,8 @@ class Domains(CavitiesBase):
                     )
         else:
             raise ValueError(
-                "No discretization present -> can only access discrete domain centers, no conversion to continuous space possible."
+                "No discretization present -> can only access discrete domain centers, no conversion to continuous "
+                "space possible."
             )
 
         export_filenames.extend(self._export_gyration_parameters(fmt))
@@ -930,7 +930,7 @@ class Cavities(CavitiesBase):
                 outfile.write("{}".format(index))
                 for domain_index in multicavity:
                     outfile.write(" {}".format(domain_index + 1))
-                outfile.write("\n".format(index))
+                outfile.write("\n")
         with open(cavity_surface_file_name, "w") as outfile:
             for index, surface_area in enumerate(self.surface_areas, start=1):
                 outfile.write("{} {}\n".format(index, surface_area))

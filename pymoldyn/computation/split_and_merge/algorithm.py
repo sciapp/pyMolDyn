@@ -1,12 +1,13 @@
 import itertools
 
+import numpy as np
+
 from ...util import message
 from ...util.logger import Logger
 from .domain_centers import calculate_domain_centers as calc_dom
-from .util.pos_bool_type import PosBoolType
-from .util.numpy_extension import find_index_of_first_element_not_equivalent
 from .util.node_border_iterator import iterate_node_border_with_adjacent_node_cells
-import numpy as np
+from .util.numpy_extension import find_index_of_first_element_not_equivalent
+from .util.pos_bool_type import PosBoolType
 
 it = itertools.count(0, 1)
 
@@ -27,7 +28,8 @@ def is_homogenous_split(data_part, mask_part):
         if "C extension missing" not in logger.logs:
             logger.warn("Falling back to Python functions")
             message.log(
-                "Some C extensions could not be loaded, falling back to Python functions. Calculations may be very slow!",
+                "Some C extensions could not be loaded, falling back to Python functions."
+                " Calculations may be very slow!",
                 tag="C extension missing",
             )
         if data_part[0][0][0] == 0:
@@ -42,7 +44,7 @@ def is_homogenous_split(data_part, mask_part):
                 ret = np.where(np.logical_or(mask_part == 0, data_part == 0), 1, 0).nonzero()
         try:
             return PosBoolType((ret[0][0], ret[1][0], ret[2][0]))
-        except:
+        except:  # noqa: E722
             return PosBoolType((-1, -1, -1))
 
 
