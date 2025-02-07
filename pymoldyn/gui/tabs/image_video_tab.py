@@ -3,12 +3,10 @@ import shutil
 import sys
 import tempfile
 
-import gr3
 from PySide6 import QtWidgets
 from PySide6.QtCore import QProcess, QTimer
 
 from ...core import file
-from ..gl_widget import GLWidget
 
 
 class ImageVideoTabDock(QtWidgets.QDockWidget):

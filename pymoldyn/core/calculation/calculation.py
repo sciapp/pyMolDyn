@@ -11,7 +11,7 @@ from hashlib import sha256
 from ...config.configuration import config
 from ...util import message
 from ...util.logger import Logger
-from .. import bonds, data, file
+from .. import data, file
 from ..file import File, FileError
 from .algorithm import CavityCalculation, DomainCalculation, FakeDomainCalculation
 from .discretization import AtomDiscretization, DiscretizationCache
@@ -20,14 +20,6 @@ __all__ = [
     "Calculation",
     "CalculationCache",
     "CalculationSettings",
-    "calculated",
-    "count_frames",
-    "calculated_frames",
-    "calculate_cavities",
-    "getresults",
-    "delete_center_cavity_information",
-    "timestamp",
-    "calculate",
 ]
 
 logger = Logger("core.calculation")
@@ -410,7 +402,7 @@ class Calculation(object):
                 efpath = os.path.join(exportdir, fileprefix + ".hdf5")
                 efpath = file.get_abspath(efpath)
                 # copy atoms into HDF5 file
-                exportfile = file.HDF5File.fromInputFile(efpath, filepath)
+                file.HDF5File.fromInputFile(efpath, filepath)
                 # use HDF5 file as input
                 filepath = efpath
 

@@ -822,7 +822,8 @@ class Domains(CavitiesBase):
                     )
         else:
             raise ValueError(
-                "No discretization present -> can only access discrete domain centers, no conversion to continuous space possible."
+                "No discretization present -> can only access discrete domain centers, no conversion to continuous "
+                "space possible."
             )
 
         export_filenames.extend(self._export_gyration_parameters(fmt))
@@ -929,7 +930,7 @@ class Cavities(CavitiesBase):
                 outfile.write("{}".format(index))
                 for domain_index in multicavity:
                     outfile.write(" {}".format(domain_index + 1))
-                outfile.write("\n".format(index))
+                outfile.write("\n")
         with open(cavity_surface_file_name, "w") as outfile:
             for index, surface_area in enumerate(self.surface_areas, start=1):
                 outfile.write("{} {}\n".format(index, surface_area))

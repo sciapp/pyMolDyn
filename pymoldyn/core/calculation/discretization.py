@@ -5,7 +5,8 @@ from math import floor
 import h5py
 import numpy as np
 
-from ...util.message import finish, print_message, progress
+from ...util.message import print_message
+from .. import volumes
 from . import algorithm
 from .extension import mark_translation_vectors
 
@@ -297,7 +298,7 @@ class Discretization(object):
                         point = np.array(self.get_equivalent_point_in_volume(point))
                 if NUMEXPR:
                     s_tilde_bc = np.tile(self.s_tilde, (point.shape[0], 1))
-                    s_step = self.s_step
+                    s_step = self.s_step  # noqa: F841
                     return ne.evaluate("point * s_step - s_tilde_bc / 2")
                 else:
                     s_tilde_bc = np.tile(self.s_tilde, (point.shape[0], 1))

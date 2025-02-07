@@ -4,10 +4,9 @@ import os.path
 from PySide6 import QtCore, QtWidgets
 
 from ...config.configuration import config
-from ...core import calculation, file, volumes
+from ...core import file
 from ...core.file import File
 from ...util import message
-from ...util.message import finish, print_message, progress
 from ..dialogs.calc_settings_dialog import CalculationSettingsDialog
 from ..dialogs.progress_dialog import ProgressDialog
 from ..gl_widget import GLWidget, UpdateGLEvent
@@ -423,7 +422,8 @@ class TreeList(QtWidgets.QTreeWidget):
                 "shape?<br />"
                 "You can find information about the different cell "
                 "shapes shapes in the "
-                '<a href="https://pgi-jcns.fz-juelich.de/portal/pages/pymoldyn-doc.html#cell-shape-description">pyMolDyn documentation</a>'
+                '<a href="https://pgi-jcns.fz-juelich.de/portal/pages/pymoldyn-doc.html#cell-shape-description">'
+                "pyMolDyn documentation</a>"
             )
             msgBox.addButton(QtWidgets.QMessageBox.Yes)
             msgBox.addButton(QtWidgets.QMessageBox.No)

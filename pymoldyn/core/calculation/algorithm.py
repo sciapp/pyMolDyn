@@ -292,14 +292,11 @@ class CavityCalculation:
         message.progress(50 + progress_bar_offset)
 
         num_domains = len(self.domain_calculation.centers)
-        grid_volume = (discretization.grid == 0).sum()
         self.cavity_volumes = []
         print(num_domains)
         for domain_index in range(num_domains):
             self.cavity_volumes.append(1.0 * (self.grid3 == -(domain_index + 1)).sum() * (discretization.s_step**3))
             message.progress(int(50 + progress_bar_offset + (7 / num_domains) * domain_index))
-        if len(self.cavity_volumes) > 0:
-            volume = self.cavity_volumes[0]
         self.characteristic_radii = [(0.75 * volume / PI) ** (1.0 / 3.0) for volume in self.cavity_volumes]
 
         # step 6
@@ -329,8 +326,8 @@ class CavityCalculation:
             if len(self.multicavities) == len(
                 translated_areas
             ):  # TODO check weather split and merge and multicavity intersection give the same result for multicavities
-                # `self.multicavities` entries are sorted by the largest contained neighbor index. Thus sort the indices to
-                # access `non_translated_areas` and `translated_areas` to match the order of `self.multicavities`.
+                # `self.multicavities` entries are sorted by the largest contained neighbor index. Thus sort the indices
+                # to access `non_translated_areas` and `translated_areas` to match the order of `self.multicavities`.
                 def key_func(cavity_index):
                     cavity_area = non_translated_areas[cavity_index]
                     a_single_cavity_index = -self.grid3[cavity_area[0]] - 1

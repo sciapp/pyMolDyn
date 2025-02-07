@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 from PySide6 import QtCore, QtWidgets
 
 

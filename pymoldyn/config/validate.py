@@ -160,7 +160,6 @@ __all__ = (
     "is_ip_addr_list",
     "is_mixed_list",
     "is_option",
-    "__docformat__",
 )
 
 
@@ -651,7 +650,7 @@ class Validator(object):
                 keymatch = self._key_arg.match(arg)
                 if keymatch:
                     val = keymatch.group(2)
-                    if not val in ("'None'", '"None"'):
+                    if val not in ("'None'", '"None"'):
                         # Special case a quoted None
                         val = self._unquote(val)
                     fun_kwargs[keymatch.group(1)] = val
@@ -745,7 +744,7 @@ def _is_num_param(names, values, to_float=False):
             try:
                 out_params.append(fun(val))
             except ValueError as e:
-                raise VdtParamError(name, val)
+                raise VdtParamError(name, val) from e
         else:
             raise VdtParamError(name, val)
     return out_params
@@ -931,9 +930,9 @@ def is_boolean(value):
     # we do an equality test rather than an identity test
     # this ensures Python 2.2 compatibilty
     # and allows 0 and 1 to represent True and False
-    if value == False:
+    if value == False:  # noqa: E712
         return False
-    elif value == True:
+    elif value == True:  # noqa: E712
         return True
     else:
         raise VdtTypeError(value)
@@ -1323,7 +1322,7 @@ def is_option(value, *options):
     """
     if not isinstance(value, str):
         raise VdtTypeError(value)
-    if not value in options:
+    if value not in options:
         raise VdtValueError(value)
     return value
 

@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from PySide6 import QtCore, QtWidgets
 
 from .util.cutoff_preview_table import CutoffPreviewTable

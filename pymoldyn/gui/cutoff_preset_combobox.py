@@ -1,7 +1,3 @@
-from __future__ import absolute_import
-
-import sys
-
 from PySide6 import QtCore
 
 from ..config.cutoff_presets import cutoff_presets

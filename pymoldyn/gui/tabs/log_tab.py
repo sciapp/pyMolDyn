@@ -81,7 +81,10 @@ class LogTab(QtWidgets.QWidget):
         current_date_as_string = datetime.datetime.now().strftime("%m/%d/%y, %H:%M")
 
         self.log_area.insertHtml(
-            '<div><span class="{style_class}">{message_type} <span class="default">({date})</span>:</span> <span>{message}</span></div><br />'.format(
+            (
+                '<div><span class="{style_class}">{message_type} <span class="default">({date})</span>:</span>'
+                " <span>{message}</span></div><br />"
+            ).format(
                 style_class=level_to_style_class[level],
                 message_type=level_to_style_class[level].upper(),
                 date=current_date_as_string,

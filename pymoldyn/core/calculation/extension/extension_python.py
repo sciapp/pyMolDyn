@@ -157,8 +157,6 @@ def mark_cavities(
 
 
 def cavity_triangles(cavity_grid, cavity_indices, isolevel, step, offset, discretization_grid):
-    cavity_triangles = []
-    cavity_surface_areas = []
     grid = np.zeros(cavity_grid.shape, dtype=bool)
 
     for cavity_index in cavity_indices:

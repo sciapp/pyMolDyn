@@ -1,6 +1,5 @@
 import inspect
 import os
-import sys
 from datetime import datetime
 
 __all__ = ["Logger"]

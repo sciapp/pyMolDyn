@@ -5,13 +5,13 @@ This module provides classes to handle pyMolDyn related files.
 import os
 import os.path
 import sys
-from datetime import datetime
 from itertools import repeat
 
 import h5py
 
+from .. import core
 from ..util.logger import Logger
-from . import data, elements
+from . import data
 
 try:
     import pybel

@@ -1,7 +1,4 @@
-from __future__ import absolute_import
-
 import csv
-import os
 import sys
 
 import gr

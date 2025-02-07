@@ -1,7 +1,3 @@
-from __future__ import absolute_import
-
-import sys
-
 import numpy as np
 from PySide6 import QtCore, QtWidgets
 
@@ -15,26 +11,18 @@ except ImportError:
 
     has_qopenglwidget = False
 from OpenGL.GL import (
-    GL_DEPTH_BITS,
     GL_DEPTH_BUFFER_BIT,
     GL_DEPTH_COMPONENT,
     GL_DEPTH_TEST,
     GL_FLOAT,
     GL_FRAMEBUFFER,
-    GL_FRAMEBUFFER_BINDING,
-    GL_FRAMEBUFFER_COMPLETE,
-    GL_VIEWPORT,
     glBindFramebuffer,
-    glCheckFramebufferStatus,
     glClear,
     glEnable,
-    glGetIntegerv,
-    glIsEnabled,
     glReadPixels,
 )
 
 from ..config.configuration import config
-from ..util.gl_util import create_look_at_matrix, create_perspective_projection_matrix
 
 
 class UpdateGLEvent(QtCore.QEvent):

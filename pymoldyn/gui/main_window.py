@@ -1,16 +1,13 @@
-from __future__ import absolute_import
-
 import functools
 import os
 import os.path
-import sys
 
+import core
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtQuick import QQuickWindow, QSGRendererInterface
 
 from .._version import __version__
 from ..config.configuration import config
-from ..core import bonds, control
 from ..util import message
 from .dialogs.about_dialog import AboutDialog
 from .dialogs.settings_dialog import SettingsDialog

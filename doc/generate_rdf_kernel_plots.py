@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-
-from __future__ import absolute_import, division, print_function, unicode_literals
+#!/usr/bin/env python3
 
 import os
 import sys
@@ -9,7 +7,7 @@ import gr
 import numpy as np
 
 sys.path.insert(0, os.path.abspath("../src"))
-from statistics.rdf import Kernels
+from statistics.rdf import Kernels  # noqa: E402
 
 x = np.linspace(-1.25, 1.25, 500)
 for name in dir(Kernels):

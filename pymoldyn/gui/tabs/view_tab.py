@@ -1,7 +1,7 @@
 import itertools
 from functools import partial
 
-from PySide6 import QtCore, QtWidgets
+from PySide6 import QtWidgets
 
 from ..object_select_widget import ObjectSelectWidget
 

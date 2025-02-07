@@ -4,7 +4,8 @@ import os.path
 
 from . import configobj, validate
 
-CONFIG_DIRECTORY = "~/.pymoldyn/"  # MUST be written with ~ to save a path in the config file that is relative to the user's home directory
+# MUST be written with ~ to save a path in the config file that is relative to the user's home directory
+CONFIG_DIRECTORY = "~/.pymoldyn/"
 CONFIG_FILE = os.path.expanduser("%s/config.cfg" % CONFIG_DIRECTORY)
 CONFIG_SPEC_FILE = os.path.expanduser("%s/config.spec" % CONFIG_DIRECTORY)
 
@@ -128,7 +129,7 @@ class ConfigFile(object):
             pass
         except PermissionError:
             pass
-        except IOError as e:
+        except IOError:
             print("IOError in ConfigFile.generate_configspec")
 
     def generate_spec_for_section(self, section, spec_section):
@@ -159,7 +160,7 @@ class ConfigFile(object):
 
         except FileNotFoundError:
             pass
-        except IOError as e:
+        except IOError:
             print("IOError in ConfigFile.save")
 
     def parse_node_to_section(self, node, section):

@@ -2,14 +2,9 @@
 Calculate pair distribution functions.
 """
 
-MINDISTANCE = 2.0  # shorter distances are ignored
-PDFCUTOFF = 1.0  # g(r) = 0 if r < PDFCUTOFF
-
-
 __all__ = ["PDF"]
 
 
-import itertools
 import math
 import os.path
 import sys
@@ -19,6 +14,10 @@ import numpy as np
 from ..config.configuration import config
 from ..core.calculation.discretization import DiscretizationCache
 from ..util.logger import Logger
+
+MINDISTANCE = 2.0  # shorter distances are ignored
+PDFCUTOFF = 1.0  # g(r) = 0 if r < PDFCUTOFF
+
 
 logger = Logger("statistics.pdf")
 logger.setstream("default", sys.stdout, Logger.DEBUG)
@@ -103,7 +102,7 @@ class PDF(object):
                 break
         if data is None:
             logger.debug("No statistical data for '{}-{}' found.".format(elem1, elem2))
-            raise Exception("No statistical data for '{}' found.".format(elem1, elem2))
+            raise Exception("No statistical data for '{}-{}' found.".format(elem1, elem2))
 
         if cutoff is None:
             cutoff = data.max()
@@ -113,11 +112,11 @@ class PDF(object):
             return sel
         if len(sel) < 2:
             logger.debug("Not enough data for '{}-{}' in cutoff={} range.".format(elem1, elem2, cutoff))
-            raise Exception("Not enough data for '{}' in cutoff={} range.".format(elem1, elem2, cutoff))
+            raise Exception("Not enough data for '{}-{}' in cutoff={} range.".format(elem1, elem2, cutoff))
 
         if h is None:
-            ## magic constant
-            ## minimizes the first peak
+            # magic constant
+            # minimizes the first peak
             # h = min(0.5, 0.5772778 * sel.min())
             h = 0.4
 
@@ -149,7 +148,10 @@ class PDF(object):
             A sorted sample.
         """
         if volume is None:
-            distance = lambda x, y: np.abs(y - x)
+
+            def distance(x, y):
+                return np.abs(y - x)
+
         else:
             distance = volume.get_distance
 
@@ -177,7 +179,7 @@ class PDF(object):
         the other elements.
         """
         elemlist = np.unique(elements).tolist()
-        if len(centers) > 0 and not "cav" in elemlist:
+        if len(centers) > 0 and "cav" not in elemlist:
             elemlist.append("cav")
         pos = [None] * len(elemlist)
         for i, e in enumerate(elemlist):

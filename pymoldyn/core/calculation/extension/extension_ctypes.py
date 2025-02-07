@@ -3,8 +3,7 @@ __all__ = ["atomstogrid", "mark_cavities", "cavity_triangles", "cavity_intersect
 
 import os
 import platform
-import sys
-from ctypes import CDLL, POINTER, Structure, byref, c_float, c_int, c_int8, c_int64, cast, sizeof
+from ctypes import CDLL, POINTER, Structure, byref, c_float, c_int, c_int8, c_int64, cast
 
 # Import gr3 to load `libGR3.so` which is needed by the ctypes extension
 import gr3  # noqa: F401 pylint: disable=unused-import

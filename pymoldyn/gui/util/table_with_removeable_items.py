@@ -1,8 +1,4 @@
-from __future__ import absolute_import
-
-import collections
-
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 from .table_fit import TableFit
 

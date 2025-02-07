@@ -28,7 +28,8 @@ def is_homogenous_split(data_part, mask_part):
         if "C extension missing" not in logger.logs:
             logger.warn("Falling back to Python functions")
             message.log(
-                "Some C extensions could not be loaded, falling back to Python functions. Calculations may be very slow!",
+                "Some C extensions could not be loaded, falling back to Python functions."
+                " Calculations may be very slow!",
                 tag="C extension missing",
             )
         if data_part[0][0][0] == 0:
@@ -43,7 +44,7 @@ def is_homogenous_split(data_part, mask_part):
                 ret = np.where(np.logical_or(mask_part == 0, data_part == 0), 1, 0).nonzero()
         try:
             return PosBoolType((ret[0][0], ret[1][0], ret[2][0]))
-        except:
+        except:  # noqa: E722
             return PosBoolType((-1, -1, -1))
 
 

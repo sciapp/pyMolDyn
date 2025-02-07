@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from PySide6 import QtCore, QtGui, QtWidgets
 
 
