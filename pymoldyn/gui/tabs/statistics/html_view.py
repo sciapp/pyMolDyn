@@ -1,13 +1,14 @@
+import os.path
+from collections import Counter
+
 import jinja2
 import numpy as np
 from PySide6 import QtCore, QtWidgets
-import os.path
-from ....core import elements
-from ....core import bonds
-from collections import Counter
+
+from ....core import bonds, elements
 from ....core.calculation.discretization import Discretization
-from ..statistics.tree_list import TreeList
 from ...util.webview import WebWidget
+from ..statistics.tree_list import TreeList
 
 
 def render_html_atom_group(atom_number, atom_elements):

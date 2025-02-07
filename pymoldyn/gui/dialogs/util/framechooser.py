@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-
-
 # TODO: fix frame indexing. it should start at 0 for everything, except in the strings that are displayed in the widgets
 # INGO keep it like this dont change a running system?
 

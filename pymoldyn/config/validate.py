@@ -17,115 +17,115 @@
 # Comments, suggestions and bug reports welcome.
 
 """
-    The Validator object is used to check that supplied values
-    conform to a specification.
+The Validator object is used to check that supplied values
+conform to a specification.
 
-    The value can be supplied as a string - e.g. from a config file.
-    In this case the check will also *convert* the value to
-    the required type. This allows you to add validation
-    as a transparent layer to access data stored as strings.
-    The validation checks that the data is correct *and*
-    converts it to the expected type.
+The value can be supplied as a string - e.g. from a config file.
+In this case the check will also *convert* the value to
+the required type. This allows you to add validation
+as a transparent layer to access data stored as strings.
+The validation checks that the data is correct *and*
+converts it to the expected type.
 
-    Some standard checks are provided for basic data types.
-    Additional checks are easy to write. They can be
-    provided when the ``Validator`` is instantiated or
-    added afterwards.
+Some standard checks are provided for basic data types.
+Additional checks are easy to write. They can be
+provided when the ``Validator`` is instantiated or
+added afterwards.
 
-    The standard functions work with the following basic data types :
+The standard functions work with the following basic data types :
 
-    * integers
-    * floats
-    * booleans
-    * strings
-    * ip_addr
+* integers
+* floats
+* booleans
+* strings
+* ip_addr
 
-    plus lists of these datatypes
+plus lists of these datatypes
 
-    Adding additional checks is done through coding simple functions.
+Adding additional checks is done through coding simple functions.
 
-    The full set of standard checks are :
+The full set of standard checks are :
 
-    * 'integer': matches integer values (including negative)
-                 Takes optional 'min' and 'max' arguments : ::
+* 'integer': matches integer values (including negative)
+             Takes optional 'min' and 'max' arguments : ::
 
-                   integer()
-                   integer(3, 9)  # any value from 3 to 9
-                   integer(min=0) # any positive value
-                   integer(max=9)
+               integer()
+               integer(3, 9)  # any value from 3 to 9
+               integer(min=0) # any positive value
+               integer(max=9)
 
-    * 'float': matches float values
-               Has the same parameters as the integer check.
+* 'float': matches float values
+           Has the same parameters as the integer check.
 
-    * 'boolean': matches boolean values - ``True`` or ``False``
-                 Acceptable string values for True are :
-                   true, on, yes, 1
-                 Acceptable string values for False are :
-                   false, off, no, 0
+* 'boolean': matches boolean values - ``True`` or ``False``
+             Acceptable string values for True are :
+               true, on, yes, 1
+             Acceptable string values for False are :
+               false, off, no, 0
 
-                 Any other value raises an error.
+             Any other value raises an error.
 
-    * 'ip_addr': matches an Internet Protocol address, v.4, represented
-                 by a dotted-quad string, i.e. '1.2.3.4'.
+* 'ip_addr': matches an Internet Protocol address, v.4, represented
+             by a dotted-quad string, i.e. '1.2.3.4'.
 
-    * 'string': matches any string.
-                Takes optional keyword args 'min' and 'max'
-                to specify min and max lengths of the string.
+* 'string': matches any string.
+            Takes optional keyword args 'min' and 'max'
+            to specify min and max lengths of the string.
 
-    * 'list': matches any list.
-              Takes optional keyword args 'min', and 'max' to specify min and
-              max sizes of the list. (Always returns a list.)
+* 'list': matches any list.
+          Takes optional keyword args 'min', and 'max' to specify min and
+          max sizes of the list. (Always returns a list.)
 
-    * 'tuple': matches any tuple.
-              Takes optional keyword args 'min', and 'max' to specify min and
-              max sizes of the tuple. (Always returns a tuple.)
+* 'tuple': matches any tuple.
+          Takes optional keyword args 'min', and 'max' to specify min and
+          max sizes of the tuple. (Always returns a tuple.)
 
-    * 'int_list': Matches a list of integers.
-                  Takes the same arguments as list.
+* 'int_list': Matches a list of integers.
+              Takes the same arguments as list.
 
-    * 'float_list': Matches a list of floats.
-                    Takes the same arguments as list.
+* 'float_list': Matches a list of floats.
+                Takes the same arguments as list.
 
-    * 'bool_list': Matches a list of boolean values.
-                   Takes the same arguments as list.
+* 'bool_list': Matches a list of boolean values.
+               Takes the same arguments as list.
 
-    * 'ip_addr_list': Matches a list of IP addresses.
-                     Takes the same arguments as list.
+* 'ip_addr_list': Matches a list of IP addresses.
+                 Takes the same arguments as list.
 
-    * 'string_list': Matches a list of strings.
-                     Takes the same arguments as list.
+* 'string_list': Matches a list of strings.
+                 Takes the same arguments as list.
 
-    * 'mixed_list': Matches a list with different types in
-                    specific positions. List size must match
-                    the number of arguments.
+* 'mixed_list': Matches a list with different types in
+                specific positions. List size must match
+                the number of arguments.
 
-                    Each position can be one of :
-                    'integer', 'float', 'ip_addr', 'string', 'boolean'
+                Each position can be one of :
+                'integer', 'float', 'ip_addr', 'string', 'boolean'
 
-                    So to specify a list with two strings followed
-                    by two integers, you write the check as : ::
+                So to specify a list with two strings followed
+                by two integers, you write the check as : ::
 
-                      mixed_list('string', 'string', 'integer', 'integer')
+                  mixed_list('string', 'string', 'integer', 'integer')
 
-    * 'pass': This check matches everything ! It never fails
-              and the value is unchanged.
+* 'pass': This check matches everything ! It never fails
+          and the value is unchanged.
 
-              It is also the default if no check is specified.
+          It is also the default if no check is specified.
 
-    * 'option': This check matches any from a list of options.
-                You specify this check with : ::
+* 'option': This check matches any from a list of options.
+            You specify this check with : ::
 
-                  option('option 1', 'option 2', 'option 3')
+              option('option 1', 'option 2', 'option 3')
 
-    You can supply a default value (returned if no value is supplied)
-    using the default keyword argument.
+You can supply a default value (returned if no value is supplied)
+using the default keyword argument.
 
-    You specify a list argument for default using a list constructor syntax in
-    the check : ::
+You specify a list argument for default using a list constructor syntax in
+the check : ::
 
-        checkname(arg1, arg2, default=list('val 1', 'val 2', 'val 3'))
+    checkname(arg1, arg2, default=list('val 1', 'val 2', 'val 3'))
 
-    A badly formatted set of arguments will raise a ``VdtParamError``.
+A badly formatted set of arguments will raise a ``VdtParamError``.
 """
 
 __version__ = "1.0.1"
@@ -165,7 +165,6 @@ __all__ = (
 
 
 import re
-
 
 _list_arg = re.compile(
     r"""
@@ -285,7 +284,8 @@ def dottedQuadToNum(ip):
     """
 
     # import here to avoid it when ip_addr values are not used
-    import socket, struct
+    import socket
+    import struct
 
     try:
         return struct.unpack("!L", socket.inet_aton(ip.strip()))[0]
@@ -321,7 +321,8 @@ def numToDottedQuad(num):
     """
 
     # import here to avoid it when ip_addr values are not used
-    import socket, struct
+    import socket
+    import struct
 
     # no need to intercept here, 4294967295L is fine
     if num > 4294967295 or num < 0:
@@ -1452,8 +1453,8 @@ def _test3():
 
 if __name__ == "__main__":
     # run the code tests in doctest format
-    import sys
     import doctest
+    import sys
 
     m = sys.modules.get("__main__")
     globs = m.__dict__.copy()

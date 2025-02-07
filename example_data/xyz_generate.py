@@ -1,4 +1,5 @@
-from math import pi,sqrt
+from math import pi, sqrt
+
 import numpy as np
 
 with open('generated2.xyz','w') as f:
@@ -33,4 +34,3 @@ with open('generated2.xyz','w') as f:
             for c in range(bound[0],bound[1]):   # g1-cells
                 p = c/10.*g1 + b/10.*g2 + a/10.*g3
                 f.write('Sb   {}   {}   {}\n'.format(p[0],p[1],p[2]))
-

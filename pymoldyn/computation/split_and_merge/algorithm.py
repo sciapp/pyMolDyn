@@ -1,12 +1,13 @@
 import itertools
 
+import numpy as np
+
 from ...util import message
 from ...util.logger import Logger
 from .domain_centers import calculate_domain_centers as calc_dom
-from .util.pos_bool_type import PosBoolType
-from .util.numpy_extension import find_index_of_first_element_not_equivalent
 from .util.node_border_iterator import iterate_node_border_with_adjacent_node_cells
-import numpy as np
+from .util.numpy_extension import find_index_of_first_element_not_equivalent
+from .util.pos_bool_type import PosBoolType
 
 it = itertools.count(0, 1)
 

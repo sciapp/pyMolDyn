@@ -1,7 +1,8 @@
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import QTimer
-from .statistics.tree_list import TreeList
+
 from .statistics.html_view import HTMLWindow
+from .statistics.tree_list import TreeList
 
 
 class StatisticsTabDock(QtWidgets.QDockWidget):

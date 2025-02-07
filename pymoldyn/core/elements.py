@@ -1,4 +1,3 @@
-# coding=utf-8
 """
 This module includes information about the chemical elements:
 - names maps element number to name

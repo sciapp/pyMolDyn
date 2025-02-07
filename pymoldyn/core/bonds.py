@@ -1,13 +1,11 @@
-# coding=utf-8
-"""
+""" """
 
-"""
-
-import sys
+import collections
 import math
+import sys
+
 import numpy as np
 import numpy.linalg as la
-import collections
 
 
 def clamping_acos(cos):

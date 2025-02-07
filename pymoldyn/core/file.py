@@ -1,17 +1,17 @@
-# -*- coding: utf-8 -*-
 """
 This module provides classes to handle pyMolDyn related files.
 """
 
 import os
 import os.path
-import h5py
-from itertools import repeat
-from datetime import datetime
-from . import data
 import sys
+from datetime import datetime
+from itertools import repeat
+
+import h5py
+
 from ..util.logger import Logger
-from . import elements
+from . import data, elements
 
 try:
     import pybel

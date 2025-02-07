@@ -1,5 +1,6 @@
-from PySide6 import QtCore, QtWidgets
 from collections import Counter, OrderedDict
+
+from PySide6 import QtCore, QtWidgets
 
 
 class TreeList(QtWidgets.QTreeWidget):

@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
-
-from PySide6 import QtCore, QtGui, QtWidgets
 import datetime
 import logging
 
+from PySide6 import QtCore, QtGui, QtWidgets
 
 STYLE_SHEET = """
 .default {

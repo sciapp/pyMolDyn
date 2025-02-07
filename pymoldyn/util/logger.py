@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
-
-import sys
-import os
 import inspect
+import os
+import sys
 from datetime import datetime
 
 __all__ = ["Logger"]

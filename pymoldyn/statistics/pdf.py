@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 Calculate pair distribution functions.
 """
-
 
 MINDISTANCE = 2.0  # shorter distances are ignored
 PDFCUTOFF = 1.0  # g(r) = 0 if r < PDFCUTOFF
@@ -11,15 +9,16 @@ PDFCUTOFF = 1.0  # g(r) = 0 if r < PDFCUTOFF
 __all__ = ["PDF"]
 
 
-import numpy as np
-import math
-from ..util.logger import Logger
-import sys
-from ..core.calculation.discretization import DiscretizationCache
 import itertools
+import math
 import os.path
-from ..config.configuration import config
+import sys
 
+import numpy as np
+
+from ..config.configuration import config
+from ..core.calculation.discretization import DiscretizationCache
+from ..util.logger import Logger
 
 logger = Logger("statistics.pdf")
 logger.setstream("default", sys.stdout, Logger.DEBUG)

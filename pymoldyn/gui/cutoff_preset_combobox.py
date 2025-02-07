@@ -1,11 +1,11 @@
-# -*- coding: utf-8 -*-
-
 from __future__ import absolute_import
 
 import sys
+
 from PySide6 import QtCore
-from .util.labeled_combobox import LabeledComboBox
+
 from ..config.cutoff_presets import cutoff_presets
+from .util.labeled_combobox import LabeledComboBox
 
 
 class CutoffPresetComboBox(LabeledComboBox):

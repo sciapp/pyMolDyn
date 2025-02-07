@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from __future__ import absolute_import
 
 import collections
@@ -7,8 +5,9 @@ import datetime
 import json
 import os.path
 import sys
-from .configuration import CONFIG_DIRECTORY
+
 from ..util.logger import Logger
+from .configuration import CONFIG_DIRECTORY
 
 logger = Logger("config.cutoff_history")
 logger.setstream("default", sys.stdout, Logger.WARNING)

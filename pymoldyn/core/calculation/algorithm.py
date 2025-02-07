@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This module allows the analysis of surface-based molecular cavities in various
 volumes. To do so, a volume and a list of atom positions and their cutoff radii
@@ -64,23 +63,19 @@ contain the relevant information.
 
 Author: Florian Rhiem <f.rhiem@fz-juelich.de>
 """
-from math import pi as PI
+
 import sys
+from math import pi as PI
+
 import numpy as np
 
+from ...computation.split_and_merge.algorithm import ObjectType
+from ...computation.split_and_merge.pipeline import start_split_and_merge_pipeline
 from ...util import message
 from ...util.logger import Logger
-from ...computation.split_and_merge.pipeline import start_split_and_merge_pipeline
-from ...computation.split_and_merge.algorithm import ObjectType
-from ..calculation.gyrationtensor import calculate_gyration_tensor_parameters
 from ...util.message import print_message
-from .extension import (
-    atomstogrid,
-    mark_cavities,
-    cavity_triangles,
-    cavity_intersections,
-)
-
+from ..calculation.gyrationtensor import calculate_gyration_tensor_parameters
+from .extension import atomstogrid, cavity_intersections, cavity_triangles, mark_cavities
 
 dimension = 3
 dimensions = range(dimension)

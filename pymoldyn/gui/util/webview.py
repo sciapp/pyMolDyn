@@ -1,11 +1,8 @@
-# -*- coding: utf-8 -*-
-
 import os.path
+
 from PySide6 import QtCore
+from PySide6.QtWebEngineCore import QWebEnginePage  # QtWebKit is deprecated since Pyside2
 from PySide6.QtWebEngineWidgets import QWebEngineView
-from PySide6.QtWebEngineCore import (
-    QWebEnginePage,
-)  # QtWebKit is deprecated since Pyside2
 
 has_qtwebengine = True
 

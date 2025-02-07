@@ -1,26 +1,23 @@
 #!/usr/bin/env python
-# coding: utf-8
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-import sys
 import os
-import numpy as np
-import gr
+import sys
 
-sys.path.insert(0, os.path.abspath('../src'))
+import gr
+import numpy as np
+
+sys.path.insert(0, os.path.abspath("../src"))
 from statistics.rdf import Kernels
 
 x = np.linspace(-1.25, 1.25, 500)
 for name in dir(Kernels):
-    if name.startswith('_') or name == 'bandwidth':
+    if name.startswith("_") or name == "bandwidth":
         continue
     kernel = getattr(Kernels, name)
     y = kernel(x)
-    gr.beginprint(name.lower()+'.svg')
+    gr.beginprint(name.lower() + ".svg")
     gr.clearws()
     gr.setwsviewport(0, 0.1, 0, 0.06)
     gr.setviewport(0, 1, 0, 1)

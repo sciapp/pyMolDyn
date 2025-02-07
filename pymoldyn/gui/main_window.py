@@ -1,30 +1,26 @@
-# -*- coding: utf-8 -*-
-
 from __future__ import absolute_import
 
+import functools
 import os
+import os.path
 import sys
 
-from ..core import bonds
-from ..core import control
-
-from .tabs.file_tab import FileTabDock
-from .tabs.view_tab import ViewTabDock
-from .tabs.image_video_tab import ImageVideoTabDock
-from .tabs.statistics_tab import StatisticsTabDock
-from .tabs.log_tab import LogTabDock
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtQuick import QQuickWindow, QSGRendererInterface
-from .dialogs.settings_dialog import SettingsDialog
-from .dialogs.about_dialog import AboutDialog
-from .gl_widget import UpdateGLEvent
-from ..util import message
-from .gl_stack import GLStack
-from .._version import __version__
-import functools
-import os.path
-from ..config.configuration import config
 
+from .._version import __version__
+from ..config.configuration import config
+from ..core import bonds, control
+from ..util import message
+from .dialogs.about_dialog import AboutDialog
+from .dialogs.settings_dialog import SettingsDialog
+from .gl_stack import GLStack
+from .gl_widget import UpdateGLEvent
+from .tabs.file_tab import FileTabDock
+from .tabs.image_video_tab import ImageVideoTabDock
+from .tabs.log_tab import LogTabDock
+from .tabs.statistics_tab import StatisticsTabDock
+from .tabs.view_tab import ViewTabDock
 
 WEBSITE_URL = "https://pgi-jcns.fz-juelich.de/portal/pages/pymoldyn-doc.html"
 

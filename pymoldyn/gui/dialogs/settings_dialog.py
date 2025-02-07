@@ -1,13 +1,15 @@
-from PySide6 import QtCore, QtGui, QtWidgets
+import functools
 import sys
 from collections import OrderedDict
-import functools
-from ...config.configuration import config, Configuration
-from ..gl_widget import UpdateGLEvent, GLWidget
-from ..cutoff_history_table import CutoffHistoryTable
-from ..cutoff_preset_table import CutoffPresetTable
+
+from PySide6 import QtCore, QtGui, QtWidgets
+
+from ...config.configuration import Configuration, config
 from ...config.cutoff_history import cutoff_history
 from ...config.cutoff_presets import cutoff_presets
+from ..cutoff_history_table import CutoffHistoryTable
+from ..cutoff_preset_table import CutoffPresetTable
+from ..gl_widget import GLWidget, UpdateGLEvent
 
 
 class GraphicsSettingsPage(QtWidgets.QWidget):

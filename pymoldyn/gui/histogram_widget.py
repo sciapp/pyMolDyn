@@ -1,18 +1,16 @@
-# -*- coding: utf-8 -*-
-
 from __future__ import absolute_import
 
-from PySide6 import QtCore, QtWidgets
-import gr
-from qtgr import GRWidget
 import csv
-
-from ..util.logger import Logger
-import sys
-import numpy as np
 import os
+import sys
 from math import floor
 
+import gr
+import numpy as np
+from PySide6 import QtCore, QtWidgets
+from qtgr import GRWidget
+
+from ..util.logger import Logger
 
 logger = Logger("gui.histogram_widget")
 logger.setstream("default", sys.stdout, Logger.DEBUG)

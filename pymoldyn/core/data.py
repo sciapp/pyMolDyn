@@ -1,21 +1,20 @@
-# -*- coding: utf-8 -*-
 """
 This module contains classes that are used to store data in pyMolDyn.
 Most of them can be read and written to hdf5 files.
 """
 
 import collections
-import numpy as np
-import sys
 import os
+import sys
 from datetime import datetime
+
 import dateutil.parser
 import h5py
-from . import volumes
+import numpy as np
+
 from ..config.configuration import config
 from ..util.logger import Logger
-from . import elements
-from . import bonds
+from . import bonds, elements, volumes
 
 try:
     import openbabel

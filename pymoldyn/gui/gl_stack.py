@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
-
 from PySide6 import QtWidgets
+
 from .gl_widget import GLWidget
-from .pdf_widget import PDFWidget
 from .histogram_widget import HistogramWidget
+from .pdf_widget import PDFWidget
 
 
 class GLStack(QtWidgets.QStackedWidget):

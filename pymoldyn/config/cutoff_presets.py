@@ -1,13 +1,12 @@
-# -*- coding: utf-8 -*-
-
 from __future__ import absolute_import
 
 import collections
 import json
 import os.path
 import sys
-from .configuration import CONFIG_DIRECTORY
+
 from ..util.logger import Logger
+from .configuration import CONFIG_DIRECTORY
 
 logger = Logger("config.cutoff_presets")
 logger.setstream("default", sys.stdout, Logger.WARNING)

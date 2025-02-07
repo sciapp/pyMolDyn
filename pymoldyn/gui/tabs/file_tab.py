@@ -1,16 +1,16 @@
-# -*- coding: utf-8 -*-
+import functools
+import os.path
 
 from PySide6 import QtCore, QtWidgets
-import os.path
-import functools
-from ...core import calculation, volumes, file
-from ..dialogs.calc_settings_dialog import CalculationSettingsDialog
-from ..dialogs.progress_dialog import ProgressDialog
+
 from ...config.configuration import config
-from ...util.message import print_message, progress, finish
-from ..gl_widget import GLWidget, UpdateGLEvent
+from ...core import calculation, file, volumes
 from ...core.file import File
 from ...util import message
+from ...util.message import finish, print_message, progress
+from ..dialogs.calc_settings_dialog import CalculationSettingsDialog
+from ..dialogs.progress_dialog import ProgressDialog
+from ..gl_widget import GLWidget, UpdateGLEvent
 
 
 class FileTabDock(QtWidgets.QDockWidget):

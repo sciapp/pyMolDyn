@@ -1,15 +1,12 @@
-# -*- coding: utf-8 -*-
-
-
 __all__ = ["atomstogrid", "mark_cavities", "cavity_triangles", "cavity_intersections"]
 
 
-import numpy as np
 import itertools
 import sys
 from math import ceil
-from gr3 import triangulate
 
+import numpy as np
+from gr3 import triangulate
 
 dimension = 3
 dimensions = range(dimension)

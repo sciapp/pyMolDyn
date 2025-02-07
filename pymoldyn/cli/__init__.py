@@ -3,7 +3,6 @@ import sys
 
 from ..core import file
 from ..core.control import Control
-
 from .cli import Cli
 
 __all__ = ["Cli"]

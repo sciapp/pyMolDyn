@@ -1,12 +1,9 @@
-# -*- coding: utf-8 -*-
-
-
 from __future__ import absolute_import
 
-
 from PySide6 import QtCore, QtWidgets
-from .util.table_with_removeable_items import TableWithRemoveableEntries
+
 from .util.cutoff_preview_table import CutoffPreviewTable
+from .util.table_with_removeable_items import TableWithRemoveableEntries
 
 
 class CutoffPresetTable(TableWithRemoveableEntries):

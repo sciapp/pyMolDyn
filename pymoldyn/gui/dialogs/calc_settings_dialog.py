@@ -1,24 +1,20 @@
-# -*- coding: utf-8 -*-
-
-
-from .util.calc_table import CalculationTable, TableModel
-from .cutoff_history_dialog import CutoffHistoryDialog
-from ..cutoff_table_widget import CutoffTableWidget
-from ..cutoff_preset_combobox import CutoffPresetComboBox
-from ...core import calculation
-from ...core import file
 import collections
 import collections.abc
 import datetime
-import os.path
 import itertools as it
+import os.path
 import re
-from ...config.configuration import config
-from ...config.cutoff_presets import cutoff_presets
-from ...config.cutoff_presets import Preset
-from ...config.cutoff_history import cutoff_history
-from ...config.cutoff_history import HistoryEntry
+
 from PySide6 import QtCore, QtWidgets
+
+from ...config.configuration import config
+from ...config.cutoff_history import HistoryEntry, cutoff_history
+from ...config.cutoff_presets import Preset, cutoff_presets
+from ...core import calculation, file
+from ..cutoff_preset_combobox import CutoffPresetComboBox
+from ..cutoff_table_widget import CutoffTableWidget
+from .cutoff_history_dialog import CutoffHistoryDialog
+from .util.calc_table import CalculationTable, TableModel
 
 
 class CalculationSettingsDialog(QtWidgets.QDialog):

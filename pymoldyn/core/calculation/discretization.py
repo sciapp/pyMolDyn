@@ -1,11 +1,11 @@
-# -*- coding: utf-8 -*-
-
-from math import floor
 import collections
 import itertools
-import numpy as np
+from math import floor
+
 import h5py
-from ...util.message import print_message, progress, finish
+import numpy as np
+
+from ...util.message import finish, print_message, progress
 from . import algorithm
 from .extension import mark_translation_vectors
 

@@ -101,7 +101,7 @@ EXPORT void atomstogrid(
                         if (SQUARE(sphereindex[0] - radius)
                                 + SQUARE(sphereindex[1] - radius)
                                 + SQUARE(sphereindex[2] - radius)
-                                <= SQUARE(radius) 
+                                <= SQUARE(radius)
                                 && discretization_grid[INDEXDISCGRID(gridpos[0], gridpos[1], gridpos[2])] == 0) {
                             grid_index = INDEXGRID(gridpos[0], gridpos[1], gridpos[2]);
                             grid_value = grid[grid_index];
@@ -304,7 +304,7 @@ EXPORT void mark_cavities(int64_t *grid, int64_t *domain_grid, int dimensions[3]
                                     + neigh[2] * sg->strides[2];
                             cell = sg->a + neigh_index;
                             for (i = 0; i < cell->num_atoms; i++) {
-                                squared_atom_distance = 
+                                squared_atom_distance =
                                         SQUARE(cell->atom_positions[i * 3 + 0] - pos[0])
                                         + SQUARE(cell->atom_positions[i * 3 + 1] - pos[1])
                                         + SQUARE(cell->atom_positions[i * 3 + 2] - pos[2]);
@@ -324,7 +324,7 @@ EXPORT void mark_cavities(int64_t *grid, int64_t *domain_grid, int dimensions[3]
                                     + neigh[2] * sg->strides[2];
                             cell = sg->a + neigh_index;
                             for (i = 0; i < cell->num_domains; i++) {
-                                squared_domain_distance = 
+                                squared_domain_distance =
                                         SQUARE(cell->domain_points[i * 3 + 0] - pos[0])
                                         + SQUARE(cell->domain_points[i * 3 + 1] - pos[1])
                                         + SQUARE(cell->domain_points[i * 3 + 2] - pos[2]);
@@ -440,7 +440,7 @@ EXPORT int cavity_triangles(
             bbox[1][i]++;
         }
     }
-    
+
     ntriangles = gr3_triangulate(
             counts + INDEXGRID(bbox[0][0], bbox[0][1], bbox[0][2]),
             100 + isolevel,
@@ -463,9 +463,9 @@ EXPORT int cavity_triangles(
             normal_p = vertex_p + 3 * 3;
             for (k = 0; k < 3; k++) {
                 disc_pos[k] = floor(vertex_p[k] + 0.5);
-                continuous_vertices[(i * 3 + j) * 3 + k] = 
+                continuous_vertices[(i * 3 + j) * 3 + k] =
                         vertex_p[k] * step[k] + offset[k];
-                continuous_normals[(i * 3 + j) * 3 + k] = 
+                continuous_normals[(i * 3 + j) * 3 + k] =
                         normal_p[k] / step[k];
             }
             if (discretization_grid[INDEXDISCGRID(

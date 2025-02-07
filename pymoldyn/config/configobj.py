@@ -21,9 +21,7 @@ from __future__ import generators
 import os
 import re
 import sys
-
 from codecs import BOM_UTF8, BOM_UTF16, BOM_UTF16_BE, BOM_UTF16_LE, lookup
-
 
 # imported lazily to avoid startup performance hit if it isn't used
 compiler = None

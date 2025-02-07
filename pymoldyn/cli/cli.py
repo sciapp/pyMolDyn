@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-
-
 import collections
 import optparse
 import os
@@ -8,10 +5,10 @@ import re
 import sys
 import threading
 from datetime import datetime
-from ..core.calculation import CalculationSettings
-from ..core import file
-from ..config.configuration import config
 
+from ..config.configuration import config
+from ..core import file
+from ..core.calculation import CalculationSettings
 
 shell_colors = {
     "white_font": "\033[37m",

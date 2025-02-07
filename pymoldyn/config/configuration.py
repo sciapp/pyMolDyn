@@ -1,8 +1,8 @@
-from . import configobj
-from . import validate
+import inspect
 import os
 import os.path
-import inspect
+
+from . import configobj, validate
 
 CONFIG_DIRECTORY = "~/.pymoldyn/"  # MUST be written with ~ to save a path in the config file that is relative to the user's home directory
 CONFIG_FILE = os.path.expanduser("%s/config.cfg" % CONFIG_DIRECTORY)

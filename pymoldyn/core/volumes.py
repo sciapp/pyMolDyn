@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 To support various materials, different Bravais lattice systems need to be used
 in pyMolDyn2, so that the shapes and periodic boundary conditions of different
@@ -16,13 +15,14 @@ http://en.wikipedia.org/wiki/Bravais_lattice
 Author: Florian Rhiem <f.rhiem@fz-juelich.de>
 """
 
-
-from math import ceil, sin, cos, pi, sqrt, acos
+from math import acos, ceil, cos, pi, sin, sqrt
 
 cot = lambda alpha: cos(alpha) / sin(alpha)
 import itertools
+
 import numpy as np
 import numpy.linalg as la
+
 from ..util.logger import Logger
 
 logger = Logger("core.volumes")

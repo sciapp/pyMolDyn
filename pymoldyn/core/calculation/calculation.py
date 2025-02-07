@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 With the classes in this module the rather complicated calculation process
 can be started with a simple method call.
@@ -6,17 +5,16 @@ Additionally, results are stored in a cache and can be reused later.
 """
 
 import os
-from .. import data
-from .. import file
-from ..file import File, FileError
-from .algorithm import CavityCalculation, DomainCalculation, FakeDomainCalculation
-from .discretization import DiscretizationCache, AtomDiscretization
-from ...util import message
-from ...config.configuration import config
-from ...util.logger import Logger
 import sys
 from hashlib import sha256
-from .. import bonds
+
+from ...config.configuration import config
+from ...util import message
+from ...util.logger import Logger
+from .. import bonds, data, file
+from ..file import File, FileError
+from .algorithm import CavityCalculation, DomainCalculation, FakeDomainCalculation
+from .discretization import AtomDiscretization, DiscretizationCache
 
 __all__ = [
     "Calculation",
