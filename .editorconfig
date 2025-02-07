@@ -30,3 +30,22 @@ indent_size = 2
 # See <https://www.git-scm.com/book/en/v2/Distributed-Git-Contributing-to-a-Project#_commit_guidelines> for a reference
 [COMMIT_EDITMSG]
 max_line_length = 72
+
+# Excludes:
+[/doc/**]
+charset = unset
+end_of_line = unset
+insert_final_newline = unset
+indent_style = unset
+indent_size = unset
+max_line_length = unset
+trim_trailing_whitespace = unset
+
+[/example_data/**]
+charset = unset
+end_of_line = unset
+insert_final_newline = unset
+indent_style = unset
+indent_size = unset
+max_line_length = unset
+trim_trailing_whitespace = unset

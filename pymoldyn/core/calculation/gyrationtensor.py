@@ -6,10 +6,10 @@ def calculate_gyration_tensor_parameters(points):
     """
     Calculates the gyration tensor parameters R_g^2, η, c, κ from a list of
     all points inside a cavity.
-     - R_g^2 is the squared gyration radius
-     - η is the asphericity
-     - c is the acylindricity
-     - κ is the anisotropy
+    - R_g^2 is the squared gyration radius
+    - η is the asphericity
+    - c is the acylindricity
+    - κ is the anisotropy
     """
 
     points = np.array(points, dtype=np.float64)

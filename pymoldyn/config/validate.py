@@ -16,6 +16,7 @@
 # http://lists.sourceforge.net/lists/listinfo/configobj-develop
 # Comments, suggestions and bug reports welcome.
 
+# editorconfig-checker-disable
 """
 The Validator object is used to check that supplied values
 conform to a specification.
@@ -127,6 +128,7 @@ the check : ::
 
 A badly formatted set of arguments will raise a ``VdtParamError``.
 """
+# editorconfig-checker-enable
 
 __version__ = "1.0.1"
 
@@ -1248,12 +1250,12 @@ def is_mixed_list(value, *args):
     You specify each member as a positional argument specifying type
 
     Each type should be one of the following strings :
-      'integer', 'float', 'ip_addr', 'string', 'boolean'
+        'integer', 'float', 'ip_addr', 'string', 'boolean'
 
     So you can specify a list of two strings, followed by
     two integers as :
 
-      mixed_list('string', 'string', 'integer', 'integer')
+        mixed_list('string', 'string', 'integer', 'integer')
 
     The length of the list must match the number of positional
     arguments you supply.

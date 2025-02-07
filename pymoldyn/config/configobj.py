@@ -422,6 +422,7 @@ class TemplateInterpolation(InterpolationEngine):
 
     _cookie = "$"
     _delimiter = "$"
+    # editorconfig-checker-disable
     _KEYCRE = re.compile(
         r"""
         \$(?:
@@ -432,6 +433,7 @@ class TemplateInterpolation(InterpolationEngine):
         """,
         re.IGNORECASE | re.VERBOSE,
     )
+    # editorconfig-checker-enable
 
     def _parse_match(self, match):
         # Valid name (in or out of braces): fetch value from section
@@ -2430,4 +2432,4 @@ def get_extra_values(conf, _prepend=()):
     return out
 
 
-"""*A programming language is a medium of expression.* - Paul Graham"""
+# *A programming language is a medium of expression.* - Paul Graham

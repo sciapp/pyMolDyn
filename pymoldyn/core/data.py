@@ -315,8 +315,8 @@ class ResultInfo(FileInfo):
                 the resolution for which the information will be queried
 
         **Returns:**
-             A :class:`CalculatedFrames` object with information about
-             existing calculations.
+            A :class:`CalculatedFrames` object with information about
+            existing calculations.
         """
         if resolution not in self.calculatedframes:
             self.calculatedframes[resolution] = CalculatedFrames(self.num_frames)
@@ -331,7 +331,7 @@ class ResultInfo(FileInfo):
                 the resolution for which the information will be queried
 
         **Returns:**
-             If a :class:`CalculatedFrames` object for this resolution exists
+            If a :class:`CalculatedFrames` object for this resolution exists
         """
         return resolution in self.calculatedframes
 

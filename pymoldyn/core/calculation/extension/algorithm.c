@@ -517,7 +517,21 @@ EXPORT void cavity_intersections(
     int neigh[3];
     int gridindex, neighindex;
     int64_t domain1, domain2;
-    int offsets[13][3] = {{-1, -1, -1}, {-1, -1, 0}, {-1, -1, 1}, {-1, 0, -1}, {-1, 0, 0}, {-1, 0, 1}, {-1, 1, -1}, {-1, 1, 0}, {-1, 1, 1}, {0, -1, -1}, {0, -1, 0}, {0, -1, 1}, {0, 0, -1}};
+    int offsets[13][3] = {
+        {-1, -1, -1},
+        {-1, -1, 0},
+        {-1, -1, 1},
+        {-1, 0, -1},
+        {-1, 0, 0},
+        {-1, 0, 1},
+        {-1, 1, -1},
+        {-1, 1, 0},
+        {-1, 1, 1},
+        {0, -1, -1},
+        {0, -1, 0},
+        {0, -1, 1},
+        {0, 0, -1}
+    };
 
     for (pos[0] = 1; pos[0] < dimensions[0] - 1; pos[0]++) {
         for (pos[1] = 1; pos[1] < dimensions[1] - 1; pos[1]++) {
@@ -546,6 +560,7 @@ EXPORT void cavity_intersections(
 
 
 #define INDEXGRID(i,j,k) ((int64_t)(i)*strides[0]+(j)*strides[1]+(k)*strides[2])
+/* editorconfig-checker-disable */
 /**
  * Take a discretization grid, where cells inside the volume are 0
  * and cells outside are 1. For each outside cell, find the translation
@@ -554,12 +569,14 @@ EXPORT void cavity_intersections(
  * inside has an equivalent (i.e. reachable through a translation vector)
  * cell inside; and that every cell outside has an equivalent cell inside.
  */
-EXPORT void mark_translation_vectors(int8_t *grid,
-                              int dimensions[3],
-                              int strides[3],
-                              int ntranslations,
-                              int *translations)
-{
+/* editorconfig-checker-enable */
+EXPORT void mark_translation_vectors(
+    int8_t *grid,
+    int dimensions[3],
+    int strides[3],
+    int ntranslations,
+    int *translations
+) {
     int pos[3];
     int grid_index;
     int grid_value;
@@ -588,9 +605,13 @@ EXPORT void mark_translation_vectors(int8_t *grid,
                         trans_valid[i] &= tp >= 0 && tp < dimensions[j];
                     }
                     if (trans_valid[i]) {
-                        grid[INDEXGRID(trans_pos[i * 3 + 0],
-                                       trans_pos[i * 3 + 1],
-                                       trans_pos[i * 3 + 2])] = 1;
+                        grid[
+                            INDEXGRID(
+                                trans_pos[i * 3 + 0],
+                                trans_pos[i * 3 + 1],
+                                trans_pos[i * 3 + 2]
+                            )
+                        ] = 1;
                     }
                 }
             }
@@ -615,9 +636,15 @@ EXPORT void mark_translation_vectors(int8_t *grid,
                 trans_index = -1;
                 for (i = 0; i < ntranslations; i++) {
                     if (trans_valid[i]) {
-                        if (grid[INDEXGRID(trans_pos[i * 3 + 0],
-                                           trans_pos[i * 3 + 1],
-                                           trans_pos[i * 3 + 2])] == 0) {
+                        if (
+                            grid[
+                                INDEXGRID(
+                                    trans_pos[i * 3 + 0],
+                                    trans_pos[i * 3 + 1],
+                                    trans_pos[i * 3 + 2]
+                                )
+                            ] == 0
+                        ) {
                             trans_index = i;
                             break;
                         }
@@ -641,9 +668,13 @@ EXPORT void mark_translation_vectors(int8_t *grid,
                         }
                     }
                     if (trans_index != -1) {
-                        grid[INDEXGRID(trans_pos[trans_index * 3 + 0],
-                                       trans_pos[trans_index * 3 + 1],
-                                       trans_pos[trans_index * 3 + 2])] = 0;
+                        grid[
+                            INDEXGRID(
+                                trans_pos[trans_index * 3 + 0],
+                                trans_pos[trans_index * 3 + 1],
+                                trans_pos[trans_index * 3 + 2]
+                            )
+                        ] = 0;
                     }
                     /* trans_index == -1: grid[grid_index] = 0 */
                     grid[grid_index] = -trans_index - 1;

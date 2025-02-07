@@ -67,7 +67,15 @@ static PyObject *calculate_domain_centers(PyObject *self, PyObject *args) {
     combined_translation_vectors_it = PyObject_GetIter(combined_translation_vectors);
     i = 1;
     while((combined_translation_vector = PyIter_Next(combined_translation_vectors_it))) {
-        if (!PyArg_ParseTuple(combined_translation_vector, "iii", &combined_trans_vecs[i].x, &combined_trans_vecs[i].y, &combined_trans_vecs[i].z)) {
+        if (
+            !PyArg_ParseTuple(
+                combined_translation_vector,
+                "iii",
+                &combined_trans_vecs[i].x,
+                &combined_trans_vecs[i].y,
+                &combined_trans_vecs[i].z
+            )
+        ) {
             Py_DECREF(combined_translation_vector);
             Py_DECREF(combined_translation_vectors_it);
             free(atom_pos);

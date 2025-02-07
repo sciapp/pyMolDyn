@@ -6,49 +6,51 @@ file (using the ``pybel`` module), defining a hexagonal volume and moving all
 atoms into this volume.
 
 .. code-block:: python
-   :emphasize-lines: 7,10
+    :emphasize-lines: 7,10
 
-   import pybel
+    import pybel
 
-   atoms = pybel.readfile("xyz", "hexagonal.xyz").next().atoms
-   num_atoms = len(atoms)
-   atom_positions = [atom.coords for atom in atoms]
+    atoms = pybel.readfile("xyz", "hexagonal.xyz").next().atoms
+    num_atoms = len(atoms)
+    atom_positions = [atom.coords for atom in atoms]
 
-   volume = volumes.HexagonalVolume(17.68943, 22.61158)
-   for atom_index in range(num_atoms):
-       atom_positions[atom_index] = volume.get_equivalent_point(atom_positions[atom_index])
-   atoms = Atoms(atom_positions, [2.8]*num_atoms)
+    volume = volumes.HexagonalVolume(17.68943, 22.61158)
+    for atom_index in range(num_atoms):
+        atom_positions[atom_index] = volume.get_equivalent_point(atom_positions[atom_index])
+    atoms = Atoms(atom_positions, [2.8]*num_atoms)
 
 After this, a discretization of the volume is needed. This module supports
 caching of these with the ``DiscretizationCache`` class.
 
 .. code-block:: python
 
-   discretization_cache = DiscretizationCache('cache.hdf5')
-   discretization = discretization_cache.get_discretization(volume, 192)
+    discretization_cache = DiscretizationCache('cache.hdf5')
+    discretization = discretization_cache.get_discretization(volume, 192)
 
 Using this ``discretization`` and the ``Atoms`` object created above, the atom
 positions and their cutoff radii are also discretized.
 
 .. code-block:: python
 
-   atom_discretization = AtomDiscretization(atoms, discretization)
+    atom_discretization = AtomDiscretization(atoms, discretization)
 
 With these objects created, all preparations are complete and the domain and
 cavity calculation can be done:
 
 .. code-block:: python
 
-   domain_calculation = DomainCalculation(discretization, atom_discretization)
-   cavity_calculation = CavityCalculation(domain_calculation)
+    domain_calculation = DomainCalculation(discretization, atom_discretization)
+    cavity_calculation = CavityCalculation(domain_calculation)
 
 Additionally, calculation of center-based cavities is possible by passing an
 additional parameter to the CavityCalculation:
 
 .. code-block:: python
 
-   cavity_calculation = CavityCalculation(domain_calculation,
-                                          use_surface_points=False)
+    cavity_calculation = CavityCalculation(
+        domain_calculation,
+        use_surface_points=False,
+    )
 
 The FakeDomainCalculation class provides a drop-in replacement for the
 domain_calculation object in case the results of a previous calculation need to
@@ -87,12 +89,15 @@ logger.setstream("default", sys.stdout, Logger.WARNING)
 class DomainCalculation:
     """
     Cavity domain calulation is performed by the following steps:
-     1. A grid is created with the resolution defined in the volume
+
+    1.  A grid is created with the resolution defined in the volume
         discretization and filled with zeros.
-     2. For each atom, all points in the grid closer to this atom than the
+
+    2.  For each atom, all points in the grid closer to this atom than the
         discrete cavity cutoff radius are set to a point indicating the atom
         index (atom_index+1).
-     3. At this point, every point in the grid which is inside of the volume
+
+    3.  At this point, every point in the grid which is inside of the volume
         and still has a value of zero is part of a cavity domain. To find these
         domains, an optimized split and merge algorithm is applied to the whole
         grid. It returns the center and surface points of each cavity domain
@@ -203,26 +208,32 @@ class DomainCalculation:
 class CavityCalculation:
     """
     Cavity domain calulation is performed by the following steps:
-     1. The discrete volume grid is divided into subgrid cells with a side
+
+    1.  The discrete volume grid is divided into subgrid cells with a side
         length based on the maximum discrete cavity cutoff radius. For each
         subgrid, a tuple of three lists is stored (in self.sg).
-     2. The first list for each subgrid cell is filled with the atoms inside
+
+    2.  The first list for each subgrid cell is filled with the atoms inside
         the cell (their 'real' positions, which might be outside of the
         volume).
-     3. The second and third lists are filled with surface points and their
+
+    3.  The second and third lists are filled with surface points and their
         domain index. (These might also be moved with the translation vectors
         and might thereby also be outside of the volume.)
-     4. A new grid is created (grid3) and each point in this grid is set to
+
+    4.  A new grid is created (grid3) and each point in this grid is set to
         zero if it is outside of the volume or part inside of the cavity cutoff
         radius of an atom, or a negative value if it is part of a cavity domain
         (see the domain calculation step 2 for this).
-     5. For each point which is inside the cavity cutoff radius of an
+
+    5.  For each point which is inside the cavity cutoff radius of an
         atom, the nearest atom and the nearest domain surface point are found
         by using the neighbor subgrid cells. If a domain surface point is
         nearer than the nearest atom, than the point belongs to the cavity
         which this surface point belonged to and is marked with a negative
         value.
-     6. At this point, two cavities constructed from two cavity domains might
+
+    6.  At this point, two cavities constructed from two cavity domains might
         actually be one multicavity. In this step, these are found and a list
         of multicavities is created.
 

@@ -8,6 +8,7 @@ import numpy.linalg as la
 
 
 def cartesian(arrays, out=None):
+    # editorconfig-checker-disable
     """
     Generate a cartesian product of input arrays.
 
@@ -41,6 +42,7 @@ def cartesian(arrays, out=None):
            [3, 5, 7]])
 
     """
+    # editorconfig-checker-enable
 
     arrays = [np.asarray(x) for x in arrays]
     dtype = arrays[0].dtype

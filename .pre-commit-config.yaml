@@ -79,6 +79,10 @@ repos:
   rev: v6.2.4
   hooks:
   - id: rstcheck
+    args: [
+      '--ignore-directives=autoclass,automodule,toctree',
+      '--ignore-roles=ref',
+    ]
 - repo: https://github.com/psf/black
   rev: 25.1.0
   hooks:

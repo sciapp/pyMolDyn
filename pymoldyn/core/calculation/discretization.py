@@ -99,30 +99,37 @@ class Discretization(object):
     Instances of this class represent a discrete version of a volume.
 
     The discretization is done in the following steps:
-     1. For a given maximum resolution of the resulting discrete representation
+
+    1.  For a given maximum resolution of the resulting discrete representation
         (d_max), the length of the discretization cells (s_step) is calculated.
-     2. The actual resolutions of the resulting discrete representation (d) are
+
+    2.  The actual resolutions of the resulting discrete representation (d) are
         calculated and the side lengths of corresponding bounding cuboid
         (s_tilde) are calculated. (After this point, the transformation
         functions discrete_to_continuous(p) and continuous_to_discrete(p) can
         be used.)
-     3. The volume's translation vectors are discretized (translation_vectors)
+
+    3.  The volume's translation vectors are discretized (translation_vectors)
         and combinations of these are calculated
         (combined_translation_vectors).
-     4. An integer grid is created and for each discrete point, it stores
+
+    4.  An integer grid is created and for each discrete point, it stores
         either 0 if the point is inside the volume or 1 if it is outside the
         volume.
-     5. In the grid, for each point which is inside the volume (value = 0) all
+
+    5.  In the grid, for each point which is inside the volume (value = 0) all
         points created by addition of a combined translation vector are defined
         to be outside of the volume (value = 1), except for the point itself.
         After this, there is no equivalent pair of points, which both are
         inside the volume.
-     6. At this point there might still be some points in the grid though,
+
+    6.  At this point there might still be some points in the grid though,
         which have no equivalent point inside of the volume (value = 0). For
         each of these points, all equivalent points are found and from these,
         the one closest to the center (continuous coordinates (0,0,0)) is
         defined to be inside the volume.
-     7. For each point which is outside of the volume (value = 1). A negative
+
+    7.  For each point which is outside of the volume (value = 1). A negative
         value is set to indicate which combined translation vector leads to the
         equivalent point inside the volume.
     """
