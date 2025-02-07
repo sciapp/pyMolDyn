@@ -38,7 +38,7 @@ The implementation of \texttt{InputFile} is \texttt{XYZFile}, which reads a pybe
 \begin{tikzpicture}
     \begin{class}[text width=\umlwidth]{File}{0, 0}
         \attribute{+ $<<$static$>>$ types : Dictionary(String $\rightarrow$ Class)}
-        
+
         \operation{+ $<<$static$>>$ listdir() : List(String)}
         \operation{+ $<<$static$>>$ open(filepath : String) : InputFile}
         \operation{+ $<<$static$>>$ exists(filepath : String) : Boolean}
@@ -50,4 +50,3 @@ The \texttt{types} dictionary is used to associate filename extensions (e.\,g.\ 
 
 \todo{Overrideable \texttt{detectfiletype} method (flexibility),\\
 unfiltered file list}
-

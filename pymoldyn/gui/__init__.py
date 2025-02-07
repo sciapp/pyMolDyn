@@ -46,7 +46,7 @@ def test_gui_dependencies():
 
 
 def start_gui():
-    from PySide6 import QtCore, QtGui, QtWidgets
+    from PySide6 import QtCore, QtWidgets
 
     from ..core import file
     from ..core.control import Control

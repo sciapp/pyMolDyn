@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
-
 import re
+
 from PySide6 import QtCore, QtGui, QtWidgets
 
 

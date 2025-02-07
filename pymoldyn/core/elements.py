@@ -1,4 +1,4 @@
-# coding=utf-8
+# editorconfig-checker-disable
 """
 This module includes information about the chemical elements:
 - names maps element number to name
@@ -8,6 +8,7 @@ This module includes information about the chemical elements:
 - radii maps element number to covalent radius in Å (data from openbabel)
 http://sourceforge.net/p/openbabel/code/HEAD/tree/openbabel/trunk/data/element.txt
 """
+# editorconfig-checker-enable
 
 import numpy as np
 

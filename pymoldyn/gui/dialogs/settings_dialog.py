@@ -1,13 +1,14 @@
-from PySide6 import QtCore, QtGui, QtWidgets
 import sys
 from collections import OrderedDict
-import functools
-from ...config.configuration import config, Configuration
-from ..gl_widget import UpdateGLEvent, GLWidget
-from ..cutoff_history_table import CutoffHistoryTable
-from ..cutoff_preset_table import CutoffPresetTable
+
+from PySide6 import QtCore, QtGui, QtWidgets
+
+from ...config.configuration import Configuration, config
 from ...config.cutoff_history import cutoff_history
 from ...config.cutoff_presets import cutoff_presets
+from ..cutoff_history_table import CutoffHistoryTable
+from ..cutoff_preset_table import CutoffPresetTable
+from ..gl_widget import GLWidget, UpdateGLEvent
 
 
 class GraphicsSettingsPage(QtWidgets.QWidget):
@@ -28,13 +29,13 @@ class GraphicsSettingsPage(QtWidgets.QWidget):
         for i, (attr_str, label) in enumerate(self.values.items()):
             cfg_comp = getattr(self._config, "OpenGL")
 
-            l = QtWidgets.QLabel(label, self)
-            t = QtWidgets.QLineEdit(self)
-            t.setText(str(getattr(cfg_comp, attr_str)))
-            self.lineedit_dict[attr_str] = t
-            t.textChanged.connect(self.any_change)
-            grid.addWidget(l, i, 0)
-            grid.addWidget(t, i, 1)
+            label = QtWidgets.QLabel(label, self)
+            line_edit = QtWidgets.QLineEdit(self)
+            line_edit.setText(str(getattr(cfg_comp, attr_str)))
+            self.lineedit_dict[attr_str] = line_edit
+            line_edit.textChanged.connect(self.any_change)
+            grid.addWidget(label, i, 0)
+            grid.addWidget(line_edit, i, 1)
 
         self.colors = OrderedDict(
             (
@@ -111,15 +112,15 @@ class ComputationSettingsPage(QtWidgets.QWidget):
         for i, (attr_str, label) in enumerate(self.values.items()):
             cfg_comp = getattr(self._config, "Computation")
 
-            l = QtWidgets.QLabel(label, self)
-            t = QtWidgets.QLineEdit(self)
-            t.setText(str(getattr(cfg_comp, attr_str)))
-            self.lineedit_dict[attr_str] = t
+            label = QtWidgets.QLabel(label, self)
+            line_edit = QtWidgets.QLineEdit(self)
+            line_edit.setText(str(getattr(cfg_comp, attr_str)))
+            self.lineedit_dict[attr_str] = line_edit
 
-            # self.connect(t, QtCore.SIGNAL("editingFinished()"), lambda who=attr_str: self.value_edited(who))
-            t.textChanged.connect(self.any_change)
-            grid.addWidget(l, i, 0)
-            grid.addWidget(t, i, 1)
+            # self.connect(line_edit, QtCore.SIGNAL("editingFinished()"), lambda who=attr_str: self.value_edited(who))
+            line_edit.textChanged.connect(self.any_change)
+            grid.addWidget(label, i, 0)
+            grid.addWidget(line_edit, i, 1)
 
         self.tw_cutoff_history = CutoffHistoryTable(cutoff_history.history)
         pb_clear_cutoff_history = QtWidgets.QPushButton(
@@ -203,14 +204,14 @@ class PathSettingsPage(QtWidgets.QWidget):
         for i, (attr_str, label) in enumerate(self.path.items()):
             cfg_path = getattr(self._config, "Path")
 
-            l = QtWidgets.QLabel(label, self)
-            t = QtWidgets.QLineEdit(self)
-            t.setText(getattr(cfg_path, attr_str))
-            self.lineedit_dict[attr_str] = t
+            label = QtWidgets.QLabel(label, self)
+            line_edit = QtWidgets.QLineEdit(self)
+            line_edit.setText(getattr(cfg_path, attr_str))
+            self.lineedit_dict[attr_str] = line_edit
 
-            t.editingFinished.connect(lambda who=attr_str: self.path_edited(who))
-            grid.addWidget(l, i, 0)
-            grid.addWidget(t, i, 1)
+            line_edit.editingFinished.connect(lambda who=attr_str: self.path_edited(who))
+            grid.addWidget(label, i, 0)
+            grid.addWidget(line_edit, i, 1)
         box.addLayout(grid)
         box.addStretch()
         self.setLayout(box)

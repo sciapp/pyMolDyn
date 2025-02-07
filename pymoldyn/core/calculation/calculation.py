@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 With the classes in this module the rather complicated calculation process
 can be started with a simple method call.
@@ -6,30 +5,21 @@ Additionally, results are stored in a cache and can be reused later.
 """
 
 import os
-from .. import data
-from .. import file
-from ..file import File, FileError
-from .algorithm import CavityCalculation, DomainCalculation, FakeDomainCalculation
-from .discretization import DiscretizationCache, AtomDiscretization
-from ...util import message
-from ...config.configuration import config
-from ...util.logger import Logger
 import sys
 from hashlib import sha256
-from .. import bonds
+
+from ...config.configuration import config
+from ...util import message
+from ...util.logger import Logger
+from .. import data, file
+from ..file import File, FileError
+from .algorithm import CavityCalculation, DomainCalculation, FakeDomainCalculation
+from .discretization import AtomDiscretization, DiscretizationCache
 
 __all__ = [
     "Calculation",
     "CalculationCache",
     "CalculationSettings",
-    "calculated",
-    "count_frames",
-    "calculated_frames",
-    "calculate_cavities",
-    "getresults",
-    "delete_center_cavity_information",
-    "timestamp",
-    "calculate",
 ]
 
 logger = Logger("core.calculation")
@@ -412,7 +402,7 @@ class Calculation(object):
                 efpath = os.path.join(exportdir, fileprefix + ".hdf5")
                 efpath = file.get_abspath(efpath)
                 # copy atoms into HDF5 file
-                exportfile = file.HDF5File.fromInputFile(efpath, filepath)
+                file.HDF5File.fromInputFile(efpath, filepath)
                 # use HDF5 file as input
                 filepath = efpath
 

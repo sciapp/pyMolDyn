@@ -4,7 +4,6 @@
 
 .. autoclass:: Visualization
     :members:
-   
+
 .. autoclass:: VisualizationSettings
     :members:
-

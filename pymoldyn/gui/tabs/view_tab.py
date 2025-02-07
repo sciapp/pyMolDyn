@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
-
-from functools import partial
 import itertools
-from PySide6 import QtCore, QtWidgets
+from functools import partial
+
+from PySide6 import QtWidgets
+
 from ..object_select_widget import ObjectSelectWidget
 
 counter = itertools.count(0, 1)

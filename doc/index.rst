@@ -11,7 +11,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
    :numbered:
-   
+
    data
    volumes
    file
@@ -27,4 +27,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

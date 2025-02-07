@@ -7,7 +7,7 @@ Input Data
 .. autoclass:: Atoms
    :special-members: __init__
    :members:
-   
+
 
 Output Data
 -----------
@@ -19,11 +19,11 @@ Output Data
 .. autoclass:: Cavities
    :special-members: __init__
    :members:
-   
+
 .. autoclass:: Results
    :special-members: __init__
    :members:
-   
+
 
 Meta Data
 ---------

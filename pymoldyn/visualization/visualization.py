@@ -1,19 +1,17 @@
-# -*- coding: utf-8 -*-
 """
 Visualize Atoms and Cavities with GR3
 """
 
-from math import sin, cos, sqrt, pi
+from ctypes import c_int
+
 import gr3
-from ..config.configuration import config
-from ..core import calculation as calculation
 import numpy as np
 import numpy.linalg as la
-import os
-from ctypes import c_int
+
+from ..config.configuration import config
 from ..util.gl_util import (
-    create_perspective_projection_matrix,
     create_look_at_matrix,
+    create_perspective_projection_matrix,
     create_rotation_matrix_homogenous,
     create_translation_matrix_homogenous,
 )
@@ -236,7 +234,7 @@ class Visualization(object):
         """
         Update the shown scene after the perspective has changed.
         """
-        rightt = self.mat[:3, 0]
+        # rightt = self.mat[:3, 0]
         upt = self.mat[:3, 1]
         pt = self.mat[:3, 2] * self.d
         t = self.mat[:3, 3]

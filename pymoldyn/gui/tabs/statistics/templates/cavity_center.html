@@ -13,7 +13,7 @@
     <div class="headline">Domain Center-based Cavity {{ index+1 }}</div>
     {% if is_cyclic %}
     <div class="alertbox">
-      <span class="alert">Warning:</span> The center-based cavity is infinite.
+        <span class="alert">Warning:</span> The center-based cavity is infinite.
     </div>
     {% endif %}
     <table class="table_margin_upper_table">
@@ -21,7 +21,9 @@
         <tr>
             <td>center:</td>
             <td> {% for domain in domains: %}
-                <a href="gui:domain/{{domain[0]}}">({{ "%.4f, %.4f, %.4f"|format(domain[1][0], domain[1][1], domain[1][2]) }})</a>
+                <a href="gui:domain/{{domain[0]}}">
+                    ({{ "%.4f, %.4f, %.4f"|format(domain[1][0], domain[1][1], domain[1][2]) }})
+                </a>
                 <br/>
 
                 {% endfor %}

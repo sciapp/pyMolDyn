@@ -1,16 +1,15 @@
-# -*- coding: utf-8 -*-
+import functools
+import os.path
 
 from PySide6 import QtCore, QtWidgets
-import os.path
-import functools
-from ...core import calculation, volumes, file
-from ..dialogs.calc_settings_dialog import CalculationSettingsDialog
-from ..dialogs.progress_dialog import ProgressDialog
+
 from ...config.configuration import config
-from ...util.message import print_message, progress, finish
-from ..gl_widget import GLWidget, UpdateGLEvent
+from ...core import file
 from ...core.file import File
 from ...util import message
+from ..dialogs.calc_settings_dialog import CalculationSettingsDialog
+from ..dialogs.progress_dialog import ProgressDialog
+from ..gl_widget import GLWidget, UpdateGLEvent
 
 
 class FileTabDock(QtWidgets.QDockWidget):
@@ -423,7 +422,8 @@ class TreeList(QtWidgets.QTreeWidget):
                 "shape?<br />"
                 "You can find information about the different cell "
                 "shapes shapes in the "
-                '<a href="https://pgi-jcns.fz-juelich.de/portal/pages/pymoldyn-doc.html#cell-shape-description">pyMolDyn documentation</a>'
+                '<a href="https://pgi-jcns.fz-juelich.de/portal/pages/pymoldyn-doc.html#cell-shape-description">'
+                "pyMolDyn documentation</a>"
             )
             msgBox.addButton(QtWidgets.QMessageBox.Yes)
             msgBox.addButton(QtWidgets.QMessageBox.No)

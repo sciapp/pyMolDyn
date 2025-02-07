@@ -6,7 +6,7 @@
 #define IS_EQUIVALENT(a, b) ((!(a) || (b)) && (!(b) || (a)))
 
 typedef struct {
-	int x, y, z;
+    int x, y, z;
 } point_t;
 
 
@@ -38,7 +38,11 @@ static PyObject *find_index_of_first_element_not_equivalent(PyObject *self, PyOb
     for(x = 0; x < shape[0]; ++x) {
         for(y = 0; y < shape[1]; ++y) {
             for(z = 0; z < shape[2]; ++z) {
-                current_elem = data[x*data_stride[0]/sizeof(int) + y*data_stride[1]/sizeof(int) + z*data_stride[2]/sizeof(int)];
+                current_elem = data[
+                    x*data_stride[0]/sizeof(int) +
+                    y*data_stride[1]/sizeof(int) +
+                    z*data_stride[2]/sizeof(int)
+                ];
                 current_mask_elem = mask[x*mask_stride[0] + y*mask_stride[1] + z*mask_stride[2]];
                 if(!IS_EQUIVALENT(current_elem, elem) || !IS_EQUIVALENT(current_mask_elem, mask_elem)) {
                     pos.x = x;
@@ -57,7 +61,12 @@ static PyObject *find_index_of_first_element_not_equivalent(PyObject *self, PyOb
 }
 
 static PyMethodDef FindMethods[] = {
-    {"find_index_of_first_element_not_equivalent", find_index_of_first_element_not_equivalent, METH_VARARGS, "Finds the first index in a numpy array that is unequal to a given value"},
+    {
+        "find_index_of_first_element_not_equivalent",
+        find_index_of_first_element_not_equivalent,
+        METH_VARARGS,
+        "Finds the first index in a numpy array that is unequal to a given value"
+    },
     {NULL, NULL, 0, NULL}
 };
 

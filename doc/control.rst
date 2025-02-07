@@ -4,5 +4,3 @@
 
 .. autoclass:: Control
     :members:
-   
-

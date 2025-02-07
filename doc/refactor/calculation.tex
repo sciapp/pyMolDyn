@@ -4,7 +4,7 @@ The interface to get calculation Results:\\
 \begin{tikzpicture}
     \begin{class}[text width=\umlwidth]{Calculation}{0, 0}
         \attribute{\# cache : CalculationCache}
-        
+
         \operation{+ Calculation()}
         \operation{+ Calculation(cachedir : String)}
         \operation{+ calculatedframes(filepath : String, resolution : Integer, surface : Boolean, center : Boolean) : List(Timestamp)}
@@ -46,7 +46,7 @@ The internal mechanism of caching and creating an index file:\\
     \begin{class}[text width=\umlwidth]{CalculationCache}{0, 0}
         \attribute{\# index : Dictionary(String $\rightarrow$ String)}
         \attribute{+ indexfilepath : String}
-        
+
         \operation{+ CalculationCache(directory : String)}
         \operation{+ \_\_contains\_\_(filepath : String) : Boolean}
         \operation{+ \_\_getitem\_\_(filepath : String) : ResultFile}
@@ -65,7 +65,7 @@ The internal mechanism of caching and creating an index file:\\
         \attribute{+ domain\_triangles : List(Array(Float))}
         \attribute{+ centers : Array(Float)}
         \attribute{+ surface\_point\_list : \textbf{FIXME}}
-        
+
         \operation{+ DomainCalculation(discretization : Discretization, atom\_discretization : AtomDiscretization)}
     \end{class}
 \end{tikzpicture}
@@ -84,7 +84,7 @@ The internal mechanism of caching and creating an index file:\\
         \attribute{+ multicavity\_volumes : List(Float)}
         \attribute{+ cavity\_triangles : List(Array(Float))}
         \attribute{+ cavity\_surface\_areas : Array(Float)}
-        
+
         \operation{+ CavityCalculation(domain\_calculation : DomainCalculation, use\_surface\_points : Boolean)}
     \end{class}
 \end{tikzpicture}
@@ -101,4 +101,3 @@ The internal mechanism of caching and creating an index file:\\
     \end{class}
 \end{tikzpicture}
 \\\todo{\texttt{FakeDomainCalculation} uses the deprecated \texttt{CalculationResults}}
-

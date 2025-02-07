@@ -7,7 +7,7 @@ TEXFILES+=domains.tex
 ${PDFFILE}: ${TEXFILES}
 	pdflatex master
 	pdflatex master
-    
+
 clean:
 	rm -f ${PDFFILE} # resulting pdf file
 	rm -f *.aux # auxiliary file
