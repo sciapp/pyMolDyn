@@ -1,12 +1,11 @@
 import inspect
 import os
 import os.path
-import inspect
+
 from ..util.logger import Logger
+from . import configobj, validate
 
 logger = Logger("config.configuration")
-
-from . import configobj, validate
 
 # MUST be written with ~ to save a path in the config file that is relative to the user's home directory
 CONFIG_DIRECTORY = "~/.pymoldyn/"

@@ -2,10 +2,10 @@ import functools
 import os
 import os.path
 
-import core
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtQuick import QQuickWindow, QSGRendererInterface
 
+from .. import core
 from .._version import __version__
 from ..config.configuration import config
 from ..util import message

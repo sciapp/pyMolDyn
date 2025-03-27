@@ -72,6 +72,7 @@ class CalculationSettings(object):
         recalculate=False,
         exporthdf5=False,
         exporttext=False,
+        exportsingletext=False,
         exportdir=None,
     ):
         """ """
@@ -85,6 +86,7 @@ class CalculationSettings(object):
         self.recalculate = recalculate
         self.exporthdf5 = exporthdf5
         self.exporttext = exporttext
+        self.exportsingletext = exportsingletext
         self.exportdir = exportdir
         self.bonds = False
         self.dihedral_angles = False
@@ -106,6 +108,7 @@ class CalculationSettings(object):
         dup.recalculate = self.recalculate
         dup.exporthdf5 = self.exporthdf5
         dup.exporttext = self.exporttext
+        dup.exportsingletext = self.exportsingletext
         dup.exportdir = self.exportdir
         dup.bonds = self.bonds
         dup.dihedral_angles = self.dihedral_angles
@@ -470,6 +473,36 @@ class Calculation(object):
                             logger.warn("The export of center cavity information could not be finished.")
                 # gather results
                 fileresults.append(frameresult)
+            # export all results
+            if calcsettings.exportsingletext:
+                outfile = os.path.join(exportdir, "full_output") + ".txt"
+                with open(outfile, "w") as f:
+                    for frame, frameresult in enumerate(fileresults):
+                        f.write("Frame {}:\n".format(frame + 1))
+                        if frameresult.atoms is not None:
+                            f.write("Atoms:\n")
+                            frameresult.atoms.tosingletxt(f)
+                        if frameresult.domains is not None:
+                            try:
+                                frameresult.domains.tosingletxt(f)
+                            except ValueError as e:
+                                logger.warn(str(e))
+                                logger.warn("The export of domain information could not be finished.")
+                        if frameresult.surface_cavities is not None:
+                            try:
+                                f.write("Surface Cavity:\n")
+                                frameresult.surface_cavities.tosingletxt(f)
+                            except ValueError as e:
+                                logger.warn(str(e))
+                                logger.warn("The export of surface cavity information could not be finished.")
+                        if frameresult.center_cavities is not None:
+                            try:
+                                f.write("Center Cavity:\n")
+                                frameresult.center_cavities.tosingletxt(f)
+                            except ValueError as e:
+                                logger.warn(str(e))
+                                logger.warn("The export of center cavity information could not be finished.")
+
             allresults.append(fileresults)
         return allresults
 
