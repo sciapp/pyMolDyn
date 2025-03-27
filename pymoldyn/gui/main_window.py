@@ -2,7 +2,7 @@ import functools
 import os
 import os.path
 
-import core
+from .. import core
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtQuick import QQuickWindow, QSGRendererInterface
 

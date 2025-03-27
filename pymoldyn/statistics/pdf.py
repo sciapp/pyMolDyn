@@ -390,7 +390,7 @@ class _TestPDF(object):
 
     @classmethod
     def run(cls):
-        import core.calculation as calculation
+        from ..core import calculation
 
         calc = calculation.Calculation("../results")
         filename = "../xyz/structure_c.xyz"
