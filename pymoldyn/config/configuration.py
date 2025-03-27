@@ -1,6 +1,10 @@
 import inspect
 import os
 import os.path
+import inspect
+from ..util.logger import Logger
+
+logger = Logger("config.configuration")
 
 from . import configobj, validate
 
@@ -121,16 +125,15 @@ class ConfigFile(object):
         """
         spec_file = configobj.ConfigObj(CONFIG_SPEC_FILE)
         self.generate_spec_for_section(self.file, spec_file)
-        # TODO: better error handling
         try:
             self._create_needed_parent_directories(CONFIG_SPEC_FILE)
             spec_file.write()
-        except FileNotFoundError:
-            pass
         except PermissionError:
-            pass
-        except IOError:
-            print("IOError in ConfigFile.generate_configspec")
+            logger.err("Missing permission to write to %s" % CONFIG_SPEC_FILE)
+        except FileNotFoundError:
+            logger.err("%s does not exist" % CONFIG_SPEC_FILE)
+        except IOError as e:
+            logger.err("IOError in ConfigFile.generate_configspec: %s" % e)
 
     def generate_spec_for_section(self, section, spec_section):
         """
@@ -151,17 +154,18 @@ class ConfigFile(object):
         self.file = configobj.ConfigObj(CONFIG_FILE)
         self.parse_node_to_section(self.config, self.file)
 
-        # TODO: better error handling
         try:
             self._create_needed_parent_directories(CONFIG_FILE)
             self.file.write()
             self.generate_configspec()
             self.file.write()
 
+        except PermissionError:
+            logger.err("Missing permission to write to %s" % CONFIG_FILE)
         except FileNotFoundError:
-            pass
-        except IOError:
-            print("IOError in ConfigFile.save")
+            logger.err("%s does not exist" % CONFIG_FILE)
+        except IOError as e:
+            logger.err("IOError in ConfigFile.save: %s" % e)
 
     def parse_node_to_section(self, node, section):
         """
@@ -175,9 +179,7 @@ class ConfigFile(object):
             elif not inspect.ismethod(attr) and not attr_str.startswith("_"):
                 section[attr_str] = attr
             else:
-                pass
-                # print attr_str, 'NOT PROCESSED'
-                # TODO ???
+                logger.info(f"{attr_str} not processed because it is a method or private attribute")
 
     def read(self):
         """

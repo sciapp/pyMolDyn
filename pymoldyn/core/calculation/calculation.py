@@ -152,10 +152,14 @@ class Calculation(object):
         info = None
         try:
             inputfile = File.open(filepath)
+        except PermissionError:
+            logger.err("Missing permission to write to %s" % filepath)
+        except FileNotFoundError:
+            logger.err("%s does not exist" % filepath)
         except IOError:
             raise
         except Exception as e:
-            raise FileError("Cannot read file info.", e)  # TODO error
+            raise FileError("Cannot read file info.", e)
         if isinstance(inputfile, file.ResultFile):
             info = inputfile.info
         else:
@@ -212,6 +216,10 @@ class Calculation(object):
         """
         try:
             inputfile = File.open(filepath)
+        except PermissionError:
+            logger.err("Missing permission to write to %s" % filepath)
+        except FileNotFoundError:
+            logger.err("%s does not exist" % filepath)
         except IOError:
             raise
         except Exception as e:

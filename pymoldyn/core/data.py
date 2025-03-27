@@ -16,14 +16,6 @@ from ..config.configuration import config
 from ..util.logger import Logger
 from . import bonds, elements, volumes
 
-try:
-    import openbabel
-
-    USE_PYBEL = True
-    PYBEL_MOLECULE_TYPE = openbabel.pybel.Molecule  # TODO openbabel install
-except ImportError:
-    USE_PYBEL = False
-    PYBEL_MOLECULE_TYPE = None
 
 
 logger = Logger("core.data")
@@ -416,20 +408,10 @@ class Atoms(object):
             volume = volumes.Volume.fromstring(str(volume))
         else:
             # in these two cases atom positions may be outside of the volume
-            if USE_PYBEL and isinstance(args[0], PYBEL_MOLECULE_TYPE):
-                molecule = args[0]
-                if len(args) > 1:
-                    volume = args[1]
-                else:
-                    volume = None
-                positions = map(lambda atom: atom.coords, molecule)
-                elements = map(lambda atom: elements.symbols[atom.atomicnum], molecule)
-                radii = None
-            else:
-                positions = args[0]
-                radii = args[1]
-                elements = args[2]
-                volume = args[3]
+            positions = args[0]
+            radii = args[1]
+            elements = args[2]
+            volume = args[3]
 
             if isinstance(volume, str):
                 volume = volumes.Volume.fromstring(volume)
