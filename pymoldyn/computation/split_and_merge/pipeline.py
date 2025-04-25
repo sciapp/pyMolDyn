@@ -4,7 +4,7 @@ from .util.graph import GraphForSplitAndMerge
 
 
 def start_split_and_merge_pipeline(
-    data, mask, atoms, combined_translation_vectors, get_translation_vector, object_type
+    data, mask, atoms, combined_translation_vectors, get_translation_vector, object_type, progress=0
 ):
     def is_relevant_part(hom_image_data_part):
         return algorithm.is_relevant_part(hom_image_data_part, object_type)
@@ -12,7 +12,7 @@ def start_split_and_merge_pipeline(
     graph = GraphForSplitAndMerge(data, mask, get_translation_vector, is_relevant_part)
     algorithm.split(data, mask, graph, object_type)
     algorithm.merge(data, graph)
-    algorithm.add_periodic_neighbors(graph)
+    algorithm.add_periodic_neighbors(graph, progress)
     algorithm.merge_periodic_border(data, graph)
     areas, non_translated_areas, cyclic_area_indices = graph.get_all_areas(
         apply_translation=True, with_non_translated_nodes=True, mark_cyclic_areas=True

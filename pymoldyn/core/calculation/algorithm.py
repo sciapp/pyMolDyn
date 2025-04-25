@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This module allows the analysis of surface-based molecular cavities in various
 volumes. To do so, a volume and a list of atom positions and their cutoff radii
@@ -7,49 +6,51 @@ file (using the ``pybel`` module), defining a hexagonal volume and moving all
 atoms into this volume.
 
 .. code-block:: python
-   :emphasize-lines: 7,10
+    :emphasize-lines: 7,10
 
-   import pybel
+    import pybel
 
-   atoms = pybel.readfile("xyz", "hexagonal.xyz").next().atoms
-   num_atoms = len(atoms)
-   atom_positions = [atom.coords for atom in atoms]
+    atoms = pybel.readfile("xyz", "hexagonal.xyz").next().atoms
+    num_atoms = len(atoms)
+    atom_positions = [atom.coords for atom in atoms]
 
-   volume = volumes.HexagonalVolume(17.68943, 22.61158)
-   for atom_index in range(num_atoms):
-       atom_positions[atom_index] = volume.get_equivalent_point(atom_positions[atom_index])
-   atoms = Atoms(atom_positions, [2.8]*num_atoms)
+    volume = volumes.HexagonalVolume(17.68943, 22.61158)
+    for atom_index in range(num_atoms):
+        atom_positions[atom_index] = volume.get_equivalent_point(atom_positions[atom_index])
+    atoms = Atoms(atom_positions, [2.8]*num_atoms)
 
 After this, a discretization of the volume is needed. This module supports
 caching of these with the ``DiscretizationCache`` class.
 
 .. code-block:: python
 
-   discretization_cache = DiscretizationCache('cache.hdf5')
-   discretization = discretization_cache.get_discretization(volume, 192)
+    discretization_cache = DiscretizationCache('cache.hdf5')
+    discretization = discretization_cache.get_discretization(volume, 192)
 
 Using this ``discretization`` and the ``Atoms`` object created above, the atom
 positions and their cutoff radii are also discretized.
 
 .. code-block:: python
 
-   atom_discretization = AtomDiscretization(atoms, discretization)
+    atom_discretization = AtomDiscretization(atoms, discretization)
 
 With these objects created, all preparations are complete and the domain and
 cavity calculation can be done:
 
 .. code-block:: python
 
-   domain_calculation = DomainCalculation(discretization, atom_discretization)
-   cavity_calculation = CavityCalculation(domain_calculation)
+    domain_calculation = DomainCalculation(discretization, atom_discretization)
+    cavity_calculation = CavityCalculation(domain_calculation)
 
 Additionally, calculation of center-based cavities is possible by passing an
 additional parameter to the CavityCalculation:
 
 .. code-block:: python
 
-   cavity_calculation = CavityCalculation(domain_calculation,
-                                          use_surface_points=False)
+    cavity_calculation = CavityCalculation(
+        domain_calculation,
+        use_surface_points=False,
+    )
 
 The FakeDomainCalculation class provides a drop-in replacement for the
 domain_calculation object in case the results of a previous calculation need to
@@ -64,23 +65,19 @@ contain the relevant information.
 
 Author: Florian Rhiem <f.rhiem@fz-juelich.de>
 """
-from math import pi as PI
+
 import sys
+from math import pi as PI
+
 import numpy as np
 
+from ...computation.split_and_merge.algorithm import ObjectType
+from ...computation.split_and_merge.pipeline import start_split_and_merge_pipeline
 from ...util import message
 from ...util.logger import Logger
-from ...computation.split_and_merge.pipeline import start_split_and_merge_pipeline
-from ...computation.split_and_merge.algorithm import ObjectType
-from ..calculation.gyrationtensor import calculate_gyration_tensor_parameters
 from ...util.message import print_message
-from .extension import (
-    atomstogrid,
-    mark_cavities,
-    cavity_triangles,
-    cavity_intersections,
-)
-
+from ..calculation.gyrationtensor import calculate_gyration_tensor_parameters
+from .extension import atomstogrid, cavity_intersections, cavity_triangles, mark_cavities
 
 dimension = 3
 dimensions = range(dimension)
@@ -92,12 +89,15 @@ logger.setstream("default", sys.stdout, Logger.WARNING)
 class DomainCalculation:
     """
     Cavity domain calulation is performed by the following steps:
-     1. A grid is created with the resolution defined in the volume
+
+    1.  A grid is created with the resolution defined in the volume
         discretization and filled with zeros.
-     2. For each atom, all points in the grid closer to this atom than the
+
+    2.  For each atom, all points in the grid closer to this atom than the
         discrete cavity cutoff radius are set to a point indicating the atom
         index (atom_index+1).
-     3. At this point, every point in the grid which is inside of the volume
+
+    3.  At this point, every point in the grid which is inside of the volume
         and still has a value of zero is part of a cavity domain. To find these
         domains, an optimized split and merge algorithm is applied to the whole
         grid. It returns the center and surface points of each cavity domain
@@ -112,6 +112,8 @@ class DomainCalculation:
         self.atom_discretization = atom_discretization
         self.grid = np.zeros(self.discretization.d, dtype=np.int64)
 
+        message.progress(13)
+
         # step 2
         atomstogrid(
             self.grid,
@@ -121,6 +123,7 @@ class DomainCalculation:
             [(0, 0, 0)] + self.discretization.combined_translation_vectors,
             self.discretization.grid,
         )
+        message.progress(16)
         # step 3
         result = start_split_and_merge_pipeline(
             self.grid,
@@ -138,6 +141,7 @@ class DomainCalculation:
             self.cyclic_area_indices,
         ) = result
         print_message("Number of domains:", len(self.centers))
+        message.progress(20)
 
         self.domain_volumes = []
         self.critical_domains = []  # count of very small domains -> domains that can disappear on cutoff radius changes
@@ -189,6 +193,7 @@ class DomainCalculation:
         offset = self.discretization.discrete_to_continuous((0, 0, 0))
         for domain_index in range(number_of_domains):
             print_message("Calculating triangles for domain", domain_index)
+            message.progress(int(20 + (20 / number_of_domains) * domain_index))
             vertices, normals, surface_area = cavity_triangles(
                 self.grid, [domain_index], 1, step, offset, self.discretization.grid
             )
@@ -203,26 +208,32 @@ class DomainCalculation:
 class CavityCalculation:
     """
     Cavity domain calulation is performed by the following steps:
-     1. The discrete volume grid is divided into subgrid cells with a side
+
+    1.  The discrete volume grid is divided into subgrid cells with a side
         length based on the maximum discrete cavity cutoff radius. For each
         subgrid, a tuple of three lists is stored (in self.sg).
-     2. The first list for each subgrid cell is filled with the atoms inside
+
+    2.  The first list for each subgrid cell is filled with the atoms inside
         the cell (their 'real' positions, which might be outside of the
         volume).
-     3. The second and third lists are filled with surface points and their
+
+    3.  The second and third lists are filled with surface points and their
         domain index. (These might also be moved with the translation vectors
         and might thereby also be outside of the volume.)
-     4. A new grid is created (grid3) and each point in this grid is set to
+
+    4.  A new grid is created (grid3) and each point in this grid is set to
         zero if it is outside of the volume or part inside of the cavity cutoff
         radius of an atom, or a negative value if it is part of a cavity domain
         (see the domain calculation step 2 for this).
-     5. For each point which is inside the cavity cutoff radius of an
+
+    5.  For each point which is inside the cavity cutoff radius of an
         atom, the nearest atom and the nearest domain surface point are found
         by using the neighbor subgrid cells. If a domain surface point is
         nearer than the nearest atom, than the point belongs to the cavity
         which this surface point belonged to and is marked with a negative
         value.
-     6. At this point, two cavities constructed from two cavity domains might
+
+    6.  At this point, two cavities constructed from two cavity domains might
         actually be one multicavity. In this step, these are found and a list
         of multicavities is created.
 
@@ -247,10 +258,12 @@ class CavityCalculation:
     ):
         self.domain_calculation = domain_calculation
         if use_surface_points:
+            progress_bar_offset = 0
             self.grid = self.domain_calculation.grid
             num_surface_points = sum(map(len, self.domain_calculation.surface_point_list))
             print_message("Number of surface points:", num_surface_points)
         else:
+            progress_bar_offset = 30
             self.grid = None
 
         self.sg_cube_size = self.domain_calculation.atom_discretization.sorted_discrete_radii[0]
@@ -273,8 +286,10 @@ class CavityCalculation:
             domain_seed_point_lists,
             use_surface_points,
         )
+        message.progress(43 + progress_bar_offset)
 
         if gyration_tensor_parameters:
+            message.print_message("Calculating gyration tensor parameters")
             result = start_split_and_merge_pipeline(
                 self.grid3,
                 discretization.grid,
@@ -282,16 +297,17 @@ class CavityCalculation:
                 discretization.combined_translation_vectors,
                 discretization.get_translation_vector,
                 ObjectType.CAVITY,
+                progress=43 + progress_bar_offset,
             )
             translated_areas, non_translated_areas, cyclic_area_indices = result
+        message.progress(50 + progress_bar_offset)
 
         num_domains = len(self.domain_calculation.centers)
-        grid_volume = (discretization.grid == 0).sum()
         self.cavity_volumes = []
+        print(num_domains)
         for domain_index in range(num_domains):
             self.cavity_volumes.append(1.0 * (self.grid3 == -(domain_index + 1)).sum() * (discretization.s_step**3))
-        if len(self.cavity_volumes) > 0:
-            volume = self.cavity_volumes[0]
+            message.progress(int(50 + progress_bar_offset + (7 / num_domains) * domain_index))
         self.characteristic_radii = [(0.75 * volume / PI) ** (1.0 / 3.0) for volume in self.cavity_volumes]
 
         # step 6
@@ -299,6 +315,7 @@ class CavityCalculation:
         multicavities = []
         cavity_to_neighbors = num_domains * [None]
         for domain in range(num_domains):
+            message.progress(int(55 + progress_bar_offset + (13 / num_domains) * domain))
             current_neighbors = set([domain])
             for neighbor in range(num_domains):
                 if intersection_table[domain][neighbor] == 1:
@@ -320,8 +337,8 @@ class CavityCalculation:
             if len(self.multicavities) == len(
                 translated_areas
             ):  # TODO check weather split and merge and multicavity intersection give the same result for multicavities
-                # `self.multicavities` entries are sorted by the largest contained neighbor index. Thus sort the indices to
-                # access `non_translated_areas` and `translated_areas` to match the order of `self.multicavities`.
+                # `self.multicavities` entries are sorted by the largest contained neighbor index. Thus sort the indices
+                # to access `non_translated_areas` and `translated_areas` to match the order of `self.multicavities`.
                 def key_func(cavity_index):
                     cavity_area = non_translated_areas[cavity_index]
                     a_single_cavity_index = -self.grid3[cavity_area[0]] - 1

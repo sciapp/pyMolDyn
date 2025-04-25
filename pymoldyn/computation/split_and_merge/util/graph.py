@@ -1,5 +1,9 @@
 import itertools as it
+
+from ....util.logger import Logger
 from .node_border_iterator import iterate_node_border
+
+logger = Logger("computation.split_and_merge.util.graph")
 
 
 class MergeGroup(object):
@@ -367,9 +371,11 @@ class GraphForSplitAndMerge(Graph):
         def func(border_x, border_y, border_z):
             try:
                 if bool(self.mask[border_x, border_y, border_z]):
-                    translation_vectors.add(tuple(self.get_translation_vector((border_x, border_y, border_z))))
-            except:
-                pass  # TODO dont fix like this
+                    translation_vectors.add(  # Attribute error?
+                        tuple(self.get_translation_vector((border_x, border_y, border_z)))
+                    )
+            except Exception as e:
+                logger.error("Error when creating translation vectors: {}".format(e))
 
         self.border_nodes = {}
         self.border_node_translation_vectors = {}

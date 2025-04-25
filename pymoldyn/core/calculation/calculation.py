@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 With the classes in this module the rather complicated calculation process
 can be started with a simple method call.
@@ -6,30 +5,21 @@ Additionally, results are stored in a cache and can be reused later.
 """
 
 import os
-from .. import data
-from .. import file
-from ..file import File
-from .algorithm import CavityCalculation, DomainCalculation, FakeDomainCalculation
-from .discretization import DiscretizationCache, AtomDiscretization
-from ...util import message
-from ...config.configuration import config
-from ...util.logger import Logger
-from hashlib import sha256
 import sys
-from .. import bonds
+from hashlib import sha256
+
+from ...config.configuration import config
+from ...util import message
+from ...util.logger import Logger
+from .. import data, file
+from ..file import File, FileError
+from .algorithm import CavityCalculation, DomainCalculation, FakeDomainCalculation
+from .discretization import AtomDiscretization, DiscretizationCache
 
 __all__ = [
     "Calculation",
     "CalculationCache",
     "CalculationSettings",
-    "calculated",
-    "count_frames",
-    "calculated_frames",
-    "calculate_cavities",
-    "getresults",
-    "delete_center_cavity_information",
-    "timestamp",
-    "calculate",
 ]
 
 logger = Logger("core.calculation")
@@ -82,6 +72,7 @@ class CalculationSettings(object):
         recalculate=False,
         exporthdf5=False,
         exporttext=False,
+        exportsingletext=False,
         exportdir=None,
     ):
         """ """
@@ -95,6 +86,7 @@ class CalculationSettings(object):
         self.recalculate = recalculate
         self.exporthdf5 = exporthdf5
         self.exporttext = exporttext
+        self.exportsingletext = exportsingletext
         self.exportdir = exportdir
         self.bonds = False
         self.dihedral_angles = False
@@ -116,6 +108,7 @@ class CalculationSettings(object):
         dup.recalculate = self.recalculate
         dup.exporthdf5 = self.exporthdf5
         dup.exporttext = self.exporttext
+        dup.exportsingletext = self.exportsingletext
         dup.exportdir = self.exportdir
         dup.bonds = self.bonds
         dup.dihedral_angles = self.dihedral_angles
@@ -160,8 +153,16 @@ class Calculation(object):
             of the calculation or `None`.
         """
         info = None
-        inputfile = File.open(filepath)
-        # TODO: error handling
+        try:
+            inputfile = File.open(filepath)
+        except PermissionError:
+            logger.err("Missing permission to write to %s" % filepath)
+        except FileNotFoundError:
+            logger.err("%s does not exist" % filepath)
+        except IOError:
+            raise
+        except Exception as e:
+            raise FileError("Cannot read file info.", e)
         if isinstance(inputfile, file.ResultFile):
             info = inputfile.info
         else:
@@ -216,8 +217,16 @@ class Calculation(object):
             A :class:`core.data.Results` object if cached results exist,
             else `None`
         """
-        inputfile = File.open(filepath)
-        # TODO: error handling
+        try:
+            inputfile = File.open(filepath)
+        except PermissionError:
+            logger.err("Missing permission to write to %s" % filepath)
+        except FileNotFoundError:
+            logger.err("%s does not exist" % filepath)
+        except IOError:
+            raise
+        except Exception as e:
+            raise FileError("Cannot read file info.", e)
         resultfile = None
         results = None
         if isinstance(inputfile, file.ResultFile):
@@ -285,7 +294,6 @@ class Calculation(object):
         recalculate = recalculate or (gyration_tensor_parameters and (center or surface))
         message.progress(0)
         inputfile = File.open(filepath)
-        # TODO: error handling
         if isinstance(inputfile, file.ResultFile):
             resultfile = inputfile
         else:
@@ -320,7 +328,7 @@ class Calculation(object):
             with DiscretizationCache(cachepath) as discretization_cache:
                 discretization = discretization_cache.get_discretization(volume, resolution)
             atom_discretization = AtomDiscretization(atoms, discretization)
-            message.progress(10)  # TODO: improve the progress bar visualisation
+            message.progress(10)
             if (domains and results.domains is None) or (surface and results.surface_cavities is None):
                 # CavityCalculation depends on DomainCalculation
                 message.print_message("Calculating domains")
@@ -397,7 +405,9 @@ class Calculation(object):
                 while "*" in exportdir:
                     i = exportdir.rindex("*")
                     exportdir = os.path.join(exportdir[:i], dirlist.pop() + exportdir[i + 1 :])
-                if (calcsettings.exporthdf5 or calcsettings.exporttext) and not os.path.exists(exportdir):
+                if (
+                    calcsettings.exporthdf5 or calcsettings.exporttext or calcsettings.exportsingletext
+                ) and not os.path.exists(exportdir):
                     os.makedirs(exportdir)
             else:
                 exportdir = os.path.dirname(filepath)
@@ -405,7 +415,7 @@ class Calculation(object):
                 efpath = os.path.join(exportdir, fileprefix + ".hdf5")
                 efpath = file.get_abspath(efpath)
                 # copy atoms into HDF5 file
-                exportfile = file.HDF5File.fromInputFile(efpath, filepath)
+                file.HDF5File.fromInputFile(efpath, filepath)
                 # use HDF5 file as input
                 filepath = efpath
 
@@ -465,6 +475,36 @@ class Calculation(object):
                             logger.warn("The export of center cavity information could not be finished.")
                 # gather results
                 fileresults.append(frameresult)
+            # export all results
+            if calcsettings.exportsingletext:
+                outfile = os.path.join(exportdir, fileprefix + "_full") + ".txt"
+                with open(outfile, "w") as f:
+                    for frame, frameresult in enumerate(fileresults):
+                        f.write("Frame {}:\n".format(frame + 1))
+                        if frameresult.atoms is not None:
+                            f.write("Atoms:\n")
+                            frameresult.atoms.tosingletxt(f)
+                        if frameresult.domains is not None:
+                            try:
+                                frameresult.domains.tosingletxt(f)
+                            except ValueError as e:
+                                logger.warn(str(e))
+                                logger.warn("The export of domain information could not be finished.")
+                        if frameresult.surface_cavities is not None:
+                            try:
+                                f.write("Surface Cavity:\n")
+                                frameresult.surface_cavities.tosingletxt(f)
+                            except ValueError as e:
+                                logger.warn(str(e))
+                                logger.warn("The export of surface cavity information could not be finished.")
+                        if frameresult.center_cavities is not None:
+                            try:
+                                f.write("Center Cavity:\n")
+                                frameresult.center_cavities.tosingletxt(f)
+                            except ValueError as e:
+                                logger.warn(str(e))
+                                logger.warn("The export of center cavity information could not be finished.")
+
             allresults.append(fileresults)
         return allresults
 
@@ -526,7 +566,10 @@ class CalculationCache(object):
             self.index[sourcefilepath] = cachefilepath
             self.writeindex()
         cachefile = file.HDF5File(cachefilepath, sourcefilepath)
-        # TODO: what if not sourcefilepath == cachefile.info.sourcefilepath
+        if cachefile.info is not None:
+            if sourcefilepath != cachefile.info.sourcefilepath:
+                cachefile.info.sourcefilepath = sourcefilepath
+                logger.info("Updating source file path in cache file.")
         return cachefile
 
     def abspath(self, filename):

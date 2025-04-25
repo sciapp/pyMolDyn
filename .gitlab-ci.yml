@@ -1,4 +1,5 @@
 stages:
+- check
 - build
 - pre-package
 - package
@@ -7,6 +8,45 @@ stages:
 
 variables:
   BRIEFCASE_VERSION: "0.3.20"
+
+
+pre-commit:
+  stage: check
+  image: python:3
+  variables:
+    GIT_CLONE_PATH: "${CI_BUILDS_DIR}/${CI_PROJECT_NAME}"
+    PIP_CACHE_DIR: "${CI_PROJECT_DIR}/.cache/pip"
+    PRE_COMMIT_HOME: "${CI_PROJECT_DIR}/.cache/pre-commit"
+  cache:
+    key: pre-commit
+    paths:
+    - .cache
+  before_script:
+  - pip install "pre-commit==4.1.0"
+  script:
+  - TMP_MSG_FILE="$(mktemp)"
+  - git log -1 --pretty=%B > "${TMP_MSG_FILE}"
+  - pre-commit run
+      --all-files
+      --color=always
+      --show-diff-on-failure
+      --hook-stage pre-commit &&
+    pre-commit run
+      --all-files
+      --color=always
+      --show-diff-on-failure
+      --hook-stage commit-msg
+      --commit-msg-filename "${TMP_MSG_FILE}" &&
+    pre-commit run
+      --all-files
+      --color=always
+      --show-diff-on-failure
+      --hook-stage post-commit ||
+    {
+      >&2 echo "pre-commit checks failed. Please consider installing pre-commit";
+      >&2 echo "hooks in your local Git clone by running \`make git-hooks-install\`.";
+      exit 1;
+    }
 
 
 build:sdist:
@@ -565,9 +605,13 @@ package:windows:
   needs: ["pre-package"]
   tags:
   - libvirt
-  variables:
-    IMAGE_MAGICK_VERSION: "7.1.1-43"
   before_script:
+  - IMAGE_MAGICK_VERSION="$(
+      git ls-remote --tags https://github.com/ImageMagick/ImageMagick.git
+      | grep -Po 'refs/tags/\K\d+\.\d+\.\d+-\d+$'
+      | sort -ruV
+      | head -1
+    )"
   - vcvars_cmd python -m pip install briefcase
   - curl -fLO "https://imagemagick.org/archive/binaries/ImageMagick-${IMAGE_MAGICK_VERSION}-portable-Q8-x64.zip"
   - unzip "ImageMagick-${IMAGE_MAGICK_VERSION}-portable-Q8-x64.zip"

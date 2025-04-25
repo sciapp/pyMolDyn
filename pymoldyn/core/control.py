@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 The :class:`Control` object is the central part of pyMolDyn.
 It is responsible for initiating the calculation process and visualizing
@@ -40,13 +39,12 @@ And with threads::
             thread.start()
 """
 
-
 import os.path
 import threading
+
+from .. import visualization
 from ..config.configuration import config
 from ..core import calculation as calculation
-from .. import visualization
-
 
 # TODO: make an instance of this available everywhere
 

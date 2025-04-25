@@ -8,7 +8,7 @@ Domain calculation
 
 .. autoclass:: DomainCalculation
    :members:
-   
+
 Cavity calculation
 ------------------
 
@@ -22,10 +22,9 @@ Cavity calculation
 
 .. autoclass:: Discretization
    :members:
-   
+
 .. autoclass:: DiscretizationCache
    :members:
 
 .. autoclass:: AtomDiscretization
    :members:
-

@@ -1,17 +1,17 @@
-# -*- coding: utf-8 -*-
 """
 This module provides classes to handle pyMolDyn related files.
 """
 
 import os
 import os.path
-import h5py
-from itertools import repeat
-from datetime import datetime
-from . import data
 import sys
+from itertools import repeat
+
+import h5py
+
+from .. import core
 from ..util.logger import Logger
-from . import elements
+from . import data
 
 try:
     import pybel
@@ -94,8 +94,8 @@ class InputFile(object):
             try:
                 self.readinfo()
             except IOError as e:
-                # logger.error(str(e))
-                pass
+                logger.info(str(e))
+                return None
             if self._info.volume is None:
                 self._info.volume_guessed = True
                 minx, maxx = float("inf"), float("-inf")
@@ -472,12 +472,12 @@ class HDF5File(ResultFile):
         return results
 
     def writeresults(self, results, overwrite=True):
-        # TODO: results valid?
+        # results valid? I think so!
         try:
             with h5py.File(self.path, "a") as f:
                 group = f.require_group("atoms/frame{}".format(results.frame))
-                # TODO: is it OK to never overwrite atoms?
-                results.atoms.tohdf(group, overwrite=False)
+                # is it OK to never overwrite atoms? I think they should be saved when recalculating the file!
+                results.atoms.tohdf(group, overwrite=overwrite)
                 if (
                     results.domains is not None
                     or results.surface_cavities is not None

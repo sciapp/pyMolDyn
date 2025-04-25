@@ -14,7 +14,7 @@
   \[|x-y| = \min_{n \in \mathbb{Z}^3}(\|x-y+\sum_{i=1}^3 v_i \cdot n_i\|_2)\]
   This defines the distance between two points in $\mathbb{R}^3$ as the minimum of the euclidean distance between any of their corresponding points. The range of $n_i$ can be restricted if $x$ and $y$ are inside the analyzed volume:
   \[\forall x,y  \in \mathcal{V}\colon n_i\in {-1,0,1}\]
-  
+
   To allow operating both in continuous and in discrete spaces, the analyzed volume is defined as a subspace of a given space $\mathcal{X} \subseteq \mathbb{R}^3$. As an example, if the analyzed volume is supposed to be a cube with a side length $s$ centered in the origin, $\mathcal{V}(\mathcal{X})$ would be defined as:
   \[\mathcal{V}(\mathcal{X}) = \{x | x \in \mathcal{X} \land |x_i| < \frac{s}{2} ~\forall i \in [1,3]\}\]
   \subsection{Triclinic lattice systems}
@@ -65,11 +65,11 @@
 \draw[dashed] ({1*1.75-0.33},{0.5*1.5+0.8}) -- ({2*1.75-0.33},{0.5*1.5+0.8});
 \draw[dashed] ({3*1.75-0.33},{0.5*1.5+0.8}) -- ({2*1.75-0.33},{0.5*1.5+0.8});
 \begin{scope}
-\clip (0,0) rectangle(7.7,6); 
+\clip (0,0) rectangle(7.7,6);
 \foreach \i in {0,...,7}
-\draw ({\i*1.75+0.5},6) --({\i*1.75-2},-0.5); 
+\draw ({\i*1.75+0.5},6) --({\i*1.75-2},-0.5);
 \foreach \i in {0,...,7}
-\draw (-2,\i*1.5+0.8) --(10,\i*1.5+0.8); 
+\draw (-2,\i*1.5+0.8) --(10,\i*1.5+0.8);
 \end{scope}
 \node at (4.83,2.9) {$v_1$};
 \node at (3.8,4) {$v_2$};
@@ -78,7 +78,7 @@
 \caption{A triclinic lattice system (x-y-plane)}
 \end{figure}
   \subsection{Hexagonal lattice systems}
-  For a hexagonal lattice system, the analyzed volume $\mathcal{V}(\mathcal{X},T)$ can be defined as: 
+  For a hexagonal lattice system, the analyzed volume $\mathcal{V}(\mathcal{X},T)$ can be defined as:
   \begin{align*}\mathcal{V}(\mathcal{X}) = \{x &| x \in \mathcal{X} \\ &\land (|x_1| < \sin(60^\circ)\cdot a)\\ &\land (|x_2| < a) \\ &\land (|x_3| < \frac{c}{2}) \\ &\land ((|x_2| < \frac{a}{2}) \lor (|x_2| < a - \cot(60^\circ) \cdot x_1))\}\end{align*}
   and the translation vectors are:
   \begingroup
@@ -88,7 +88,7 @@
   v_2 = \begin{pmatrix}\frac{\sqrt{3}}{2}a\\\frac{3}{2}a\\0\end{pmatrix},
   v_3 = \begin{pmatrix}0\\0\\c\end{pmatrix}
   \]
-  \endgroup  
+  \endgroup
   \begin{figure}[h]
   \begin{center}
 \begin{tikzpicture}
@@ -116,7 +116,7 @@
 \draw[dashed] ({2.1+sqrt(3)*2},-3) -- ({2.1+sqrt(3)*2.5},{-3+1.5});
 \begin{scope}[rotate=-90]
 \clip (0,0) rectangle (6,7.7);
-\foreach \i in {0,...,3} 
+\foreach \i in {0,...,3}
   \foreach \j in {0,...,5} {
   \foreach \a in {0,120,-120} \draw ({3*\i-0.5},{sqrt(3)*\j-0.5}) -- +(\a:1);
   \foreach \a in {0,120,-120} \draw ({3*\i+3*0.5-0.5},{\j*sqrt(3)+sqrt(3)*0.5-0.5}) -- +(\a:1);}
@@ -128,7 +128,7 @@
 \caption{A hexagonal lattice system (x-y-plane)}
 \end{figure}
 \subsection{The bounding cuboid $\mathcal{B}$ and the discrete set $\mathcal{D}$}
-  
+
   \begin{figure}[h]
   \begin{center}
 \begin{tikzpicture}
@@ -237,7 +237,7 @@ The side lengths of $\mathcal{\tilde{B}}$ can then be defined as:
 \]
 So the discretization resolutions of the three dimensions are:
 \[
-d_i = \left\lfloor \frac{s_i}{s_{step}}\right\rfloor+2 
+d_i = \left\lfloor \frac{s_i}{s_{step}}\right\rfloor+2
 \]
 A new set $\mathcal{D} \subset \mathcal{\tilde{B}}$ can be defined as:
 \[

@@ -1,15 +1,12 @@
-# -*- coding: utf-8 -*-
-
-
 __all__ = ["atomstogrid", "mark_cavities", "cavity_triangles", "cavity_intersections"]
 
 
-import numpy as np
 import itertools
 import sys
 from math import ceil
-from gr3 import triangulate
 
+import numpy as np
+from gr3 import triangulate
 
 dimension = 3
 dimensions = range(dimension)
@@ -160,8 +157,6 @@ def mark_cavities(
 
 
 def cavity_triangles(cavity_grid, cavity_indices, isolevel, step, offset, discretization_grid):
-    cavity_triangles = []
-    cavity_surface_areas = []
     grid = np.zeros(cavity_grid.shape, dtype=bool)
 
     for cavity_index in cavity_indices:

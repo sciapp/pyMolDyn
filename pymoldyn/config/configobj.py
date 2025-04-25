@@ -21,9 +21,7 @@ from __future__ import generators
 import os
 import re
 import sys
-
-from codecs import BOM_UTF8, BOM_UTF16, BOM_UTF16_BE, BOM_UTF16_LE
-
+from codecs import BOM_UTF8, BOM_UTF16, BOM_UTF16_BE, BOM_UTF16_LE, lookup
 
 # imported lazily to avoid startup performance hit if it isn't used
 compiler = None
@@ -38,25 +36,17 @@ BOMS = {
     BOM_UTF16: ("utf_16", "utf_16"),
 }
 # All legal variants of the BOM codecs.
-# TO_DO: the list of aliases is not meant to be exhaustive, is there a
-#   better way ?
-BOM_LIST = {
-    "utf_16": "utf_16",
-    "u16": "utf_16",
-    "utf16": "utf_16",
-    "utf-16": "utf_16",
-    "utf16_be": "utf16_be",
-    "utf_16_be": "utf16_be",
-    "utf-16be": "utf16_be",
-    "utf16_le": "utf16_le",
-    "utf_16_le": "utf16_le",
-    "utf-16le": "utf16_le",
-    "utf_8": "utf_8",
-    "u8": "utf_8",
-    "utf": "utf_8",
-    "utf8": "utf_8",
-    "utf-8": "utf_8",
-}
+
+
+def get_bom_encoding(encoding):
+    """
+    Translates encoding name into legal BOM codec.
+    """
+    try:
+        return lookup(encoding).name
+    except LookupError:
+        return None
+
 
 # Map of encodings to the BOM to write.
 BOM_SET = {
@@ -69,7 +59,7 @@ BOM_SET = {
 
 
 def match_utf8(encoding):
-    return BOM_LIST.get(encoding.lower()) == "utf_8"
+    return get_bom_encoding(encoding) == "utf_8"
 
 
 # Quote strings used for writing values
@@ -313,7 +303,7 @@ class InterpolationEngine(object):
 
     def interpolate(self, key, value):
         # short-cut
-        if not self._cookie in value:
+        if self._cookie not in value:
             return value
 
         def recursive_interpolate(key, value, section, backtrail):
@@ -432,6 +422,7 @@ class TemplateInterpolation(InterpolationEngine):
 
     _cookie = "$"
     _delimiter = "$"
+    # editorconfig-checker-disable
     _KEYCRE = re.compile(
         r"""
         \$(?:
@@ -442,6 +433,7 @@ class TemplateInterpolation(InterpolationEngine):
         """,
         re.IGNORECASE | re.VERBOSE,
     )
+    # editorconfig-checker-enable
 
     def _parse_match(self, match):
         # Valid name (in or out of braces): fetch value from section
@@ -542,7 +534,7 @@ class Section(dict):
         except AttributeError:
             # not yet: first time running _interpolate(), so pick the engine
             name = self.main.interpolation
-            if name == True:  # note that "if name:" would be incorrect here
+            if name == True:  # note that "if name:" would be incorrect here  # noqa: E712
                 # backwards-compatibility: interpolation=True means use default
                 name = DEFAULT_INTERPOLATION
             name = name.lower()  # so that "Template", "template", etc. all work
@@ -699,9 +691,9 @@ class Section(dict):
             self[key] = default
             return self[key]
 
-    def items(self):  # TODO INGO WHAT ITEMS TO USE
-        """D.items() -> list of D's (key, value) pairs, as 2-tuples"""
-        return zip((self.scalars + self.sections), self.values())
+    #  def items(self):TODO
+    #  """D.items() -> list of D's (key, value) pairs, as 2-tuples"""
+    #  return zip((self.scalars + self.sections), self.values())
 
     def keys(self):
         """D.keys() -> list of D's keys"""
@@ -937,19 +929,15 @@ class Section(dict):
         0
         """
         val = self[key]
-        if val == True:
+        if val == True:  # noqa: E712
             return True
-        elif val == False:
+        elif val == False:  # noqa: E712
             return False
         else:
-            try:
-                if not isinstance(val, str):
-                    # TODO: Why do we raise a KeyError here?
-                    raise KeyError()
-                else:
-                    return self.main._bools[val.lower()]
-            except KeyError:
+            if not isinstance(val, str):
                 raise ValueError('Value "%s" is neither True nor False' % val)
+            else:
+                return self.main._bools[val.lower()]
 
     def as_int(self, key):
         """
@@ -1222,10 +1210,11 @@ class ConfigObj(Section):
                 stacklevel=2,
             )
 
-            # TO_DO: check the values too.
-            for entry in options:
+            for entry, value in options:
                 if entry not in OPTION_DEFAULTS:
                     raise TypeError('Unrecognised option "%s".' % entry)
+                if value not in [True, False, None]:  # INGO can other values appear?
+                    raise TypeError('Unrecognised value "%s" for option "%s".' % (value, entry))
             for entry, value in OPTION_DEFAULTS.items():
                 if entry not in options:
                     options[entry] = value
@@ -1404,7 +1393,7 @@ class ConfigObj(Section):
         ``infile`` must always be returned as a list of lines, but may be
         passed in as a single string.
         """
-        if (self.encoding is not None) and (self.encoding.lower() not in BOM_LIST):
+        if (self.encoding is not None) and (get_bom_encoding(self.encoding) is None):
             # No need to check for a BOM
             # the encoding specified doesn't have one
             # just decode
@@ -1417,20 +1406,18 @@ class ConfigObj(Section):
         if self.encoding is not None:
             # encoding explicitly supplied
             # And it could have an associated BOM
-            # TO_DO: if encoding is just UTF16 - we ought to check for both
-            # TO_DO: big endian and little endian versions.
-            enc = BOM_LIST[self.encoding.lower()]
-            if enc == "utf_16":
+            enc = get_bom_encoding(self.encoding)
+            if enc in BOMS.items():
                 # For UTF16 we try big endian and little endian
                 for BOM, (encoding, final_encoding) in BOMS.items():
                     if not final_encoding:
                         # skip UTF8
                         continue
                     if infile.startswith(BOM):
-                        ### BOM discovered
-                        ##self.BOM = True
+                        # ## BOM discovered
+                        # #self.BOM = True
                         # Don't need to remove BOM
-                        return self._decode(infile, encoding)
+                        return self._decode(infile, encoding)  # Encoding is utf_16 variant
 
                 # If we get this far, will *probably* raise a DecodeError
                 # As it doesn't appear to start with a BOM
@@ -1647,7 +1634,7 @@ class ConfigObj(Section):
                             try:
                                 value = unrepr(value)
                             except Exception as e:
-                                if type(e) == UnknownType:
+                                if isinstance(e, UnknownType):
                                     msg = "Unknown name or type in value at line %s."
                                 else:
                                     msg = "Parse error in value at line %s."
@@ -2065,8 +2052,8 @@ class ConfigObj(Section):
             # might need to encode
             # NOTE: This will *screw* UTF16, each line will start with the BOM
             if self.encoding:
-                out = [l.encode(self.encoding) for l in out]
-            if self.BOM and ((self.encoding is None) or (BOM_LIST.get(self.encoding.lower()) == "utf_8")):
+                out = [line.encode(self.encoding) for line in out]
+            if self.BOM and ((self.encoding is None) or (get_bom_encoding(self.encoding) == "utf_8")):
                 # Add the UTF8 BOM
                 if not out:
                     out.append("")
@@ -2213,7 +2200,7 @@ class ConfigObj(Section):
             if entry in ("__many__", "___many___"):
                 # reserved names
                 continue
-            if (not entry in section.scalars) or (entry in section.defaults):
+            if (entry not in section.scalars) or (entry in section.defaults):
                 # missing entries
                 # or entries from defaults
                 missing = True
@@ -2277,9 +2264,9 @@ class ConfigObj(Section):
                 section=section[entry],
             )
             out[entry] = check
-            if check == False:
+            if check == False:  # noqa: E712
                 ret_true = False
-            elif check == True:
+            elif check == True:  # noqa: E712
                 ret_false = False
             else:
                 ret_true = False
@@ -2395,15 +2382,15 @@ def flatten_errors(cfg, res, levels=None, results=None):
         # first time called
         levels = []
         results = []
-    if res == True:
+    if res == True:  # noqa: E712
         return results
-    if res == False or isinstance(res, Exception):
+    if res == False or isinstance(res, Exception):  # noqa: E712
         results.append((levels[:], None, res))
         if levels:
             levels.pop()
         return results
     for key, val in res.items():
-        if val == True:
+        if val == True:  # noqa: E712
             continue
         if isinstance(cfg.get(key), dict):
             # Go down one level
@@ -2445,4 +2432,4 @@ def get_extra_values(conf, _prepend=()):
     return out
 
 
-"""*A programming language is a medium of expression.* - Paul Graham"""
+# *A programming language is a medium of expression.* - Paul Graham

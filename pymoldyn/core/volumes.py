@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 To support various materials, different Bravais lattice systems need to be used
 in pyMolDyn2, so that the shapes and periodic boundary conditions of different
@@ -16,13 +15,20 @@ http://en.wikipedia.org/wiki/Bravais_lattice
 Author: Florian Rhiem <f.rhiem@fz-juelich.de>
 """
 
-
-from math import ceil, sin, cos, pi, sqrt, acos
-
-cot = lambda alpha: cos(alpha) / sin(alpha)
 import itertools
+from math import acos, ceil, cos, pi, sin, sqrt
+
 import numpy as np
 import numpy.linalg as la
+
+from ..util.logger import Logger
+
+logger = Logger("core.volumes")
+
+
+def cot(alpha):
+    return cos(alpha) / sin(alpha)
+
 
 try:
     import numexpr as ne
@@ -30,9 +36,7 @@ try:
     NUMEXPR = True
 except ImportError:
     NUMEXPR = False
-
-
-# TODO: check __str__ routines, make them use vectors
+    logger.info("numexpr package not found.")
 
 
 class HexagonalVolume(object):
@@ -86,10 +90,10 @@ class HexagonalVolume(object):
         """
         if isinstance(point, np.ndarray) and len(point.shape) > 1:
             if NUMEXPR:
-                a = self.a
-                c = self.c
-                sinpi3 = sin(pi / 3)
-                cotpi3 = cot(pi / 3)
+                a = self.a  # noqa: F841
+                c = self.c  # noqa: F841
+                sinpi3 = sin(pi / 3)  # noqa: F841
+                cotpi3 = cot(pi / 3)  # noqa: F841
                 x = point[:, 0]
                 y = point[:, 1]
                 z = point[:, 2]
@@ -183,7 +187,8 @@ class HexagonalVolume(object):
         return "HEXAGONAL a=%f c=%f" % (self.a, self.c)
 
     def __str__(self):
-        return "HEX %f %f" % (self.a, self.c)
+        #  return "HEX %f %f" % (self.a, self.c)
+        return "HEX " + " ".join([str(x) for v in self.translation_vectors for x in v])
 
 
 class TriclinicVolume(object):
@@ -257,7 +262,7 @@ class TriclinicVolume(object):
         for i, j, k in itertools.product((-0.5, 0, 0.5), repeat=3):
             point = self.Minv * np.matrix((i, j, k)).T
             point = point.T.tolist()[0]
-            for l in range(3):
+            for l in range(3):  # noqa: E741
                 min_point[l] = min(min_point[l], point[l])
                 max_point[l] = max(max_point[l], point[l])
 
@@ -370,7 +375,8 @@ class MonoclinicVolume(TriclinicVolume):
         return "MONOCLINIC a=%f b=%f c=%f beta=%f" % (self.a, self.b, self.c, self.beta)
 
     def __str__(self):
-        return "MON %f %f %f %f" % (self.a, self.b, self.c, self.beta)
+        #  return "MON %f %f %f %f" % (self.a, self.b, self.c, self.beta)
+        return "MON " + " ".join([str(x) for v in self.translation_vectors for x in v])
 
 
 class OrthorhombicVolume(TriclinicVolume):
@@ -398,7 +404,8 @@ class OrthorhombicVolume(TriclinicVolume):
         return "ORTHORHOMBIC a=%f b=%f c=%f" % (self.a, self.b, self.c)
 
     def __str__(self):
-        return "ORT %f %f %f" % (self.a, self.b, self.c)
+        #  return "ORT %f %f %f" % (self.a, self.b, self.c)
+        return "ORT " + " ".join([str(x) for v in self.translation_vectors for x in v])
 
 
 class TetragonalVolume(TriclinicVolume):
@@ -426,7 +433,8 @@ class TetragonalVolume(TriclinicVolume):
         return "TETRAGONAL a=%f c=%f" % (self.a, self.c)
 
     def __str__(self):
-        return "TET %f %f" % (self.a, self.c)
+        #  return "TET %f %f" % (self.a, self.c)
+        return "TET " + " ".join([str(x) for v in self.translation_vectors for x in v])
 
 
 class RhombohedralVolume(TriclinicVolume):
@@ -454,7 +462,8 @@ class RhombohedralVolume(TriclinicVolume):
         return "RHOMBOHEDRAL a=%f alpha=%f" % (self.a, self.alpha)
 
     def __str__(self):
-        return "RHO %f %f" % (self.a, self.alpha)
+        #  return "RHO %f %f" % (self.a, self.alpha)
+        return "RHO " + " ".join([str(x) for v in self.translation_vectors for x in v])
 
 
 class CubicVolume(TriclinicVolume):
@@ -482,7 +491,8 @@ class CubicVolume(TriclinicVolume):
         return "CUBIC a=%f" % self.a
 
     def __str__(self):
-        return "CUB %f" % self.a
+        #  return "CUB %f" % self.a
+        return "CUB " + " ".join([str(x) for v in self.translation_vectors for x in v])
 
 
 class Volume(object):

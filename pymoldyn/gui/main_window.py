@@ -1,30 +1,23 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import absolute_import
-
+import functools
 import os
-import sys
+import os.path
 
-from ..core import bonds
-from ..core import control
-
-from .tabs.file_tab import FileTabDock
-from .tabs.view_tab import ViewTabDock
-from .tabs.image_video_tab import ImageVideoTabDock
-from .tabs.statistics_tab import StatisticsTabDock
-from .tabs.log_tab import LogTabDock
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtQuick import QQuickWindow, QSGRendererInterface
-from .dialogs.settings_dialog import SettingsDialog
-from .dialogs.about_dialog import AboutDialog
-from .gl_widget import UpdateGLEvent
-from ..util import message
-from .gl_stack import GLStack
-from .._version import __version__
-import functools
-import os.path
-from ..config.configuration import config
 
+from .. import core
+from .._version import __version__
+from ..config.configuration import config
+from ..util import message
+from .dialogs.about_dialog import AboutDialog
+from .dialogs.settings_dialog import SettingsDialog
+from .gl_stack import GLStack
+from .gl_widget import UpdateGLEvent
+from .tabs.file_tab import FileTabDock
+from .tabs.image_video_tab import ImageVideoTabDock
+from .tabs.log_tab import LogTabDock
+from .tabs.statistics_tab import StatisticsTabDock
+from .tabs.view_tab import ViewTabDock
 
 WEBSITE_URL = "https://pgi-jcns.fz-juelich.de/portal/pages/pymoldyn-doc.html"
 
@@ -342,16 +335,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.view_dock.view_tab.update_cavity_buttons(self.control.visualization.results, None)
             self.center.gl_stack.updatestatus()
             QtWidgets.QApplication.postEvent(self.center.gl_stack.gl_widget, UpdateGLEvent())
-
-
-#    def closeEvent(self, event):
-#        reply = QtWidgets.QMessageBox.question(self, 'Message',
-#            "Are you sure to quit?", QtWidgets.QMessageBox.Yes |
-#            QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
-#        if reply == QtWidgets.QMessageBox.Yes:
-#            event.accept()
-#        else:
-#            event.ignore() TODO: why is this commented out
 
 
 class CentralWidget(QtWidgets.QWidget):

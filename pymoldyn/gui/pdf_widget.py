@@ -1,18 +1,13 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import absolute_import
-
-from PySide6 import QtCore, QtWidgets
-import gr
-from qtgr import GRWidget
 import csv
-
-from ..util.logger import Logger
 import sys
-from ..statistics.pdf import PDF, Kernels
-import numpy as np
-import os
 
+import gr
+import numpy as np
+from PySide6 import QtCore, QtWidgets
+from qtgr import GRWidget
+
+from ..statistics.pdf import PDF, Kernels
+from ..util.logger import Logger
 
 logger = Logger("gui.pdf_widget")
 logger.setstream("default", sys.stdout, Logger.DEBUG)
@@ -265,7 +260,7 @@ class PDFWidget(QtWidgets.QWidget):
         yvalues = self.gr_widget.yvalues
         if xvalues is None or yvalues is None:
             return
-        with open(filepath, "w") as csvfile:  # TODO same check as with histogramm (bytes csv)
+        with open(filepath, "w") as csvfile:
             csvwriter = csv.writer(csvfile)
             for x, y in zip(xvalues, yvalues):
                 csvwriter.writerow([x, y])

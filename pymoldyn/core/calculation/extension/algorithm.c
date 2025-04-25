@@ -101,7 +101,7 @@ EXPORT void atomstogrid(
                         if (SQUARE(sphereindex[0] - radius)
                                 + SQUARE(sphereindex[1] - radius)
                                 + SQUARE(sphereindex[2] - radius)
-                                <= SQUARE(radius) 
+                                <= SQUARE(radius)
                                 && discretization_grid[INDEXDISCGRID(gridpos[0], gridpos[1], gridpos[2])] == 0) {
                             grid_index = INDEXGRID(gridpos[0], gridpos[1], gridpos[2]);
                             grid_value = grid[grid_index];
@@ -304,7 +304,7 @@ EXPORT void mark_cavities(int64_t *grid, int64_t *domain_grid, int dimensions[3]
                                     + neigh[2] * sg->strides[2];
                             cell = sg->a + neigh_index;
                             for (i = 0; i < cell->num_atoms; i++) {
-                                squared_atom_distance = 
+                                squared_atom_distance =
                                         SQUARE(cell->atom_positions[i * 3 + 0] - pos[0])
                                         + SQUARE(cell->atom_positions[i * 3 + 1] - pos[1])
                                         + SQUARE(cell->atom_positions[i * 3 + 2] - pos[2]);
@@ -324,7 +324,7 @@ EXPORT void mark_cavities(int64_t *grid, int64_t *domain_grid, int dimensions[3]
                                     + neigh[2] * sg->strides[2];
                             cell = sg->a + neigh_index;
                             for (i = 0; i < cell->num_domains; i++) {
-                                squared_domain_distance = 
+                                squared_domain_distance =
                                         SQUARE(cell->domain_points[i * 3 + 0] - pos[0])
                                         + SQUARE(cell->domain_points[i * 3 + 1] - pos[1])
                                         + SQUARE(cell->domain_points[i * 3 + 2] - pos[2]);
@@ -440,7 +440,7 @@ EXPORT int cavity_triangles(
             bbox[1][i]++;
         }
     }
-    
+
     ntriangles = gr3_triangulate(
             counts + INDEXGRID(bbox[0][0], bbox[0][1], bbox[0][2]),
             100 + isolevel,
@@ -463,9 +463,9 @@ EXPORT int cavity_triangles(
             normal_p = vertex_p + 3 * 3;
             for (k = 0; k < 3; k++) {
                 disc_pos[k] = floor(vertex_p[k] + 0.5);
-                continuous_vertices[(i * 3 + j) * 3 + k] = 
+                continuous_vertices[(i * 3 + j) * 3 + k] =
                         vertex_p[k] * step[k] + offset[k];
-                continuous_normals[(i * 3 + j) * 3 + k] = 
+                continuous_normals[(i * 3 + j) * 3 + k] =
                         normal_p[k] / step[k];
             }
             if (discretization_grid[INDEXDISCGRID(
@@ -517,7 +517,21 @@ EXPORT void cavity_intersections(
     int neigh[3];
     int gridindex, neighindex;
     int64_t domain1, domain2;
-    int offsets[13][3] = {{-1, -1, -1}, {-1, -1, 0}, {-1, -1, 1}, {-1, 0, -1}, {-1, 0, 0}, {-1, 0, 1}, {-1, 1, -1}, {-1, 1, 0}, {-1, 1, 1}, {0, -1, -1}, {0, -1, 0}, {0, -1, 1}, {0, 0, -1}};
+    int offsets[13][3] = {
+        {-1, -1, -1},
+        {-1, -1, 0},
+        {-1, -1, 1},
+        {-1, 0, -1},
+        {-1, 0, 0},
+        {-1, 0, 1},
+        {-1, 1, -1},
+        {-1, 1, 0},
+        {-1, 1, 1},
+        {0, -1, -1},
+        {0, -1, 0},
+        {0, -1, 1},
+        {0, 0, -1}
+    };
 
     for (pos[0] = 1; pos[0] < dimensions[0] - 1; pos[0]++) {
         for (pos[1] = 1; pos[1] < dimensions[1] - 1; pos[1]++) {
@@ -546,6 +560,7 @@ EXPORT void cavity_intersections(
 
 
 #define INDEXGRID(i,j,k) ((int64_t)(i)*strides[0]+(j)*strides[1]+(k)*strides[2])
+/* editorconfig-checker-disable */
 /**
  * Take a discretization grid, where cells inside the volume are 0
  * and cells outside are 1. For each outside cell, find the translation
@@ -554,12 +569,14 @@ EXPORT void cavity_intersections(
  * inside has an equivalent (i.e. reachable through a translation vector)
  * cell inside; and that every cell outside has an equivalent cell inside.
  */
-EXPORT void mark_translation_vectors(int8_t *grid,
-                              int dimensions[3],
-                              int strides[3],
-                              int ntranslations,
-                              int *translations)
-{
+/* editorconfig-checker-enable */
+EXPORT void mark_translation_vectors(
+    int8_t *grid,
+    int dimensions[3],
+    int strides[3],
+    int ntranslations,
+    int *translations
+) {
     int pos[3];
     int grid_index;
     int grid_value;
@@ -588,9 +605,13 @@ EXPORT void mark_translation_vectors(int8_t *grid,
                         trans_valid[i] &= tp >= 0 && tp < dimensions[j];
                     }
                     if (trans_valid[i]) {
-                        grid[INDEXGRID(trans_pos[i * 3 + 0],
-                                       trans_pos[i * 3 + 1],
-                                       trans_pos[i * 3 + 2])] = 1;
+                        grid[
+                            INDEXGRID(
+                                trans_pos[i * 3 + 0],
+                                trans_pos[i * 3 + 1],
+                                trans_pos[i * 3 + 2]
+                            )
+                        ] = 1;
                     }
                 }
             }
@@ -615,9 +636,15 @@ EXPORT void mark_translation_vectors(int8_t *grid,
                 trans_index = -1;
                 for (i = 0; i < ntranslations; i++) {
                     if (trans_valid[i]) {
-                        if (grid[INDEXGRID(trans_pos[i * 3 + 0],
-                                           trans_pos[i * 3 + 1],
-                                           trans_pos[i * 3 + 2])] == 0) {
+                        if (
+                            grid[
+                                INDEXGRID(
+                                    trans_pos[i * 3 + 0],
+                                    trans_pos[i * 3 + 1],
+                                    trans_pos[i * 3 + 2]
+                                )
+                            ] == 0
+                        ) {
                             trans_index = i;
                             break;
                         }
@@ -641,9 +668,13 @@ EXPORT void mark_translation_vectors(int8_t *grid,
                         }
                     }
                     if (trans_index != -1) {
-                        grid[INDEXGRID(trans_pos[trans_index * 3 + 0],
-                                       trans_pos[trans_index * 3 + 1],
-                                       trans_pos[trans_index * 3 + 2])] = 0;
+                        grid[
+                            INDEXGRID(
+                                trans_pos[trans_index * 3 + 0],
+                                trans_pos[trans_index * 3 + 1],
+                                trans_pos[trans_index * 3 + 2]
+                            )
+                        ] = 0;
                     }
                     /* trans_index == -1: grid[grid_index] = 0 */
                     grid[grid_index] = -trans_index - 1;

@@ -1,31 +1,20 @@
-# -*- coding: utf-8 -*-
 """
 This module contains classes that are used to store data in pyMolDyn.
 Most of them can be read and written to hdf5 files.
 """
 
 import collections
-import numpy as np
-import sys
 import os
+import sys
 from datetime import datetime
+
 import dateutil.parser
 import h5py
-from . import volumes
+import numpy as np
+
 from ..config.configuration import config
 from ..util.logger import Logger
-from . import elements
-from . import bonds
-
-try:
-    import openbabel
-
-    USE_PYBEL = True
-    PYBEL_MOLECULE_TYPE = openbabel.pybel.Molecule  # TODO openbabel install
-except ImportError:
-    USE_PYBEL = False
-    PYBEL_MOLECULE_TYPE = None
-
+from . import bonds, elements, volumes
 
 logger = Logger("core.data")
 logger.setstream("default", sys.stdout, Logger.WARNING)
@@ -316,8 +305,8 @@ class ResultInfo(FileInfo):
                 the resolution for which the information will be queried
 
         **Returns:**
-             A :class:`CalculatedFrames` object with information about
-             existing calculations.
+            A :class:`CalculatedFrames` object with information about
+            existing calculations.
         """
         if resolution not in self.calculatedframes:
             self.calculatedframes[resolution] = CalculatedFrames(self.num_frames)
@@ -332,7 +321,7 @@ class ResultInfo(FileInfo):
                 the resolution for which the information will be queried
 
         **Returns:**
-             If a :class:`CalculatedFrames` object for this resolution exists
+            If a :class:`CalculatedFrames` object for this resolution exists
         """
         return resolution in self.calculatedframes
 
@@ -417,20 +406,10 @@ class Atoms(object):
             volume = volumes.Volume.fromstring(str(volume))
         else:
             # in these two cases atom positions may be outside of the volume
-            if USE_PYBEL and isinstance(args[0], PYBEL_MOLECULE_TYPE):
-                molecule = args[0]
-                if len(args) > 1:
-                    volume = args[1]
-                else:
-                    volume = None
-                positions = map(lambda atom: atom.coords, molecule)
-                elements = map(lambda atom: elements.symbols[atom.atomicnum], molecule)
-                radii = None
-            else:
-                positions = args[0]
-                radii = args[1]
-                elements = args[2]
-                volume = args[3]
+            positions = args[0]
+            radii = args[1]
+            elements = args[2]
+            volume = args[3]
 
             if isinstance(volume, str):
                 volume = volumes.Volume.fromstring(volume)
@@ -529,7 +508,6 @@ class Atoms(object):
         bond_chain_angle_file_name = fmt.format(property="bond_dihedral_angles")
 
         bond_angles, bond_chain_angles = bonds.calculate_bond_angles(self, self.bonds)
-
         with open(bond_file_name, "w") as outfile:
             for source_index, target_indices in enumerate(self.bonds):
                 for target_index in target_indices:
@@ -549,6 +527,28 @@ class Atoms(object):
             for bond_chain, angle in bond_chain_angles.items():
                 outfile.write("{} {} {} {}".format(*[index + 1 for index in bond_chain]))
                 outfile.write(" {}\n".format(angle))
+
+    def tosingletxt(self, fmt):
+        bond_angles, bond_chain_angles = bonds.calculate_bond_angles(self, self.bonds)
+        fmt.write("Bonds:\n")
+        for source_index, target_indices in enumerate(self.bonds):
+            for target_index in target_indices:
+                fmt.write("{} {}\n".format(source_index + 1, target_index + 1))
+        fmt.write("Bond Angles:\n")
+        for bond1, bond2 in bond_angles.keys():
+            if bond1[0] > bond2[1]:
+                fmt.write(
+                    "{} {} {} {}\n".format(
+                        bond1[0] + 1,
+                        bond1[1] + 1,
+                        bond2[1] + 1,
+                        bond_angles[bond1, bond2],
+                    )
+                )
+        fmt.write("Bond Dihedral Angles:\n")
+        for bond_chain, angle in bond_chain_angles.items():
+            fmt.write("{} {} {} {}".format(*[index + 1 for index in bond_chain]))
+            fmt.write(" {}\n".format(angle))
 
 
 class CavitiesBase(object):
@@ -823,12 +823,42 @@ class Domains(CavitiesBase):
                     )
         else:
             raise ValueError(
-                "No discretization present -> can only access discrete domain centers, no conversion to continuous space possible."
+                "No discretization present -> can only access discrete domain centers, no conversion to continuous "
+                "space possible."
             )
 
         export_filenames.extend(self._export_gyration_parameters(fmt))
 
         return export_filenames
+
+    def tosingletxt(self, fmt):
+        fmt.write("Surface Areas:\n")
+        for index, surface_area in enumerate(self.surface_areas, start=1):
+            fmt.write("{} {}\n".format(index, surface_area))
+        fmt.write("Volumes:\n")
+        for index, volume in enumerate(self.volumes, start=1):
+            fmt.write("{} {}\n".format(index, volume))
+        fmt.write("Surface Area to Volume Ratios:\n")
+        for index, t in enumerate(zip(self.volumes, self.surface_areas), start=1):
+            volume, surface_area = t
+            fmt.write("{} {}\n".format(index, surface_area / volume))
+        continuous_centers = self.getattr_normalized("continuous_centers")
+        if continuous_centers is not None:
+            fmt.write("Centers:\n")
+            for index, continuous_center in enumerate(continuous_centers, start=1):
+                fmt.write(
+                    "{} {} {} {}\n".format(
+                        index,
+                        continuous_center[0],
+                        continuous_center[1],
+                        continuous_center[2],
+                    )
+                )
+        else:
+            raise ValueError(
+                "No discretization present -> can only access discrete domain centers, no conversion to continuous "
+                "space possible."
+            )
 
 
 class Cavities(CavitiesBase):
@@ -930,7 +960,7 @@ class Cavities(CavitiesBase):
                 outfile.write("{}".format(index))
                 for domain_index in multicavity:
                     outfile.write(" {}".format(domain_index + 1))
-                outfile.write("\n".format(index))
+                outfile.write("\n")
         with open(cavity_surface_file_name, "w") as outfile:
             for index, surface_area in enumerate(self.surface_areas, start=1):
                 outfile.write("{} {}\n".format(index, surface_area))
@@ -945,6 +975,24 @@ class Cavities(CavitiesBase):
         export_filenames.extend(self._export_gyration_parameters(fmt))
 
         return export_filenames
+
+    def tosingletxt(self, fmt):
+        fmt.write("Domain indices:\n")
+        for index, multicavity in enumerate(self.multicavities, start=1):
+            fmt.write("{}".format(index))
+            for domain_index in multicavity:
+                fmt.write(" {}".format(domain_index + 1))
+            fmt.write("\n")
+        fmt.write("Surface areas:\n")
+        for index, surface_area in enumerate(self.surface_areas, start=1):
+            fmt.write("{} {}\n".format(index, surface_area))
+        fmt.write("Volumes:\n")
+        for index, volume in enumerate(self.volumes, start=1):
+            fmt.write("{} {}\n".format(index, volume))
+        fmt.write("Surface area to volume ratios:\n")
+        for index, t in enumerate(zip(self.volumes, self.surface_areas), start=1):
+            volume, surface_area = t
+            fmt.write("{} {}\n".format(index, surface_area / volume))
 
 
 class Results(object):

@@ -1,24 +1,20 @@
-# -*- coding: utf-8 -*-
-
-
-from .util.calc_table import CalculationTable, TableModel
-from .cutoff_history_dialog import CutoffHistoryDialog
-from ..cutoff_table_widget import CutoffTableWidget
-from ..cutoff_preset_combobox import CutoffPresetComboBox
-from ...core import calculation
-from ...core import file
 import collections
 import collections.abc
 import datetime
-import os.path
 import itertools as it
+import os.path
 import re
-from ...config.configuration import config
-from ...config.cutoff_presets import cutoff_presets
-from ...config.cutoff_presets import Preset
-from ...config.cutoff_history import cutoff_history
-from ...config.cutoff_history import HistoryEntry
+
 from PySide6 import QtCore, QtWidgets
+
+from ...config.configuration import config
+from ...config.cutoff_history import HistoryEntry, cutoff_history
+from ...config.cutoff_presets import Preset, cutoff_presets
+from ...core import calculation, file
+from ..cutoff_preset_combobox import CutoffPresetComboBox
+from ..cutoff_table_widget import CutoffTableWidget
+from .cutoff_history_dialog import CutoffHistoryDialog
+from .util.calc_table import CalculationTable, TableModel
 
 
 class CalculationSettingsDialog(QtWidgets.QDialog):
@@ -89,6 +85,13 @@ class CalculationSettingsDialog(QtWidgets.QDialog):
         self.res_slider.setValue((self.resolution - self.RES_MIN) / self.RES_INTERVAL)
         self.update_table()
 
+        def create_separator():
+            line = QtWidgets.QFrame()
+            line.setFrameShape(QtWidgets.QFrame.HLine)
+            line.setFrameShadow(QtWidgets.QFrame.Sunken)
+            line.setLineWidth(1)
+            return line
+
         self.surf_check = QtWidgets.QCheckBox("calculate surface based cavities", self)
         self.surf_check.setChecked(True)
         self.center_check = QtWidgets.QCheckBox("calculate center based cavities", self)
@@ -97,10 +100,15 @@ class CalculationSettingsDialog(QtWidgets.QDialog):
         self.overwrite_check = QtWidgets.QCheckBox("overwrite existing results", self)
         self.exporthdf5_check = QtWidgets.QCheckBox("export results as HDF5 files", self)
         self.exporttext_check = QtWidgets.QCheckBox("export results as text files", self)
+        self.exportsingletext_check = QtWidgets.QCheckBox("export results as single text file", self)
         self.exportdir_radio_input = QtWidgets.QRadioButton("export to the directory of the input files", self)
         self.exportdir_radio_config = QtWidgets.QRadioButton("export to %s" % config.Path.result_dir, self)
 
         self.exportdir_radio_input.setChecked(True)
+
+        self.exportdir_radio_group = QtWidgets.QButtonGroup(self)
+        self.exportdir_radio_group.addButton(self.exportdir_radio_input)
+        self.exportdir_radio_group.addButton(self.exportdir_radio_config)
 
         covalence_radii_by_element = self.__get_all_covalence_radii_by_element()
         self.radii_widget = RadiiWidget(covalence_radii_by_element, self.file_frame_dict, self)
@@ -110,9 +118,12 @@ class CalculationSettingsDialog(QtWidgets.QDialog):
         inner_layout.addWidget(self.surf_check)
         inner_layout.addWidget(self.center_check)
         inner_layout.addWidget(self.gyration_tensor_check)
+        inner_layout.addWidget(create_separator())
         inner_layout.addWidget(self.overwrite_check)
         inner_layout.addWidget(self.exporthdf5_check)
         inner_layout.addWidget(self.exporttext_check)
+        inner_layout.addWidget(self.exportsingletext_check)
+        inner_layout.addWidget(create_separator())
         inner_layout.addWidget(self.exportdir_radio_input)
         inner_layout.addWidget(self.exportdir_radio_config)
 
@@ -310,6 +321,7 @@ class CalculationSettingsDialog(QtWidgets.QDialog):
                 overwrite = self.overwrite_check.isChecked()
                 exporthdf5 = self.exporthdf5_check.isChecked()
                 exporttext = self.exporttext_check.isChecked()
+                exportsingletext = self.exportsingletext_check.isChecked()
                 if self.exportdir_radio_config.isChecked():
                     exportdir = os.path.expanduser(config.Path.result_dir)
                 else:
@@ -325,6 +337,7 @@ class CalculationSettingsDialog(QtWidgets.QDialog):
                     recalculate=overwrite,
                     exporthdf5=exporthdf5,
                     exporttext=exporttext,
+                    exportsingletext=exportsingletext,
                     exportdir=exportdir,
                 )
                 break

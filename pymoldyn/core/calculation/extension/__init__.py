@@ -1,9 +1,6 @@
-# -*- coding: utf-8 -*-
-
-import os
 import sys
-from pymoldyn.util import env_is_true
-from pymoldyn.util import message
+
+from pymoldyn.util import env_is_true, message
 from pymoldyn.util.logger import Logger
 
 __all__ = [
@@ -25,9 +22,9 @@ class CExtensionError(Exception):
 try:
     from .extension_ctypes import (
         atomstogrid,
-        mark_cavities,
-        cavity_triangles,
         cavity_intersections,
+        cavity_triangles,
+        mark_cavities,
         mark_translation_vectors,
     )
 except OSError as e:
@@ -44,8 +41,8 @@ except OSError as e:
         )
         from .extension_python import (
             atomstogrid,
-            mark_cavities,
-            cavity_triangles,
             cavity_intersections,
+            cavity_triangles,
+            mark_cavities,
             mark_translation_vectors,
         )
