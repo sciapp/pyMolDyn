@@ -405,7 +405,9 @@ class Calculation(object):
                 while "*" in exportdir:
                     i = exportdir.rindex("*")
                     exportdir = os.path.join(exportdir[:i], dirlist.pop() + exportdir[i + 1 :])
-                if (calcsettings.exporthdf5 or calcsettings.exporttext) and not os.path.exists(exportdir):
+                if (
+                    calcsettings.exporthdf5 or calcsettings.exporttext or calcsettings.exportsingletext
+                ) and not os.path.exists(exportdir):
                     os.makedirs(exportdir)
             else:
                 exportdir = os.path.dirname(filepath)
