@@ -475,7 +475,7 @@ class Calculation(object):
                 fileresults.append(frameresult)
             # export all results
             if calcsettings.exportsingletext:
-                outfile = os.path.join(exportdir, "full_output") + ".txt"
+                outfile = os.path.join(exportdir, fileprefix + "_full") + ".txt"
                 with open(outfile, "w") as f:
                     for frame, frameresult in enumerate(fileresults):
                         f.write("Frame {}:\n".format(frame + 1))
