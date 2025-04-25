@@ -260,7 +260,7 @@ class PDFWidget(QtWidgets.QWidget):
         yvalues = self.gr_widget.yvalues
         if xvalues is None or yvalues is None:
             return
-        with open(filepath, "w") as csvfile:  # TODO same check as with histogramm (bytes csv)
+        with open(filepath, "w") as csvfile:
             csvwriter = csv.writer(csvfile)
             for x, y in zip(xvalues, yvalues):
                 csvwriter.writerow([x, y])

@@ -368,7 +368,7 @@ Note: Because the cutoff radius is stored in the global configuration, it cannot
                                     if re.match(r"^\s+", line):
                                         element = line_parts[0]
                                         radius = float(line_parts[1])
-                                        atom_radii[element] = radius  # TODO ask ingo what is happening here
+                                        atom_radii[element] = radius
                                         line_is_processed = True
                                     else:
                                         read_state = ReadState.DEFAULT
