@@ -374,10 +374,8 @@ class GraphForSplitAndMerge(Graph):
                     translation_vectors.add(  # Attribute error?
                         tuple(self.get_translation_vector((border_x, border_y, border_z)))
                     )
-            except IndexError:
-                pass
             except Exception as e:
-                logger.error("Error when creating translation vectors: {}".format(e))  # TODO exceptions
+                logger.error("Error when creating translation vectors: {}".format(e))
 
         self.border_nodes = {}
         self.border_node_translation_vectors = {}

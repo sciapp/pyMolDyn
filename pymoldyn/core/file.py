@@ -472,12 +472,12 @@ class HDF5File(ResultFile):
         return results
 
     def writeresults(self, results, overwrite=True):
-        # TODO: results valid?
+        # results valid? I think so!
         try:
             with h5py.File(self.path, "a") as f:
                 group = f.require_group("atoms/frame{}".format(results.frame))
-                # TODO: is it OK to never overwrite atoms?
-                results.atoms.tohdf(group, overwrite=False)
+                # is it OK to never overwrite atoms? I think they should be saved when recalculating the file!
+                results.atoms.tohdf(group, overwrite=overwrite)
                 if (
                     results.domains is not None
                     or results.surface_cavities is not None
