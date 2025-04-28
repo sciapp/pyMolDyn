@@ -22,7 +22,7 @@ class Visualization(object):
     Visualize Atoms and Cavities with GR3
     """
 
-    def __init__(self):
+    def __init__(self, repaint_callback=None):
         self.max_side_lengths = 1.0
         self.mat = np.eye(4)
         self.d = self.max_side_lengths * 2
@@ -37,7 +37,12 @@ class Visualization(object):
         self.width = 0
         self.height = 0
         self.usecurrentframebuffer = False
+        if repaint_callback is not None:
+            self._repaint_callback = repaint_callback
+        else:
+            self._repaint_callback = lambda: self.paint(self.width, self.height)
         #  self.assigned_opengl_context = None
+        self._export_args = None
 
         self.results = None
         self.settings = VisualizationSettings()
@@ -58,7 +63,7 @@ class Visualization(object):
         self.far = 6 * max_side_lengths
         self.create_scene()
         if self.width != 0 and self.height != 0:
-            self.paint(self.width, self.height)
+            self.repaint_callback()
         self.settings.visible_domain_indices = None
         self.settings.visible_surface_cavity_indices = None
         self.settings.visible_center_cavity_indices = None
@@ -270,15 +275,19 @@ class Visualization(object):
             self.usecurrentframebuffer = usecurrentframebuffer
         if self.usecurrentframebuffer:
             gr3.usecurrentframebuffer()
-        gr3.drawimage(
-            0,
-            width * device_pixel_ratio,
-            0,
-            height * device_pixel_ratio,
-            width,
-            height,
-            gr3.GR3_Drawable.GR3_DRAWABLE_OPENGL,
-        )
+        if self._export_args is not None:
+            gr3.export(*self._export_args)
+            self._export_args = None
+        else:
+            gr3.drawimage(
+                0,
+                width * device_pixel_ratio,
+                0,
+                height * device_pixel_ratio,
+                width,
+                height,
+                gr3.GR3_Drawable.GR3_DRAWABLE_OPENGL,
+            )
 
     def save_screenshot(self, file_name, width=3840, height=2160, first=True, last=True):
         """
@@ -286,7 +295,8 @@ class Visualization(object):
         ``first`` and ``last`` can be used to indicate if the first or last screenshot is taken when
         multiple images are saved in a loop for example.
         """
-        gr3.export(file_name, width, height)
+        self._export_args = (file_name, width, height)
+        self.repaint_callback()
 
     def get_object_at_2dposition(self, x, y):
         oid = gr3.c_int(0)
@@ -316,6 +326,14 @@ class Visualization(object):
 
             if 0.95 < distances[nearest_atom_index] / atom_radius < 1.05:
                 return ("atom", nearest_atom_index)
+
+    @property
+    def repaint_callback(self):
+        return self._repaint_callback
+
+    @repaint_callback.setter
+    def repaint_callback(self, repaint_callback):
+        self._repaint_callback = repaint_callback
 
 
 class VisualizationSettings(object):
