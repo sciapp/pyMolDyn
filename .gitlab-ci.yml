@@ -447,6 +447,11 @@ package:ubuntu:24.10:
   image: ubuntu:24.10
 
 
+package:ubuntu:25.04:
+  extends: .package:debian
+  image: ubuntu:25.04
+
+
 .package:rhel:
   stage: package
   needs: ["pre-package"]
@@ -485,6 +490,11 @@ package:rockylinux:9:
 package:fedora:41:
   extends: .package:rhel
   image: fedora:41
+
+
+package:fedora:42:
+  extends: .package:rhel
+  image: fedora:42
 
 
 package:opensuse:tumbleweed:
