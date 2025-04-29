@@ -382,10 +382,14 @@ pre-package:
   - pipx install "briefcase==${BRIEFCASE_VERSION}"
   - export PATH="${HOME}/.local/bin:${PATH}"
   - python3 -m venv env
+  - ./env/bin/python3 -m pip install -U
+      pip
+      setuptools
+      wheel
   script:
   # Install the project in editable mode to force to build all C extenions in-place. Otherwise, they won't be packaged
   # by briefcase
-  - ./env/bin/python3 -m pip install -e .
+  - ./env/bin/python3 -m pip install --no-deps -e .
   - briefcase create linux system
   - briefcase build linux system
   - briefcase package linux system
@@ -433,10 +437,14 @@ package:ubuntu:24.10:
   - pipx install "briefcase==${BRIEFCASE_VERSION}"
   - export PATH="${HOME}/.local/bin:${PATH}"
   - python3 -m venv env
+  - ./env/bin/python3 -m pip install -U
+      pip
+      setuptools
+      wheel
   script:
   # Install the project in editable mode to force to build all C extenions in-place. Otherwise, they won't be packaged
   # by briefcase
-  - ./env/bin/python3 -m pip install -e .
+  - ./env/bin/python3 -m pip install --no-deps -e .
   - briefcase create linux system
   - briefcase build linux system
   - briefcase package linux system
@@ -468,10 +476,14 @@ package:opensuse:tumbleweed:
   - pipx install "briefcase==${BRIEFCASE_VERSION}"
   - export PATH="${HOME}/.local/bin:${PATH}"
   - python3 -m venv env
+  - ./env/bin/python3 -m pip install -U
+      pip
+      setuptools
+      wheel
   script:
   # Install the project in editable mode to force to build all C extenions in-place. Otherwise, they won't be packaged
   # by briefcase
-  - ./env/bin/python3 -m pip install -e .
+  - ./env/bin/python3 -m pip install --no-deps -e .
   - briefcase create linux system
   - briefcase build linux system
   - briefcase package linux system
@@ -500,10 +512,14 @@ package:flatpack:
   - pipx install "briefcase==${BRIEFCASE_VERSION}"
   - export PATH="${HOME}/.local/bin:${PATH}"
   - python3 -m venv env
+  - ./env/bin/python3 -m pip install -U
+      pip
+      setuptools
+      wheel
   script:
   # Install the project in editable mode to force to build all C extenions in-place. Otherwise, they won't be packaged
   # by briefcase
-  - ./env/bin/python3 -m pip install -e .
+  - ./env/bin/python3 -m pip install --no-deps -e .
   - briefcase create linux flatpak
   - briefcase build linux flatpak
   - briefcase package linux flatpak
@@ -575,6 +591,10 @@ package:macos:
   - ./create_icns.py pymoldyn/icon.png pymoldyn/icon.icns
   - GR_TEMPDIR="$(mktemp -d)"
   - python3 -m venv env
+  - ./env/bin/python3 -m pip install -U
+      pip
+      setuptools
+      wheel
   - GR_STABLE_VERSION="$(
       git ls-remote --tags "https://github.com/sciapp/gr" |
       awk 'match($2, /refs\/tags\/v[0-9]+\.[0-9]+\.[0-9]+$/) { print substr($2, RSTART + length("refs/tags/v")) }' |
@@ -587,7 +607,7 @@ package:macos:
   script:
   # Install the project in editable mode to force to build all C extenions in-place. Otherwise, they won't be packaged
   # by briefcase
-  - ./env/bin/python3 -m pip install -e .
+  - ./env/bin/python3 -m pip install --no-deps -e .
   - briefcase create
   # Force to use the universal GR binaries for x86_64 and arm64
   - rsync -a "${GR_TEMPDIR}/gr/" --exclude "Applications"
@@ -620,10 +640,14 @@ package:windows:
       -define "icon:auto-resize=16,32,48,64,128,256"
       pymoldyn/icon.ico
   - vcvars_cmd python -m venv env
+  - ./env/Scripts/python -m pip install -U
+      pip
+      setuptools
+      wheel
   script:
   # Install the project in editable mode to force to build all C extenions in-place. Otherwise, they won't be packaged
   # by briefcase
-  - ./env/Scripts/python -m pip install -e .
+  - ./env/Scripts/python -m pip install --no-deps -e .
   - vcvars_cmd python -m briefcase create
   - vcvars_cmd python -m briefcase build
   - vcvars_cmd python -m briefcase package --adhoc-sign
