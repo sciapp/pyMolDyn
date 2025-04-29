@@ -386,6 +386,30 @@ pre-package:
       pip
       setuptools
       wheel
+  # Latest pip versions on Debian 11 bullseye may throw encoding errors in `compileall.py` if not all modules can be
+  # byte-compiled (for example for PySide6). Therefore, patch the Python installation to use 'UTF-8' as fallback
+  # encoding.
+  - |-
+    if ! awk -F'=' '$1 == "VERSION_CODENAME" && $2 == "bullseye" { exit 1 }' /etc/os-release; then
+      pushd /usr/lib/python3.9
+    (
+      echo "--- compileall.py       2025-03-20 02:07:39.000000000 +0000";
+      echo "+++ compileall.py.patched       2025-04-29 10:11:00.568493043 +0000";
+      echo "@@ -252,9 +252,9 @@";
+      echo "                 else:";
+      echo "                     print('*** ', end='')";
+      echo "                 # escape non-printable characters in msg";
+      echo "-                msg = err.msg.encode(sys.stdout.encoding,";
+      echo "+                msg = err.msg.encode(sys.stdout.encoding if sys.stdout.encoding is not None else 'utf-8',";
+      echo "                                      errors='backslashreplace')";
+      echo "-                msg = msg.decode(sys.stdout.encoding)";
+      echo "+                msg = msg.decode(sys.stdout.encoding if sys.stdout.encoding is not None else 'utf-8')";
+      echo "                 print(msg)";
+      echo "             except (SyntaxError, UnicodeError, OSError) as e:";
+      echo "                 success = False";
+    ) | patch -N
+      popd
+    fi
   script:
   # Install the project in editable mode to force to build all C extenions in-place. Otherwise, they won't be packaged
   # by briefcase
