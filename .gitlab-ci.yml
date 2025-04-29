@@ -382,10 +382,38 @@ pre-package:
   - pipx install "briefcase==${BRIEFCASE_VERSION}"
   - export PATH="${HOME}/.local/bin:${PATH}"
   - python3 -m venv env
+  - ./env/bin/python3 -m pip install -U
+      pip
+      setuptools
+      wheel
+  # Latest pip versions on Debian 11 bullseye may throw encoding errors in `compileall.py` if not all modules can be
+  # byte-compiled (for example for PySide6). Therefore, patch the Python installation to use 'UTF-8' as fallback
+  # encoding.
+  - |-
+    if ! awk -F'=' '$1 == "VERSION_CODENAME" && $2 == "bullseye" { exit 1 }' /etc/os-release; then
+      pushd /usr/lib/python3.9
+    (
+      echo "--- compileall.py       2025-03-20 02:07:39.000000000 +0000";
+      echo "+++ compileall.py.patched       2025-04-29 10:11:00.568493043 +0000";
+      echo "@@ -252,9 +252,9 @@";
+      echo "                 else:";
+      echo "                     print('*** ', end='')";
+      echo "                 # escape non-printable characters in msg";
+      echo "-                msg = err.msg.encode(sys.stdout.encoding,";
+      echo "+                msg = err.msg.encode(sys.stdout.encoding if sys.stdout.encoding is not None else 'utf-8',";
+      echo "                                      errors='backslashreplace')";
+      echo "-                msg = msg.decode(sys.stdout.encoding)";
+      echo "+                msg = msg.decode(sys.stdout.encoding if sys.stdout.encoding is not None else 'utf-8')";
+      echo "                 print(msg)";
+      echo "             except (SyntaxError, UnicodeError, OSError) as e:";
+      echo "                 success = False";
+    ) | patch -N
+      popd
+    fi
   script:
   # Install the project in editable mode to force to build all C extenions in-place. Otherwise, they won't be packaged
   # by briefcase
-  - ./env/bin/python3 -m pip install -e .
+  - ./env/bin/python3 -m pip install --no-deps -e .
   - briefcase create linux system
   - briefcase build linux system
   - briefcase package linux system
@@ -419,6 +447,11 @@ package:ubuntu:24.10:
   image: ubuntu:24.10
 
 
+package:ubuntu:25.04:
+  extends: .package:debian
+  image: ubuntu:25.04
+
+
 .package:rhel:
   stage: package
   needs: ["pre-package"]
@@ -433,10 +466,14 @@ package:ubuntu:24.10:
   - pipx install "briefcase==${BRIEFCASE_VERSION}"
   - export PATH="${HOME}/.local/bin:${PATH}"
   - python3 -m venv env
+  - ./env/bin/python3 -m pip install -U
+      pip
+      setuptools
+      wheel
   script:
   # Install the project in editable mode to force to build all C extenions in-place. Otherwise, they won't be packaged
   # by briefcase
-  - ./env/bin/python3 -m pip install -e .
+  - ./env/bin/python3 -m pip install --no-deps -e .
   - briefcase create linux system
   - briefcase build linux system
   - briefcase package linux system
@@ -455,6 +492,11 @@ package:fedora:41:
   image: fedora:41
 
 
+package:fedora:42:
+  extends: .package:rhel
+  image: fedora:42
+
+
 package:opensuse:tumbleweed:
   stage: package
   image: opensuse/tumbleweed
@@ -468,10 +510,14 @@ package:opensuse:tumbleweed:
   - pipx install "briefcase==${BRIEFCASE_VERSION}"
   - export PATH="${HOME}/.local/bin:${PATH}"
   - python3 -m venv env
+  - ./env/bin/python3 -m pip install -U
+      pip
+      setuptools
+      wheel
   script:
   # Install the project in editable mode to force to build all C extenions in-place. Otherwise, they won't be packaged
   # by briefcase
-  - ./env/bin/python3 -m pip install -e .
+  - ./env/bin/python3 -m pip install --no-deps -e .
   - briefcase create linux system
   - briefcase build linux system
   - briefcase package linux system
@@ -500,10 +546,14 @@ package:flatpack:
   - pipx install "briefcase==${BRIEFCASE_VERSION}"
   - export PATH="${HOME}/.local/bin:${PATH}"
   - python3 -m venv env
+  - ./env/bin/python3 -m pip install -U
+      pip
+      setuptools
+      wheel
   script:
   # Install the project in editable mode to force to build all C extenions in-place. Otherwise, they won't be packaged
   # by briefcase
-  - ./env/bin/python3 -m pip install -e .
+  - ./env/bin/python3 -m pip install --no-deps -e .
   - briefcase create linux flatpak
   - briefcase build linux flatpak
   - briefcase package linux flatpak
@@ -575,6 +625,10 @@ package:macos:
   - ./create_icns.py pymoldyn/icon.png pymoldyn/icon.icns
   - GR_TEMPDIR="$(mktemp -d)"
   - python3 -m venv env
+  - ./env/bin/python3 -m pip install -U
+      pip
+      setuptools
+      wheel
   - GR_STABLE_VERSION="$(
       git ls-remote --tags "https://github.com/sciapp/gr" |
       awk 'match($2, /refs\/tags\/v[0-9]+\.[0-9]+\.[0-9]+$/) { print substr($2, RSTART + length("refs/tags/v")) }' |
@@ -587,7 +641,7 @@ package:macos:
   script:
   # Install the project in editable mode to force to build all C extenions in-place. Otherwise, they won't be packaged
   # by briefcase
-  - ./env/bin/python3 -m pip install -e .
+  - ./env/bin/python3 -m pip install --no-deps -e .
   - briefcase create
   # Force to use the universal GR binaries for x86_64 and arm64
   - rsync -a "${GR_TEMPDIR}/gr/" --exclude "Applications"
@@ -620,10 +674,14 @@ package:windows:
       -define "icon:auto-resize=16,32,48,64,128,256"
       pymoldyn/icon.ico
   - vcvars_cmd python -m venv env
+  - ./env/Scripts/python -m pip install -U
+      pip
+      setuptools
+      wheel
   script:
   # Install the project in editable mode to force to build all C extenions in-place. Otherwise, they won't be packaged
   # by briefcase
-  - ./env/Scripts/python -m pip install -e .
+  - ./env/Scripts/python -m pip install --no-deps -e .
   - vcvars_cmd python -m briefcase create
   - vcvars_cmd python -m briefcase build
   - vcvars_cmd python -m briefcase package --adhoc-sign

@@ -48,6 +48,7 @@ class GLWidget(QGLWidget if has_qopenglwidget else QGLWidget):
         self.control = parent.control
         self.main_window = main_window
         self.setDisabled(True)
+        self.vis.repaint_callback = self.update
 
     @property
     def vis(self):
